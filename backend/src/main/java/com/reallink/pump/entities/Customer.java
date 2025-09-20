@@ -54,14 +54,12 @@ public class Customer extends BaseEntity {
     @Column(name = "phone_number", nullable = false, length = 15)
     private String phoneNumber;
 
-    @NotBlank(message = "GST number is required")
     @Size(min = 10, max = 20, message = "GST number must be greater than 10 and less than 20 characters")
-    @Column(name = "gst_number", nullable = false, length = 20)
+    @Column(name = "gst_number", length = 20)
     private String gstNumber;
 
-    @NotBlank(message = "PAN number is required")
     @Size(min = 10, max = 20, message = "PAN number must be greater than 10 and less than 20 characters")
-    @Column(name = "pan_number", nullable = false, length = 20)
+    @Column(name = "pan_number", length = 20)
     private String panNumber;
 
     @NotNull(message = "Credit limit is required")

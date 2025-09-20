@@ -53,14 +53,12 @@ public class Supplier extends BaseEntity {
     @Column(name = "email", length = 200)
     private String email;
 
-    @NotBlank(message = "GST Number is required")
     @Size(min = 15, max = 15, message = "GST Number must be exactly 15 characters")
-    @Column(name = "gst_in", nullable = false, length = 15)
+    @Column(name = "gst_in", length = 15)
     private String gstNumber;
 
-    @NotBlank(message = "Tax Identification Number is required")
-    @Size(min = 11, max = 11, message = "Tax Identification Number must be exactly 11 characters")
-    @Column(name = "t_in", nullable = false, length = 11)
+    @Size(min = 11, max = 20, message = "Tax Identification Number must be between 11 and 20 characters")
+    @Column(name = "t_in", length = 20)
     private String taxIdentificationNumber;
 
     @NotBlank(message = "Address is required")
