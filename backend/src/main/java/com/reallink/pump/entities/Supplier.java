@@ -1,0 +1,79 @@
+package com.reallink.pump.entities;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "pump_supplier_master", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_supplier_name_pump", columnNames = {"supplier_name", "pump_master_id"}),})
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class Supplier extends BaseEntity {
+
+    @NotNull(message = "Pump master is required")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "pump_master_id", nullable = false, foreignKey = @ForeignKey(name = "fk_supplier_pump_master"))
+    private PumpInfoMaster pumpMaster;
+
+    @NotBlank(message = "Supplier name is required")
+    @Size(min = 2, max = 100, message = "Supplier name must be between 2 and 100 characters")
+    @Column(name = "supplier_name", nullable = false, length = 100)
+    private String supplierName;
+
+    @NotBlank(message = "Contact person name is required")
+    @Size(min = 2, max = 100, message = "Contact person name must be between 2 and 100 characters")
+    @Column(name = "contact_person_name", nullable = false, length = 100)
+    private String contactPersonName;
+
+    @NotBlank(message = "Contact number is required")
+    @Size(min = 10, max = 15, message = "Contact number must be between 10 and 15 characters")
+    @Column(name = "contact_number", nullable = false, length = 15)
+    private String contactNumber;
+
+    @Size(max = 200, message = "Email cannot exceed 200 characters")
+    @Column(name = "email", length = 200)
+    private String email;
+
+    @NotBlank(message = "GST Number is required")
+    @Size(min = 15, max = 15, message = "GST Number must be exactly 15 characters")
+    @Column(name = "gst_in", nullable = false, length = 15)
+    private String gstNumber;
+
+    @NotBlank(message = "Tax Identification Number is required")
+    @Size(min = 11, max = 11, message = "Tax Identification Number must be exactly 11 characters")
+    @Column(name = "t_in", nullable = false, length = 11)
+    private String taxIdentificationNumber;
+
+    @NotBlank(message = "Address is required")
+    @Size(min = 5, max = 255, message = "Address must be between 5 and 255 characters")
+    @Column(name = "address", nullable = false, length = 255)
+    private String address;
+
+    @NotNull(message = "Opening balance is required")
+    @DecimalMin(value = "0.00", message = "Opening balance must be greater than or equal to 0.00")
+    @Column(name = "opening_balance", nullable = false, precision = 15, scale = 2)
+    private BigDecimal openingBalance = BigDecimal.ZERO;
+
+    @NotNull(message = "Opening balance date is required")
+    @Column(name = "opening_balance_date", nullable = false)
+    private LocalDate openingBalanceDate = LocalDate.now();
+}

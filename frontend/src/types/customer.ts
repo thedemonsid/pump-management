@@ -1,0 +1,53 @@
+import { z } from 'zod';
+
+// Customer schemas
+export const CustomerSchema = z.object({
+  id: z.string().optional(),
+  pumpMasterId: z.string(),
+  customerName: z
+    .string()
+    .min(2, 'Customer name must be at least 2 characters')
+    .max(100, 'Customer name cannot exceed 100 characters'),
+  address: z
+    .string()
+    .min(5, 'Address must be at least 5 characters')
+    .max(255, 'Address cannot exceed 255 characters'),
+  pincode: z
+    .string()
+    .min(5, 'Pincode must be at least 5 characters')
+    .max(10, 'Pincode cannot exceed 10 characters'),
+  phoneNumber: z
+    .string()
+    .min(10, 'Phone number must be at least 10 characters')
+    .max(15, 'Phone number cannot exceed 15 characters'),
+  gstNumber: z
+    .string()
+    .min(10, 'GST number must be at least 10 characters')
+    .max(20, 'GST number cannot exceed 20 characters'),
+  panNumber: z
+    .string()
+    .min(10, 'PAN number must be at least 10 characters')
+    .max(20, 'PAN number cannot exceed 20 characters'),
+  creditLimit: z.number().min(0, 'Credit limit cannot be negative'),
+  openingBalance: z.number().optional(),
+  openingBalanceDate: z
+    .string()
+    .optional()
+    .refine((val) => !val || !isNaN(Date.parse(val)), 'Invalid date format'),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+  version: z.number().optional(),
+});
+
+export const CreateCustomerSchema = CustomerSchema.omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  version: true,
+});
+
+export const UpdateCustomerSchema = CreateCustomerSchema.partial();
+
+export type Customer = z.infer<typeof CustomerSchema>;
+export type CreateCustomer = z.infer<typeof CreateCustomerSchema>;
+export type UpdateCustomer = z.infer<typeof UpdateCustomerSchema>;
