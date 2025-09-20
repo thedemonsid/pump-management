@@ -7,7 +7,7 @@ export const SalesmanSchema = z.object({
   name: z.string().min(2, 'Salesman full name is required'),
   employeeId: z.string().min(2, 'Employee ID is required'),
   contactNumber: z.string().min(10, 'Contact phone number is required'),
-  email: z.string().email('Invalid email format'),
+  email: z.string().email('Invalid email address').optional(),
   address: z.string().max(200),
   aadharCardNumber: z
     .string()

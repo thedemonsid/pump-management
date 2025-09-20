@@ -46,7 +46,10 @@ export function UpdateSalesmanForm({
       name: salesman.name,
       employeeId: salesman.employeeId,
       contactNumber: salesman.contactNumber,
-      email: salesman.email,
+      email:
+        salesman?.email && salesman.email.trim() !== ''
+          ? salesman.email
+          : undefined,
       address: salesman.address || '',
       aadharCardNumber: salesman.aadharCardNumber || '',
       panCardNumber: salesman.panCardNumber || '',
@@ -57,7 +60,11 @@ export function UpdateSalesmanForm({
   const { isSubmitting } = formState;
 
   const onSubmit = async (data: UpdateSalesmanFormData) => {
-    await editSalesman(salesman.id!, data);
+    const submitData = {
+      ...data,
+      email: data.email && data.email.trim() !== '' ? data.email : undefined,
+    };
+    await editSalesman(salesman.id!, submitData);
     reset();
     onSuccess?.();
   };

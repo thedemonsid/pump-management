@@ -49,7 +49,6 @@ export function CreateSalesmanForm({
       address: '',
       aadharCardNumber: '',
       panCardNumber: '',
-      email: '',
       active: true,
     },
   });
@@ -57,7 +56,11 @@ export function CreateSalesmanForm({
   const { isSubmitting } = formState;
 
   const onSubmit = async (data: CreateSalesmanFormData) => {
-    await createSalesman(data);
+    const submitData = {
+      ...data,
+      email: data.email && data.email.trim() !== '' ? data.email : undefined,
+    };
+    await createSalesman(submitData);
     reset();
     onSuccess?.();
   };
@@ -160,7 +163,6 @@ export function CreateSalesmanForm({
           />
         </div>
         <div className="grid grid-cols-1 gap-4">
-
           <FormField
             control={control}
             name="address"
