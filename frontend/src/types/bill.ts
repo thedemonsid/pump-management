@@ -1,9 +1,8 @@
+import type { BillType, RateType } from './common';
 import type {
-  BillType,
-  RateType,
+  CustomerBillPaymentResponse,
   CreateCustomerBillPaymentRequest,
-} from './common';
-import type { CustomerBillPaymentResponse } from './customer-bill-payment';
+} from './customer-bill-payment';
 
 /**
  * Bill item interface for internal use
