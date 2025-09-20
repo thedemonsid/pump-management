@@ -1,8 +1,9 @@
 import axios from 'axios';
-
+const nodeEnv = import.meta.env.VITE_NODE_ENV || null;
+console.log('Current NODE_ENV:', nodeEnv);
 // Create axios instance with base URL from environment
 const api = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:8081',
+  baseURL: nodeEnv === 'development' ? import.meta.env.VITE_BACKEND_URL : '',
   headers: {
     'Content-Type': 'application/json',
   },

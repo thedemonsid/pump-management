@@ -43,13 +43,25 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authz -> authz
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**").permitAll()
+                .requestMatchers("/actuator/**").permitAll()
+                // Allow public access to static frontend files
+                .requestMatchers(
+                        "/",
+                        "/index.html",
+                        "/static/**",
+                        "/assets/**",
+                        "/fonts/**",
+                        "/vite.svg"
+                ).permitAll()
+                // Allow public access to specific /api endpoints
                 .requestMatchers("/api/v1/users/login").permitAll()
                 .requestMatchers("/api/v1/users/register/super/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**").permitAll()
                 .requestMatchers("/api/v1/pumps/**").permitAll()
                 .requestMatchers("/api/v1/users/**").permitAll()
-                .requestMatchers("/actuator/**").permitAll()
-                .anyRequest().authenticated()
+                // Only require authentication for other /api/**
+                .requestMatchers("/api/**").authenticated()
+                .anyRequest().permitAll()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex
