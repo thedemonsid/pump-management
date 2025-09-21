@@ -134,7 +134,7 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
             name="gstNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>GST Number *</FormLabel>
+                <FormLabel>GST Number</FormLabel>
                 <FormControl>
                   <Input placeholder="e.g., 22AAAAA0000A1Z5" {...field} />
                 </FormControl>
@@ -151,7 +151,7 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
             name="taxIdentificationNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Tax Identification Number *</FormLabel>
+                <FormLabel>Tax Identification Number</FormLabel>
                 <FormControl>
                   <Input placeholder="e.g., 12345678901" {...field} />
                 </FormControl>

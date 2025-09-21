@@ -97,8 +97,14 @@ export const useSalesmanStore = create<SalesmanState>()(
           const { id, createdAt, updatedAt, ...salesmanToCreate } =
             validatedSalesman;
 
+          // Ensure email is always a string (empty string if undefined)
+          const salesmanToCreateWithEmail = {
+            ...salesmanToCreate,
+            email: salesmanToCreate.email ?? '',
+          };
+
           const createdSalesman = await SalesmanService.create(
-            salesmanToCreate
+            salesmanToCreateWithEmail
           );
           addSalesman(createdSalesman);
           toast.success('Salesman created successfully');

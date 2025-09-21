@@ -6,3 +6,6 @@ export { formatDate, formatDateTime } from './date';
 
 // ID utilities
 export { generateId } from './id';
+
+// Time utilities
+export { formatTimeToAMPM } from './time';

@@ -17,14 +17,17 @@ export const SupplierSchema = z.object({
     .min(10, 'Contact number must be at least 10 characters')
     .max(15, 'Contact number cannot exceed 15 characters'),
   email: z
-    .string()
     .email('Invalid email format')
     .max(200, 'Email cannot exceed 200 characters')
     .optional(),
-  gstNumber: z.string().length(15, 'GST Number must be exactly 15 characters'),
+  gstNumber: z
+    .string()
+    .length(15, 'GST Number must be exactly 15 characters')
+    .optional(),
   taxIdentificationNumber: z
     .string()
-    .length(11, 'Tax Identification Number must be exactly 11 characters'),
+    .length(11, 'Tax Identification Number must be exactly 11 characters')
+    .optional(),
   address: z
     .string()
     .min(5, 'Address must be at least 5 characters')

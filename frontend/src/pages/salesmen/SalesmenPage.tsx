@@ -129,7 +129,7 @@ export function SalesmenPage() {
                   <TableHead>Employee ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Phone Number</TableHead>
-                  <TableHead>Email</TableHead>
+                  <TableHead>Address</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -142,7 +142,12 @@ export function SalesmenPage() {
                       {salesman.name}
                     </TableCell>
                     <TableCell>{salesman.contactNumber}</TableCell>
-                    <TableCell>{salesman.email}</TableCell>
+                    <TableCell
+                      className="max-w-xs truncate"
+                      title={salesman.address}
+                    >
+                      {salesman.address}
+                    </TableCell>
                     <TableCell>
                       <Badge
                         variant={salesman.active ? 'default' : 'secondary'}

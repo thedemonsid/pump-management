@@ -74,7 +74,7 @@ export function CreateSalesmanForm({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name</FormLabel>
+                <FormLabel>Name *</FormLabel>
                 <FormControl>
                   <Input placeholder="Enter salesman name" {...field} />
                 </FormControl>
@@ -87,7 +87,7 @@ export function CreateSalesmanForm({
             name="employeeId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Employee ID</FormLabel>
+                <FormLabel>Employee ID *</FormLabel>
                 <FormControl>
                   <Input placeholder="Enter employee ID" {...field} />
                 </FormControl>
@@ -100,7 +100,7 @@ export function CreateSalesmanForm({
             name="contactNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Phone Number</FormLabel>
+                <FormLabel>Phone Number *</FormLabel>
                 <FormControl>
                   <Input placeholder="Enter phone number" {...field} />
                 </FormControl>
@@ -113,7 +113,7 @@ export function CreateSalesmanForm({
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>Email (optional)</FormLabel>
                 <FormControl>
                   <Input
                     type="email"
@@ -131,7 +131,7 @@ export function CreateSalesmanForm({
             name="aadharCardNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Aadhar Card Number</FormLabel>
+                <FormLabel>Aadhar Card Number (optional)</FormLabel>
                 <FormControl>
                   <Input
                     type="text"
@@ -149,11 +149,11 @@ export function CreateSalesmanForm({
             name="panCardNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Pan Card Number</FormLabel>
+                <FormLabel>Pan Card Number (optional)</FormLabel>
                 <FormControl>
                   <Input
                     type="text"
-                    placeholder="Enter Pan Card address"
+                    placeholder="Enter Pan Card number"
                     {...field}
                   />
                 </FormControl>
@@ -168,7 +168,7 @@ export function CreateSalesmanForm({
             name="address"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Address</FormLabel>
+                <FormLabel>Address *</FormLabel>
                 <FormControl>
                   <Textarea placeholder="Enter salesman address" {...field} />
                 </FormControl>

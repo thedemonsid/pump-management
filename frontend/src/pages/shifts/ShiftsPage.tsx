@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/dialog';
 import { ShiftForm } from './ShiftForm';
 import type { Shift } from '@/types';
-
+import { formatTimeToAMPM } from '@/lib/utils/index';
 export function ShiftsPage() {
   const { shifts, loading, error, fetchShifts, removeShift } = useShiftStore();
 
@@ -60,11 +60,6 @@ export function ShiftsPage() {
   const handleCloseEditDialog = () => {
     setEditingShift(null);
   };
-
-  const formatTime = (time: string) => {
-    return time;
-  };
-
   if (loading && shifts.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -147,8 +142,8 @@ export function ShiftsPage() {
                         {shift.name}
                       </TableCell>
                       <TableCell>{shift.description}</TableCell>
-                      <TableCell>{formatTime(shift.startTime)}</TableCell>
-                      <TableCell>{formatTime(shift.endTime)}</TableCell>
+                      <TableCell>{formatTimeToAMPM(shift.startTime)}</TableCell>
+                      <TableCell>{formatTimeToAMPM(shift.endTime)}</TableCell>
                       <TableCell>
                         <Badge
                           variant={shift.isActive ? 'default' : 'secondary'}

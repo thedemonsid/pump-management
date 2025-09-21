@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useNozzleStore } from '@/store/nozzle-store';
 import { useNozzleShiftStore } from '@/store/nozzle-shift-store';
+import { formatTimeToAMPM } from '@/lib/utils/time';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -292,9 +293,13 @@ export function NozzleDetailPage() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{shift.openingTime}</TableCell>
                       <TableCell>
-                        {shift.closingTime || (
+                        {formatTimeToAMPM(shift.openingTime)}
+                      </TableCell>
+                      <TableCell>
+                        {shift.closingTime ? (
+                          formatTimeToAMPM(shift.closingTime)
+                        ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
