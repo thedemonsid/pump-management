@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTankStore } from '@/store/tank-store';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/dialog';
 import { CreateTankForm } from './CreateTankForm';
 import { UpdateTankForm } from './UpdateTankForm';
+import { TankTransactionService } from '@/services/tank-transaction-service';
 import type { Tank } from '@/types';
 
 export function TanksPage() {
@@ -38,10 +39,87 @@ export function TanksPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingTank, setEditingTank] = useState<Tank | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [currentBalances, setCurrentBalances] = useState<
+    Record<string, number>
+  >({});
+  const [balancesLoading, setBalancesLoading] = useState<
+    Record<string, boolean>
+  >({});
 
   useEffect(() => {
     fetchTanks();
   }, [fetchTanks]);
+
+  const calculateCurrentBalances = useCallback(async () => {
+    const today = new Date();
+    const twoDaysBefore = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
+    const twoDaysAfter = new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000);
+    const fromDate = twoDaysBefore.toISOString().split('T')[0];
+    const toDate = twoDaysAfter.toISOString().split('T')[0];
+
+    const balances: Record<string, number> = {};
+    const loadingStates: Record<string, boolean> = {};
+
+    // Start loading for all tanks
+    tanks.forEach((tank) => {
+      loadingStates[tank.id!] = true;
+    });
+    setBalancesLoading(loadingStates);
+
+    // Calculate balance for each tank
+    await Promise.all(
+      tanks.map(async (tank) => {
+        if (!tank.id) return;
+
+        try {
+          // Get opening level for 2 days before today
+          const levelBefore = await TankTransactionService.getOpeningLevel(
+            tank.id,
+            fromDate
+          );
+
+          // Get transactions for the date range
+          const transactions =
+            await TankTransactionService.getTransactionsWithDateRange(
+              tank.id,
+              fromDate,
+              toDate
+            );
+
+          // Calculate running level
+          let runningLevel = levelBefore;
+          transactions.forEach((transaction) => {
+            if (transaction.transactionType === 'ADDITION') {
+              runningLevel += transaction.volume;
+            } else if (transaction.transactionType === 'REMOVAL') {
+              runningLevel -= transaction.volume;
+            }
+          });
+
+          balances[tank.id] = Math.max(0, runningLevel); // Ensure non-negative
+        } catch (error) {
+          console.error(
+            `Failed to calculate balance for tank ${tank.id}:`,
+            error
+          );
+          // Fallback to tank's current level or 0
+          balances[tank.id] = tank.currentLevel || 0;
+        } finally {
+          loadingStates[tank.id] = false;
+        }
+      })
+    );
+
+    setCurrentBalances(balances);
+    setBalancesLoading(loadingStates);
+  }, [tanks]);
+
+  // Calculate current balances for all tanks
+  useEffect(() => {
+    if (tanks.length > 0) {
+      calculateCurrentBalances();
+    }
+  }, [tanks, calculateCurrentBalances]);
 
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this tank?')) {
@@ -69,19 +147,21 @@ export function TanksPage() {
   };
 
   const getFillPercentage = (tank: Tank) => {
+    const currentLevel = currentBalances[tank.id!] ?? tank.currentLevel ?? 0;
     return (
       tank.fillPercentage ??
-      (tank.currentLevel && tank.capacity
-        ? calculateFillPercentage(tank.currentLevel, tank.capacity)
+      (currentLevel && tank.capacity
+        ? calculateFillPercentage(currentLevel, tank.capacity)
         : 0)
     );
   };
 
   const getIsLowLevel = (tank: Tank) => {
+    const currentLevel = currentBalances[tank.id!] ?? tank.currentLevel ?? 0;
     return (
       tank.isLowLevel ??
-      (tank.currentLevel && tank.lowLevelAlert
-        ? tank.currentLevel <= tank.lowLevelAlert
+      (currentLevel && tank.lowLevelAlert
+        ? currentLevel <= tank.lowLevelAlert
         : false)
     );
   };
@@ -170,10 +250,19 @@ export function TanksPage() {
                     </TableCell>
                     <TableCell>{formatCapacity(tank.capacity)} L</TableCell>
                     <TableCell>
-                      {tank.currentLevel
-                        ? formatCapacity(tank.currentLevel)
-                        : '0'}{' '}
-                      L
+                      {balancesLoading[tank.id!] ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <span>Calculating...</span>
+                        </div>
+                      ) : (
+                        <>
+                          {formatCapacity(
+                            currentBalances[tank.id!] || tank.currentLevel || 0
+                          )}{' '}
+                          L
+                        </>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

@@ -172,7 +172,9 @@ public class FuelPurchaseService {
         transactionRequest.setVolume(fuelPurchase.getQuantity());
         transactionRequest.setTransactionDate(fuelPurchase.getPurchaseDate().atStartOfDay());
         transactionRequest.setDescription("Fuel purchase - Invoice: " + fuelPurchase.getInvoiceNumber());
+        transactionRequest.setSupplierName(fuelPurchase.getSupplier().getSupplierName());
+        transactionRequest.setInvoiceNumber(fuelPurchase.getInvoiceNumber());
 
-        tankTransactionService.createAdditionTransaction(tank.getId(), transactionRequest);
+        tankTransactionService.createAdditionTransaction(tank.getId(), transactionRequest, fuelPurchase);
     }
 }

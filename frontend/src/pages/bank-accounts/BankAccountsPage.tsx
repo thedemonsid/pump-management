@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBankAccountStore } from '@/store/bank-account-store';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { BankAccountForm } from './BankAccountForm';
+import { BankAccountService } from '@/services/bank-account-service';
 import type { BankAccount } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils/index';
 
@@ -39,10 +40,88 @@ export function BankAccountsPage() {
   const [editingBankAccount, setEditingBankAccount] =
     useState<BankAccount | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [currentBalances, setCurrentBalances] = useState<
+    Record<string, number>
+  >({});
+  const [balancesLoading, setBalancesLoading] = useState<
+    Record<string, boolean>
+  >({});
 
   useEffect(() => {
     fetchBankAccounts();
   }, [fetchBankAccounts]);
+
+  const calculateCurrentBalances = useCallback(async () => {
+    const today = new Date();
+    const twoDaysBefore = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
+    const twoDaysAfter = new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000);
+    const fromDate = twoDaysBefore.toISOString().split('T')[0];
+    const toDate = twoDaysAfter.toISOString().split('T')[0];
+
+    const balances: Record<string, number> = {};
+    const loadingStates: Record<string, boolean> = {};
+
+    // Start loading for all bank accounts
+    bankAccounts.forEach((account) => {
+      loadingStates[account.id!] = true;
+    });
+    setBalancesLoading(loadingStates);
+
+    // Calculate balance for each bank account
+    await Promise.all(
+      bankAccounts.map(async (account) => {
+        if (!account.id) return;
+
+        try {
+          // Get opening balance for 2 days before today
+          const openingBalance = await BankAccountService.getOpeningBalance(
+            account.id,
+            fromDate
+          );
+
+          // Get transactions for the date range
+          const transactions =
+            await BankAccountService.getTransactionsWithDateRange(
+              account.id,
+              fromDate,
+              toDate
+            );
+
+          // Calculate running balance
+          let runningBalance = openingBalance;
+          transactions.forEach((transaction) => {
+            if (transaction.transactionType === 'CREDIT') {
+              runningBalance += transaction.amount;
+            } else if (transaction.transactionType === 'DEBIT') {
+              runningBalance -= transaction.amount;
+            }
+          });
+
+          balances[account.id] = runningBalance;
+        } catch (error) {
+          console.error(
+            `Failed to calculate balance for bank account ${account.id}:`,
+            error
+          );
+          // Fallback to account's current balance or opening balance
+          balances[account.id] =
+            account.currentBalance ?? account.openingBalance;
+        } finally {
+          loadingStates[account.id] = false;
+        }
+      })
+    );
+
+    setCurrentBalances(balances);
+    setBalancesLoading(loadingStates);
+  }, [bankAccounts]);
+
+  // Calculate current balances for all bank accounts
+  useEffect(() => {
+    if (bankAccounts.length > 0) {
+      calculateCurrentBalances();
+    }
+  }, [bankAccounts, calculateCurrentBalances]);
 
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this bank account?')) {
@@ -152,9 +231,18 @@ export function BankAccountsPage() {
                     </TableCell>
 
                     <TableCell>
-                      {bankAccount.currentBalance != null
-                        ? formatCurrency(bankAccount.currentBalance)
-                        : '-'}
+                      {balancesLoading[bankAccount.id!] ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <span>Calculating...</span>
+                        </div>
+                      ) : (
+                        formatCurrency(
+                          currentBalances[bankAccount.id!] ??
+                            bankAccount.currentBalance ??
+                            bankAccount.openingBalance
+                        )
+                      )}
                     </TableCell>
                     <TableCell>
                       {formatDate(bankAccount.openingBalanceDate)}

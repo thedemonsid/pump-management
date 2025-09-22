@@ -15,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import com.reallink.pump.dto.request.CreateTankTransactionRequest;
 import com.reallink.pump.dto.response.TankTransactionResponse;
 import com.reallink.pump.entities.DailyTankLevel;
+import com.reallink.pump.entities.FuelPurchase;
 import com.reallink.pump.entities.Tank;
 import com.reallink.pump.entities.TankTransaction;
 import com.reallink.pump.entities.TankTransaction.TransactionType;
@@ -64,6 +65,25 @@ public class TankTransactionService {
         transaction.setTank(tank);
         transaction.setTransactionType(TransactionType.ADDITION);
         transaction.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
+        if (transaction.getTransactionDate() == null) {
+            transaction.setTransactionDate(LocalDateTime.now());
+        }
+        TankTransaction saved = transactionRepository.save(transaction);
+        updateDailyTankLevel(saved);
+        return mapper.toResponse(saved);
+    }
+
+    @Transactional
+    public TankTransactionResponse createAdditionTransaction(@NotNull UUID tankId, @Valid CreateTankTransactionRequest request, FuelPurchase fuelPurchase) {
+        Tank tank = tankRepository.findById(tankId).orElse(null);
+        if (tank == null) {
+            throw new PumpBusinessException("TANK_NOT_FOUND", "Tank with ID " + tankId + " not found");
+        }
+        TankTransaction transaction = mapper.toEntity(request);
+        transaction.setTank(tank);
+        transaction.setTransactionType(TransactionType.ADDITION);
+        transaction.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
+        transaction.setFuelPurchase(fuelPurchase);
         if (transaction.getTransactionDate() == null) {
             transaction.setTransactionDate(LocalDateTime.now());
         }

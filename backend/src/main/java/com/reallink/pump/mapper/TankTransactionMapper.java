@@ -20,6 +20,8 @@ public interface TankTransactionMapper {
 
     @Mapping(target = "tankId", source = "tank.id")
     @Mapping(target = "tankName", source = "tank.tankName")
+    @Mapping(target = "fuelPurchaseId", source = "fuelPurchase.id")
+    @Mapping(target = "fuelPurchaseInvoiceNumber", source = "fuelPurchase.invoiceNumber")
     TankTransactionResponse toResponse(TankTransaction entity);
 
     List<TankTransactionResponse> toResponseList(List<TankTransaction> entities);

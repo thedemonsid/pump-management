@@ -58,6 +58,10 @@ public class TankTransaction extends BaseEntity {
     @Column(name = "invoice_number", length = 50)
     private String invoiceNumber;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "fuel_purchase_id", foreignKey = @ForeignKey(name = "fk_tank_transaction_fuel_purchase"))
+    private FuelPurchase fuelPurchase;
+
     public enum TransactionType {
         ADDITION, // Fuel added to tank
         REMOVAL   // Fuel removed from tank (e.g., for sales, transfers)

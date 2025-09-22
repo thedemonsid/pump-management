@@ -43,6 +43,12 @@ public class TankTransactionResponse {
     @Schema(description = "Invoice number", example = "INV-2023-001")
     private String invoiceNumber;
 
+    @Schema(description = "Fuel purchase ID if transaction originated from fuel purchase", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID fuelPurchaseId;
+
+    @Schema(description = "Fuel purchase invoice number if transaction originated from fuel purchase", example = "FP-2023-001")
+    private String fuelPurchaseInvoiceNumber;
+
     @Schema(description = "Creation timestamp")
     private LocalDateTime createdAt;
 
