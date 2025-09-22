@@ -22,6 +22,9 @@ public interface DailyTankLevelRepository extends JpaRepository<DailyTankLevel, 
     Optional<DailyTankLevel> findLatestByTankIdAndDateBeforeOrEqual(@Param("tankId") UUID tankId, @Param("date") LocalDate date);
 
     @Modifying
-    @Query("UPDATE DailyTankLevel dtl SET dtl.closingLevel = :closingLevel WHERE dtl.tank.id = :tankId AND dtl.date = :date")
-    int updateClosingLevel(@Param("tankId") UUID tankId, @Param("date") LocalDate date, @Param("closingLevel") BigDecimal closingLevel);
+    @Query("UPDATE DailyTankLevel dtl SET dtl.dailyNet = :dailyNet WHERE dtl.tank.id = :tankId AND dtl.date = :date")
+    int updateDailyNet(@Param("tankId") UUID tankId, @Param("date") LocalDate date, @Param("dailyNet") BigDecimal dailyNet);
+
+    @Query("SELECT COALESCE(SUM(dtl.dailyNet), 0) FROM DailyTankLevel dtl WHERE dtl.tank.id = :tankId AND dtl.date <= :date")
+    BigDecimal getCumulativeNetUpToDate(@Param("tankId") UUID tankId, @Param("date") LocalDate date);
 }

@@ -46,7 +46,8 @@ export function CreateTankForm({ onSuccess }: CreateTankFormProps) {
       pumpMasterId: DEFAULT_PUMP_INFO.id,
       tankName: '',
       capacity: 0,
-      currentLevel: 0,
+      openingLevel: 0,
+      openingLevelDate: new Date().toISOString().split('T')[0],
       lowLevelAlert: 0,
       tankLocation: '',
       productId: '',
@@ -114,10 +115,10 @@ export function CreateTankForm({ onSuccess }: CreateTankFormProps) {
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="currentLevel"
+            name="openingLevel"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Current Level (Liters)</FormLabel>
+                <FormLabel>Opening Level (Liters)</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -130,13 +131,32 @@ export function CreateTankForm({ onSuccess }: CreateTankFormProps) {
                   />
                 </FormControl>
                 <FormDescription>
-                  Current fuel level in the tank
+                  Opening fuel level in the tank
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
 
+          <FormField
+            control={form.control}
+            name="openingLevelDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Opening Level Date</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormDescription>
+                  Date when the opening level was recorded
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="lowLevelAlert"

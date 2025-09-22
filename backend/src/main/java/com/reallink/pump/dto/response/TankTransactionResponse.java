@@ -19,11 +19,17 @@ public class TankTransactionResponse {
     @Schema(description = "Tank ID", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID tankId;
 
+    @Schema(description = "Tank name", example = "Tank 1 - Premium")
+    private String tankName;
+
     @Schema(description = "Transaction type", example = "ADDITION")
     private TankTransaction.TransactionType transactionType;
 
-    @Schema(description = "Transaction amount", example = "1000.00")
-    private BigDecimal amount;
+    @Schema(description = "Transaction volume", example = "1000.00")
+    private BigDecimal volume;
+
+    @Schema(description = "Transaction description", example = "Fuel purchase from supplier")
+    private String description;
 
     @Schema(description = "Entry by user", example = "admin")
     private String entryBy;
@@ -31,6 +37,15 @@ public class TankTransactionResponse {
     @Schema(description = "Transaction date and time", example = "2023-12-01T10:30:00")
     private LocalDateTime transactionDate;
 
-    @Schema(description = "Transaction remarks", example = "Fuel delivery from supplier")
-    private String remarks;
+    @Schema(description = "Supplier name", example = "ABC Fuel Suppliers")
+    private String supplierName;
+
+    @Schema(description = "Invoice number", example = "INV-2023-001")
+    private String invoiceNumber;
+
+    @Schema(description = "Creation timestamp")
+    private LocalDateTime createdAt;
+
+    @Schema(description = "Last update timestamp")
+    private LocalDateTime updatedAt;
 }

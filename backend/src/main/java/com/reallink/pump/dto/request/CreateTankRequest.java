@@ -31,11 +31,6 @@ public class CreateTankRequest {
     @Schema(description = "Tank capacity in litres", example = "5000.00", required = true)
     private BigDecimal capacity;
 
-    @DecimalMin(value = "0.0", message = "Current level cannot be negative")
-    @Digits(integer = 10, fraction = 2, message = "Current level must have at most 10 digits and 2 decimal places")
-    @Schema(description = "Current level in litres", example = "2500.00")
-    private BigDecimal currentLevel;
-
     @NotNull(message = "Opening level is required")
     @DecimalMin(value = "0.00", message = "Opening level must be greater than or equal to 0.00")
     @Digits(integer = 10, fraction = 2, message = "Opening level must have at most 10 digits and 2 decimal places")

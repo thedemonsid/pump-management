@@ -86,6 +86,9 @@ public class Tank extends BaseEntity {
     @OneToMany(mappedBy = "tank", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Nozzle> nozzles = new HashSet<>();
 
+    @OneToMany(mappedBy = "tank", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TankTransaction> transactions = new HashSet<>();
+
     public Tank(String tankName, BigDecimal capacity, String tankLocation, Product product, PumpInfoMaster pumpMaster) {
         this.tankName = tankName;
         this.capacity = capacity;

@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -43,8 +44,14 @@ public class TankTransactionService {
         return mapper.toResponseList(transactions);
     }
 
-    public BigDecimal getLevelChangeByTankId(@NotNull UUID tankId) {
-        return transactionRepository.getLevelChangeByTankId(tankId);
+    public List<TankTransactionResponse> getTransactionsByTankIdAndDateRange(
+            UUID tankId, LocalDate fromDate, LocalDate toDate) {
+        List<TankTransaction> transactions = transactionRepository
+                .findByTankIdAndTransactionDateBetweenOrderByTransactionDateAsc(
+                        tankId, fromDate.atStartOfDay(), toDate.atTime(23, 59, 59));
+        return transactions.stream()
+                .map(mapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -85,14 +92,12 @@ public class TankTransactionService {
 
     private void updateDailyTankLevel(TankTransaction transaction) {
         LocalDate date = transaction.getTransactionDate().toLocalDate();
-        BigDecimal levelChange = transactionRepository.getLevelChangeByTankIdAndDate(transaction.getTank().getId(), transaction.getTransactionDate());
-        BigDecimal closingLevel = transaction.getTank().getOpeningLevel().add(levelChange);
-
+        BigDecimal dailyNet = transactionRepository.getDailyNetByTankIdAndDate(transaction.getTank().getId(), date);
         DailyTankLevel dailyLevel = dailyTankLevelRepository.findByTank_IdAndDate(transaction.getTank().getId(), date)
                 .orElse(new DailyTankLevel());
         dailyLevel.setTank(transaction.getTank());
         dailyLevel.setDate(date);
-        dailyLevel.setClosingLevel(closingLevel);
+        dailyLevel.setDailyNet(dailyNet);
         dailyTankLevelRepository.save(dailyLevel);
     }
 }

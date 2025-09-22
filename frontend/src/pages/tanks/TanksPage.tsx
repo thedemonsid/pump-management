@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTankStore } from '@/store/tank-store';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, FileText } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -31,6 +32,7 @@ import { UpdateTankForm } from './UpdateTankForm';
 import type { Tank } from '@/types';
 
 export function TanksPage() {
+  const navigate = useNavigate();
   const { tanks, loading, error, fetchTanks, removeTank } = useTankStore();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -221,6 +223,14 @@ export function TanksPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => navigate(`/tanks/${tank.id}/ledger`)}
+                          title="View Ledger"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"

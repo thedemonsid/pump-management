@@ -46,7 +46,9 @@ export function UpdateTankForm({ tank, onSuccess }: UpdateTankFormProps) {
     defaultValues: {
       tankName: tank.tankName,
       capacity: tank.capacity,
-      currentLevel: tank.currentLevel || 0,
+      openingLevel: tank.openingLevel || 0,
+      openingLevelDate:
+        tank.openingLevelDate || new Date().toISOString().split('T')[0],
       lowLevelAlert: tank.lowLevelAlert || 0,
       tankLocation: tank.tankLocation || '',
       productId: tank.productId,
@@ -113,10 +115,10 @@ export function UpdateTankForm({ tank, onSuccess }: UpdateTankFormProps) {
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="currentLevel"
+            name="openingLevel"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Current Level (Liters)</FormLabel>
+                <FormLabel>Opening Level (Liters)</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -129,13 +131,32 @@ export function UpdateTankForm({ tank, onSuccess }: UpdateTankFormProps) {
                   />
                 </FormControl>
                 <FormDescription>
-                  Current fuel level in the tank
+                  Opening fuel level in the tank
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
 
+          <FormField
+            control={form.control}
+            name="openingLevelDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Opening Level Date</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormDescription>
+                  Date when the opening level was recorded
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="lowLevelAlert"

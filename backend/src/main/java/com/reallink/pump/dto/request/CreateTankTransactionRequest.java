@@ -13,15 +13,24 @@ import lombok.Data;
 @Schema(description = "Request DTO for creating a tank transaction")
 public class CreateTankTransactionRequest {
 
-    @NotNull(message = "Amount is required")
-    @DecimalMin(value = "0.00", inclusive = false, message = "Amount must be positive")
-    @Schema(description = "Transaction amount", example = "1000.00", required = true)
-    private BigDecimal amount;
+    @NotNull(message = "Volume is required")
+    @DecimalMin(value = "0.01", message = "Volume must be greater than 0.00")
+    @Schema(description = "Transaction volume", example = "1000.00", required = true)
+    private BigDecimal volume;
+
+    @NotNull(message = "Description is required")
+    @Size(min = 1, max = 255, message = "Description must be between 1 and 255 characters")
+    @Schema(description = "Transaction description", example = "Fuel purchase from supplier", required = true)
+    private String description;
 
     @Schema(description = "Transaction date and time", example = "2023-12-01T10:30:00")
     private LocalDateTime transactionDate;
 
-    @Size(max = 255, message = "Remarks cannot exceed 255 characters")
-    @Schema(description = "Transaction remarks", example = "Fuel delivery from supplier")
-    private String remarks;
+    @Size(max = 100, message = "Supplier name cannot exceed 100 characters")
+    @Schema(description = "Supplier name", example = "ABC Fuel Suppliers")
+    private String supplierName;
+
+    @Size(max = 50, message = "Invoice number cannot exceed 50 characters")
+    @Schema(description = "Invoice number", example = "INV-2023-001")
+    private String invoiceNumber;
 }

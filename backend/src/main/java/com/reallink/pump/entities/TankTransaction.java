@@ -36,22 +36,27 @@ public class TankTransaction extends BaseEntity {
     @Column(name = "transaction_type", nullable = false, length = 10)
     private TransactionType transactionType;
 
-    @NotNull(message = "Amount is required")
-    @DecimalMin(value = "0.00", inclusive = false, message = "Amount must be positive")
-    @Column(name = "amount", nullable = false, precision = 12, scale = 2)
-    private BigDecimal amount;
+    @NotNull(message = "Volume is required")
+    @DecimalMin(value = "0.01", message = "Volume must be greater than 0.00")
+    @Column(name = "volume", nullable = false, precision = 12, scale = 2)
+    private BigDecimal volume;
 
-    @NotBlank(message = "Entry by is required")
-    @Size(min = 1, max = 100, message = "Entry by must be between 1 and 100 characters")
-    @Column(name = "entry_by", nullable = false, length = 100)
-    private String entryBy;
+    @NotBlank(message = "Description is required")
+    @Size(min = 1, max = 255, message = "Description must be between 1 and 255 characters")
+    @Column(name = "description", nullable = false, length = 255)
+    private String description;
 
+    @NotNull(message = "Transaction date is required")
     @Column(name = "transaction_date", nullable = false)
     private LocalDateTime transactionDate;
 
-    @Size(max = 255, message = "Remarks cannot exceed 255 characters")
-    @Column(name = "remarks", length = 255)
-    private String remarks;
+    @Size(max = 100, message = "Supplier name cannot exceed 100 characters")
+    @Column(name = "supplier_name", length = 100)
+    private String supplierName;
+
+    @Size(max = 50, message = "Invoice number cannot exceed 50 characters")
+    @Column(name = "invoice_number", length = 50)
+    private String invoiceNumber;
 
     public enum TransactionType {
         ADDITION, // Fuel added to tank

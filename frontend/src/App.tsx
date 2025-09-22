@@ -46,6 +46,7 @@ import { BillsPage } from './pages/bills/BillsPage';
 import { BillDetailPage } from './pages/bills/BillDetailPage';
 import { BillsDetailsPage } from './pages/bills/BillsDetailsPage';
 import { SalesmanBillsPage } from './pages/salesmen/SalesmanBillsPage';
+import { TankLedgerPage } from './pages/tanks/TankLedgerPage';
 import { ProductsReportPage } from '@/pages/ProductsReportPage';
 import { CustomersReportPage } from '@/pages/customers/CustomersReportPage';
 import { SuppliersReportPage } from '@/pages/suppliers/SuppliersReportPage';
@@ -113,6 +114,8 @@ export function MainHeader() {
           detailLabel = 'Nozzle Details';
         } else if (parentSegment === 'bank-accounts') {
           detailLabel = 'Bank Account Details';
+        } else if (parentSegment === 'tanks') {
+          detailLabel = 'Tank Details';
         } else if (parentSegment === 'bills') {
           detailLabel = 'Bill Details';
         } else if (parentSegment === 'salesman-bills') {
@@ -235,6 +238,10 @@ function App() {
                         element={<ProductsReportPage />}
                       />
                       <Route path="/tanks" element={<TanksPage />} />
+                      <Route
+                        path="/tanks/:id/ledger"
+                        element={<TankLedgerPage />}
+                      />
                       <Route path="/nozzles" element={<NozzlesPage />} />
                       <Route
                         path="/nozzles/:id"

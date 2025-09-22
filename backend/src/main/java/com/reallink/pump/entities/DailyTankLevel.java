@@ -11,7 +11,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -36,8 +35,7 @@ public class DailyTankLevel extends BaseEntity {
     @Column(name = "date", nullable = false)
     private LocalDate date;
 
-    @NotNull(message = "Closing level is required")
-    @DecimalMin(value = "0.00", message = "Closing level must be greater than or equal to 0.00")
-    @Column(name = "closing_level", nullable = false, precision = 12, scale = 2)
-    private BigDecimal closingLevel;
+    @NotNull(message = "Daily net is required")
+    @Column(name = "daily_net", nullable = false, precision = 12, scale = 2)
+    private BigDecimal dailyNet;
 }

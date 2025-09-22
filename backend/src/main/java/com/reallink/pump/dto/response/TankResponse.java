@@ -1,6 +1,7 @@
 package com.reallink.pump.dto.response;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -25,6 +26,12 @@ public class TankResponse {
 
     @Schema(description = "Current level in litres", example = "2500.00")
     private BigDecimal currentLevel;
+
+    @Schema(description = "Opening level in litres at opening date", example = "0.00")
+    private BigDecimal openingLevel;
+
+    @Schema(description = "Opening level date", example = "2023-12-01")
+    private LocalDate openingLevelDate;
 
     @Schema(description = "Low level alert threshold in litres", example = "500.00")
     private BigDecimal lowLevelAlert;

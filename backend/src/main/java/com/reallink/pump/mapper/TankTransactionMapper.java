@@ -4,15 +4,22 @@ import java.util.List;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.ReportingPolicy;
 
 import com.reallink.pump.dto.request.CreateTankTransactionRequest;
 import com.reallink.pump.dto.response.TankTransactionResponse;
 import com.reallink.pump.entities.TankTransaction;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+        componentModel = "spring",
+        unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+)
 public interface TankTransactionMapper {
 
     @Mapping(target = "tankId", source = "tank.id")
+    @Mapping(target = "tankName", source = "tank.tankName")
     TankTransactionResponse toResponse(TankTransaction entity);
 
     List<TankTransactionResponse> toResponseList(List<TankTransaction> entities);

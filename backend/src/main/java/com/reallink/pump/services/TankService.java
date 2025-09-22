@@ -3,7 +3,6 @@ package com.reallink.pump.services;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -15,7 +14,6 @@ import org.springframework.validation.annotation.Validated;
 import com.reallink.pump.dto.request.CreateTankRequest;
 import com.reallink.pump.dto.request.UpdateTankRequest;
 import com.reallink.pump.dto.response.TankResponse;
-import com.reallink.pump.entities.DailyTankLevel;
 import com.reallink.pump.entities.Product;
 import com.reallink.pump.entities.PumpInfoMaster;
 import com.reallink.pump.entities.Tank;
@@ -83,9 +81,6 @@ public class TankService {
         Tank tank = mapper.toEntity(request);
         tank.setProduct(product);
         tank.setPumpMaster(pumpMaster);
-        if (tank.getCurrentLevel() == null) {
-            tank.setCurrentLevel(BigDecimal.ZERO);
-        }
         Tank savedTank = repository.save(tank);
         return mapper.toResponse(savedTank);
     }
@@ -110,12 +105,7 @@ public class TankService {
     }
 
     private void setCurrentLevel(TankResponse response, Tank tank) {
-        Optional<DailyTankLevel> latestLevel = dailyTankLevelRepository.findLatestByTankIdAndDateBeforeOrEqual(tank.getId(), LocalDate.now());
-        if (latestLevel.isPresent()) {
-            response.setCurrentLevel(latestLevel.get().getClosingLevel());
-        } else {
-            // Fallback to opening level if no transactions
-            response.setCurrentLevel(tank.getOpeningLevel());
-        }
+        BigDecimal cumulativeNetUpToToday = dailyTankLevelRepository.getCumulativeNetUpToDate(tank.getId(), LocalDate.now());
+        response.setCurrentLevel(tank.getOpeningLevel().add(cumulativeNetUpToToday));
     }
 }

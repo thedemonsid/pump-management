@@ -10,6 +10,11 @@ export const TankSchema = z.object({
     .min(2, 'Tank name must be at least 2 characters')
     .max(100, 'Tank name cannot exceed 100 characters'),
   capacity: z.number().positive('Capacity must be positive'),
+  openingLevel: z
+    .number()
+    .min(0, 'Opening level must be greater than or equal to 0')
+    .optional(),
+  openingLevelDate: z.string().optional(),
   currentLevel: z
     .number()
     .min(0, 'Current level cannot be negative')
@@ -32,15 +37,26 @@ export const TankSchema = z.object({
   updatedAt: z.string().optional(),
 });
 
-export const CreateTankSchema = TankSchema.omit({
-  id: true,
-  product: true,
-  nozzleCount: true,
-  availableCapacity: true,
-  fillPercentage: true,
-  isLowLevel: true,
-  createdAt: true,
-  updatedAt: true,
+export const CreateTankSchema = z.object({
+  pumpMasterId: z.string(),
+  tankName: z
+    .string()
+    .min(2, 'Tank name must be at least 2 characters')
+    .max(100, 'Tank name cannot exceed 100 characters'),
+  capacity: z.number().positive('Capacity must be positive'),
+  openingLevel: z
+    .number()
+    .min(0, 'Opening level must be greater than or equal to 0'),
+  openingLevelDate: z.string(),
+  lowLevelAlert: z
+    .number()
+    .min(0, 'Low level alert cannot be negative')
+    .optional(),
+  tankLocation: z
+    .string()
+    .max(50, 'Tank location cannot exceed 50 characters')
+    .optional(),
+  productId: z.string(),
 });
 
 export const UpdateTankSchema = CreateTankSchema.partial();

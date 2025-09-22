@@ -1,6 +1,7 @@
 package com.reallink.pump.repositories;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -17,11 +18,17 @@ public interface TankTransactionRepository extends JpaRepository<TankTransaction
 
     List<TankTransaction> findByTankIdOrderByTransactionDateDesc(UUID tankId);
 
-    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.reallink.pump.entities.TankTransaction.TransactionType.ADDITION THEN t.amount ELSE -t.amount END), 0) "
+    List<TankTransaction> findByTankIdAndTransactionDateBetweenOrderByTransactionDateAsc(UUID tankId, LocalDateTime fromDateTime, LocalDateTime toDateTime);
+
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.reallink.pump.entities.TankTransaction.TransactionType.ADDITION THEN t.volume ELSE -t.volume END), 0) "
             + "FROM TankTransaction t WHERE t.tank.id = :tankId")
     BigDecimal getLevelChangeByTankId(@Param("tankId") UUID tankId);
 
-    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.reallink.pump.entities.TankTransaction.TransactionType.ADDITION THEN t.amount ELSE -t.amount END), 0) "
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.reallink.pump.entities.TankTransaction.TransactionType.ADDITION THEN t.volume ELSE -t.volume END), 0) "
             + "FROM TankTransaction t WHERE t.tank.id = :tankId AND DATE(t.transactionDate) <= :date")
     BigDecimal getLevelChangeByTankIdAndDate(@Param("tankId") UUID tankId, @Param("date") LocalDateTime date);
+
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.reallink.pump.entities.TankTransaction.TransactionType.ADDITION THEN t.volume ELSE -t.volume END), 0) "
+            + "FROM TankTransaction t WHERE t.tank.id = :tankId AND DATE(t.transactionDate) = :date")
+    BigDecimal getDailyNetByTankIdAndDate(@Param("tankId") UUID tankId, @Param("date") LocalDate date);
 }

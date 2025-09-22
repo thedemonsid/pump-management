@@ -27,7 +27,6 @@ public interface TankMapper {
     @Mapping(target = "pumpMaster.id", source = "pumpMasterId")
     @Mapping(target = "product", ignore = true)
     @Mapping(target = "nozzles", ignore = true)
-    @Mapping(target = "currentLevel", defaultValue = "0.0")
     Tank toEntity(CreateTankRequest request);
 
     /**

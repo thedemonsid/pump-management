@@ -2,6 +2,7 @@
 export * from './common';
 export * from './product';
 export * from './tank';
+export * from './tank-transaction';
 export * from './nozzle';
 export * from './nozzle-shift';
 export * from './salesman';
