@@ -29,6 +29,7 @@ export const BankAccountSchema = z.object({
   currentBalance: z
     .number()
     .min(0, 'Current balance must be non-negative')
+    .nullable()
     .optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
