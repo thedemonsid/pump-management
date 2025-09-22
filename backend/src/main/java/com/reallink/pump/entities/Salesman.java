@@ -78,9 +78,6 @@ public class Salesman extends BaseEntity {
     private Boolean active = true;
 
     @OneToMany(mappedBy = "salesman", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private Set<SalesmanShift> shifts = new HashSet<>();
-
-    @OneToMany(mappedBy = "salesman", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<NozzleShift> nozzleShifts = new HashSet<>();
 
     public Salesman(String name, String employeeId) {

@@ -47,11 +47,6 @@ public class NozzleReading extends BaseEntity {
     @JoinColumn(name = "nozzle_id", nullable = false, foreignKey = @ForeignKey(name = "fk_reading_nozzle"))
     private Nozzle nozzle;
 
-    @NotNull(message = "Salesman shift is required")
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "salesman_shift_id", nullable = false, foreignKey = @ForeignKey(name = "fk_reading_salesman_shift"))
-    private SalesmanShift salesmanShift;
-
     @NotNull(message = "Opening reading is required")
     @DecimalMin(value = "0.0", message = "Opening reading cannot be negative")
     @Digits(integer = 12, fraction = 3, message = "Opening reading must have at most 12 digits and 3 decimal places")
@@ -81,14 +76,6 @@ public class NozzleReading extends BaseEntity {
     @Size(max = 20, message = "Status cannot exceed 20 characters")
     @Column(name = "status", nullable = false, length = 20, columnDefinition = "VARCHAR(20) DEFAULT 'OPEN'")
     private String status = "OPEN"; // OPEN, CLOSED
-
-    public NozzleReading(Nozzle nozzle, SalesmanShift salesmanShift, BigDecimal openingReading) {
-        this.nozzle = nozzle;
-        this.salesmanShift = salesmanShift;
-        this.openingReading = openingReading;
-        this.readingTime = LocalDateTime.now();
-        this.status = "OPEN";
-    }
 
     // Business methods
     public void closeReading(BigDecimal closingReading) {

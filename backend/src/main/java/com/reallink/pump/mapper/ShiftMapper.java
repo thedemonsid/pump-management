@@ -23,7 +23,6 @@ public interface ShiftMapper {
     /**
      * Maps CreateShiftRequest to Shift entity
      */
-    @Mapping(target = "salesmanShifts", ignore = true)
     @Mapping(target = "active", constant = "true")
     @Mapping(target = "pumpMaster.id", source = "pumpMasterId")
     Shift toEntity(CreateShiftRequest request);
@@ -48,7 +47,6 @@ public interface ShiftMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "version", ignore = true)
-    @Mapping(target = "salesmanShifts", ignore = true)
     void updateEntity(UpdateShiftRequest request, @MappingTarget Shift entity);
 
     /**
@@ -58,6 +56,5 @@ public interface ShiftMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "version", ignore = true)
-    @Mapping(target = "salesmanShifts", ignore = true)
     void partialUpdate(CreateShiftRequest request, @MappingTarget Shift entity);
 }

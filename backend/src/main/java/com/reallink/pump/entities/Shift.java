@@ -1,10 +1,7 @@
 package com.reallink.pump.entities;
 
 import java.time.LocalTime;
-import java.util.HashSet;
-import java.util.Set;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -12,7 +9,6 @@ import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -61,9 +57,6 @@ public class Shift extends BaseEntity {
 
     @Column(name = "active", nullable = false, columnDefinition = "BOOLEAN DEFAULT true")
     private Boolean active = true;
-
-    @OneToMany(mappedBy = "shift", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private Set<SalesmanShift> salesmanShifts = new HashSet<>();
 
     public Shift(String name, LocalTime startTime, LocalTime endTime) {
         this.name = name;

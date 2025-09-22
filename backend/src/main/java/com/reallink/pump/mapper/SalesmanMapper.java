@@ -19,7 +19,6 @@ public interface SalesmanMapper {
     /**
      * Maps CreateSalesmanRequest to Salesman entity
      */
-    @Mapping(target = "shifts", ignore = true)
     @Mapping(target = "active", constant = "true")
     @Mapping(target = "pumpMaster.id", source = "pumpMasterId")
     Salesman toEntity(CreateSalesmanRequest request);
@@ -45,7 +44,6 @@ public interface SalesmanMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "version", ignore = true)
-    @Mapping(target = "shifts", ignore = true)
     void updateEntity(UpdateSalesmanRequest request, @MappingTarget Salesman entity);
 
     /**
@@ -55,6 +53,5 @@ public interface SalesmanMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "version", ignore = true)
-    @Mapping(target = "shifts", ignore = true)
     void partialUpdate(CreateSalesmanRequest request, @MappingTarget Salesman entity);
 }

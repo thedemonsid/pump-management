@@ -22,11 +22,9 @@ public interface NozzleReadingMapper {
 
     /**
      * Maps CreateNozzleReadingRequest to NozzleReading entity Nozzle and
-     * SalesmanShift relationships should be set separately in the service layer
      */
     @Mapping(target = "pumpMaster.id", source = "pumpMasterId")
     @Mapping(target = "nozzle", ignore = true)
-    @Mapping(target = "salesmanShift", ignore = true)
     @Mapping(target = "closingReading", ignore = true)
     @Mapping(target = "volumeDispensed", ignore = true)
     @Mapping(target = "amountCollected", ignore = true)
@@ -43,11 +41,6 @@ public interface NozzleReadingMapper {
     @Mapping(target = "previousReading", source = "nozzle.previousReading")
     @Mapping(target = "difference", expression = "java(entity.getVolumeDispensed() != null ? entity.getVolumeDispensed() : java.math.BigDecimal.ZERO)")
     @Mapping(target = "readingDateTime", source = "readingTime")
-    @Mapping(target = "salesman.id", source = "salesmanShift.salesman.id")
-    @Mapping(target = "salesman.name", source = "salesmanShift.salesman.name")
-    @Mapping(target = "salesman.employeeId", source = "salesmanShift.salesman.employeeId")
-    @Mapping(target = "shift.id", source = "salesmanShift.shift.id")
-    @Mapping(target = "shift.name", source = "salesmanShift.shift.name")
     NozzleReadingResponse toResponse(NozzleReading entity);
 
     /**
@@ -64,7 +57,6 @@ public interface NozzleReadingMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "version", ignore = true)
     @Mapping(target = "nozzle", ignore = true)
-    @Mapping(target = "salesmanShift", ignore = true)
     @Mapping(target = "openingReading", ignore = true)
     void updateEntity(UpdateNozzleReadingRequest request, @MappingTarget NozzleReading entity);
 
@@ -77,6 +69,5 @@ public interface NozzleReadingMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "version", ignore = true)
     @Mapping(target = "nozzle", ignore = true)
-    @Mapping(target = "salesmanShift", ignore = true)
     void partialUpdate(CreateNozzleReadingRequest request, @MappingTarget NozzleReading entity);
 }

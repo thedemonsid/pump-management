@@ -1,8 +1,6 @@
 package com.reallink.pump.repositories;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,15 +17,7 @@ public interface NozzleReadingRepository extends JpaRepository<NozzleReading, UU
 
     List<NozzleReading> findByPumpMaster_PumpCode(String pumpCode);
 
-    Optional<NozzleReading> findByNozzle_IdAndSalesmanShift_IdAndReadingTimeAndPumpMaster_Id(UUID nozzleId, UUID salesmanShiftId, LocalDateTime readingTime, UUID pumpMasterId);
-
-    boolean existsByNozzle_IdAndSalesmanShift_IdAndReadingTimeAndPumpMaster_Id(UUID nozzleId, UUID salesmanShiftId, LocalDateTime readingTime, UUID pumpMasterId);
-
-    boolean existsByNozzle_IdAndSalesmanShift_IdAndReadingTimeAndPumpMaster_IdAndIdNot(UUID nozzleId, UUID salesmanShiftId, LocalDateTime readingTime, UUID pumpMasterId, UUID id);
-
     List<NozzleReading> findByNozzle_Id(UUID nozzleId);
-
-    List<NozzleReading> findBySalesmanShift_Id(UUID salesmanShiftId);
 
     List<NozzleReading> findByStatus(String status);
 
@@ -35,19 +25,6 @@ public interface NozzleReadingRepository extends JpaRepository<NozzleReading, UU
 
     @Query("SELECT nr FROM NozzleReading nr WHERE LOWER(nr.nozzle.nozzleName) LIKE LOWER(CONCAT('%', :nozzleName, '%'))")
     List<NozzleReading> findByNozzleNameContainingIgnoreCase(@Param("nozzleName") String nozzleName);
-
-    @Query("SELECT nr FROM NozzleReading nr WHERE LOWER(nr.salesmanShift.salesman.name) LIKE LOWER(CONCAT('%', :salesmanName, '%'))")
-    List<NozzleReading> findBySalesmanNameContainingIgnoreCase(@Param("salesmanName") String salesmanName);
-
-    @Query("SELECT nr FROM NozzleReading nr WHERE "
-            + "(:nozzleId IS NULL OR nr.nozzle.id = :nozzleId) AND "
-            + "(:salesmanShiftId IS NULL OR nr.salesmanShift.id = :salesmanShiftId) AND "
-            + "(:status IS NULL OR nr.status = :status) AND "
-            + "(:pumpMasterId IS NULL OR nr.pumpMaster.id = :pumpMasterId)")
-    List<NozzleReading> findBySearchCriteria(@Param("nozzleId") UUID nozzleId,
-            @Param("salesmanShiftId") UUID salesmanShiftId,
-            @Param("status") String status,
-            @Param("pumpMasterId") UUID pumpMasterId);
 
     @Query("SELECT COUNT(nr) FROM NozzleReading nr WHERE nr.pumpMaster.id = :pumpMasterId")
     long countByPumpMasterId(@Param("pumpMasterId") UUID pumpMasterId);

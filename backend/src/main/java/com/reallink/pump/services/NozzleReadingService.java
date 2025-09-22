@@ -53,9 +53,6 @@ public class NozzleReadingService {
         if (nozzle == null) {
             throw new IllegalArgumentException("Invalid nozzleId: " + request.getNozzleId());
         }
-        // Fetch the SalesmanShift entity (assuming we need to find by salesmanId and shiftId, but for simplicity, if salesmanId and shiftId are provided, find by them)
-        // For now, assume salesmanShift is fetched separately or set later
-        // Fetch PumpInfoMaster
         PumpInfoMaster pumpMaster = pumpInfoMasterRepository.findById(request.getPumpMasterId()).orElse(null);
         if (pumpMaster == null) {
             throw new IllegalArgumentException("Invalid pumpMasterId: " + request.getPumpMasterId());
@@ -64,7 +61,6 @@ public class NozzleReadingService {
         nozzleReading.setNozzle(nozzle);
         nozzleReading.setPumpMaster(pumpMaster);
         nozzleReading.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
-        // Set salesmanShift if needed
         NozzleReading savedNozzleReading = repository.save(nozzleReading);
         return mapper.toResponse(savedNozzleReading);
     }

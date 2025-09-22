@@ -17,11 +17,11 @@ public interface BankTransactionRepository extends JpaRepository<BankTransaction
 
     List<BankTransaction> findByBankAccountIdOrderByTransactionDateDesc(UUID bankAccountId);
 
-    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = 'CREDIT' THEN t.amount ELSE -t.amount END), 0) "
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.reallink.pump.entities.BankTransaction.TransactionType.CREDIT THEN t.amount ELSE -t.amount END), 0) "
             + "FROM BankTransaction t WHERE t.bankAccount.id = :bankAccountId")
     BigDecimal getBalanceByBankAccountId(@Param("bankAccountId") UUID bankAccountId);
 
-    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = 'CREDIT' THEN t.amount ELSE -t.amount END), 0) "
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.reallink.pump.entities.BankTransaction.TransactionType.CREDIT THEN t.amount ELSE -t.amount END), 0) "
             + "FROM BankTransaction t WHERE t.bankAccount.id = :bankAccountId AND DATE(t.transactionDate) <= :date")
     BigDecimal getBalanceByBankAccountIdAndDate(@Param("bankAccountId") UUID bankAccountId, @Param("date") LocalDate date);
 }

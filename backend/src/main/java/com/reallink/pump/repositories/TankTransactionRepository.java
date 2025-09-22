@@ -17,11 +17,11 @@ public interface TankTransactionRepository extends JpaRepository<TankTransaction
 
     List<TankTransaction> findByTankIdOrderByTransactionDateDesc(UUID tankId);
 
-    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = 'ADDITION' THEN t.amount ELSE -t.amount END), 0) "
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.reallink.pump.entities.TankTransaction.TransactionType.ADDITION THEN t.amount ELSE -t.amount END), 0) "
             + "FROM TankTransaction t WHERE t.tank.id = :tankId")
     BigDecimal getLevelChangeByTankId(@Param("tankId") UUID tankId);
 
-    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = 'ADDITION' THEN t.amount ELSE -t.amount END), 0) "
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.reallink.pump.entities.TankTransaction.TransactionType.ADDITION THEN t.amount ELSE -t.amount END), 0) "
             + "FROM TankTransaction t WHERE t.tank.id = :tankId AND DATE(t.transactionDate) <= :date")
     BigDecimal getLevelChangeByTankIdAndDate(@Param("tankId") UUID tankId, @Param("date") LocalDateTime date);
 }
