@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.reallink.pump.entities.ProductType;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -16,6 +18,9 @@ public class ProductResponse {
 
     @Schema(description = "Pump Master ID", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID pumpMasterId;
+
+    @Schema(description = "Product type", example = "FUEL")
+    private ProductType productType;
 
     @Schema(description = "Product name", example = "Premium Gasoline")
     private String productName;

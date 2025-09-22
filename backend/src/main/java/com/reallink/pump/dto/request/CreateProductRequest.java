@@ -3,6 +3,8 @@ package com.reallink.pump.dto.request;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import com.reallink.pump.entities.ProductType;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -19,6 +21,10 @@ public class CreateProductRequest {
     @NotNull(message = "Pump Master ID is required")
     @Schema(description = "Pump Master ID this product belongs to", example = "123e4567-e89b-12d3-a456-426614174000", required = true)
     private UUID pumpMasterId;
+
+    @NotNull(message = "Product type is required")
+    @Schema(description = "Product type", example = "FUEL", required = true)
+    private ProductType productType;
 
     @NotBlank(message = "Product name is required")
     @Size(min = 2, max = 100, message = "Product name must be between 2 and 100 characters")
