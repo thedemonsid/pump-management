@@ -22,6 +22,19 @@ export const AuthContext = createContext<AuthContextType | undefined>(
   undefined
 );
 
+// Global reference to logout function for API interceptor
+let globalLogout: (() => void) | null = null;
+
+export function setGlobalLogout(logoutFn: () => void) {
+  globalLogout = logoutFn;
+}
+
+export function handleTokenExpiration() {
+  if (globalLogout) {
+    globalLogout();
+  }
+}
+
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

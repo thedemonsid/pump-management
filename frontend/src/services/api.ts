@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { handleTokenExpiration } from '@/hooks/useAuth';
 const nodeEnv = import.meta.env.VITE_NODE_ENV || null;
 console.log('Current NODE_ENV:', nodeEnv);
 // Create axios instance with base URL from environment
@@ -41,6 +42,17 @@ api.interceptors.response.use(
 
     if (error.response) {
       // Server responded with error status
+      if (error.response.status === 401) {
+        // Token expired or invalid - logout and redirect to login
+        console.log('Token expired or invalid, logging out...');
+        handleTokenExpiration();
+        // Redirect to login page
+        window.location.href = '/login';
+        return Promise.reject(
+          new Error('Authentication expired. Please log in again.')
+        );
+      }
+
       const message =
         error.response.data?.message ||
         error.response.statusText ||

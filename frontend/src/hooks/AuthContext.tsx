@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AuthContext } from './useAuth';
+import { AuthContext, setGlobalLogout } from './useAuth';
 import type { AuthContextType, User } from './useAuth';
 
 interface AuthProviderProps {
@@ -45,6 +45,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
   };
+
+  // Set global logout function for API interceptor
+  useEffect(() => {
+    setGlobalLogout(logout);
+  }, []);
 
   const value: AuthContextType = {
     user,
