@@ -75,6 +75,7 @@ export const BankTransactionSchema = z.object({
     .min(1, 'Description is required')
     .max(255, 'Description cannot exceed 255 characters'),
   transactionDate: z.string().optional(),
+  entryBy: z.string().optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });
@@ -89,6 +90,7 @@ export const CreateBankTransactionSchema = z.object({
     .min(1, 'Description is required')
     .max(255, 'Description cannot exceed 255 characters'),
   transactionDate: z.string().optional(),
+  entryBy: z.string().optional(),
 });
 
 export const TransactionFormSchema = z.object({

@@ -40,4 +40,7 @@ public class BankTransactionResponse {
 
     @Schema(description = "Last update timestamp", example = "2023-10-01T12:00:00")
     private LocalDateTime updatedAt;
+
+    @Schema(description = "Entry by", example = "admin")
+    private String entryBy;
 }

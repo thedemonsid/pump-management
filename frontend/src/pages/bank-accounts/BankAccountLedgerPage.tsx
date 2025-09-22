@@ -448,13 +448,14 @@ export function BankAccountLedgerPage() {
                       <TableHead className="font-semibold">
                         Description
                       </TableHead>
+                      <TableHead className="font-semibold">Entry By</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {ledgerData.length === 0 ? (
                       <TableRow>
                         <TableCell
-                          colSpan={6}
+                          colSpan={7}
                           className="text-center py-8 text-muted-foreground"
                         >
                           No transactions found for the selected date range.
@@ -490,6 +491,9 @@ export function BankAccountLedgerPage() {
                           </TableCell>
                           <TableCell className="text-sm max-w-xs truncate">
                             {entry.description}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {entry.entryBy || '-'}
                           </TableCell>
                         </TableRow>
                       ))
