@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "pump_nozzle_shift", indexes = {
+@Table(name = "pump_nozzle_shift_master", indexes = {
     @Index(name = "idx_nozzle_shift_date", columnList = "shift_date"),
     @Index(name = "idx_nozzle_shift_nozzle", columnList = "nozzle_id"),
     @Index(name = "idx_nozzle_shift_salesman", columnList = "salesman_id")

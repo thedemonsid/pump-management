@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "pump_customer_bill_payment", uniqueConstraints = {
+@Table(name = "pump_customer_bill_payment_master", uniqueConstraints = {
     @UniqueConstraint(name = "uk_payment_reference_bank_transaction", columnNames = {"reference_number", "bank_transaction_id"})
 })
 @Getter

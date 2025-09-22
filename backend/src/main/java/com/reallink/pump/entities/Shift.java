@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "pump_shift", uniqueConstraints = {
+@Table(name = "pump_shift_master", uniqueConstraints = {
     @jakarta.persistence.UniqueConstraint(name = "uk_shift_name_pump", columnNames = {"name", "pump_master_id"})
 }, indexes = {
     @Index(name = "idx_shift_name", columnList = "name"),

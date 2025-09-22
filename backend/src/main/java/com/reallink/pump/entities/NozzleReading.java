@@ -22,10 +22,9 @@ import lombok.Setter;
 
 @Entity
 @Table(
-        name = "pump_nozzle_reading",
+        name = "pump_nozzle_reading_master",
         indexes = {
             @Index(name = "idx_nozzle_id", columnList = "nozzle_id"),
-            @Index(name = "idx_salesman_shift_id", columnList = "salesman_shift_id"),
             @Index(name = "idx_reading_time", columnList = "reading_time"),
             @Index(name = "idx_pump_master_id_reading", columnList = "pump_master_id"),
             @Index(name = "idx_status", columnList = "status")

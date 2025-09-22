@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "pump_bank_transaction")
+@Table(name = "pump_bank_transaction_master")
 @Getter
 @Setter
 @NoArgsConstructor

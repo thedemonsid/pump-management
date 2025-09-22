@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "pump_bank_account", uniqueConstraints = {
+@Table(name = "pump_bank_account_master", uniqueConstraints = {
     @UniqueConstraint(name = "uk_account_number_pump", columnNames = {"account_number", "pump_master_id"}),})
 @Getter
 @Setter

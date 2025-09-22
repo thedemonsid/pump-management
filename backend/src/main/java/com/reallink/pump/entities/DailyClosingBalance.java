@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "pump_daily_closing_balance", uniqueConstraints = {
+@Table(name = "pump_daily_closing_balance_master", uniqueConstraints = {
     @UniqueConstraint(name = "uk_bank_account_date", columnNames = {"bank_account_id", "date"})})
 @Getter
 @Setter

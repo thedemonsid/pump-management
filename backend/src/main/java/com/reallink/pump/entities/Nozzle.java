@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "pump_nozzle_master", uniqueConstraints = {
+@Table(name = "pump_nozzle_master_master", uniqueConstraints = {
     @UniqueConstraint(name = "fk_nozzle_tank_pump", columnNames = {"nozzle_name", "tank_id", "pump_master_id"})
 }, indexes = {
     @Index(name = "idx_nozzle_name", columnList = "nozzle_name"),

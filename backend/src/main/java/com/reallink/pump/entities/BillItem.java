@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "pump_bill_item")
+@Table(name = "pump_bill_item_master")
 @Getter
 @Setter
 @NoArgsConstructor
