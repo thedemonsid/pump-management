@@ -9,15 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Plus, Pencil, Trash2, Loader2, Phone, Mail, Eye } from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Plus, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +20,8 @@ import {
 } from '@/components/ui/dialog';
 import { CreateSupplierForm } from './CreateSupplierForm';
 import { UpdateSupplierForm } from './UpdateSupplierForm';
+import { DataTable } from '@/components/ui/data-table';
+import { columns } from './columns';
 import type { Supplier } from '@/types';
 import { Link } from 'react-router-dom';
 
@@ -38,7 +32,6 @@ export function SuppliersPage() {
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSuppliers();
@@ -46,13 +39,10 @@ export function SuppliersPage() {
 
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this supplier?')) {
-      setDeletingId(id);
       try {
         await removeSupplier(id);
       } catch (error) {
         console.error('Failed to delete supplier:', error);
-      } finally {
-        setDeletingId(null);
       }
     }
   };
@@ -132,107 +122,18 @@ export function SuppliersPage() {
               No suppliers found. Create your first supplier to get started.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Supplier Name</TableHead>
-                  <TableHead>Contact Person</TableHead>
-                  <TableHead>Contact Number</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>GST Number</TableHead>
-                  <TableHead>Opening Balance</TableHead>
-                  <TableHead>Opening Balance Date</TableHead>
-                  <TableHead>Address</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {suppliers.map((supplier) => (
-                  <TableRow key={supplier.id}>
-                    <TableCell className="font-medium">
-                      {supplier.supplierName}
-                    </TableCell>
-                    <TableCell>{supplier.contactPersonName}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Phone className="h-3 w-3" />
-                        {supplier.contactNumber}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {supplier.email && (
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          {supplier.email}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {supplier.gstNumber}
-                    </TableCell>
-                    <TableCell className="font-mono">
-                      {supplier.openingBalance !== undefined ? (
-                        <span
-                          className={
-                            supplier.openingBalance < 0
-                              ? 'text-red-600'
-                              : 'text-green-600'
-                          }
-                        >
-                          ₹{supplier.openingBalance.toLocaleString()}
-                        </span>
-                      ) : (
-                        '-'
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {supplier.openingBalanceDate
-                        ? new Date(
-                            supplier.openingBalanceDate
-                          ).toLocaleDateString()
-                        : '-'}
-                    </TableCell>
-                    <TableCell
-                      className="max-w-xs truncate"
-                      title={supplier.address}
-                    >
-                      {supplier.address}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => navigate(`/suppliers/${supplier.id}`)}
-                          title="View Supplier Details"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setEditingSupplier(supplier)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(supplier.id!)}
-                          disabled={deletingId === supplier.id}
-                        >
-                          {deletingId === supplier.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={columns}
+              data={suppliers}
+              searchKey="supplierName"
+              searchPlaceholder="Filter suppliers..."
+              meta={{
+                onView: (supplier: Supplier) =>
+                  navigate(`/suppliers/${supplier.id}`),
+                onEdit: (supplier: Supplier) => setEditingSupplier(supplier),
+                onDelete: (id: string) => handleDelete(id),
+              }}
+            />
           )}
         </CardContent>
       </Card>

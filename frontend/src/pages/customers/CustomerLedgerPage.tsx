@@ -10,19 +10,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import {
   Loader2,
@@ -34,6 +21,8 @@ import {
 } from 'lucide-react';
 import { useCustomerStore } from '@/store/customer-store';
 import { useLedgerStore } from '@/store/ledger-store';
+import { DataTable } from '@/components/ui/data-table';
+import { ledgerColumns } from './ledger-columns';
 import type { LedgerEntry, LedgerSummary } from '@/types/ledger';
 
 export function CustomerLedgerPage() {
@@ -309,169 +298,15 @@ export function CustomerLedgerPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border overflow-hidden">
-                <Table>
-                  <TableHeader className="bg-muted/50">
-                    <TableRow>
-                      <TableHead className="font-semibold">Date</TableHead>
-                      <TableHead className="font-semibold">
-                        Invoice No.
-                      </TableHead>
-                      <TableHead className="font-semibold">
-                        Bill Details
-                      </TableHead>
-                      <TableHead className="font-semibold text-right">
-                        Bill Amount
-                      </TableHead>
-                      <TableHead className="font-semibold text-right">
-                        Payment Amount
-                      </TableHead>
-                      <TableHead className="font-semibold text-right">
-                        Running Balance
-                      </TableHead>
-                      <TableHead className="font-semibold">Entry By</TableHead>
-                      <TableHead className="font-semibold">Comments</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {ledgerData.length === 0 ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={8}
-                          className="text-center py-8 text-muted-foreground"
-                        >
-                          No transactions found for the selected date range.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      ledgerData.map((entry, index) => (
-                        <TableRow key={index} className="hover:bg-muted/30">
-                          <TableCell className="font-medium">
-                            {formatDate(entry.date)}
-                          </TableCell>
-                          <TableCell className="font-mono text-sm">
-                            {entry.invoiceNo}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {entry.billDetails ? (
-                              <div className="space-y-1">
-                                <div className="font-medium">
-                                  Bill #{entry.billDetails.billNo}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  {entry.billDetails.billItems.length} item(s)
-                                </div>
-                              </div>
-                            ) : (
-                              '-'
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right font-medium">
-                            {entry.billAmount > 0
-                              ? formatCurrency(entry.billAmount)
-                              : '-'}
-                          </TableCell>
-                          <TableCell className="text-right font-medium">
-                            {entry.amountPaid > 0 ? (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="cursor-help">
-                                    {formatCurrency(entry.amountPaid)}
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <div className="text-sm">
-                                    <div className="font-medium">
-                                      Payment Details
-                                    </div>
-                                    {entry.type === 'bill' &&
-                                    entry.billDetails?.payments ? (
-                                      <div className="mt-1 space-y-1">
-                                        {entry.billDetails.payments.map(
-                                          (p, idx) => (
-                                            <div key={idx}>
-                                              <div>
-                                                Amount:{' '}
-                                                {formatCurrency(p.amount)}
-                                              </div>
-                                              <div>
-                                                Method: {p.paymentMethod}
-                                              </div>
-                                              <div>
-                                                Date:{' '}
-                                                {formatDate(p.paymentDate)}
-                                              </div>
-                                              {p.referenceNumber && (
-                                                <div>
-                                                  Ref: {p.referenceNumber}
-                                                </div>
-                                              )}
-                                              {p.notes && (
-                                                <div>Notes: {p.notes}</div>
-                                              )}
-                                            </div>
-                                          )
-                                        )}
-                                      </div>
-                                    ) : entry.type === 'payment' &&
-                                      entry.paymentDetails ? (
-                                      <div className="mt-1 space-y-1">
-                                        <div>
-                                          Method:{' '}
-                                          {entry.paymentDetails.paymentMethod}
-                                        </div>
-                                        <div>
-                                          Amount:{' '}
-                                          {formatCurrency(
-                                            entry.paymentDetails.amount
-                                          )}
-                                        </div>
-                                        {entry.paymentDetails
-                                          .referenceNumber && (
-                                          <div>
-                                            Ref:{' '}
-                                            {
-                                              entry.paymentDetails
-                                                .referenceNumber
-                                            }
-                                          </div>
-                                        )}
-                                        {entry.paymentDetails.notes && (
-                                          <div>
-                                            Notes: {entry.paymentDetails.notes}
-                                          </div>
-                                        )}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </TooltipContent>
-                              </Tooltip>
-                            ) : (
-                              '-'
-                            )}
-                          </TableCell>
-                          <TableCell
-                            className={`text-right font-bold ${
-                              entry.balanceAmount >= 0
-                                ? 'text-red-600'
-                                : 'text-green-600'
-                            }`}
-                          >
-                            {formatCurrency(Math.abs(entry.balanceAmount))}
-                            {entry.balanceAmount < 0 && ' (Credit)'}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {entry.entryBy}
-                          </TableCell>
-                          <TableCell className="text-sm max-w-xs truncate">
-                            {entry.comments}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+              <DataTable
+                columns={ledgerColumns}
+                data={ledgerData}
+                enableSorting={false}
+                enableFiltering={false}
+                enablePagination={true}
+                enableColumnVisibility={false}
+                pageSize={20}
+              />
             </CardContent>
           </Card>
 

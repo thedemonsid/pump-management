@@ -88,6 +88,7 @@ public class BillController {
     public ResponseEntity<BillResponse> createBill(@Valid @RequestBody CreateBillRequest request, HttpServletRequest httpRequest) {
         UUID pumpMasterId = extractPumpMasterId(httpRequest);
         request.setPumpMasterId(pumpMasterId);
+        request.setBillNo(service.getNextBillNo(pumpMasterId));
         return ResponseEntity.status(HttpStatus.CREATED).body(service.create(request));
     }
 

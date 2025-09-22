@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBillStore } from '@/store/bill-store';
 import { Loader2 } from 'lucide-react';
-import { CreateBillForm } from './CreateBillForm';
 import { Button } from '@/components/ui/button';
+import CreateBill from './create-bill';
 
 export function BillsPage() {
   const navigate = useNavigate();
@@ -48,7 +48,7 @@ export function BillsPage() {
       )}
 
       {/* Inline Create Form */}
-      <CreateBillForm onSuccess={() => {}} />
-    </div>
+      <CreateBill></CreateBill>
+    </div >
   );
 }

@@ -10,14 +10,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { DataTable } from '@/components/ui/data-table';
+import { columns } from './ledger-columns';
 import { Separator } from '@/components/ui/separator';
 import {
   Loader2,
@@ -289,108 +283,23 @@ export function SupplierLedgerPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border overflow-hidden">
-                <Table>
-                  <TableHeader className="bg-muted/50">
-                    <TableRow>
-                      <TableHead className="font-semibold">Date</TableHead>
-                      <TableHead className="font-semibold">
-                        Invoice No.
-                      </TableHead>
-                      <TableHead className="font-semibold">
-                        Product Name
-                      </TableHead>
-                      <TableHead className="font-semibold text-right">
-                        Quantity
-                      </TableHead>
-                      <TableHead className="font-semibold text-right">
-                        Rate
-                      </TableHead>
-                      <TableHead className="font-semibold text-right">
-                        Purchase Amount
-                      </TableHead>
-                      <TableHead className="font-semibold text-right">
-                        Payment Amount
-                      </TableHead>
-                      <TableHead className="font-semibold text-right">
-                        Running Balance
-                      </TableHead>
-                      <TableHead className="font-semibold">Entry By</TableHead>
-                      <TableHead className="font-semibold">Comments</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {ledgerData.length === 0 ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={10}
-                          className="text-center py-8 text-muted-foreground"
-                        >
-                          No transactions found for the selected date range.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      ledgerData.map((entry, index) => (
-                        <TableRow key={index} className="hover:bg-muted/30">
-                          <TableCell className="font-medium">
-                            {formatDate(entry.date)}
-                          </TableCell>
-                          <TableCell className="font-mono text-sm">
-                            {entry.invoiceNo}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {entry.purchaseDetails?.productName ||
-                              entry.fuelPurchaseDetails?.productName ||
-                              '-'}
-                          </TableCell>
-                          <TableCell className="text-right text-sm">
-                            {entry.purchaseDetails?.quantity ||
-                              entry.fuelPurchaseDetails?.quantity ||
-                              '-'}
-                          </TableCell>
-                          <TableCell className="text-right text-sm">
-                            {entry.purchaseDetails
-                              ? formatCurrency(
-                                  entry.purchaseDetails.purchaseRate
-                                )
-                              : entry.fuelPurchaseDetails
-                              ? formatCurrency(
-                                  entry.fuelPurchaseDetails.purchaseRate
-                                )
-                              : '-'}
-                          </TableCell>
-                          <TableCell className="text-right font-medium">
-                            {entry.purchaseAmount > 0
-                              ? formatCurrency(entry.purchaseAmount)
-                              : '-'}
-                          </TableCell>
-                          <TableCell className="text-right font-medium">
-                            {entry.amountPaid > 0
-                              ? formatCurrency(entry.amountPaid)
-                              : '-'}
-                          </TableCell>
-                          <TableCell
-                            className={`text-right font-bold ${
-                              entry.balanceAmount >= 0
-                                ? 'text-red-600'
-                                : 'text-green-600'
-                            }`}
-                          >
-                            {formatCurrency(Math.abs(entry.balanceAmount))}
-                            {entry.balanceAmount < 0 && ' (Adv.)'}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {entry.entryBy}
-                          </TableCell>
-                          <TableCell className="text-sm max-w-xs truncate">
-                            {entry.comments}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+              {ledgerData.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No transactions found for the selected date range.
+                </div>
+              ) : (
+                <DataTable
+                  columns={columns}
+                  data={ledgerData}
+                  searchKey="invoiceNo"
+                  searchPlaceholder="Filter by invoice number..."
+                  pageSize={20}
+                  enableSorting={true}
+                  enableFiltering={true}
+                  enablePagination={true}
+                  enableColumnVisibility={true}
+                />
+              )}
             </CardContent>
           </Card>
 

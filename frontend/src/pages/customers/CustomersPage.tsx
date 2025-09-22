@@ -9,23 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Loader2,
-  Phone,
-  MapPin,
-  Eye,
-} from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Plus, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -36,6 +20,8 @@ import {
 } from '@/components/ui/dialog';
 import { CreateCustomerForm } from './CreateCustomerForm';
 import { UpdateCustomerForm } from './UpdateCustomerForm';
+import { DataTable } from '@/components/ui/data-table';
+import { columns } from './columns';
 import type { Customer } from '@/types';
 import { Link } from 'react-router-dom';
 
@@ -46,7 +32,6 @@ export function CustomersPage() {
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCustomers();
@@ -54,13 +39,10 @@ export function CustomersPage() {
 
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this customer?')) {
-      setDeletingId(id);
       try {
         await removeCustomer(id);
       } catch (error) {
         console.error('Failed to delete customer:', error);
-      } finally {
-        setDeletingId(null);
       }
     }
   };
@@ -140,107 +122,18 @@ export function CustomersPage() {
               No customers found. Create your first customer to get started.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer Name</TableHead>
-                  <TableHead>Phone Number</TableHead>
-                  <TableHead>GST Number</TableHead>
-                  <TableHead>PAN Number</TableHead>
-                  <TableHead>Credit Limit</TableHead>
-                  <TableHead>Opening Balance</TableHead>
-                  <TableHead>Opening Balance Date</TableHead>
-                  <TableHead>Address</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {customers.map((customer) => (
-                  <TableRow key={customer.id}>
-                    <TableCell className="font-medium">
-                      {customer.customerName}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Phone className="h-3 w-3" />
-                        {customer.phoneNumber}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {customer.gstNumber}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {customer.panNumber}
-                    </TableCell>
-                    <TableCell className="font-mono">
-                      ₹{customer.creditLimit.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="font-mono">
-                      {customer.openingBalance !== undefined ? (
-                        <span
-                          className={
-                            customer.openingBalance > 0
-                              ? 'text-red-600'
-                              : 'text-green-600'
-                          }
-                        >
-                          ₹{customer.openingBalance.toLocaleString()}
-                        </span>
-                      ) : (
-                        '-'
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {customer.openingBalanceDate
-                        ? new Date(
-                            customer.openingBalanceDate
-                          ).toLocaleDateString()
-                        : '-'}
-                    </TableCell>
-                    <TableCell
-                      className="max-w-xs truncate"
-                      title={customer.address}
-                    >
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3 flex-shrink-0" />
-                        <span className="truncate">{customer.address}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => navigate(`/customers/${customer.id}`)}
-                          title="View Customer Details"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setEditingCustomer(customer)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(customer.id!)}
-                          disabled={deletingId === customer.id}
-                        >
-                          {deletingId === customer.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={columns}
+              data={customers}
+              searchKey="customerName"
+              searchPlaceholder="Filter customers..."
+              meta={{
+                onView: (customer: Customer) =>
+                  navigate(`/customers/${customer.id}`),
+                onEdit: (customer: Customer) => setEditingCustomer(customer),
+                onDelete: (id: string) => handleDelete(id),
+              }}
+            />
           )}
         </CardContent>
       </Card>
