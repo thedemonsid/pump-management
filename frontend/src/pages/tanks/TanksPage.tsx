@@ -9,16 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Plus, Pencil, Trash2, Loader2, FileText } from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import { Plus, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -30,6 +21,8 @@ import {
 import { CreateTankForm } from './CreateTankForm';
 import { UpdateTankForm } from './UpdateTankForm';
 import { TankTransactionService } from '@/services/tank-transaction-service';
+import { DataTable } from '@/components/ui/data-table';
+import { columns } from './columns';
 import type { Tank } from '@/types';
 
 export function TanksPage() {
@@ -134,38 +127,6 @@ export function TanksPage() {
     }
   };
 
-  const formatCapacity = (capacity: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'decimal',
-      maximumFractionDigits: 2,
-    }).format(capacity);
-  };
-
-  const calculateFillPercentage = (currentLevel: number, capacity: number) => {
-    if (capacity <= 0) return 0;
-    return (currentLevel / capacity) * 100;
-  };
-
-  const getFillPercentage = (tank: Tank) => {
-    const currentLevel = currentBalances[tank.id!] ?? tank.currentLevel ?? 0;
-    return (
-      tank.fillPercentage ??
-      (currentLevel && tank.capacity
-        ? calculateFillPercentage(currentLevel, tank.capacity)
-        : 0)
-    );
-  };
-
-  const getIsLowLevel = (tank: Tank) => {
-    const currentLevel = currentBalances[tank.id!] ?? tank.currentLevel ?? 0;
-    return (
-      tank.isLowLevel ??
-      (currentLevel && tank.lowLevelAlert
-        ? currentLevel <= tank.lowLevelAlert
-        : false)
-    );
-  };
-
   if (loading && tanks.length === 0) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -227,124 +188,20 @@ export function TanksPage() {
               No tanks found. Create your first tank to get started.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tank Name</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Capacity (L)</TableHead>
-                  <TableHead>Current Level (L)</TableHead>
-                  <TableHead>Fill %</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tanks.map((tank) => (
-                  <TableRow key={tank.id}>
-                    <TableCell className="font-medium">
-                      {tank.tankName}
-                    </TableCell>
-                    <TableCell>
-                      {tank.product?.productName || 'No Product'}
-                    </TableCell>
-                    <TableCell>{formatCapacity(tank.capacity)} L</TableCell>
-                    <TableCell>
-                      {balancesLoading[tank.id!] ? (
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                          <span>Calculating...</span>
-                        </div>
-                      ) : (
-                        <>
-                          {formatCapacity(
-                            currentBalances[tank.id!] || tank.currentLevel || 0
-                          )}{' '}
-                          L
-                        </>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {(() => {
-                          const fillPercentage = getFillPercentage(tank);
-                          if (fillPercentage > 0) {
-                            return (
-                              <>
-                                <div className="w-12 bg-gray-200 rounded-full h-2">
-                                  <div
-                                    className={`h-2 rounded-full ${
-                                      fillPercentage >= 50
-                                        ? 'bg-green-500'
-                                        : fillPercentage >= 25
-                                        ? 'bg-yellow-500'
-                                        : 'bg-red-500'
-                                    }`}
-                                    style={{
-                                      width: `${Math.min(
-                                        fillPercentage,
-                                        100
-                                      )}%`,
-                                    }}
-                                  ></div>
-                                </div>
-                                <span className="text-sm">
-                                  {fillPercentage.toFixed(1)}%
-                                </span>
-                              </>
-                            );
-                          } else {
-                            return (
-                              <span className="text-sm text-muted-foreground">
-                                N/A
-                              </span>
-                            );
-                          }
-                        })()}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getIsLowLevel(tank) ? (
-                        <Badge variant="destructive">Low Level</Badge>
-                      ) : (
-                        <Badge variant="secondary">Normal</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => navigate(`/tanks/${tank.id}/ledger`)}
-                          title="View Ledger"
-                        >
-                          <FileText className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setEditingTank(tank)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(tank.id!)}
-                          disabled={deletingId === tank.id}
-                        >
-                          {deletingId === tank.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={columns}
+              data={tanks}
+              searchKey="tankName"
+              searchPlaceholder="Filter tanks..."
+              meta={{
+                onView: (tank: Tank) => navigate(`/tanks/${tank.id}/ledger`),
+                onEdit: (tank: Tank) => setEditingTank(tank),
+                onDelete: (id: string) => handleDelete(id),
+                currentBalances,
+                balancesLoading,
+                deletingId,
+              }}
+            />
           )}
         </CardContent>
       </Card>

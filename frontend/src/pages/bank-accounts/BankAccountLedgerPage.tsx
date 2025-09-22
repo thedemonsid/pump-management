@@ -10,14 +10,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
@@ -43,6 +35,8 @@ import { toast } from 'sonner';
 import { useBankAccountStore } from '@/store/bank-account-store';
 import { useBankAccountLedgerStore } from '@/store/bank-account-ledger-store';
 import { BankAccountService } from '@/services/bank-account-service';
+import { DataTable } from '@/components/ui/data-table';
+import { ledgerColumns } from './ledger-columns';
 import { TransactionForm } from '@/components/bank-accounts/transaction-form';
 import { TransactionFormSchema, type TransactionFormValues } from '@/types';
 
@@ -430,77 +424,12 @@ export function BankAccountLedgerPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border overflow-hidden">
-                <Table>
-                  <TableHeader className="bg-muted/50">
-                    <TableRow>
-                      <TableHead className="font-semibold">Date</TableHead>
-                      <TableHead className="font-semibold">Action</TableHead>
-                      <TableHead className="font-semibold text-right">
-                        Credit
-                      </TableHead>
-                      <TableHead className="font-semibold text-right">
-                        Debit
-                      </TableHead>
-                      <TableHead className="font-semibold text-right">
-                        Balance
-                      </TableHead>
-                      <TableHead className="font-semibold">
-                        Description
-                      </TableHead>
-                      <TableHead className="font-semibold">Entry By</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {ledgerData.length === 0 ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={7}
-                          className="text-center py-8 text-muted-foreground"
-                        >
-                          No transactions found for the selected date range.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      ledgerData.map((entry, index) => (
-                        <TableRow key={index} className="hover:bg-muted/30">
-                          <TableCell className="font-medium">
-                            {formatDate(entry.date)}
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {entry.action}
-                          </TableCell>
-                          <TableCell className="text-right font-medium text-green-600">
-                            {entry.credit > 0
-                              ? formatCurrency(entry.credit)
-                              : '-'}
-                          </TableCell>
-                          <TableCell className="text-right font-medium text-red-600">
-                            {entry.debit > 0
-                              ? formatCurrency(entry.debit)
-                              : '-'}
-                          </TableCell>
-                          <TableCell
-                            className={`text-right font-bold ${
-                              entry.balance >= 0
-                                ? 'text-green-600'
-                                : 'text-red-600'
-                            }`}
-                          >
-                            {formatCurrency(Math.abs(entry.balance))}
-                          </TableCell>
-                          <TableCell className="text-sm max-w-xs truncate">
-                            {entry.description}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {entry.entryBy || '-'}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+              <DataTable
+                columns={ledgerColumns}
+                data={ledgerData}
+                searchKey="description"
+                searchPlaceholder="Search transactions..."
+              />
             </CardContent>
           </Card>
 

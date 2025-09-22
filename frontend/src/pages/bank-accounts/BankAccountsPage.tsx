@@ -9,15 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Plus, Pencil, Trash2, Loader2, Eye } from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Plus, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -28,8 +20,9 @@ import {
 } from '@/components/ui/dialog';
 import { BankAccountForm } from './BankAccountForm';
 import { BankAccountService } from '@/services/bank-account-service';
+import { DataTable } from '@/components/ui/data-table';
+import { columns } from './columns';
 import type { BankAccount } from '@/types';
-import { formatCurrency, formatDate } from '@/lib/utils/index';
 
 export function BankAccountsPage() {
   const { bankAccounts, loading, error, fetchBankAccounts, removeBankAccount } =
@@ -39,7 +32,6 @@ export function BankAccountsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingBankAccount, setEditingBankAccount] =
     useState<BankAccount | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [currentBalances, setCurrentBalances] = useState<
     Record<string, number>
   >({});
@@ -125,13 +117,10 @@ export function BankAccountsPage() {
 
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this bank account?')) {
-      setDeletingId(id);
       try {
         await removeBankAccount(id);
       } catch (error) {
         console.error('Failed to delete bank account:', error);
-      } finally {
-        setDeletingId(null);
       }
     }
   };
@@ -198,92 +187,21 @@ export function BankAccountsPage() {
               started.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Account Holder</TableHead>
-                  <TableHead>Account Number</TableHead>
-                  <TableHead>Bank</TableHead>
-                  <TableHead>Branch</TableHead>
-                  <TableHead>IFSC Code</TableHead>
-                  <TableHead>Opening Balance</TableHead>
-                  <TableHead>Current Balance</TableHead>
-                  <TableHead>Opening Date</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bankAccounts.map((bankAccount) => (
-                  <TableRow key={bankAccount.id}>
-                    <TableCell className="font-medium">
-                      {bankAccount.accountHolderName}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {bankAccount.accountNumber}
-                    </TableCell>
-                    <TableCell>{bankAccount.bank}</TableCell>
-                    <TableCell>{bankAccount.branch}</TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {bankAccount.ifscCode}
-                    </TableCell>
-                    <TableCell>
-                      {formatCurrency(bankAccount.openingBalance)}
-                    </TableCell>
-
-                    <TableCell>
-                      {balancesLoading[bankAccount.id!] ? (
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                          <span>Calculating...</span>
-                        </div>
-                      ) : (
-                        formatCurrency(
-                          currentBalances[bankAccount.id!] ??
-                            bankAccount.currentBalance ??
-                            bankAccount.openingBalance
-                        )
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {formatDate(bankAccount.openingBalanceDate)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() =>
-                            navigate(`/bank-accounts/${bankAccount.id}/ledger`)
-                          }
-                          title="View Ledger"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setEditingBankAccount(bankAccount)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(bankAccount.id!)}
-                          disabled={deletingId === bankAccount.id}
-                        >
-                          {deletingId === bankAccount.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={columns}
+              data={bankAccounts}
+              searchKey="accountHolderName"
+              searchPlaceholder="Filter bank accounts..."
+              meta={{
+                onView: (bankAccount: BankAccount) =>
+                  navigate(`/bank-accounts/${bankAccount.id}/ledger`),
+                onEdit: (bankAccount: BankAccount) =>
+                  setEditingBankAccount(bankAccount),
+                onDelete: (id: string) => handleDelete(id),
+                currentBalances,
+                balancesLoading,
+              }}
+            />
           )}
         </CardContent>
       </Card>

@@ -10,14 +10,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
@@ -27,12 +19,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { DataTable } from '@/components/ui/data-table';
+import { tankLedgerColumns } from './tank-ledger-columns';
 import {
   Loader2,
   Fuel,
   Calendar,
-  TrendingUp,
-  TrendingDown,
   Search,
   FileText,
   Plus,
@@ -423,84 +415,12 @@ export function TankLedgerPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border overflow-hidden">
-                <Table>
-                  <TableHeader className="bg-muted/50">
-                    <TableRow>
-                      <TableHead className="font-semibold">Date</TableHead>
-                      <TableHead className="font-semibold">Action</TableHead>
-                      <TableHead className="font-semibold text-right">
-                        Volume (L)
-                      </TableHead>
-                      <TableHead className="font-semibold text-right">
-                        Level After (L)
-                      </TableHead>
-                      <TableHead className="font-semibold">
-                        Description
-                      </TableHead>
-                      <TableHead className="font-semibold">Supplier</TableHead>
-                      <TableHead className="font-semibold">Invoice</TableHead>
-                      <TableHead className="font-semibold">Entry By</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {ledgerData.length === 0 ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={8}
-                          className="text-center py-8 text-muted-foreground"
-                        >
-                          No fuel transactions found for the selected date
-                          range.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      ledgerData.map((entry, index) => (
-                        <TableRow key={index} className="hover:bg-muted/30">
-                          <TableCell className="font-medium">
-                            {formatDate(entry.date)}
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-2">
-                              {entry.type === 'addition' ? (
-                                <TrendingUp className="h-4 w-4 text-green-600" />
-                              ) : (
-                                <TrendingDown className="h-4 w-4 text-red-600" />
-                              )}
-                              {entry.action}
-                            </div>
-                          </TableCell>
-                          <TableCell
-                            className={`text-right font-medium ${
-                              entry.type === 'addition'
-                                ? 'text-green-600'
-                                : 'text-red-600'
-                            }`}
-                          >
-                            {entry.type === 'addition' ? '+' : '-'}
-                            {formatVolume(entry.volume)}
-                          </TableCell>
-                          <TableCell className="text-right font-bold">
-                            {formatVolume(entry.level)}
-                          </TableCell>
-                          <TableCell className="text-sm max-w-xs truncate">
-                            {entry.description}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {entry.supplierName || '-'}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {entry.invoiceNumber || '-'}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {entry.entryBy}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+              <DataTable
+                columns={tankLedgerColumns}
+                data={ledgerData}
+                searchKey="description"
+                searchPlaceholder="Search transactions..."
+              />
             </CardContent>
           </Card>
 
