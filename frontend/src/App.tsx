@@ -41,6 +41,7 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { FuelPurchasesPage } from './pages/fuel-purchases/FuelPurchasesPage';
 import { BankAccountsPage } from './pages/bank-accounts/BankAccountsPage';
 import { BankAccountLedgerPage } from './pages/bank-accounts/BankAccountLedgerPage';
+import { BankAccountLedgerReportPage } from './pages/bank-accounts/BankAccountLedgerReportPage';
 import { BillsPage } from './pages/bills/BillsPage';
 import { BillDetailPage } from './pages/bills/BillDetailPage';
 import { BillsDetailsPage } from './pages/bills/BillsDetailsPage';
@@ -287,6 +288,10 @@ function App() {
                       <Route
                         path="/bank-accounts/:id/ledger"
                         element={<BankAccountLedgerPage />}
+                      />
+                      <Route
+                        path="/bank-accounts/:id/ledger/report"
+                        element={<BankAccountLedgerReportPage />}
                       />
                       <Route path="/bills" element={<BillsPage />} />
                       <Route path="/bills/:id" element={<BillDetailPage />} />
