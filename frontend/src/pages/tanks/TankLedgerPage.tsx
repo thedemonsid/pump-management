@@ -41,7 +41,7 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { useTankStore } from '@/store/tank-store';
+import { useTankStore, formatOpeningLevelDate } from '@/store/tank-store';
 import { useTankLedgerStore } from '@/store/tank-ledger-store';
 import { TankTransactionService } from '@/services/tank-transaction-service';
 import { TankTransactionForm } from '@/components/tanks/tank-transaction-form';
@@ -129,11 +129,10 @@ export function TankLedgerPage() {
 
   useEffect(() => {
     if (tank?.openingLevelDate) {
-      // Format the opening level date to YYYY-MM-DD for the date input
-      const openingDate = new Date(tank.openingLevelDate)
-        .toISOString()
-        .split('T')[0];
-      setFromDate(openingDate);
+      const openingDate = formatOpeningLevelDate(tank.openingLevelDate);
+      if (openingDate) {
+        setFromDate(openingDate);
+      }
     }
   }, [tank?.openingLevelDate]);
 
@@ -333,22 +332,13 @@ export function TankLedgerPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="text-center p-4 border rounded-lg">
                   <p className="text-sm font-medium text-muted-foreground mb-2">
                     Capacity
                   </p>
                   <p className="text-xl font-semibold text-foreground">
                     {formatVolume(tank.capacity)} L
-                  </p>
-                </div>
-                <div className="text-center p-4 border rounded-lg">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">
-                    Current Level
-                  </p>
-                  <p className="text-xl font-semibold text-foreground">
-                    {tank.currentLevel ? formatVolume(tank.currentLevel) : '0'}{' '}
-                    L
                   </p>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
@@ -368,18 +358,6 @@ export function TankLedgerPage() {
                     {tank.openingLevelDate
                       ? formatDate(tank.openingLevelDate)
                       : 'Not specified'}
-                  </p>
-                </div>
-                <div className="text-center p-4 border rounded-lg">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">
-                    Fill Percentage
-                  </p>
-                  <p className="text-xl font-semibold text-foreground">
-                    {tank.capacity > 0 && tank.currentLevel
-                      ? `${((tank.currentLevel / tank.capacity) * 100).toFixed(
-                          1
-                        )}%`
-                      : 'N/A'}
                   </p>
                 </div>
               </div>

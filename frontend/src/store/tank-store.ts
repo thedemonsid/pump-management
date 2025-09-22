@@ -5,6 +5,16 @@ import { CreateTankSchema, UpdateTankSchema } from '@/types';
 import { TankService } from '@/services/api';
 import { toast } from 'sonner';
 
+// Utility function to format opening level date
+export const formatOpeningLevelDate = (
+  openingLevelDate: string | undefined
+): string | undefined => {
+  if (openingLevelDate) {
+    return new Date(openingLevelDate).toISOString().split('T')[0];
+  }
+  return undefined;
+};
+
 interface TankState {
   tanks: Tank[];
   loading: boolean;
