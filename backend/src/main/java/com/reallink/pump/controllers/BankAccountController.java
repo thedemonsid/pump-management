@@ -40,9 +40,8 @@ public class BankAccountController {
 
     private UUID extractPumpMasterId(HttpServletRequest request) {
         Object pumpMasterIdObj = request.getAttribute("pumpMasterId");
-        if (!(pumpMasterIdObj instanceof UUID)) {
-        } else {
-            return (UUID) pumpMasterIdObj;
+        if (pumpMasterIdObj instanceof UUID uuid) {
+            return uuid;
         }
         throw new RuntimeException("Pump master ID not found in request");
     }

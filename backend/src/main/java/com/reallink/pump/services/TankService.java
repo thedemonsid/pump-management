@@ -1,7 +1,9 @@
 package com.reallink.pump.services;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -13,11 +15,13 @@ import org.springframework.validation.annotation.Validated;
 import com.reallink.pump.dto.request.CreateTankRequest;
 import com.reallink.pump.dto.request.UpdateTankRequest;
 import com.reallink.pump.dto.response.TankResponse;
+import com.reallink.pump.entities.DailyTankLevel;
 import com.reallink.pump.entities.Product;
 import com.reallink.pump.entities.PumpInfoMaster;
 import com.reallink.pump.entities.Tank;
 import com.reallink.pump.exception.PumpBusinessException;
 import com.reallink.pump.mapper.TankMapper;
+import com.reallink.pump.repositories.DailyTankLevelRepository;
 import com.reallink.pump.repositories.ProductRepository;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
 import com.reallink.pump.repositories.TankRepository;
@@ -36,13 +40,20 @@ public class TankService {
     private final ProductRepository productRepository;
     private final PumpInfoMasterRepository pumpInfoMasterRepository;
     private final TankMapper mapper;
+    private final DailyTankLevelRepository dailyTankLevelRepository;
 
     public Page<TankResponse> getAllPaginated(Pageable pageable) {
         return repository.findAll(pageable).map(mapper::toResponse);
     }
 
     public List<TankResponse> getAll() {
-        return repository.findAll().stream().map(mapper::toResponse).toList();
+        return repository.findAll().stream()
+                .map(tank -> {
+                    TankResponse response = mapper.toResponse(tank);
+                    setCurrentLevel(response, tank);
+                    return response;
+                })
+                .toList();
     }
 
     public TankResponse getById(@NotNull UUID id) {
@@ -50,7 +61,9 @@ public class TankService {
         if (tank == null) {
             throw new PumpBusinessException("TANK_NOT_FOUND", "Tank with ID " + id + " not found");
         }
-        return mapper.toResponse(tank);
+        TankResponse response = mapper.toResponse(tank);
+        setCurrentLevel(response, tank);
+        return response;
     }
 
     public List<TankResponse> getByPumpMasterId(@NotNull UUID pumpMasterId) {
@@ -94,5 +107,15 @@ public class TankService {
             throw new PumpBusinessException("TANK_NOT_FOUND", "Tank with ID " + id + " not found");
         }
         repository.deleteById(id);
+    }
+
+    private void setCurrentLevel(TankResponse response, Tank tank) {
+        Optional<DailyTankLevel> latestLevel = dailyTankLevelRepository.findLatestByTankIdAndDateBeforeOrEqual(tank.getId(), LocalDate.now());
+        if (latestLevel.isPresent()) {
+            response.setCurrentLevel(latestLevel.get().getClosingLevel());
+        } else {
+            // Fallback to opening level if no transactions
+            response.setCurrentLevel(tank.getOpeningLevel());
+        }
     }
 }

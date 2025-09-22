@@ -7,6 +7,8 @@ import java.util.Set;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Index;
@@ -45,6 +47,11 @@ public class Product extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "pump_master_id", nullable = false, foreignKey = @ForeignKey(name = "fk_product_pump_master"))
     private PumpInfoMaster pumpMaster;
+
+    @NotNull(message = "Product type is required")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "product_type", nullable = false, length = 20, columnDefinition = "VARCHAR(20) DEFAULT 'GENERAL'")
+    private ProductType productType = ProductType.GENERAL;
 
     @NotBlank(message = "Product name is required")
     @Size(min = 2, max = 100, message = "Product name must be between 2 and 100 characters")
@@ -98,7 +105,7 @@ public class Product extends BaseEntity {
 
     public Product(String productName, String alias, Integer lowStockCount, BigDecimal purchaseRate,
             BigDecimal salesRate, String hsnCode, String salesUnit, String purchaseUnit,
-            BigDecimal stockConversionRatio, PumpInfoMaster pumpMaster) {
+            BigDecimal stockConversionRatio, PumpInfoMaster pumpMaster, ProductType productType) {
         this.productName = productName;
         this.alias = alias;
         this.lowStockCount = lowStockCount;
@@ -109,5 +116,6 @@ public class Product extends BaseEntity {
         this.purchaseUnit = purchaseUnit;
         this.stockConversionRatio = stockConversionRatio;
         this.pumpMaster = pumpMaster;
+        this.productType = productType != null ? productType : ProductType.GENERAL;
     }
 }

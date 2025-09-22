@@ -2,7 +2,12 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useProductStore } from '@/store/product-store';
-import { ProductSchema, type Product, DEFAULT_PUMP_INFO } from '@/types';
+import {
+  ProductSchema,
+  type Product,
+  ProductType,
+  DEFAULT_PUMP_INFO,
+} from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -25,9 +30,12 @@ import { Loader2 } from 'lucide-react';
 import { z } from 'zod';
 
 // Form schema without id, pumpMasterId (these are handled by the store)
+// Ensure productType is required for the form
 const ProductFormSchema = ProductSchema.omit({
   id: true,
-  pumpMasterId: true
+  pumpMasterId: true,
+}).extend({
+  productType: z.enum([ProductType.FUEL, ProductType.GENERAL]),
 });
 
 type ProductFormData = z.infer<typeof ProductFormSchema>;
@@ -47,27 +55,29 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
     resolver: zodResolver(ProductFormSchema),
     defaultValues: product
       ? {
-        productName: product.productName,
-        alias: product.alias,
-        lowStockCount: product.lowStockCount,
-        purchaseRate: product.purchaseRate,
-        salesRate: product.salesRate,
-        hsnCode: product.hsnCode,
-        salesUnit: product.salesUnit,
-        purchaseUnit: product.purchaseUnit,
-        stockConversionRatio: product.stockConversionRatio,
-      }
+          productType: product.productType || ProductType.GENERAL,
+          productName: product.productName,
+          alias: product.alias,
+          lowStockCount: product.lowStockCount,
+          purchaseRate: product.purchaseRate,
+          salesRate: product.salesRate,
+          hsnCode: product.hsnCode,
+          salesUnit: product.salesUnit,
+          purchaseUnit: product.purchaseUnit,
+          stockConversionRatio: product.stockConversionRatio,
+        }
       : {
-        productName: '',
-        alias: '',
-        lowStockCount: 100,
-        purchaseRate: 0,
-        salesRate: 0,
-        hsnCode: '',
-        salesUnit: 'Liters',
-        purchaseUnit: 'Liters',
-        stockConversionRatio: 1.0,
-      },
+          productType: ProductType.GENERAL,
+          productName: '',
+          alias: '',
+          lowStockCount: 100,
+          purchaseRate: 0,
+          salesRate: 0,
+          hsnCode: '',
+          salesUnit: 'Liters',
+          purchaseUnit: 'Liters',
+          stockConversionRatio: 1.0,
+        },
   });
 
   const onSubmit = async (data: ProductFormData) => {
@@ -100,6 +110,28 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="productType"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Product Type</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select product type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value={ProductType.FUEL}>Fuel</SelectItem>
+                  <SelectItem value={ProductType.GENERAL}>General</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}

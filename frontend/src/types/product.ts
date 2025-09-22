@@ -1,9 +1,20 @@
 import { z } from 'zod';
 
+// Product type enum
+export const ProductType = {
+  FUEL: 'FUEL',
+  GENERAL: 'GENERAL',
+} as const;
+
+export type ProductType = (typeof ProductType)[keyof typeof ProductType];
+
 // Product schemas
 export const ProductSchema = z.object({
   id: z.string().optional(),
   pumpMasterId: z.string().optional(),
+  productType: z
+    .enum([ProductType.FUEL, ProductType.GENERAL])
+    .default(ProductType.GENERAL),
   productName: z.string().min(1, 'Product name is required'),
   alias: z.string().min(1, 'Alias is required'),
   lowStockCount: z

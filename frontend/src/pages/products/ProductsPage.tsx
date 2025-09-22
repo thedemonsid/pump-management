@@ -133,6 +133,7 @@ export function ProductsPage() {
                 <TableRow>
                   <TableHead>Product Name</TableHead>
                   <TableHead>Alias</TableHead>
+                  <TableHead>Product Type</TableHead>
                   <TableHead>HSN Code</TableHead>
                   <TableHead>Purchase Rate</TableHead>
                   <TableHead>Sales Rate</TableHead>
@@ -150,6 +151,9 @@ export function ProductsPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{product.alias}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{product.productType}</Badge>
                     </TableCell>
                     <TableCell className="font-mono text-sm">
                       {product.hsnCode}

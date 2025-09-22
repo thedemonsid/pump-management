@@ -1,6 +1,7 @@
 package com.reallink.pump.services;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -15,10 +16,12 @@ import com.reallink.pump.dto.response.BankTransactionResponse;
 import com.reallink.pump.entities.BankAccount;
 import com.reallink.pump.entities.BankTransaction;
 import com.reallink.pump.entities.BankTransaction.TransactionType;
+import com.reallink.pump.entities.DailyClosingBalance;
 import com.reallink.pump.exception.PumpBusinessException;
 import com.reallink.pump.mapper.BankTransactionMapper;
 import com.reallink.pump.repositories.BankAccountRepository;
 import com.reallink.pump.repositories.BankTransactionRepository;
+import com.reallink.pump.repositories.DailyClosingBalanceRepository;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -33,6 +36,7 @@ public class BankTransactionService {
     private final BankTransactionRepository transactionRepository;
     private final BankAccountRepository bankAccountRepository;
     private final BankTransactionMapper mapper;
+    private final DailyClosingBalanceRepository dailyClosingBalanceRepository;
 
     public List<BankTransactionResponse> getTransactionsByBankAccountId(@NotNull UUID bankAccountId) {
         List<BankTransaction> transactions = transactionRepository.findByBankAccountIdOrderByTransactionDateDesc(bankAccountId);
@@ -57,6 +61,7 @@ public class BankTransactionService {
             transaction.setTransactionDate(LocalDateTime.now());
         }
         BankTransaction saved = transactionRepository.save(transaction);
+        updateDailyClosingBalance(saved);
         return mapper.toResponse(saved);
     }
 
@@ -74,6 +79,18 @@ public class BankTransactionService {
             transaction.setTransactionDate(LocalDateTime.now());
         }
         BankTransaction saved = transactionRepository.save(transaction);
+        updateDailyClosingBalance(saved);
         return mapper.toResponse(saved);
+    }
+
+    private void updateDailyClosingBalance(BankTransaction transaction) {
+        LocalDate date = transaction.getTransactionDate().toLocalDate();
+        BigDecimal balance = transactionRepository.getBalanceByBankAccountIdAndDate(transaction.getBankAccount().getId(), date);
+        DailyClosingBalance dailyBalance = dailyClosingBalanceRepository.findByBankAccount_IdAndDate(transaction.getBankAccount().getId(), date)
+                .orElse(new DailyClosingBalance());
+        dailyBalance.setBankAccount(transaction.getBankAccount());
+        dailyBalance.setDate(date);
+        dailyBalance.setClosingBalance(balance);
+        dailyClosingBalanceRepository.save(dailyBalance);
     }
 }

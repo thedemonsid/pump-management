@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useBillStore } from '@/store/bill-store';
@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { AutocompleteInput } from '@/components/ui/combobox';
 
 import { Separator } from '@/components/ui/separator';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
@@ -53,6 +54,20 @@ export function CreateBillForm({ onSuccess }: CreateBillFormProps) {
   const { bankAccounts, fetchBankAccounts } = useBankAccountStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [billNoLoading, setBillNoLoading] = useState(true);
+
+  const [newItem, setNewItem] = useState({
+    productId: '',
+    quantity: 0,
+    rate: 0,
+    discount: 0,
+    taxPercentage: 0,
+  });
+
+  const productRef = useRef<HTMLInputElement>(null);
+  const quantityRef = useRef<HTMLInputElement>(null);
+  const rateRef = useRef<HTMLInputElement>(null);
+  const discountRef = useRef<HTMLInputElement>(null);
+  const taxRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<CreateBillFormData>({
     resolver: zodResolver(CreateBillRequestSchema),
@@ -113,13 +128,16 @@ export function CreateBillForm({ onSuccess }: CreateBillFormProps) {
   }, [nextBillNo, form]);
 
   const addBillItem = () => {
-    append({
+    if (!newItem.productId) return;
+    append(newItem);
+    setNewItem({
       productId: '',
-      quantity: 1,
+      quantity: 0,
       rate: 0,
       discount: 0,
-      taxPercentage: 18,
+      taxPercentage: 0,
     });
+    setTimeout(() => productRef.current?.focus(), 0);
   };
 
   const addPayment = () => {
@@ -216,23 +234,24 @@ export function CreateBillForm({ onSuccess }: CreateBillFormProps) {
                   <FormLabel className="text-xs font-medium">
                     Customer
                   </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="h-7 text-sm">
-                        <SelectValue
-                          placeholder="Select a Customer"
-                          className="w-full"
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {customers.map((c) => (
-                        <SelectItem key={c.id} value={c.id!}>
-                          {c.customerName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <AutocompleteInput
+                      options={customers.map((c) => c.customerName || '')}
+                      placeholder="Select a Customer"
+                      value={
+                        customers.find((c) => c.id === field.value)
+                          ?.customerName || ''
+                      }
+                      onSelect={(selectedName) => {
+                        const selectedCustomer = customers.find(
+                          (c) => c.customerName === selectedName
+                        );
+                        field.onChange(selectedCustomer?.id || '');
+                      }}
+                      emptyMessage="No customer found."
+                      className="h-7 text-sm"
+                    />
+                  </FormControl>
                   <FormMessage className="text-xs" />
                 </FormItem>
               )}
@@ -285,22 +304,100 @@ export function CreateBillForm({ onSuccess }: CreateBillFormProps) {
 
           {/* Items Section */}
           <div className="space-y-3">
-            <div className="flex justify-end items-center">
+            <div className="grid grid-cols-6 gap-2 items-end">
+              <AutocompleteInput
+                ref={productRef}
+                tabIndex={0}
+                options={products.map((p) => p.productName || '')}
+                placeholder="Select product"
+                value={
+                  products.find((p) => p.id === newItem.productId)
+                    ?.productName || ''
+                }
+                onSelect={(selectedName) => {
+                  const selectedProduct = products.find(
+                    (p) => p.productName === selectedName
+                  );
+                  if (selectedProduct) {
+                    setNewItem((prev) => ({
+                      ...prev,
+                      productId: selectedProduct.id!,
+                      rate: selectedProduct.salesRate,
+                    }));
+                    setTimeout(() => quantityRef.current?.focus(), 0);
+                  }
+                }}
+                emptyMessage="No product found."
+                className="h-8 text-sm"
+              />
+              <Input
+                ref={quantityRef}
+                tabIndex={1}
+                type="number"
+                className="h-8 text-sm text-center"
+                value={newItem.quantity}
+                onChange={(e) =>
+                  setNewItem((prev) => ({
+                    ...prev,
+                    quantity: parseFloat(e.target.value) || 0,
+                  }))
+                }
+              />
+              <Input
+                ref={rateRef}
+                tabIndex={2}
+                type="number"
+                className="h-8 text-sm text-center"
+                value={newItem.rate}
+                onChange={(e) =>
+                  setNewItem((prev) => ({
+                    ...prev,
+                    rate: parseFloat(e.target.value) || 0,
+                  }))
+                }
+              />
+              <Input
+                ref={discountRef}
+                tabIndex={3}
+                type="number"
+                className="h-8 text-sm text-center"
+                value={newItem.discount}
+                onChange={(e) =>
+                  setNewItem((prev) => ({
+                    ...prev,
+                    discount: parseFloat(e.target.value) || 0,
+                  }))
+                }
+              />
+              <Input
+                ref={taxRef}
+                tabIndex={4}
+                type="number"
+                className="h-8 text-sm text-center"
+                value={newItem.taxPercentage}
+                onChange={(e) =>
+                  setNewItem((prev) => ({
+                    ...prev,
+                    taxPercentage: parseFloat(e.target.value) || 0,
+                  }))
+                }
+              />
               <Button
+                tabIndex={5}
                 type="button"
                 size="sm"
-                variant="outline"
                 onClick={addBillItem}
-                className="h-7 text-xs"
+                className="h-8 text-sm"
+                disabled={!newItem.productId}
               >
                 <Plus className="h-3 w-3 mr-1" />
-                Add Item
+                Add
               </Button>
             </div>
 
             {fields.length === 0 ? (
               <div className="text-xs text-muted-foreground text-center py-6 bg-muted/30 rounded-md">
-                No items added yet. Click "Add Item" to get started.
+                No items added yet. Use the inputs above to add items.
               </div>
             ) : (
               <Table className="text-sm">

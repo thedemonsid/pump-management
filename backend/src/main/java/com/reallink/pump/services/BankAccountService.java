@@ -1,7 +1,9 @@
 package com.reallink.pump.services;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -14,10 +16,12 @@ import com.reallink.pump.dto.request.CreateBankAccountRequest;
 import com.reallink.pump.dto.request.UpdateBankAccountRequest;
 import com.reallink.pump.dto.response.BankAccountResponse;
 import com.reallink.pump.entities.BankAccount;
+import com.reallink.pump.entities.DailyClosingBalance;
 import com.reallink.pump.entities.PumpInfoMaster;
 import com.reallink.pump.exception.PumpBusinessException;
 import com.reallink.pump.mapper.BankAccountMapper;
 import com.reallink.pump.repositories.BankAccountRepository;
+import com.reallink.pump.repositories.DailyClosingBalanceRepository;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
 
 import jakarta.validation.Valid;
@@ -34,6 +38,7 @@ public class BankAccountService {
     private final PumpInfoMasterRepository pumpInfoMasterRepository;
     private final BankAccountMapper mapper;
     private final BankTransactionService bankTransactionService;
+    private final DailyClosingBalanceRepository dailyClosingBalanceRepository;
 
     public List<BankAccountResponse> getAll() {
         return repository.findAll().stream()
@@ -163,7 +168,12 @@ public class BankAccountService {
     }
 
     private void setCurrentBalance(BankAccountResponse response, BankAccount bankAccount) {
-        BigDecimal transactionSum = bankTransactionService.getBalanceByBankAccountId(bankAccount.getId());
-        response.setCurrentBalance(bankAccount.getOpeningBalance().add(transactionSum));
+        Optional<DailyClosingBalance> latestBalance = dailyClosingBalanceRepository.findLatestByBankAccountIdAndDateBeforeOrEqual(bankAccount.getId(), LocalDate.now());
+        if (latestBalance.isPresent()) {
+            response.setCurrentBalance(latestBalance.get().getClosingBalance());
+        } else {
+            BigDecimal transactionSum = bankTransactionService.getBalanceByBankAccountId(bankAccount.getId());
+            response.setCurrentBalance(bankAccount.getOpeningBalance().add(transactionSum));
+        }
     }
 }

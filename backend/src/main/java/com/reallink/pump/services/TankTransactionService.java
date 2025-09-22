@@ -1,0 +1,98 @@
+package com.reallink.pump.services;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+
+import com.reallink.pump.dto.request.CreateTankTransactionRequest;
+import com.reallink.pump.dto.response.TankTransactionResponse;
+import com.reallink.pump.entities.DailyTankLevel;
+import com.reallink.pump.entities.Tank;
+import com.reallink.pump.entities.TankTransaction;
+import com.reallink.pump.entities.TankTransaction.TransactionType;
+import com.reallink.pump.exception.PumpBusinessException;
+import com.reallink.pump.mapper.TankTransactionMapper;
+import com.reallink.pump.repositories.DailyTankLevelRepository;
+import com.reallink.pump.repositories.TankRepository;
+import com.reallink.pump.repositories.TankTransactionRepository;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@Validated
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class TankTransactionService {
+
+    private final TankTransactionRepository transactionRepository;
+    private final TankRepository tankRepository;
+    private final TankTransactionMapper mapper;
+    private final DailyTankLevelRepository dailyTankLevelRepository;
+
+    public List<TankTransactionResponse> getTransactionsByTankId(@NotNull UUID tankId) {
+        List<TankTransaction> transactions = transactionRepository.findByTankIdOrderByTransactionDateDesc(tankId);
+        return mapper.toResponseList(transactions);
+    }
+
+    public BigDecimal getLevelChangeByTankId(@NotNull UUID tankId) {
+        return transactionRepository.getLevelChangeByTankId(tankId);
+    }
+
+    @Transactional
+    public TankTransactionResponse createAdditionTransaction(@NotNull UUID tankId, @Valid CreateTankTransactionRequest request) {
+        Tank tank = tankRepository.findById(tankId).orElse(null);
+        if (tank == null) {
+            throw new PumpBusinessException("TANK_NOT_FOUND", "Tank with ID " + tankId + " not found");
+        }
+        TankTransaction transaction = mapper.toEntity(request);
+        transaction.setTank(tank);
+        transaction.setTransactionType(TransactionType.ADDITION);
+        transaction.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
+        if (transaction.getTransactionDate() == null) {
+            transaction.setTransactionDate(LocalDateTime.now());
+        }
+        TankTransaction saved = transactionRepository.save(transaction);
+        updateDailyTankLevel(saved);
+        return mapper.toResponse(saved);
+    }
+
+    @Transactional
+    public TankTransactionResponse createRemovalTransaction(@NotNull UUID tankId, @Valid CreateTankTransactionRequest request) {
+        Tank tank = tankRepository.findById(tankId).orElse(null);
+        if (tank == null) {
+            throw new PumpBusinessException("TANK_NOT_FOUND", "Tank with ID " + tankId + " not found");
+        }
+        TankTransaction transaction = mapper.toEntity(request);
+        transaction.setTank(tank);
+        transaction.setTransactionType(TransactionType.REMOVAL);
+        transaction.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
+        if (transaction.getTransactionDate() == null) {
+            transaction.setTransactionDate(LocalDateTime.now());
+        }
+        TankTransaction saved = transactionRepository.save(transaction);
+        updateDailyTankLevel(saved);
+        return mapper.toResponse(saved);
+    }
+
+    private void updateDailyTankLevel(TankTransaction transaction) {
+        LocalDate date = transaction.getTransactionDate().toLocalDate();
+        BigDecimal levelChange = transactionRepository.getLevelChangeByTankIdAndDate(transaction.getTank().getId(), transaction.getTransactionDate());
+        BigDecimal closingLevel = transaction.getTank().getOpeningLevel().add(levelChange);
+
+        DailyTankLevel dailyLevel = dailyTankLevelRepository.findByTank_IdAndDate(transaction.getTank().getId(), date)
+                .orElse(new DailyTankLevel());
+        dailyLevel.setTank(transaction.getTank());
+        dailyLevel.setDate(date);
+        dailyLevel.setClosingLevel(closingLevel);
+        dailyTankLevelRepository.save(dailyLevel);
+    }
+}

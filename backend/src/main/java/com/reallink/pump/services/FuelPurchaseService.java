@@ -1,5 +1,6 @@
 package com.reallink.pump.services;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import com.reallink.pump.dto.request.CreateFuelPurchaseRequest;
+import com.reallink.pump.dto.request.CreateTankTransactionRequest;
 import com.reallink.pump.dto.request.UpdateFuelPurchaseRequest;
 import com.reallink.pump.dto.response.FuelPurchaseResponse;
 import com.reallink.pump.entities.FuelPurchase;
@@ -37,6 +39,7 @@ public class FuelPurchaseService {
     private final SupplierRepository supplierRepository;
     private final TankRepository tankRepository;
     private final FuelPurchaseMapper mapper;
+    private final TankTransactionService tankTransactionService;
 
     public List<FuelPurchaseResponse> getAll() {
         return repository.findAll().stream()
@@ -105,6 +108,12 @@ public class FuelPurchaseService {
         fuelPurchase.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
 
         FuelPurchase savedFuelPurchase = repository.save(fuelPurchase);
+
+        // If addToStock is true, update tank level and create tank transaction
+        if (Boolean.TRUE.equals(savedFuelPurchase.getAddToStock())) {
+            updateTankLevelAndCreateTransaction(savedFuelPurchase);
+        }
+
         return mapper.toResponse(savedFuelPurchase);
     }
 
@@ -149,5 +158,21 @@ public class FuelPurchaseService {
                 .orElseThrow(() -> new PumpBusinessException("FUEL_PURCHASE_NOT_FOUND",
                 "Fuel purchase with ID " + id + " not found"));
         repository.delete(fuelPurchase);
+    }
+
+    private void updateTankLevelAndCreateTransaction(FuelPurchase fuelPurchase) {
+        // Update tank's current level
+        Tank tank = fuelPurchase.getTank();
+        BigDecimal newLevel = tank.getCurrentLevel().add(fuelPurchase.getQuantity());
+        tank.setCurrentLevel(newLevel);
+        tankRepository.save(tank);
+
+        // Create tank transaction
+        CreateTankTransactionRequest transactionRequest = new CreateTankTransactionRequest();
+        transactionRequest.setAmount(fuelPurchase.getQuantity());
+        transactionRequest.setTransactionDate(fuelPurchase.getPurchaseDate().atStartOfDay());
+        transactionRequest.setRemarks("Fuel purchase - Invoice: " + fuelPurchase.getInvoiceNumber());
+
+        tankTransactionService.createAdditionTransaction(tank.getId(), transactionRequest);
     }
 }

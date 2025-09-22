@@ -1,6 +1,7 @@
 package com.reallink.pump.entities;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -59,6 +60,15 @@ public class Tank extends BaseEntity {
     @Column(name = "current_level", precision = 12, scale = 2, columnDefinition = "DECIMAL(12,2) DEFAULT 0.00")
     private BigDecimal currentLevel = BigDecimal.ZERO;
 
+    @NotNull(message = "Opening level is required")
+    @DecimalMin(value = "0.00", message = "Opening level must be greater than or equal to 0.00")
+    @Column(name = "opening_level", nullable = false, precision = 12, scale = 2)
+    private BigDecimal openingLevel;
+
+    @NotNull(message = "Opening level date is required")
+    @Column(name = "opening_level_date", nullable = false)
+    private LocalDate openingLevelDate;
+
     @DecimalMin(value = "0.0", message = "Low level alert cannot be negative")
     @Digits(integer = 10, fraction = 2, message = "Low level alert must have at most 10 digits and 2 decimal places")
     @Column(name = "low_level_alert", precision = 12, scale = 2)
@@ -83,6 +93,8 @@ public class Tank extends BaseEntity {
         this.product = product;
         this.pumpMaster = pumpMaster;
         this.currentLevel = BigDecimal.ZERO;
+        this.openingLevel = BigDecimal.ZERO;
+        this.openingLevelDate = LocalDate.now();
     }
 
     // Business methods

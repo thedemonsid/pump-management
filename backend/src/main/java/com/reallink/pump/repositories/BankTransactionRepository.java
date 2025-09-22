@@ -1,6 +1,7 @@
 package com.reallink.pump.repositories;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,4 +20,8 @@ public interface BankTransactionRepository extends JpaRepository<BankTransaction
     @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = 'CREDIT' THEN t.amount ELSE -t.amount END), 0) "
             + "FROM BankTransaction t WHERE t.bankAccount.id = :bankAccountId")
     BigDecimal getBalanceByBankAccountId(@Param("bankAccountId") UUID bankAccountId);
+
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = 'CREDIT' THEN t.amount ELSE -t.amount END), 0) "
+            + "FROM BankTransaction t WHERE t.bankAccount.id = :bankAccountId AND DATE(t.transactionDate) <= :date")
+    BigDecimal getBalanceByBankAccountIdAndDate(@Param("bankAccountId") UUID bankAccountId, @Param("date") LocalDate date);
 }
