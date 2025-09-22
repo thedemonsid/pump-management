@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,12 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.reallink.pump.dto.request.CreateTankRequest;
-import com.reallink.pump.dto.request.CreateTankTransactionRequest;
 import com.reallink.pump.dto.request.UpdateTankRequest;
 import com.reallink.pump.dto.response.TankResponse;
-import com.reallink.pump.dto.response.TankTransactionResponse;
 import com.reallink.pump.services.TankService;
-import com.reallink.pump.services.TankTransactionService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,12 +28,12 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/tanks")
+@Validated
 @RequiredArgsConstructor
-@Tag(name = "Tank Management", description = "APIs for managing tank information")
+@Tag(name = "Tank Management", description = "APIs for managing tanks")
 public class TankController {
 
     private final TankService service;
-    private final TankTransactionService transactionService;
 
     private UUID extractPumpMasterId(HttpServletRequest request) {
         Object pumpMasterIdObj = request.getAttribute("pumpMasterId");
@@ -86,27 +84,5 @@ public class TankController {
     public ResponseEntity<Void> deleteTank(@PathVariable UUID id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @Operation(summary = "Get tank transactions", description = "Retrieve all transactions for a specific tank")
-    @GetMapping("/{tankId}/transactions")
-    public ResponseEntity<List<TankTransactionResponse>> getTankTransactions(@PathVariable UUID tankId) {
-        return ResponseEntity.ok(transactionService.getTransactionsByTankId(tankId));
-    }
-
-    @Operation(summary = "Add fuel to tank", description = "Record fuel addition to a tank")
-    @PostMapping("/{tankId}/add-fuel")
-    public ResponseEntity<TankTransactionResponse> addFuel(@PathVariable UUID tankId,
-            @Valid @RequestBody CreateTankTransactionRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(transactionService.createAdditionTransaction(tankId, request));
-    }
-
-    @Operation(summary = "Remove fuel from tank", description = "Record fuel removal from a tank")
-    @PostMapping("/{tankId}/remove-fuel")
-    public ResponseEntity<TankTransactionResponse> removeFuel(@PathVariable UUID tankId,
-            @Valid @RequestBody CreateTankTransactionRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(transactionService.createRemovalTransaction(tankId, request));
     }
 }

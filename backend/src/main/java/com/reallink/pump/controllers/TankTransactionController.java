@@ -1,5 +1,6 @@
 package com.reallink.pump.controllers;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -26,7 +27,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/tanks")
+@RequestMapping("/api/v1/tanks")
 @Validated
 @RequiredArgsConstructor
 @Tag(name = "Tank Transaction Management", description = "APIs for managing tank transactions (fuel purchases)")
@@ -61,5 +62,13 @@ public class TankTransactionController {
     public ResponseEntity<TankTransactionResponse> removeFuel(@PathVariable UUID tankId,
             @Valid @RequestBody CreateTankTransactionRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(transactionService.createRemovalTransaction(tankId, request));
+    }
+
+    @GetMapping("/{tankId}/opening-level")
+    @Operation(summary = "Get tank opening level at a specific date")
+    public ResponseEntity<BigDecimal> getOpeningLevel(@PathVariable UUID tankId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        BigDecimal openingLevel = transactionService.getOpeningLevel(tankId, date);
+        return ResponseEntity.ok(openingLevel);
     }
 }

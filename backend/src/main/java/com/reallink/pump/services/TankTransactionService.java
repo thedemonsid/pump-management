@@ -100,4 +100,17 @@ public class TankTransactionService {
         dailyLevel.setDailyNet(dailyNet);
         dailyTankLevelRepository.save(dailyLevel);
     }
+
+    public BigDecimal getOpeningLevel(UUID tankId, LocalDate date) {
+        Tank tank = tankRepository.findById(tankId).orElse(null);
+        if (tank == null) {
+            throw new PumpBusinessException("TANK_NOT_FOUND", "Tank with ID " + tankId + " not found");
+        }
+
+        // Get cumulative additions up to the specified date
+        BigDecimal cumulativeAdditions = dailyTankLevelRepository.getCumulativeNetUpToDate(tankId, date);
+
+        // Return opening level + cumulative additions
+        return tank.getOpeningLevel().add(cumulativeAdditions);
+    }
 }

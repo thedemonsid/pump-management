@@ -127,6 +127,16 @@ export function TankLedgerPage() {
     }
   }, [tanks.length, fetchTanks]);
 
+  useEffect(() => {
+    if (tank?.openingLevelDate) {
+      // Format the opening level date to YYYY-MM-DD for the date input
+      const openingDate = new Date(tank.openingLevelDate)
+        .toISOString()
+        .split('T')[0];
+      setFromDate(openingDate);
+    }
+  }, [tank?.openingLevelDate]);
+
   const handleFetchLedger = () => {
     if (!id || !fromDate) return;
     computeLedgerData({
