@@ -108,4 +108,34 @@ export class BankAccountService {
     );
     return response.data;
   }
+
+  // Get transactions for a bank account with date range
+  static async getTransactionsWithDateRange(
+    bankAccountId: string,
+    fromDate: string,
+    toDate: string
+  ): Promise<BankTransaction[]> {
+    const queryParams = new URLSearchParams();
+    queryParams.append('fromDate', fromDate);
+    queryParams.append('toDate', toDate);
+
+    const response = await api.get<BankTransaction[]>(
+      `${this.BASE_PATH}/${bankAccountId}/transactions?${queryParams}`
+    );
+    return response.data;
+  }
+
+  // Get opening balance for a specific date
+  static async getOpeningBalance(
+    bankAccountId: string,
+    date: string
+  ): Promise<number> {
+    const queryParams = new URLSearchParams();
+    queryParams.append('date', date);
+
+    const response = await api.get<number>(
+      `${this.BASE_PATH}/${bankAccountId}/opening-balance?${queryParams}`
+    );
+    return response.data;
+  }
 }

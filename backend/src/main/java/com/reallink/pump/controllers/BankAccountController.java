@@ -1,8 +1,11 @@
 package com.reallink.pump.controllers;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -119,10 +122,28 @@ public class BankAccountController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/{bankAccountId}/opening-balance")
+    @Operation(summary = "Get opening balance for ledger")
+    public ResponseEntity<BigDecimal> getOpeningBalance(
+            @PathVariable UUID bankAccountId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        BigDecimal openingBalance = service.getOpeningBalance(bankAccountId, date);
+        return ResponseEntity.ok(openingBalance);
+    }
+
     @GetMapping("/{bankAccountId}/transactions")
-    @Operation(summary = "Get transactions for a bank account")
-    public ResponseEntity<List<BankTransactionResponse>> getTransactions(@PathVariable UUID bankAccountId) {
-        return ResponseEntity.ok(transactionService.getTransactionsByBankAccountId(bankAccountId));
+    @Operation(summary = "Get transactions for a bank account with date filtering")
+    public ResponseEntity<List<BankTransactionResponse>> getTransactions(
+            @PathVariable UUID bankAccountId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+        List<BankTransactionResponse> transactions;
+        if (fromDate != null && toDate != null) {
+            transactions = transactionService.getTransactionsByBankAccountIdAndDateRange(bankAccountId, fromDate, toDate);
+        } else {
+            transactions = transactionService.getTransactionsByBankAccountId(bankAccountId);
+        }
+        return ResponseEntity.ok(transactions);
     }
 
     @PostMapping("/{bankAccountId}/credit")

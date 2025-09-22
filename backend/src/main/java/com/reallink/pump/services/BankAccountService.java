@@ -3,7 +3,6 @@ package com.reallink.pump.services;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -16,7 +15,6 @@ import com.reallink.pump.dto.request.CreateBankAccountRequest;
 import com.reallink.pump.dto.request.UpdateBankAccountRequest;
 import com.reallink.pump.dto.response.BankAccountResponse;
 import com.reallink.pump.entities.BankAccount;
-import com.reallink.pump.entities.DailyClosingBalance;
 import com.reallink.pump.entities.PumpInfoMaster;
 import com.reallink.pump.exception.PumpBusinessException;
 import com.reallink.pump.mapper.BankAccountMapper;
@@ -37,7 +35,6 @@ public class BankAccountService {
     private final BankAccountRepository repository;
     private final PumpInfoMasterRepository pumpInfoMasterRepository;
     private final BankAccountMapper mapper;
-    private final BankTransactionService bankTransactionService;
     private final DailyClosingBalanceRepository dailyClosingBalanceRepository;
 
     public List<BankAccountResponse> getAll() {
@@ -167,13 +164,19 @@ public class BankAccountService {
         return repository.countByPumpMasterId(pumpMasterId);
     }
 
-    private void setCurrentBalance(BankAccountResponse response, BankAccount bankAccount) {
-        Optional<DailyClosingBalance> latestBalance = dailyClosingBalanceRepository.findLatestByBankAccountIdAndDateBeforeOrEqual(bankAccount.getId(), LocalDate.now());
-        if (latestBalance.isPresent()) {
-            response.setCurrentBalance(latestBalance.get().getClosingBalance());
-        } else {
-            BigDecimal transactionSum = bankTransactionService.getBalanceByBankAccountId(bankAccount.getId());
-            response.setCurrentBalance(bankAccount.getOpeningBalance().add(transactionSum));
+    public BigDecimal getOpeningBalance(UUID bankAccountId, LocalDate date) {
+        // Get the cumulative net up to the previous day, add to account's opening balance
+        BigDecimal cumulativeNetUpToPreviousDay = dailyClosingBalanceRepository.getCumulativeNetUpToDate(bankAccountId, date.minusDays(1));
+        // Assuming we have access to the bank account's opening balance
+        BankAccount bankAccount = repository.findById(bankAccountId).orElse(null);
+        if (bankAccount == null) {
+            return BigDecimal.ZERO;
         }
+        return bankAccount.getOpeningBalance().add(cumulativeNetUpToPreviousDay);
+    }
+
+    private void setCurrentBalance(BankAccountResponse response, BankAccount bankAccount) {
+        BigDecimal cumulativeNetUpToToday = dailyClosingBalanceRepository.getCumulativeNetUpToDate(bankAccount.getId(), LocalDate.now());
+        response.setCurrentBalance(bankAccount.getOpeningBalance().add(cumulativeNetUpToToday));
     }
 }

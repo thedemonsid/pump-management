@@ -11,6 +11,7 @@ export * from './customer';
 export * from './purchase';
 export * from './fuel-purchase';
 export * from './bank-account';
+export * from './bank-account-ledger';
 
 // Explicitly re-export bill types from bill.ts to avoid ambiguity
 export type {

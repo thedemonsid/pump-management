@@ -21,7 +21,12 @@ public interface DailyClosingBalanceRepository extends JpaRepository<DailyClosin
     @Query("SELECT dcb FROM DailyClosingBalance dcb WHERE dcb.bankAccount.id = :bankAccountId AND dcb.date <= :date ORDER BY dcb.date DESC")
     Optional<DailyClosingBalance> findLatestByBankAccountIdAndDateBeforeOrEqual(@Param("bankAccountId") UUID bankAccountId, @Param("date") LocalDate date);
 
+    Optional<DailyClosingBalance> findTopByBankAccountIdAndDateLessThanOrderByDateDesc(UUID bankAccountId, LocalDate date);
+
     @Modifying
-    @Query("UPDATE DailyClosingBalance dcb SET dcb.closingBalance = :closingBalance WHERE dcb.bankAccount.id = :bankAccountId AND dcb.date = :date")
-    int updateClosingBalance(@Param("bankAccountId") UUID bankAccountId, @Param("date") LocalDate date, @Param("closingBalance") BigDecimal closingBalance);
+    @Query("UPDATE DailyClosingBalance dcb SET dcb.dailyNet = :dailyNet WHERE dcb.bankAccount.id = :bankAccountId AND dcb.date = :date")
+    int updateDailyNet(@Param("bankAccountId") UUID bankAccountId, @Param("date") LocalDate date, @Param("dailyNet") BigDecimal dailyNet);
+
+    @Query("SELECT COALESCE(SUM(dcb.dailyNet), 0) FROM DailyClosingBalance dcb WHERE dcb.bankAccount.id = :bankAccountId AND dcb.date <= :date")
+    BigDecimal getCumulativeNetUpToDate(@Param("bankAccountId") UUID bankAccountId, @Param("date") LocalDate date);
 }

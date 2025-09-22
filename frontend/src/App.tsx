@@ -40,7 +40,7 @@ import { PurchasesPage } from '@/pages/purchases/PurchasesPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { FuelPurchasesPage } from './pages/fuel-purchases/FuelPurchasesPage';
 import { BankAccountsPage } from './pages/bank-accounts/BankAccountsPage';
-import { BankAccountDetailPage } from './pages/bank-accounts/BankAccountDetailPage';
+import { BankAccountLedgerPage } from './pages/bank-accounts/BankAccountLedgerPage';
 import { BillsPage } from './pages/bills/BillsPage';
 import { BillDetailPage } from './pages/bills/BillDetailPage';
 import { BillsDetailsPage } from './pages/bills/BillsDetailsPage';
@@ -69,6 +69,7 @@ const headerMap: Record<string, string> = {
   salesmen: 'Salesmen',
   shifts: 'Shifts',
   'bank-accounts': 'Bank Accounts',
+  ledger: 'Ledger',
   bills: 'Bills',
   'bill-details': 'Bill Details',
   'salesman-bills': 'Salesman Bills',
@@ -284,8 +285,8 @@ function App() {
                         element={<BankAccountsPage />}
                       />
                       <Route
-                        path="/bank-accounts/:id"
-                        element={<BankAccountDetailPage />}
+                        path="/bank-accounts/:id/ledger"
+                        element={<BankAccountLedgerPage />}
                       />
                       <Route path="/bills" element={<BillsPage />} />
                       <Route path="/bills/:id" element={<BillDetailPage />} />

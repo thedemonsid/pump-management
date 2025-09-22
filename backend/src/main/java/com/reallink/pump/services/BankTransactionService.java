@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,16 @@ public class BankTransactionService {
     public List<BankTransactionResponse> getTransactionsByBankAccountId(@NotNull UUID bankAccountId) {
         List<BankTransaction> transactions = transactionRepository.findByBankAccountIdOrderByTransactionDateDesc(bankAccountId);
         return mapper.toResponseList(transactions);
+    }
+
+    public List<BankTransactionResponse> getTransactionsByBankAccountIdAndDateRange(
+            UUID bankAccountId, LocalDate fromDate, LocalDate toDate) {
+        List<BankTransaction> transactions = transactionRepository
+                .findByBankAccountIdAndTransactionDateBetweenOrderByTransactionDateAsc(
+                        bankAccountId, fromDate.atStartOfDay(), toDate.atTime(23, 59, 59));
+        return transactions.stream()
+                .map(mapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     public BigDecimal getBalanceByBankAccountId(@NotNull UUID bankAccountId) {
@@ -85,12 +96,12 @@ public class BankTransactionService {
 
     private void updateDailyClosingBalance(BankTransaction transaction) {
         LocalDate date = transaction.getTransactionDate().toLocalDate();
-        BigDecimal balance = transactionRepository.getBalanceByBankAccountIdAndDate(transaction.getBankAccount().getId(), date);
+        BigDecimal dailyNet = transactionRepository.getDailyNetByBankAccountIdAndDate(transaction.getBankAccount().getId(), date);
         DailyClosingBalance dailyBalance = dailyClosingBalanceRepository.findByBankAccount_IdAndDate(transaction.getBankAccount().getId(), date)
                 .orElse(new DailyClosingBalance());
         dailyBalance.setBankAccount(transaction.getBankAccount());
         dailyBalance.setDate(date);
-        dailyBalance.setClosingBalance(balance);
+        dailyBalance.setDailyNet(dailyNet);
         dailyClosingBalanceRepository.save(dailyBalance);
     }
 }

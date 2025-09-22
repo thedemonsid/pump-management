@@ -165,9 +165,9 @@ export function BankAccountsPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() =>
-                            navigate(`/bank-accounts/${bankAccount.id}`)
+                            navigate(`/bank-accounts/${bankAccount.id}/ledger`)
                           }
-                          title="View Details"
+                          title="View Ledger"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
