@@ -37,18 +37,6 @@ public class BillItemResponse {
     @Schema(description = "Amount (quantity * rate)", example = "0.35")
     private BigDecimal amount;
 
-    @Schema(description = "Discount amount", example = "0.00")
-    private BigDecimal discount;
-
-    @Schema(description = "Amount after discount", example = "0.35")
-    private BigDecimal discountAmount;
-
-    @Schema(description = "Tax percentage", example = "28.00")
-    private BigDecimal taxPercentage;
-
-    @Schema(description = "Tax amount", example = "0.10")
-    private BigDecimal taxAmount;
-
-    @Schema(description = "Net amount (after discount + tax)", example = "0.45")
+    @Schema(description = "Net amount", example = "0.35")
     private BigDecimal netAmount;
 }

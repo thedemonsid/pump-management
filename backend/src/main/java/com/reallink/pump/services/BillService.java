@@ -1,7 +1,6 @@
 package com.reallink.pump.services;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -240,23 +239,16 @@ public class BillService {
         List<BillItem> remainingItems = billItemRepository.findByBill_Id(billId);
 
         BigDecimal totalAmount = BigDecimal.ZERO;
-        BigDecimal discountAmount = BigDecimal.ZERO;
-        BigDecimal taxAmount = BigDecimal.ZERO;
 
         for (BillItem bi : remainingItems) {
             BigDecimal amt = bi.getAmount() != null ? bi.getAmount() : BigDecimal.ZERO;
-            BigDecimal disc = bi.getDiscount() != null ? bi.getDiscount() : BigDecimal.ZERO;
-            BigDecimal tax = bi.getTaxAmount() != null ? bi.getTaxAmount() : BigDecimal.ZERO;
-
             totalAmount = totalAmount.add(amt);
-            discountAmount = discountAmount.add(disc);
-            taxAmount = taxAmount.add(tax);
         }
 
         bill.setTotalAmount(totalAmount);
-        bill.setDiscountAmount(discountAmount);
-        bill.setTaxAmount(taxAmount);
-        bill.setNetAmount(totalAmount.subtract(discountAmount).add(taxAmount));
+        bill.setDiscountAmount(BigDecimal.ZERO);
+        bill.setTaxAmount(BigDecimal.ZERO);
+        bill.setNetAmount(totalAmount);
 
         repository.save(bill);
     }
@@ -268,40 +260,25 @@ public class BillService {
 
     private void calculateBillTotals(Bill bill, List<CreateBillItemRequest> itemRequests) {
         BigDecimal totalAmount = BigDecimal.ZERO;
-        BigDecimal discountAmount = BigDecimal.ZERO;
-        BigDecimal taxAmount = BigDecimal.ZERO;
 
         for (CreateBillItemRequest itemRequest : itemRequests) {
             BigDecimal quantity = BigDecimal.valueOf(itemRequest.getQuantity());
             BigDecimal amount = itemRequest.getRate().multiply(quantity);
-            BigDecimal itemDiscount = itemRequest.getDiscount() != null ? itemRequest.getDiscount() : BigDecimal.ZERO;
-            BigDecimal amountAfterDiscount = amount.subtract(itemDiscount);
-            BigDecimal itemTaxAmount = amountAfterDiscount.multiply(itemRequest.getTaxPercentage()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-
             totalAmount = totalAmount.add(amount);
-            discountAmount = discountAmount.add(itemDiscount);
-            taxAmount = taxAmount.add(itemTaxAmount);
         }
 
         bill.setTotalAmount(totalAmount);
-        bill.setDiscountAmount(discountAmount);
-        bill.setTaxAmount(taxAmount);
-        bill.setNetAmount(totalAmount.subtract(discountAmount).add(taxAmount));
+        bill.setDiscountAmount(BigDecimal.ZERO);
+        bill.setTaxAmount(BigDecimal.ZERO);
+        bill.setNetAmount(totalAmount);
     }
 
     private void calculateBillItemAmounts(BillItem billItem, CreateBillItemRequest request) {
         BigDecimal quantity = BigDecimal.valueOf(request.getQuantity());
         BigDecimal amount = request.getRate().multiply(quantity);
-        BigDecimal discount = request.getDiscount() != null ? request.getDiscount() : BigDecimal.ZERO;
-        BigDecimal discountAmount = amount.subtract(discount);
-        BigDecimal taxAmount = discountAmount.multiply(request.getTaxPercentage()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-        BigDecimal netAmount = discountAmount.add(taxAmount);
 
         billItem.setAmount(amount);
-        billItem.setDiscount(discount);
-        billItem.setDiscountAmount(discountAmount);
-        billItem.setTaxAmount(taxAmount);
-        billItem.setNetAmount(netAmount);
+        billItem.setNetAmount(amount);
     }
 
     @Transactional
@@ -335,8 +312,6 @@ public class BillService {
             req.setProductId(item.getProduct().getId());
             req.setQuantity(item.getQuantity().intValue());
             req.setRate(item.getRate());
-            req.setDiscount(item.getDiscount());
-            req.setTaxPercentage(item.getTaxPercentage());
             return req;
         }).toList();
         calculateBillTotals(bill, itemRequests);
@@ -365,8 +340,6 @@ public class BillService {
         existingItem.setProduct(product);
         existingItem.setQuantity(BigDecimal.valueOf(request.getQuantity()));
         existingItem.setRate(request.getRate());
-        existingItem.setDiscount(request.getDiscount());
-        existingItem.setTaxPercentage(request.getTaxPercentage());
 
         // Calculate item amounts
         calculateBillItemAmounts(existingItem, request);
@@ -379,8 +352,6 @@ public class BillService {
             req.setProductId(item.getProduct().getId());
             req.setQuantity(item.getQuantity().intValue());
             req.setRate(item.getRate());
-            req.setDiscount(item.getDiscount());
-            req.setTaxPercentage(item.getTaxPercentage());
             return req;
         }).toList();
         calculateBillTotals(bill, itemRequests);

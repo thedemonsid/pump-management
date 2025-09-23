@@ -53,26 +53,6 @@ public class BillItem extends BaseEntity {
     @Column(name = "amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
 
-    @DecimalMin(value = "0.0", inclusive = true, message = "Discount must be non-negative")
-    @Digits(integer = 10, fraction = 2, message = "Discount must have at most 10 digits and 2 decimal places")
-    @Column(name = "discount", precision = 12, scale = 2)
-    private BigDecimal discount = BigDecimal.ZERO;
-
-    @DecimalMin(value = "0.0", inclusive = true, message = "Discount amount must be non-negative")
-    @Digits(integer = 10, fraction = 2, message = "Discount amount must have at most 10 digits and 2 decimal places")
-    @Column(name = "discount_amount", precision = 12, scale = 2)
-    private BigDecimal discountAmount = BigDecimal.ZERO;
-
-    @DecimalMin(value = "0.0", inclusive = true, message = "Tax percentage must be non-negative")
-    @Digits(integer = 5, fraction = 2, message = "Tax percentage must have at most 5 digits and 2 decimal places")
-    @Column(name = "tax_percentage", nullable = false, precision = 7, scale = 2)
-    private BigDecimal taxPercentage = BigDecimal.ZERO;
-
-    @DecimalMin(value = "0.0", inclusive = true, message = "Tax amount must be non-negative")
-    @Digits(integer = 10, fraction = 2, message = "Tax amount must have at most 10 digits and 2 decimal places")
-    @Column(name = "tax_amount", precision = 12, scale = 2)
-    private BigDecimal taxAmount = BigDecimal.ZERO;
-
     @NotNull(message = "Net amount is required")
     @DecimalMin(value = "0.0", inclusive = true, message = "Net amount must be non-negative")
     @Digits(integer = 10, fraction = 2, message = "Net amount must have at most 10 digits and 2 decimal places")
