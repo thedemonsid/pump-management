@@ -40,6 +40,7 @@ interface BillItemsTableProps {
   gstPercent: string;
   setGstPercent: (gst: string) => void;
   gstIncluded: string;
+  onAddItem?: (item: BillItem & { productId: string }) => void;
 }
 
 export const BillItemsTable = ({
@@ -58,6 +59,7 @@ export const BillItemsTable = ({
   gstPercent,
   setGstPercent,
   gstIncluded,
+  onAddItem,
 }: BillItemsTableProps) => {
   // Match BillHeader select styles
   const selectStyles = {
@@ -125,13 +127,20 @@ export const BillItemsTable = ({
 
   const addItem = () => {
     if (selectedProduct && quantity && price) {
-      const newItem: BillItem = {
+      const newItem: BillItem & { productId: string } = {
         product: selectedProduct.productName,
         quantity,
         price,
         total,
+        productId: selectedProduct.id || '',
       };
-      setBillItems([...billItems, newItem]);
+
+      if (onAddItem) {
+        onAddItem(newItem);
+      } else {
+        setBillItems([...billItems, newItem]);
+      }
+
       setSelectedProduct(null);
       setQuantity('');
       setPrice('');
@@ -141,7 +150,6 @@ export const BillItemsTable = ({
       }, 0);
     }
   };
-
   const handleKeyPress = (e: React.KeyboardEvent, action: () => void) => {
     if (e.key === 'Enter') {
       action();

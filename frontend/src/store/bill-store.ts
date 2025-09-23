@@ -4,6 +4,8 @@ import type {
   BillResponse,
   CreateBillRequest,
   UpdateBillRequest,
+  BillItemResponse,
+  CreateBillItemRequest,
 } from '@/types';
 import { BillService } from '@/services';
 import { toast } from 'sonner';
@@ -40,13 +42,22 @@ interface BillState {
   // API methods
   fetchBills: () => Promise<void>;
   fetchBillById: (id: string) => Promise<BillResponse>;
-  fetchBillsByPumpMasterId: (pumpMasterId: string) => Promise<void>;
+  fetchBillsByPumpMasterId: () => Promise<void>;
   fetchBillsByCustomerId: (customerId: string) => Promise<void>;
   fetchBillsByDateRange: () => Promise<void>;
   getNextBillNo: () => Promise<number>;
   createBill: (bill: CreateBillRequest) => Promise<void>;
   editBill: (id: string, bill: UpdateBillRequest) => Promise<void>;
   removeBill: (id: string) => Promise<void>;
+  deleteBillItem: (billItemId: string) => Promise<void>;
+  createBillItem: (
+    billId: string,
+    billItem: CreateBillItemRequest
+  ) => Promise<BillItemResponse>;
+  updateBillItem: (
+    billItemId: string,
+    billItem: CreateBillItemRequest
+  ) => Promise<BillItemResponse>;
 }
 
 export const useBillStore = create<BillState>()(
@@ -144,10 +155,10 @@ export const useBillStore = create<BillState>()(
         }
       },
 
-      fetchBillsByPumpMasterId: async (pumpMasterId: string) => {
+      fetchBillsByPumpMasterId: async () => {
         set({ loading: true, error: null });
         try {
-          const bills = await BillService.getByPumpMasterId(pumpMasterId);
+          const bills = await BillService.getByPumpMasterId();
           set({ bills, loading: false });
         } catch (error) {
           const errorMessage =
@@ -260,6 +271,90 @@ export const useBillStore = create<BillState>()(
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : 'Failed to delete bill';
+          set({ error: errorMessage, loading: false });
+          toast.error(errorMessage);
+          throw error;
+        }
+      },
+
+      deleteBillItem: async (billItemId: string) => {
+        set({ loading: true, error: null });
+        try {
+          await BillService.deleteBillItem(billItemId);
+          // Note: This might require updating the bill in the store
+          // For now, we'll just show success
+          set({ loading: false });
+          toast.success('Bill item deleted successfully');
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : 'Failed to delete bill item';
+          set({ error: errorMessage, loading: false });
+          toast.error(errorMessage);
+          throw error;
+        }
+      },
+
+      createBillItem: async (
+        billId: string,
+        billItem: CreateBillItemRequest
+      ) => {
+        set({ loading: true, error: null });
+        try {
+          const newBillItem = await BillService.createBillItem(
+            billId,
+            billItem
+          );
+          // Update the bill in the store to include the new item
+          set((state) => ({
+            bills: state.bills.map((bill) =>
+              bill.id === billId
+                ? { ...bill, billItems: [...bill.billItems, newBillItem] }
+                : bill
+            ),
+            loading: false,
+          }));
+          toast.success('Bill item created successfully');
+          return newBillItem;
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : 'Failed to create bill item';
+          set({ error: errorMessage, loading: false });
+          toast.error(errorMessage);
+          throw error;
+        }
+      },
+
+      updateBillItem: async (
+        billItemId: string,
+        billItem: CreateBillItemRequest
+      ) => {
+        set({ loading: true, error: null });
+        try {
+          const updatedBillItem = await BillService.updateBillItem(
+            billItemId,
+            billItem
+          );
+          // Update the bill item in the store
+          set((state) => ({
+            bills: state.bills.map((bill) => ({
+              ...bill,
+              billItems: bill.billItems.map((item) =>
+                item.id === billItemId ? updatedBillItem : item
+              ),
+            })),
+            loading: false,
+          }));
+          toast.success('Bill item updated successfully');
+          return updatedBillItem;
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : 'Failed to update bill item';
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;

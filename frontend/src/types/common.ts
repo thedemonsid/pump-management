@@ -71,11 +71,10 @@ export const UpdateBillRequestSchema = z.object({
 
 export const CreateBillRequestSchema = z
   .object({
-    pumpMasterId: z.string().min(1, 'Pump Master ID is required'),
-    billNo: z.number().int().positive('Bill number is required'),
     billDate: z.string().min(1, 'Bill date is required'),
     customerId: z.string().min(1, 'Customer ID is required'),
     billType: BillTypeSchema,
+    paymentType: PaymentTypeEnum,
     rateType: RateTypeEnum,
     billItems: z
       .array(CreateBillItemRequestSchema)

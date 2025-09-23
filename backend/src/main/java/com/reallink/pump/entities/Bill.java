@@ -65,6 +65,11 @@ public class Bill extends BaseEntity {
     @Column(name = "rate_type", nullable = false)
     private RateType rateType;
 
+    @NotNull(message = "Payment type is required")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_type", nullable = false)
+    private PaymentType paymentType;
+
     @NotNull(message = "Total amount is required")
     @DecimalMin(value = "0.0", inclusive = true, message = "Total amount must be non-negative")
     @Digits(integer = 10, fraction = 2, message = "Total amount must have at most 10 digits and 2 decimal places")

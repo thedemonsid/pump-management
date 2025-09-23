@@ -10,12 +10,15 @@ import type { BankAccount } from '@/types/bank-account';
 import { BillHeader } from '@/components/bills/BillHeader';
 import { BillItemsTable } from '@/components/bills/BillItemsTable';
 import { PaymentsTable } from '@/components/bills/PaymentsTable';
+import { useBillStore } from '@/store/bill-store';
+import type { CreateBillRequest } from '@/types';
 
-interface BillItem {
+interface LocalBillItem {
   product: string;
   quantity: string;
   price: string;
   total: string;
+  productId: string;
 }
 
 interface PaymentEntry {
@@ -25,7 +28,8 @@ interface PaymentEntry {
 }
 
 const CreateBill = () => {
-  const [billItems, setBillItems] = useState<BillItem[]>([]);
+  const { createBill, loading } = useBillStore();
+  const [billItems, setBillItems] = useState<LocalBillItem[]>([]);
   const [quantity, setQuantity] = useState('');
   const [price, setPrice] = useState('');
   const [billDate, setBillDate] = useState(() => {
@@ -35,7 +39,7 @@ const CreateBill = () => {
   const [gstIncluded, setGstIncluded] = useState<string>('');
   const [paymentType, setPaymentType] = useState<string>('');
   const [fixedDiscount, setFixedDiscount] = useState('');
-  const [gstPercent, setGstPercent] = useState('18');
+  const [gstPercent, setGstPercent] = useState('0');
   const [payments, setPayments] = useState<PaymentEntry[]>([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<string>('');
@@ -96,6 +100,59 @@ const CreateBill = () => {
     finalTotal = discountedSubtotal;
   }
 
+  // Handle bill creation
+  const handleCreateBill = async () => {
+    if (!selectedCustomer?.id || billItems.length === 0) {
+      return;
+    }
+
+    const customerId = selectedCustomer.id;
+
+    const billRequest: CreateBillRequest = {
+      billDate,
+      customerId,
+      billType: 'GENERAL',
+      paymentType: paymentType as 'CASH' | 'CREDIT',
+      rateType: gstIncluded === 'including' ? 'INCLUDING_GST' : 'EXCLUDING_GST',
+      billItems: billItems.map((item) => ({
+        productId: item.productId,
+        quantity: parseFloat(item.quantity),
+        rate: parseFloat(item.price),
+      })),
+      payments: payments
+        .filter((payment) => payment.bankAccount.id)
+        .map((payment) => ({
+          pumpMasterId: '', // This will be set by the backend
+          billId: '', // Will be set after bill creation
+          customerId,
+          bankAccountId: payment.bankAccount.id!,
+          amount: parseFloat(payment.amount),
+          paymentDate: new Date().toISOString(),
+          paymentMethod: payment.paymentMethod as
+            | 'CASH'
+            | 'UPI'
+            | 'RTGS'
+            | 'NEFT'
+            | 'IMPS'
+            | 'CHEQUE',
+          referenceNumber: `REF-${Date.now()}`, // Generate a reference
+          notes: '',
+        })),
+    };
+
+    try {
+      await createBill(billRequest);
+      // Reset form or navigate
+      setBillItems([]);
+      setPayments([]);
+      setSelectedCustomer(null);
+      setPaymentType('');
+      setGstIncluded('');
+    } catch (error) {
+      console.error('Failed to create bill:', error);
+    }
+  };
+
   return (
     <div className="p-4 space-y-4">
       {/* Bill Header */}
@@ -113,8 +170,26 @@ const CreateBill = () => {
 
       {/* Items Table */}
       <BillItemsTable
-        billItems={billItems}
-        setBillItems={setBillItems}
+        billItems={billItems.map((item) => ({
+          product: item.product,
+          quantity: item.quantity,
+          price: item.price,
+          total: item.total,
+        }))}
+        setBillItems={(
+          items: {
+            product: string;
+            quantity: string;
+            price: string;
+            total: string;
+          }[]
+        ) => {
+          const transformedItems = items.map((item) => ({
+            ...item,
+            productId: selectedProduct?.id || '',
+          }));
+          setBillItems(transformedItems);
+        }}
         products={products}
         selectedProduct={selectedProduct}
         setSelectedProduct={setSelectedProduct}
@@ -128,6 +203,12 @@ const CreateBill = () => {
         gstPercent={gstPercent}
         setGstPercent={setGstPercent}
         gstIncluded={gstIncluded}
+        onAddItem={(item) => {
+          setBillItems([...billItems, item]);
+          setSelectedProduct(null);
+          setQuantity('');
+          setPrice('');
+        }}
       />
 
       {/* Payments Table */}
@@ -150,7 +231,13 @@ const CreateBill = () => {
       {/* Save Button */}
       {billItems.length > 0 && (
         <div className="flex justify-center pt-4">
-          <Button className="px-8">Save Bill</Button>
+          <Button
+            className="px-8"
+            onClick={handleCreateBill}
+            disabled={loading}
+          >
+            {loading ? 'Saving...' : 'Save Bill'}
+          </Button>
         </div>
       )}
     </div>

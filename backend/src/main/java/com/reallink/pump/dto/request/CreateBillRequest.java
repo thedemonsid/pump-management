@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.reallink.pump.entities.BillType;
+import com.reallink.pump.entities.PaymentType;
 import com.reallink.pump.entities.RateType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -36,6 +37,10 @@ public class CreateBillRequest {
     @NotNull(message = "Bill type is required")
     @Schema(description = "Bill type", example = "GENERAL", required = true)
     private BillType billType;
+
+    @NotNull(message = "Payment type is required")
+    @Schema(description = "Payment type", example = "CASH", required = true)
+    private PaymentType paymentType;
 
     @Schema(description = "Vehicle number (required for SALESMAN bill type)", example = "MH12AB1234")
     private String vehicleNo;

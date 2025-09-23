@@ -113,7 +113,7 @@ export const BillHeader = ({
 
       <div className="space-y-2">
         <Label htmlFor="payment-type" className="text-sm font-medium">
-          Type
+          Payment Type
         </Label>
         <ReactSelect
           inputId="payment-type"

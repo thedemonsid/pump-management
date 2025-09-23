@@ -3,6 +3,8 @@ import type {
   CreateBillRequest,
   UpdateBillRequest,
   BillResponse,
+  BillItemResponse,
+  CreateBillItemRequest,
 } from '@/types';
 
 export class BillService {
@@ -21,12 +23,8 @@ export class BillService {
   }
 
   // Get bills by pump master ID
-  static async getByPumpMasterId(
-    pumpMasterId: string
-  ): Promise<BillResponse[]> {
-    const response = await api.get<BillResponse[]>(
-      `${this.BASE_PATH}/pump/${pumpMasterId}`
-    );
+  static async getByPumpMasterId(): Promise<BillResponse[]> {
+    const response = await api.get<BillResponse[]>(this.BASE_PATH);
     return response.data;
   }
 
@@ -76,5 +74,34 @@ export class BillService {
   // Delete bill
   static async delete(id: string): Promise<void> {
     await api.delete(`${this.BASE_PATH}/${id}`);
+  }
+
+  // Delete bill item
+  static async deleteBillItem(billItemId: string): Promise<void> {
+    await api.delete(`${this.BASE_PATH}/items/${billItemId}`);
+  }
+
+  // Create bill item
+  static async createBillItem(
+    billId: string,
+    billItem: CreateBillItemRequest
+  ): Promise<BillItemResponse> {
+    const response = await api.post<BillItemResponse>(
+      `${this.BASE_PATH}/${billId}/items`,
+      billItem
+    );
+    return response.data;
+  }
+
+  // Update bill item
+  static async updateBillItem(
+    billItemId: string,
+    billItem: CreateBillItemRequest
+  ): Promise<BillItemResponse> {
+    const response = await api.put<BillItemResponse>(
+      `${this.BASE_PATH}/items/${billItemId}`,
+      billItem
+    );
+    return response.data;
   }
 }

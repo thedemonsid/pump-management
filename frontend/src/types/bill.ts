@@ -1,4 +1,4 @@
-import type { BillType, RateType } from './common';
+import type { BillType, RateType, PaymentType } from './common';
 import type {
   CustomerBillPaymentResponse,
   CreateCustomerBillPaymentRequest,
@@ -111,16 +111,13 @@ export interface CreateBillItemRequest {
   productId: string;
   quantity: number;
   rate: number;
-  discount?: number;
-  taxPercentage: number;
 }
 
 export interface CreateBillRequest {
-  pumpMasterId: string;
-  billNo: number;
   billDate: string;
   customerId: string;
   billType: BillType;
+  paymentType: PaymentType;
   rateType: RateType;
   billItems: CreateBillItemRequest[];
   vehicleNo?: string;
