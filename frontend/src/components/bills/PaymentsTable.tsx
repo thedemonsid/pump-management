@@ -8,7 +8,10 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import ReactSelect, { type SelectInstance } from 'react-select';
+import ReactSelect, {
+  type SelectInstance,
+  type CSSObjectWithLabel,
+} from 'react-select';
 import type { BankAccount } from '@/types/bank-account';
 
 interface PaymentEntry {
@@ -74,207 +77,225 @@ export const PaymentsTable = ({
     }
   };
 
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-8">#</TableHead>
-          <TableHead>Bank Account</TableHead>
-          <TableHead>Method</TableHead>
-          <TableHead className="w-48">Amount</TableHead>
-          <TableHead className="w-20">Action</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {/* Add Payment Row */}
-        <TableRow className="border-2 border-dashed border-green-200 bg-green-50/30">
-          <TableCell className="text-center text-muted-foreground">+</TableCell>
-          <TableCell>
-            <ReactSelect
-              ref={bankAccountRef}
-              value={
-                selectedBankAccount
-                  ? {
-                      value: selectedBankAccount,
-                      label: `${selectedBankAccount.accountHolderName} - ${selectedBankAccount.accountNumber}`,
-                    }
-                  : null
-              }
-              onChange={(option) =>
-                setSelectedBankAccount(option?.value || null)
-              }
-              options={bankAccounts.map((account) => ({
-                value: account,
-                label: `${account.accountHolderName} - ${account.accountNumber}`,
-              }))}
-              placeholder="Select Bank Account"
-              className="border-0 bg-transparent text-xs focus:bg-white"
-              styles={{
-                control: (provided) => ({
-                  ...provided,
-                  fontSize: '12px',
-                  minHeight: '32px',
-                  width: '200px',
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  '&:hover': {
-                    backgroundColor: 'white',
-                  },
-                  '&:focus-within': {
-                    backgroundColor: 'white',
-                  },
-                }),
-                option: (provided) => ({
-                  ...provided,
-                  fontSize: '12px',
-                }),
-                menu: (provided) => ({
-                  ...provided,
-                  zIndex: 9999,
-                }),
-                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-              }}
-              menuPortalTarget={document.body}
-            />
-          </TableCell>
-          <TableCell>
-            <ReactSelect
-              value={
-                selectedPaymentMethod
-                  ? {
-                      value: selectedPaymentMethod,
-                      label: selectedPaymentMethod,
-                    }
-                  : null
-              }
-              onChange={(option) =>
-                setSelectedPaymentMethod(option?.value || '')
-              }
-              options={[
-                { value: 'UPI', label: 'UPI' },
-                { value: 'Cash', label: 'Cash' },
-                { value: 'Card', label: 'Card' },
-                { value: 'Cheque', label: 'Cheque' },
-                { value: 'Bank Transfer', label: 'Bank Transfer' },
-              ]}
-              placeholder="UPI/Cash/Card"
-              className="border-0 bg-transparent text-xs focus:bg-white"
-              styles={{
-                control: (provided) => ({
-                  ...provided,
-                  fontSize: '12px',
-                  minHeight: '32px',
-                  width: '150px',
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  '&:hover': {
-                    backgroundColor: 'white',
-                  },
-                  '&:focus-within': {
-                    backgroundColor: 'white',
-                  },
-                }),
-                option: (provided) => ({
-                  ...provided,
-                  fontSize: '12px',
-                }),
-                menu: (provided) => ({
-                  ...provided,
-                  zIndex: 9999,
-                }),
-                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-              }}
-              menuPortalTarget={document.body}
-            />
-          </TableCell>
-          <TableCell>
-            <Input
-              type="number"
-              placeholder="0.00"
-              className="border-0 bg-transparent text-sm text-center focus:bg-white h-8"
-              value={paymentAmount}
-              onChange={(e) => setPaymentAmount(e.target.value)}
-              onKeyPress={(e) => handleKeyPress(e, addPayment)}
-            />
-          </TableCell>
-          <TableCell>
-            <Button
-              size="sm"
-              className="h-7 text-xs"
-              onClick={addPayment}
-              disabled={
-                !selectedBankAccount || !selectedPaymentMethod || !paymentAmount
-              }
-            >
-              Add
-            </Button>
-          </TableCell>
-        </TableRow>
+  // Match BillHeader/BillItemsTable select styles
+  const selectStyles = {
+    control: (provided: CSSObjectWithLabel) => ({
+      ...provided,
+      minHeight: '36px',
+      borderColor: '#e5e7eb',
+      backgroundColor: '#ffffff',
+      '&:hover': { borderColor: '#9ca3af' },
+      boxShadow: 'none',
+      '&:focus-within': {
+        borderColor: '#3b82f6',
+        boxShadow: '0 0 0 1px #3b82f6',
+      },
+      fontSize: '12px',
+      width: '220px', // fixed width for bank account select
+      minWidth: '220px',
+      maxWidth: '220px',
+    }),
+    option: (
+      provided: CSSObjectWithLabel,
+      state: { isSelected: boolean; isFocused: boolean }
+    ) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? '#3b82f6'
+        : state.isFocused
+        ? '#dbeafe'
+        : '#ffffff',
+      color: state.isSelected ? '#ffffff' : '#111827',
+      fontSize: '12px',
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#2563eb' : '#dbeafe',
+      },
+    }),
+    menu: (provided: CSSObjectWithLabel) => ({
+      ...provided,
+      zIndex: 9999,
+      backgroundColor: '#ffffff',
+      border: '1px solid #e5e7eb',
+    }),
+    menuPortal: (base: CSSObjectWithLabel) => ({ ...base, zIndex: 9999 }),
+  };
 
-        {/* Payment Entries */}
-        {payments.map((payment, index) => (
-          <TableRow key={index} className="hover:bg-slate-50">
-            <TableCell className="text-center text-xs font-medium">
-              {index + 1}
+  // Separate style for payment method select (narrower)
+  const paymentMethodSelectStyles = {
+    ...selectStyles,
+    control: (provided: CSSObjectWithLabel) => ({
+      ...selectStyles.control(provided),
+      width: '150px',
+      minWidth: '150px',
+      maxWidth: '150px',
+    }),
+  };
+
+  return (
+    <div className="p-4 bg-muted/50 rounded-lg">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-8">#</TableHead>
+            <TableHead>Bank Account</TableHead>
+            <TableHead>Method</TableHead>
+            <TableHead className="w-48">Amount</TableHead>
+            <TableHead className="w-20">Action</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {/* Add Payment Row */}
+          <TableRow className="border-2 border-dashed border-green-200 bg-green-50/30">
+            <TableCell className="text-center text-muted-foreground">
+              +
             </TableCell>
-            <TableCell className="text-xs">
-              {payment.bankAccount.accountHolderName} -{' '}
-              {payment.bankAccount.accountNumber}
+            <TableCell>
+              <ReactSelect
+                ref={bankAccountRef}
+                value={
+                  selectedBankAccount
+                    ? {
+                        value: selectedBankAccount,
+                        label: `${selectedBankAccount.accountHolderName} - ${selectedBankAccount.accountNumber}`,
+                      }
+                    : null
+                }
+                onChange={(option) =>
+                  setSelectedBankAccount(option?.value || null)
+                }
+                options={bankAccounts.map((account) => ({
+                  value: account,
+                  label: `${account.accountHolderName} - ${account.accountNumber}`,
+                }))}
+                placeholder="Select Bank Account"
+                className="text-xs"
+                styles={selectStyles}
+                menuPortalTarget={document.body}
+              />
             </TableCell>
-            <TableCell className="text-xs">{payment.paymentMethod}</TableCell>
-            <TableCell className="text-center text-xs font-medium">
-              ₹{payment.amount}
+            <TableCell>
+              <ReactSelect
+                value={
+                  selectedPaymentMethod
+                    ? {
+                        value: selectedPaymentMethod,
+                        label: selectedPaymentMethod,
+                      }
+                    : null
+                }
+                onChange={(option) =>
+                  setSelectedPaymentMethod(option?.value || '')
+                }
+                options={[
+                  { value: 'UPI', label: 'UPI' },
+                  { value: 'Cash', label: 'Cash' },
+                  { value: 'Card', label: 'Card' },
+                  { value: 'Cheque', label: 'Cheque' },
+                  { value: 'Bank Transfer', label: 'Bank Transfer' },
+                ]}
+                placeholder="UPI/Cash/Card"
+                className="text-xs"
+                styles={paymentMethodSelectStyles}
+                menuPortalTarget={document.body}
+              />
+            </TableCell>
+            <TableCell>
+              <Input
+                type="number"
+                placeholder="0.00"
+                className="text-sm text-center h-8 bg-white border border-gray-200"
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+                onKeyPress={(e) => handleKeyPress(e, addPayment)}
+              />
             </TableCell>
             <TableCell>
               <Button
                 size="sm"
-                variant="destructive"
                 className="h-7 text-xs"
-                onClick={() =>
-                  setPayments(payments.filter((_, i) => i !== index))
+                onClick={addPayment}
+                disabled={
+                  !selectedBankAccount ||
+                  !selectedPaymentMethod ||
+                  !paymentAmount
                 }
               >
-                Del
+                Add
               </Button>
             </TableCell>
           </TableRow>
-        ))}
 
-        {/* Payment Summary */}
-        {payments.length > 0 && (
-          <>
-            <TableRow className="border-t-2 bg-slate-50">
-              <TableCell colSpan={3} className="text-right text-xs font-medium">
-                Total Paid:
-              </TableCell>
+          {/* Payment Entries */}
+          {payments.map((payment, index) => (
+            <TableRow key={index} className="hover:bg-slate-50">
               <TableCell className="text-center text-xs font-medium">
-                ₹{totalPaid.toFixed(2)}
+                {index + 1}
               </TableCell>
-              <TableCell></TableCell>
+              <TableCell className="text-xs">
+                {payment.bankAccount.accountHolderName} -{' '}
+                {payment.bankAccount.accountNumber}
+              </TableCell>
+              <TableCell className="text-xs">{payment.paymentMethod}</TableCell>
+              <TableCell className="text-center text-xs font-medium">
+                ₹{payment.amount}
+              </TableCell>
+              <TableCell>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="h-7 text-xs"
+                  onClick={() =>
+                    setPayments(payments.filter((_, i) => i !== index))
+                  }
+                >
+                  Del
+                </Button>
+              </TableCell>
             </TableRow>
-            <TableRow className="bg-slate-50">
-              <TableCell colSpan={3} className="text-right text-xs font-medium">
-                Balance:
-              </TableCell>
-              <TableCell
-                className={`text-center text-xs font-medium ${
-                  amountNotPaid > 0
-                    ? 'text-red-600'
-                    : amountNotPaid < 0
-                    ? 'text-orange-600'
-                    : 'text-green-600'
-                }`}
-              >
-                ₹{Math.abs(amountNotPaid).toFixed(2)}
-                {amountNotPaid > 0 && ' (Due)'}
-                {amountNotPaid < 0 && ' (Excess)'}
-                {amountNotPaid === 0 && ' (Paid)'}
-              </TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-          </>
-        )}
-      </TableBody>
-    </Table>
+          ))}
+
+          {/* Payment Summary */}
+          {payments.length > 0 && (
+            <>
+              <TableRow className="border-t-2 bg-slate-50">
+                <TableCell
+                  colSpan={3}
+                  className="text-right text-xs font-medium"
+                >
+                  Total Paid:
+                </TableCell>
+                <TableCell className="text-center text-xs font-medium">
+                  ₹{totalPaid.toFixed(2)}
+                </TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+              <TableRow className="bg-slate-50">
+                <TableCell
+                  colSpan={3}
+                  className="text-right text-xs font-medium"
+                >
+                  Balance:
+                </TableCell>
+                <TableCell
+                  className={`text-center text-xs font-medium ${
+                    amountNotPaid > 0
+                      ? 'text-red-600'
+                      : amountNotPaid < 0
+                      ? 'text-orange-600'
+                      : 'text-green-600'
+                  }`}
+                >
+                  ₹{Math.abs(amountNotPaid).toFixed(2)}
+                  {amountNotPaid > 0 && ' (Due)'}
+                  {amountNotPaid < 0 && ' (Excess)'}
+                  {amountNotPaid === 0 && ' (Paid)'}
+                </TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+            </>
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 };

@@ -8,7 +8,10 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import ReactSelect, { type SelectInstance } from 'react-select';
+import ReactSelect, {
+  type SelectInstance,
+  type CSSObjectWithLabel,
+} from 'react-select';
 import type { Product } from '@/types/product';
 
 interface BillItem {
@@ -56,6 +59,45 @@ export const BillItemsTable = ({
   setGstPercent,
   gstIncluded,
 }: BillItemsTableProps) => {
+  // Match BillHeader select styles
+  const selectStyles = {
+    control: (provided: CSSObjectWithLabel) => ({
+      ...provided,
+      minHeight: '36px',
+      borderColor: '#e5e7eb',
+      backgroundColor: '#ffffff',
+      '&:hover': { borderColor: '#9ca3af' },
+      boxShadow: 'none',
+      '&:focus-within': {
+        borderColor: '#3b82f6',
+        boxShadow: '0 0 0 1px #3b82f6',
+      },
+      fontSize: '12px',
+    }),
+    option: (
+      provided: CSSObjectWithLabel,
+      state: { isSelected: boolean; isFocused: boolean }
+    ) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? '#3b82f6'
+        : state.isFocused
+        ? '#dbeafe'
+        : '#ffffff',
+      color: state.isSelected ? '#ffffff' : '#111827',
+      fontSize: '12px',
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#2563eb' : '#dbeafe',
+      },
+    }),
+    menu: (provided: CSSObjectWithLabel) => ({
+      ...provided,
+      zIndex: 9999,
+      backgroundColor: '#ffffff',
+      border: '1px solid #e5e7eb',
+    }),
+    menuPortal: (base: CSSObjectWithLabel) => ({ ...base, zIndex: 9999 }),
+  };
   const total =
     quantity && price
       ? (parseFloat(quantity) * parseFloat(price)).toFixed(2)
@@ -107,197 +149,182 @@ export const BillItemsTable = ({
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-8">#</TableHead>
-          <TableHead>Product</TableHead>
-          <TableHead className="w-40">Qty</TableHead>
-          <TableHead className="w-40">Price</TableHead>
-          <TableHead className="w-48">Total</TableHead>
-          <TableHead className="w-20">Action</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {/* Add Item Row */}
-        <TableRow className="border-2 border-dashed border-blue-200 bg-blue-50/30">
-          <TableCell className="text-center text-muted-foreground">+</TableCell>
-          <TableCell>
-            <ReactSelect
-              ref={productSelectRef}
-              value={
-                selectedProduct
-                  ? {
-                      value: selectedProduct,
-                      label: selectedProduct.productName,
-                    }
-                  : null
-              }
-              onChange={(option) => setSelectedProduct(option?.value || null)}
-              options={products.map((product) => ({
-                value: product,
-                label: product.productName,
-              }))}
-              placeholder="Select Product"
-              className="border-0 bg-transparent text-xs focus:bg-white"
-              styles={{
-                control: (provided) => ({
-                  ...provided,
-                  fontSize: '12px',
-                  minHeight: '32px',
-                  width: '200px',
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  '&:hover': {
-                    backgroundColor: 'white',
-                  },
-                  '&:focus-within': {
-                    backgroundColor: 'white',
-                  },
-                }),
-                option: (provided) => ({
-                  ...provided,
-                  fontSize: '12px',
-                }),
-                menu: (provided) => ({
-                  ...provided,
-                  zIndex: 9999,
-                }),
-                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-              }}
-              menuPortalTarget={document.body}
-              onKeyDown={(e) => handleKeyPress(e, addItem)}
-            />
-          </TableCell>
-          <TableCell>
-            <Input
-              placeholder="0"
-              className="border-0 bg-transparent text-sm text-center focus:bg-white h-8"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              onKeyPress={(e) => handleKeyPress(e, addItem)}
-            />
-          </TableCell>
-          <TableCell>
-            <Input
-              placeholder="0.00"
-              className="border-0 bg-transparent text-sm text-center focus:bg-white h-8"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              onKeyPress={(e) => handleKeyPress(e, addItem)}
-            />
-          </TableCell>
-          <TableCell className="text-center text-xs font-medium">
-            ₹{total}
-          </TableCell>
-          <TableCell>
-            <Button
-              size="sm"
-              className="h-7 text-xs"
-              onClick={addItem}
-              disabled={!selectedProduct || !quantity || !price}
-            >
-              Add
-            </Button>
-          </TableCell>
-        </TableRow>
-
-        {/* Bill Items */}
-        {billItems.map((item, index) => (
-          <TableRow key={index} className="hover:bg-slate-50">
-            <TableCell className="text-center text-xs font-medium">
-              {index + 1}
+    <div className="p-4 bg-muted/50 rounded-lg">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-8">#</TableHead>
+            <TableHead>Product</TableHead>
+            <TableHead className="w-40">Qty</TableHead>
+            <TableHead className="w-40">Price</TableHead>
+            <TableHead className="w-48">Total</TableHead>
+            <TableHead className="w-20">Action</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {/* Add Item Row */}
+          <TableRow className="border-2 border-dashed border-blue-200 bg-blue-50/30">
+            <TableCell className="text-center text-muted-foreground">
+              +
             </TableCell>
-            <TableCell className="text-xs">{item.product}</TableCell>
-            <TableCell className="text-center text-xs">
-              {item.quantity}
+            <TableCell>
+              <ReactSelect
+                ref={productSelectRef}
+                value={
+                  selectedProduct
+                    ? {
+                        value: selectedProduct,
+                        label: selectedProduct.productName,
+                      }
+                    : null
+                }
+                onChange={(option) => setSelectedProduct(option?.value || null)}
+                options={products.map((product) => ({
+                  value: product,
+                  label: product.productName,
+                }))}
+                placeholder="Select Product"
+                className="text-xs"
+                styles={selectStyles}
+                menuPortalTarget={document.body}
+                onKeyDown={(e) => handleKeyPress(e, addItem)}
+              />
             </TableCell>
-            <TableCell className="text-center text-xs">₹{item.price}</TableCell>
+            <TableCell>
+              <Input
+                placeholder="0"
+                className="text-sm text-center h-8 bg-white border border-gray-200"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                onKeyPress={(e) => handleKeyPress(e, addItem)}
+              />
+            </TableCell>
+            <TableCell>
+              <Input
+                placeholder="0.00"
+                className="text-sm text-center h-8 bg-white border border-gray-200"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                onKeyPress={(e) => handleKeyPress(e, addItem)}
+              />
+            </TableCell>
             <TableCell className="text-center text-xs font-medium">
-              ₹{item.total}
+              ₹{total}
             </TableCell>
             <TableCell>
               <Button
                 size="sm"
-                variant="destructive"
                 className="h-7 text-xs"
-                onClick={() =>
-                  setBillItems(billItems.filter((_, i) => i !== index))
-                }
+                onClick={addItem}
+                disabled={!selectedProduct || !quantity || !price}
               >
-                Del
+                Add
               </Button>
             </TableCell>
           </TableRow>
-        ))}
 
-        {/* Calculations */}
-        {billItems.length > 0 && (
-          <>
-            <TableRow className="border-t-2">
-              <TableCell colSpan={4} className="text-right text-xs font-medium">
-                Subtotal:
+          {/* Bill Items */}
+          {billItems.map((item, index) => (
+            <TableRow key={index} className="hover:bg-slate-50">
+              <TableCell className="text-center text-xs font-medium">
+                {index + 1}
+              </TableCell>
+              <TableCell className="text-xs">{item.product}</TableCell>
+              <TableCell className="text-center text-xs">
+                {item.quantity}
+              </TableCell>
+              <TableCell className="text-center text-xs">
+                ₹{item.price}
               </TableCell>
               <TableCell className="text-center text-xs font-medium">
-                ₹{subtotal.toFixed(2)}
-              </TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-
-            <TableRow>
-              <TableCell colSpan={3} className="text-right text-xs">
-                Discount (₹):
+                ₹{item.total}
               </TableCell>
               <TableCell>
-                <Input
-                  type="number"
-                  placeholder="0"
-                  className="h-8 text-sm text-center w-40"
-                  value={fixedDiscount}
-                  onChange={(e) => setFixedDiscount(e.target.value)}
-                />
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="h-7 text-xs"
+                  onClick={() =>
+                    setBillItems(billItems.filter((_, i) => i !== index))
+                  }
+                >
+                  Del
+                </Button>
               </TableCell>
-              <TableCell className="text-center text-xs">
-                -₹{discountAmount.toFixed(2)}
-              </TableCell>
-              <TableCell></TableCell>
             </TableRow>
+          ))}
 
-            <TableRow>
-              <TableCell colSpan={3} className="text-right text-xs">
-                GST (%):
-              </TableCell>
-              <TableCell>
-                <Input
-                  type="number"
-                  placeholder="18"
-                  className="h-8 text-sm text-center w-40"
-                  value={gstPercent}
-                  onChange={(e) => setGstPercent(e.target.value)}
-                />
-              </TableCell>
-              <TableCell className="text-center text-xs">
-                {gstIncluded === 'excluding'
-                  ? `+₹${gstAmount.toFixed(2)}`
-                  : gstIncluded === 'including'
-                  ? `(₹${gstAmount.toFixed(2)})`
-                  : '-'}
-              </TableCell>
-              <TableCell></TableCell>
-            </TableRow>
+          {/* Calculations */}
+          {billItems.length > 0 && (
+            <>
+              <TableRow className="border-t-2">
+                <TableCell
+                  colSpan={4}
+                  className="text-right text-xs font-medium"
+                >
+                  Subtotal:
+                </TableCell>
+                <TableCell className="text-center text-xs font-medium">
+                  ₹{subtotal.toFixed(2)}
+                </TableCell>
+                <TableCell></TableCell>
+              </TableRow>
 
-            <TableRow className="border-t-2 bg-slate-100">
-              <TableCell colSpan={4} className="text-right font-bold">
-                Total:
-              </TableCell>
-              <TableCell className="text-center font-bold text-base">
-                ₹{finalTotal.toFixed(2)}
-              </TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-          </>
-        )}
-      </TableBody>
-    </Table>
+              <TableRow>
+                <TableCell colSpan={3} className="text-right text-xs">
+                  Discount (₹):
+                </TableCell>
+                <TableCell>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    className="h-8 text-sm text-center w-40 bg-white border border-gray-200"
+                    value={fixedDiscount}
+                    onChange={(e) => setFixedDiscount(e.target.value)}
+                  />
+                </TableCell>
+                <TableCell className="text-center text-xs">
+                  -₹{discountAmount.toFixed(2)}
+                </TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+
+              <TableRow>
+                <TableCell colSpan={3} className="text-right text-xs">
+                  GST (%):
+                </TableCell>
+                <TableCell>
+                  <Input
+                    type="number"
+                    placeholder="18"
+                    className="h-8 text-sm text-center w-40 bg-white border border-gray-200"
+                    value={gstPercent}
+                    onChange={(e) => setGstPercent(e.target.value)}
+                  />
+                </TableCell>
+                <TableCell className="text-center text-xs">
+                  {gstIncluded === 'excluding'
+                    ? `+₹${gstAmount.toFixed(2)}`
+                    : gstIncluded === 'including'
+                    ? `(₹${gstAmount.toFixed(2)})`
+                    : '-'}
+                </TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+
+              <TableRow className="border-t-2 bg-slate-100">
+                <TableCell colSpan={4} className="text-right font-bold">
+                  Total:
+                </TableCell>
+                <TableCell className="text-center font-bold text-base">
+                  ₹{finalTotal.toFixed(2)}
+                </TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+            </>
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
