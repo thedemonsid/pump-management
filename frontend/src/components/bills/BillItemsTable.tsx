@@ -74,7 +74,7 @@ export const BillItemsTable = ({
         borderColor: '#3b82f6',
         boxShadow: '0 0 0 1px #3b82f6',
       },
-      fontSize: '12px',
+      fontSize: '16px',
     }),
     option: (
       provided: CSSObjectWithLabel,
@@ -87,7 +87,7 @@ export const BillItemsTable = ({
         ? '#dbeafe'
         : '#ffffff',
       color: state.isSelected ? '#ffffff' : '#111827',
-      fontSize: '12px',
+      fontSize: '16px',
       '&:hover': {
         backgroundColor: state.isSelected ? '#2563eb' : '#dbeafe',
       },
@@ -186,13 +186,18 @@ export const BillItemsTable = ({
                       }
                     : null
                 }
-                onChange={(option) => setSelectedProduct(option?.value || null)}
+                onChange={(option) => {
+                  setSelectedProduct(option?.value || null);
+                  if (option?.value) {
+                    setPrice(option.value.salesRate.toString());
+                  }
+                }}
                 options={products.map((product) => ({
                   value: product,
                   label: product.productName,
                 }))}
                 placeholder="Select Product"
-                className="text-xs"
+                className="text-base"
                 styles={selectStyles}
                 menuPortalTarget={document.body}
                 onKeyDown={(e) => handleKeyPress(e, addItem)}

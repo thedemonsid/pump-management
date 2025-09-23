@@ -90,7 +90,7 @@ export const PaymentsTable = ({
         borderColor: '#3b82f6',
         boxShadow: '0 0 0 1px #3b82f6',
       },
-      fontSize: '12px',
+      fontSize: '16px',
       width: '220px', // fixed width for bank account select
       minWidth: '220px',
       maxWidth: '220px',
@@ -106,7 +106,7 @@ export const PaymentsTable = ({
         ? '#dbeafe'
         : '#ffffff',
       color: state.isSelected ? '#ffffff' : '#111827',
-      fontSize: '12px',
+      fontSize: '16px',
       '&:hover': {
         backgroundColor: state.isSelected ? '#2563eb' : '#dbeafe',
       },
@@ -168,7 +168,7 @@ export const PaymentsTable = ({
                   label: `${account.accountHolderName} - ${account.accountNumber}`,
                 }))}
                 placeholder="Select Bank Account"
-                className="text-xs"
+                className="text-base"
                 styles={selectStyles}
                 menuPortalTarget={document.body}
               />
@@ -194,7 +194,7 @@ export const PaymentsTable = ({
                   { value: 'Bank Transfer', label: 'Bank Transfer' },
                 ]}
                 placeholder="UPI/Cash/Card"
-                className="text-xs"
+                className="text-base"
                 styles={paymentMethodSelectStyles}
                 menuPortalTarget={document.body}
               />

@@ -29,6 +29,7 @@ const selectStyles = {
       borderColor: '#3b82f6', // blue-500
       boxShadow: '0 0 0 1px #3b82f6',
     },
+    fontSize: '16px',
   }),
   option: (
     provided: CSSObjectWithLabel,
@@ -46,6 +47,7 @@ const selectStyles = {
     '&:hover': {
       backgroundColor: state.isSelected ? '#2563eb' : '#dbeafe', // blue-600 : blue-100
     },
+    fontSize: '16px',
   }),
   menu: (provided: CSSObjectWithLabel) => ({
     ...provided,
@@ -105,7 +107,7 @@ export const BillHeader = ({
             label: customer.customerName,
           }))}
           placeholder="Select Customer"
-          className="text-sm"
+          className="text-base"
           styles={selectStyles}
           menuPortalTarget={document.body}
         />
@@ -131,7 +133,7 @@ export const BillHeader = ({
             { value: 'credit', label: 'CREDIT' },
           ]}
           placeholder="Type of Payment"
-          className="text-sm"
+          className="text-base"
           styles={selectStyles}
           menuPortalTarget={document.body}
         />
@@ -157,7 +159,7 @@ export const BillHeader = ({
             { value: 'excluding', label: 'Exc' },
           ]}
           placeholder="GST"
-          className="text-sm"
+          className="text-base"
           styles={selectStyles}
           menuPortalTarget={document.body}
         />
