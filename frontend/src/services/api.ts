@@ -46,8 +46,6 @@ api.interceptors.response.use(
         // Token expired or invalid - logout and redirect to login
         console.log('Token expired or invalid, logging out...');
         handleTokenExpiration();
-        // Redirect to login page
-        window.location.href = '/login';
         return Promise.reject(
           new Error('Authentication expired. Please log in again.')
         );
@@ -60,6 +58,17 @@ api.interceptors.response.use(
       throw new Error(`${error.response.status}: ${message}`);
     } else if (error.request) {
       // Request was made but no response received
+      // Check if we have a token - if so, might be token expiration causing connection failure
+      if (localStorage.getItem('authToken')) {
+        console.log(
+          'Network error with token present - likely token expired, logging out...'
+        );
+        handleTokenExpiration();
+        window.location.href = '/login';
+        return Promise.reject(
+          new Error('Authentication expired. Please log in again.')
+        );
+      }
       throw new Error('Network error: No response from server');
     } else {
       // Something else happened

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext, setGlobalLogout } from './useAuth';
 import type { AuthContextType, User } from './useAuth';
 
@@ -10,6 +11,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check for stored auth data on mount
@@ -39,17 +41,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     localStorage.setItem('user', JSON.stringify(newUser));
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setToken(null);
     setUser(null);
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
-  };
+    navigate('/login');
+  }, [navigate]);
 
   // Set global logout function for API interceptor
   useEffect(() => {
     setGlobalLogout(logout);
-  }, []);
+  }, [logout]);
 
   const value: AuthContextType = {
     user,
