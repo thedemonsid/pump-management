@@ -45,7 +45,6 @@ import { BankAccountLedgerReportPage } from './pages/bank-accounts/BankAccountLe
 import { BillsPage } from './pages/bills/BillsPage';
 import { BillDetailPage } from './pages/bills/BillDetailPage';
 import { BillsDetailsPage } from './pages/bills/BillsDetailsPage';
-import { SalesmanBillsPage } from './pages/salesmen/SalesmanBillsPage';
 import { TankLedgerPage } from './pages/tanks/TankLedgerPage';
 import { ProductsReportPage } from '@/pages/ProductsReportPage';
 import { CustomersReportPage } from '@/pages/customers/CustomersReportPage';
@@ -305,10 +304,6 @@ function App() {
                       <Route
                         path="/bills/bill-details"
                         element={<BillsDetailsPage />}
-                      />
-                      <Route
-                        path="/salesman-bills"
-                        element={<SalesmanBillsPage />}
                       />
                       <Route path="*" element={<DashboardPage />} />
                     </Routes>
