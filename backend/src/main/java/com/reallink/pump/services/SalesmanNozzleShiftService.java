@@ -164,6 +164,11 @@ public class SalesmanNozzleShiftService {
             throw new PumpBusinessException("SHIFT_ALREADY_CLOSED", "Shift is already closed");
         }
 
+        // Validate closing balance is greater than opening balance
+        if (request.getClosingBalance().compareTo(shift.getOpeningBalance()) <= 0) {
+            throw new PumpBusinessException("INVALID_CLOSING_BALANCE", "Closing balance must be greater than opening balance");
+        }
+
         // Update shift with closing details
         shift.setEndDateTime(LocalDateTime.now(ZoneOffset.UTC)); // Set end time automatically in UTC
         shift.setClosingBalance(request.getClosingBalance());
