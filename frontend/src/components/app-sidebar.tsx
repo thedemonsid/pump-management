@@ -103,6 +103,14 @@ const managementItems = [
   },
 ];
 
+const salesmanItems = [
+  {
+    title: 'My Shifts',
+    url: '/salesman-shifts',
+    icon: Clock,
+  },
+];
+
 // const systemItems = [
 //   {
 //     title: 'Settings',
@@ -214,6 +222,16 @@ export function AppSidebar({ role }: { role: string }) {
               </SidebarGroupContent>
             </SidebarGroup>
           </>
+        )}
+        {role === 'SALESMAN' && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="uppercase tracking-wide text-[10px] font-semibold text-sidebar-foreground/60">
+              My Work
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>{renderMenuItems(salesmanItems)}</SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         )}
         {/* <SidebarGroup>
           <SidebarGroupLabel className="uppercase tracking-wide text-[10px] font-semibold text-sidebar-foreground/60">

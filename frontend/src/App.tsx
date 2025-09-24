@@ -27,6 +27,7 @@ import { ProductsPage } from '@/pages/products/ProductsPage';
 import { TanksPage } from '@/pages/tanks/TanksPage';
 import { NozzlesPage } from '@/pages/nozzles/NozzlesPage';
 import { SalesmenPage } from '@/pages/salesmen/SalesmenPage';
+import { SalesmanShiftsPage } from '@/pages/salesman-shifts/SalesmanShiftsPage';
 import { ShiftsPage } from '@/pages/shifts/ShiftsPage';
 import { SuppliersPage } from '@/pages/suppliers/SuppliersPage';
 import { SupplierDetailPage } from '@/pages/suppliers/SupplierDetailPage';
@@ -192,6 +193,11 @@ const allRoutes = [
     requiredRoles: ['ADMIN', 'MANAGER'],
   },
   {
+    path: '/salesman-shifts',
+    element: <SalesmanShiftsPage />,
+    requiredRoles: ['SALESMAN'],
+  },
+  {
     path: '*',
     element: <DashboardPage />,
     requiredRoles: ['ADMIN', 'MANAGER'],
@@ -210,6 +216,7 @@ const headerMap: Record<string, string> = {
   purchases: 'Purchases',
   'fuel-purchases': 'Fuel Purchases',
   salesmen: 'Salesmen',
+  'salesman-shifts': 'My Shifts',
   shifts: 'Shifts',
   'bank-accounts': 'Bank Accounts',
   ledger: 'Ledger',

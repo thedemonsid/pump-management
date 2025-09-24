@@ -3,6 +3,7 @@ export { TankService } from './tank-service';
 export { TankTransactionService } from './tank-transaction-service';
 export { NozzleService } from './nozzle-service';
 export { SalesmanService } from './salesman-service';
+export { SalesmanNozzleShiftService } from './salesman-nozzle-shift-service';
 export { ShiftService } from './shift-service';
 export { PumpService } from './pump-service';
 export { SupplierService } from './supplier-service';

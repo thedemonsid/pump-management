@@ -6,6 +6,7 @@ export * from './tank-transaction';
 export * from './nozzle';
 export * from './nozzle-shift';
 export * from './salesman';
+export * from './salesman-nozzle-shift';
 export * from './shift';
 export * from './supplier';
 export * from './customer';
