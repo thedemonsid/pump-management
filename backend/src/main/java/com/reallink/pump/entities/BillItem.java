@@ -58,4 +58,14 @@ public class BillItem extends BaseEntity {
     @Digits(integer = 10, fraction = 2, message = "Net amount must have at most 10 digits and 2 decimal places")
     @Column(name = "net_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal netAmount = BigDecimal.ZERO;
+
+    @DecimalMin(value = "0.0", inclusive = true, message = "GST must be non-negative")
+    @Digits(integer = 5, fraction = 2, message = "GST must have at most 5 digits and 2 decimal places")
+    @Column(name = "gst", nullable = false, precision = 7, scale = 2)
+    private BigDecimal gst = BigDecimal.ZERO;
+
+    @DecimalMin(value = "0.0", inclusive = true, message = "Discount must be non-negative")
+    @Digits(integer = 10, fraction = 2, message = "Discount must have at most 10 digits and 2 decimal places")
+    @Column(name = "discount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal discount = BigDecimal.ZERO;
 }

@@ -28,4 +28,14 @@ public class CreateBillItemRequest {
     @Digits(integer = 10, fraction = 2, message = "Rate must have at most 10 digits and 2 decimal places")
     @Schema(description = "Rate per unit", example = "100.00", required = true)
     private BigDecimal rate;
+
+    @DecimalMin(value = "0.0", inclusive = true, message = "GST must be non-negative")
+    @Digits(integer = 5, fraction = 2, message = "GST must have at most 5 digits and 2 decimal places")
+    @Schema(description = "GST percentage", example = "18.00")
+    private BigDecimal gst = BigDecimal.ZERO;
+
+    @DecimalMin(value = "0.0", inclusive = true, message = "Discount must be non-negative")
+    @Digits(integer = 5, fraction = 2, message = "Discount must have at most 5 digits and 2 decimal places")
+    @Schema(description = "Discount percentage", example = "5.00")
+    private BigDecimal discount = BigDecimal.ZERO;
 }

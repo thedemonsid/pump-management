@@ -55,11 +55,6 @@ public class Bill extends BaseEntity {
     @JoinColumn(name = "customer_id", nullable = false, foreignKey = @ForeignKey(name = "fk_bill_customer"))
     private Customer customer;
 
-    @NotNull(message = "Bill type is required")
-    @Enumerated(EnumType.STRING)
-    @Column(name = "bill_type", nullable = false)
-    private BillType billType;
-
     @NotNull(message = "Rate type is required")
     @Enumerated(EnumType.STRING)
     @Column(name = "rate_type", nullable = false)
@@ -91,12 +86,6 @@ public class Bill extends BaseEntity {
     @Digits(integer = 10, fraction = 2, message = "Net amount must have at most 10 digits and 2 decimal places")
     @Column(name = "net_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal netAmount = BigDecimal.ZERO;
-
-    @Column(name = "vehicle_no")
-    private String vehicleNo;
-
-    @Column(name = "driver_name")
-    private String driverName;
 
     @OneToMany(mappedBy = "bill", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<BillItem> billItems = new HashSet<>();
