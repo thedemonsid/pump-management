@@ -28,58 +28,49 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/v1/salesmen")
 @RequiredArgsConstructor
-@Tag(name = "Salesman Management", description = "APIs for managing salesman information")
+@Tag(name = "Salesman Management", description = "APIs for managing salesmen")
 public class SalesmanController {
 
     private final SalesmanService service;
 
     private UUID extractPumpMasterId(HttpServletRequest request) {
         Object pumpMasterIdObj = request.getAttribute("pumpMasterId");
-        if (pumpMasterIdObj instanceof UUID uuid) {
-            return uuid;
+        if (!(pumpMasterIdObj instanceof UUID)) {
+            throw new RuntimeException("Pump master ID not found in request");
         }
-        throw new RuntimeException("Pump master ID not found in request");
+        return (UUID) pumpMasterIdObj;
     }
 
-    @Operation(summary = "Get all salesmen", description = "Retrieve all salesmen (no pagination)")
     @GetMapping
+    @Operation(summary = "Get all salesmen", description = "Retrieve all salesmen for the authenticated pump master")
     public ResponseEntity<List<SalesmanResponse>> getAllSalesmen(HttpServletRequest request) {
         UUID pumpMasterId = extractPumpMasterId(request);
-        return ResponseEntity.ok(service.getByPumpMasterId(pumpMasterId));
+        return ResponseEntity.ok(service.getAllByPumpMasterId(pumpMasterId));
     }
 
-    @Operation(summary = "Get salesmen by pump master ID", description = "Retrieve all salesmen for a specific pump master")
-    @GetMapping("/pump-master/{pumpMasterId}")
-    public ResponseEntity<List<SalesmanResponse>> getSalesmenByPumpMasterId(@PathVariable UUID pumpMasterId) {
-        return ResponseEntity.ok(service.getByPumpMasterId(pumpMasterId));
-    }
-
-    @Operation(summary = "Get salesman by ID", description = "Retrieve a specific salesman by its ID")
     @GetMapping("/{id}")
+    @Operation(summary = "Get salesman by ID")
     public ResponseEntity<SalesmanResponse> getSalesmanById(@PathVariable UUID id) {
-        SalesmanResponse salesman = service.getById(id);
-        return ResponseEntity.ok(salesman);
+        return ResponseEntity.ok(service.getById(id));
     }
 
-    @Operation(summary = "Create new salesman", description = "Create a new salesman with the provided information")
     @PostMapping
-    public ResponseEntity<SalesmanResponse> createSalesman(@Valid @RequestBody CreateSalesmanRequest request, HttpServletRequest httpRequest) {
+    @Operation(summary = "Create salesman")
+    public ResponseEntity<SalesmanResponse> createSalesman(@Valid @RequestBody CreateSalesmanRequest request,
+            HttpServletRequest httpRequest) {
         UUID pumpMasterId = extractPumpMasterId(httpRequest);
-        request.setPumpMasterId(pumpMasterId);
-        SalesmanResponse createdSalesman = service.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdSalesman);
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(request, pumpMasterId));
     }
 
-    @Operation(summary = "Update salesman", description = "Update an existing salesman")
     @PutMapping("/{id}")
+    @Operation(summary = "Update salesman")
     public ResponseEntity<SalesmanResponse> updateSalesman(@PathVariable UUID id,
             @Valid @RequestBody UpdateSalesmanRequest request) {
-        SalesmanResponse updatedSalesman = service.update(id, request);
-        return ResponseEntity.ok(updatedSalesman);
+        return ResponseEntity.ok(service.update(id, request));
     }
 
-    @Operation(summary = "Delete salesman", description = "Delete an existing salesman")
     @DeleteMapping("/{id}")
+    @Operation(summary = "Delete salesman")
     public ResponseEntity<Void> deleteSalesman(@PathVariable UUID id) {
         service.delete(id);
         return ResponseEntity.noContent().build();

@@ -2,8 +2,6 @@ package com.reallink.pump.dto.response;
 
 import java.util.UUID;
 
-import com.reallink.pump.entities.UserType;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -26,8 +24,8 @@ public class LoginResponse {
     @Schema(description = "Pump Master ID", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID pumpMasterId;
 
-    @Schema(description = "User role", example = "ADMIN")
-    private UserType role;
+    @Schema(description = "User role name", example = "ADMIN")
+    private String role;
 
     @Schema(description = "Mobile number", example = "+919876543210")
     private String mobileNumber;

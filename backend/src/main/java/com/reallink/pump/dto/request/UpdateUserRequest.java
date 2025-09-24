@@ -1,7 +1,5 @@
 package com.reallink.pump.dto.request;
 
-import com.reallink.pump.entities.UserType;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -23,8 +21,8 @@ public class UpdateUserRequest {
     @Schema(description = "Mobile number", example = "+919876543210")
     private String mobileNumber;
 
-    @Schema(description = "User role", example = "ADMIN")
-    private UserType role;
+    @Schema(description = "User role name", example = "ADMIN")
+    private String role;
 
     @Schema(description = "Whether the user is enabled", example = "true")
     private Boolean enabled;

@@ -2,8 +2,6 @@ package com.reallink.pump.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Index;
@@ -53,18 +51,31 @@ public class User extends BaseEntity {
     private String mobileNumber;
 
     @NotNull(message = "Role is required")
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false, length = 20)
-    private UserType role = UserType.USER;
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "role_id", nullable = false, foreignKey = @ForeignKey(name = "fk_user_role"))
+    private Role role;
 
     @Column(name = "enabled", nullable = false)
     private Boolean enabled = true;
 
-    public User(String username, String password, String mobileNumber, UserType role, PumpInfoMaster pumpMaster) {
+    @Column(name = "email", length = 100)
+    private String email;
+
+    @Column(name = "aadhar_number", length = 12)
+    private String aadharNumber;
+
+    @Column(name = "pan_number", length = 10)
+    private String panNumber;
+
+    public User(String username, String password, String mobileNumber, Role role, PumpInfoMaster pumpMaster, String email, String aadharNumber, String panNumber) {
         this.username = username;
         this.password = password;
         this.mobileNumber = mobileNumber;
         this.role = role;
         this.pumpMaster = pumpMaster;
+        this.email = email;
+        this.aadharNumber = aadharNumber;
+        this.panNumber = panNumber;
     }
+
 }

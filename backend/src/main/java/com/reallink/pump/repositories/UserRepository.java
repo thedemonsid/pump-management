@@ -27,7 +27,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("SELECT u FROM User u WHERE "
             + "(:username IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :username, '%'))) AND "
             + "(:mobileNumber IS NULL OR u.mobileNumber = :mobileNumber) AND "
-            + "(:role IS NULL OR LOWER(u.role) LIKE LOWER(CONCAT('%', :role, '%'))) AND "
+            + "(:role IS NULL OR LOWER(u.role.roleName) LIKE LOWER(CONCAT('%', :role, '%'))) AND "
             + "(:enabled IS NULL OR u.enabled = :enabled) AND "
             + "(:pumpMasterId IS NULL OR u.pumpMaster.id = :pumpMasterId)")
     List<User> findBySearchCriteria(@Param("username") String username,

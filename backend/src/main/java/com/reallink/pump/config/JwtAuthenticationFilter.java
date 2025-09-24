@@ -42,6 +42,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             jwtToken = requestTokenHeader.substring(7);
             try {
                 username = jwtUtil.extractUsername(jwtToken);
+                UUID pumpMasterId = jwtUtil.extractPumpMasterIdFromSubject(jwtToken);
+                request.setAttribute("pumpMasterId", pumpMasterId);
+                PumpSecurityContextHolder.setPumpMasterId(pumpMasterId);
             } catch (ExpiredJwtException e) {
                 request.setAttribute("authError", "EXPIRED_TOKEN");
                 logger.error("JWT Token has expired");

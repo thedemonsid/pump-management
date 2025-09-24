@@ -66,9 +66,6 @@ public class PumpInfoMaster extends BaseEntity {
     private Set<Supplier> suppliers = new HashSet<>();
 
     @OneToMany(mappedBy = "pumpMaster", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Salesman> salesmen = new HashSet<>();
-
-    @OneToMany(mappedBy = "pumpMaster", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Shift> shifts = new HashSet<>();
 
     @OneToMany(mappedBy = "pumpMaster", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
@@ -76,9 +73,6 @@ public class PumpInfoMaster extends BaseEntity {
 
     @OneToMany(mappedBy = "pumpMaster", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Purchase> purchases = new HashSet<>();
-
-    @OneToMany(mappedBy = "pumpMaster", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<NozzleReading> nozzleReadings = new HashSet<>();
 
     @OneToMany(mappedBy = "pumpMaster", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<BankAccount> bankAccounts = new HashSet<>();

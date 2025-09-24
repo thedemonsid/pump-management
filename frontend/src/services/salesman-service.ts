@@ -18,11 +18,13 @@ export class SalesmanService {
 
   // Create new salesman (matches CreateSalesmanRequest DTO)
   static async create(salesman: {
-    pumpMasterId: string;
-    name: string;
-    employeeId: string;
-    contactNumber: string;
-    email: string;
+    username: string;
+    password: string;
+    mobileNumber: string;
+    email?: string;
+    aadharNumber?: string;
+    panNumber?: string;
+    enabled?: boolean;
   }): Promise<Salesman> {
     const response = await api.post<Salesman>(this.BASE_PATH, salesman);
     return response.data;
@@ -32,10 +34,13 @@ export class SalesmanService {
   static async update(
     id: string,
     salesman: {
-      name?: string;
-      contactNumber?: string;
+      username?: string;
+      password?: string;
+      mobileNumber?: string;
       email?: string;
-      active?: boolean;
+      aadharNumber?: string;
+      panNumber?: string;
+      enabled?: boolean;
     }
   ): Promise<Salesman> {
     const response = await api.put<Salesman>(

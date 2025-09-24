@@ -9,25 +9,30 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
-import { DEFAULT_PUMP_INFO, SalesmanSchema } from '@/types';
 import { useSalesmanStore } from '@/store/salesman-store';
 import { z } from 'zod';
 // Only use fields required by CreateSalesmanRequest DTO
-const CreateSalesmanSchema = SalesmanSchema.pick({
-  pumpMasterId: true,
-  name: true,
-  employeeId: true,
-  email: true,
-  contactNumber: true,
-  address: true,
-  aadharCardNumber: true,
-  panCardNumber: true,
-  active: true,
-}).extend({
-  active: z.boolean(),
+const CreateSalesmanSchema = z.object({
+  username: z
+    .string()
+    .min(3, 'Username is required')
+    .max(50, 'Username must be between 3 and 50 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  mobileNumber: z
+    .string()
+    .regex(/^\+?[1-9]\d{1,14}$/, 'Mobile number should be valid'),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  aadharNumber: z
+    .string()
+    .max(12, 'Aadhar number cannot exceed 12 characters')
+    .optional(),
+  panNumber: z
+    .string()
+    .max(10, 'PAN number cannot exceed 10 characters')
+    .optional(),
+  enabled: z.boolean(),
 });
 type CreateSalesmanFormData = z.infer<typeof CreateSalesmanSchema>;
 
@@ -42,14 +47,13 @@ export function CreateSalesmanForm({
   const form = useForm<CreateSalesmanFormData>({
     resolver: zodResolver(CreateSalesmanSchema),
     defaultValues: {
-      pumpMasterId: DEFAULT_PUMP_INFO.id,
-      name: '',
-      employeeId: '',
-      contactNumber: '',
-      address: '',
-      aadharCardNumber: '',
-      panCardNumber: '',
-      active: true,
+      username: '',
+      password: '',
+      mobileNumber: '',
+      email: '',
+      aadharNumber: '',
+      panNumber: '',
+      enabled: true,
     },
   });
   const { formState, handleSubmit, reset, control } = form;
@@ -71,12 +75,12 @@ export function CreateSalesmanForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={control}
-            name="name"
+            name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name *</FormLabel>
+                <FormLabel>Username *</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter salesman name" {...field} />
+                  <Input placeholder="Enter username" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -84,12 +88,16 @@ export function CreateSalesmanForm({
           />
           <FormField
             control={control}
-            name="employeeId"
+            name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Employee ID *</FormLabel>
+                <FormLabel>Password *</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter employee ID" {...field} />
+                  <Input
+                    type="password"
+                    placeholder="Enter password"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -97,12 +105,12 @@ export function CreateSalesmanForm({
           />
           <FormField
             control={control}
-            name="contactNumber"
+            name="mobileNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Phone Number *</FormLabel>
+                <FormLabel>Mobile Number *</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter phone number" {...field} />
+                  <Input placeholder="Enter mobile number" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -128,14 +136,14 @@ export function CreateSalesmanForm({
 
           <FormField
             control={control}
-            name="aadharCardNumber"
+            name="aadharNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Aadhar Card Number (optional)</FormLabel>
+                <FormLabel>Aadhar Number (optional)</FormLabel>
                 <FormControl>
                   <Input
                     type="text"
-                    placeholder="Enter Aadhar card number"
+                    placeholder="Enter Aadhar number"
                     {...field}
                   />
                 </FormControl>
@@ -146,14 +154,14 @@ export function CreateSalesmanForm({
 
           <FormField
             control={control}
-            name="panCardNumber"
+            name="panNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Pan Card Number (optional)</FormLabel>
+                <FormLabel>PAN Number (optional)</FormLabel>
                 <FormControl>
                   <Input
                     type="text"
-                    placeholder="Enter Pan Card number"
+                    placeholder="Enter PAN number"
                     {...field}
                   />
                 </FormControl>
@@ -162,16 +170,21 @@ export function CreateSalesmanForm({
             )}
           />
         </div>
-        <div className="grid grid-cols-1 gap-4">
+        <div className="flex items-center space-x-2">
           <FormField
             control={control}
-            name="address"
+            name="enabled"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Address *</FormLabel>
+              <FormItem className="flex flex-row items-center space-x-3 space-y-0">
                 <FormControl>
-                  <Textarea placeholder="Enter salesman address" {...field} />
+                  <input
+                    type="checkbox"
+                    checked={field.value}
+                    onChange={field.onChange}
+                    className="h-4 w-4"
+                  />
                 </FormControl>
+                <FormLabel>Enabled</FormLabel>
                 <FormMessage />
               </FormItem>
             )}

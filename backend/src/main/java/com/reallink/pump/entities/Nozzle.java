@@ -1,10 +1,7 @@
 package com.reallink.pump.entities;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.Set;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -12,7 +9,6 @@ import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.DecimalMin;
@@ -75,12 +71,6 @@ public class Nozzle extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tank_id", nullable = false, foreignKey = @ForeignKey(name = "fk_nozzle_tank"))
     private Tank tank;
-
-    @OneToMany(mappedBy = "nozzle", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private Set<NozzleReading> readings = new HashSet<>();
-
-    @OneToMany(mappedBy = "nozzle", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private Set<NozzleShift> shifts = new HashSet<>();
 
     public Nozzle(String nozzleName, String companyName, Tank tank, PumpInfoMaster pumpMaster) {
         this.nozzleName = nozzleName;

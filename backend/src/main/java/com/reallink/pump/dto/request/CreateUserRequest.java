@@ -2,8 +2,6 @@ package com.reallink.pump.dto.request;
 
 import java.util.UUID;
 
-import com.reallink.pump.entities.UserType;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -35,8 +33,8 @@ public class CreateUserRequest {
     private String mobileNumber;
 
     @NotNull(message = "Role is required")
-    @Schema(description = "User role", example = "ADMIN", required = true)
-    private UserType role;
+    @Schema(description = "User role name", example = "ADMIN", required = true)
+    private String role;
 
     @Schema(description = "Whether the user is enabled", example = "true", defaultValue = "true")
     private Boolean enabled = true;

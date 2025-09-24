@@ -24,12 +24,14 @@ public interface UserMapper {
      * Maps CreateUserRequest to User entity
      */
     @Mapping(target = "pumpMaster.id", source = "pumpMasterId")
+    @Mapping(target = "role", ignore = true) // Will be set manually in service
     User toEntity(CreateUserRequest request);
 
     /**
      * Maps User entity to UserResponse
      */
     @Mapping(target = "pumpMasterId", source = "pumpMaster.id")
+    @Mapping(target = "role", source = "role.roleName")
     UserResponse toResponse(User entity);
 
     /**
@@ -40,5 +42,6 @@ public interface UserMapper {
     /**
      * Updates User entity from UpdateUserRequest
      */
+    @Mapping(target = "role", ignore = true) // Will be set manually in service
     void updateEntityFromRequest(UpdateUserRequest request, @MappingTarget User entity);
 }

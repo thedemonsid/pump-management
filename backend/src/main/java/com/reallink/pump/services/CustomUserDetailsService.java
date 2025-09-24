@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.reallink.pump.config.PumpSecurityContextHolder;
 import com.reallink.pump.entities.User;
 import com.reallink.pump.repositories.UserRepository;
 
@@ -22,19 +23,21 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // For JWT authentication, we need to find user by username
-        // Since username is only unique within a pump master, we need to handle this differently
-        // We'll look for the user and assume the JWT contains the pump master info
+        UUID pumpMasterId = PumpSecurityContextHolder.getPumpMasterId();
+        if (pumpMasterId == null) {
+            throw new UsernameNotFoundException("Pump master ID not found in context");
+        }
 
-        User user = userRepository.findAll().stream()
-                .filter(u -> u.getUsername().equals(username))
-                .findFirst()
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+        User user = userRepository.findByUsernameAndPumpMaster_Id(username, pumpMasterId).orElse(null);
+
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found with username: " + username + " and pump master ID: " + pumpMasterId);
+        }
 
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
                 .password(user.getPassword())
-                .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole())))
+                .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().getRoleName())))
                 .accountExpired(false)
                 .accountLocked(false)
                 .credentialsExpired(false)
@@ -52,7 +55,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
                 .password(user.getPassword())
-                .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole())))
+                .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().getRoleName())))
                 .accountExpired(false)
                 .accountLocked(false)
                 .credentialsExpired(false)

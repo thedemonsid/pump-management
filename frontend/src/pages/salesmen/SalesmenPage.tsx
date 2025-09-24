@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSalesmanStore } from '@/store/salesman-store';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -31,6 +32,7 @@ import { UpdateSalesmanForm } from './UpdateSalesmanForm';
 import type { Salesman } from '@/types';
 
 export function SalesmenPage() {
+  const { user } = useAuth();
   const { salesmen, loading, error, fetchSalesmen, removeSalesman } =
     useSalesmanStore();
 
@@ -38,9 +40,14 @@ export function SalesmenPage() {
   const [editingSalesman, setEditingSalesman] = useState<Salesman | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // Check if user has permission to manage salesmen
+  const canManageSalesmen = user?.role === 'ADMIN' || user?.role === 'MANAGER';
+
   useEffect(() => {
-    fetchSalesmen();
-  }, [fetchSalesmen]);
+    if (canManageSalesmen) {
+      fetchSalesmen();
+    }
+  }, [fetchSalesmen, canManageSalesmen]);
 
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this salesman?')) {
@@ -62,6 +69,22 @@ export function SalesmenPage() {
   const handleCloseEditDialog = () => {
     setEditingSalesman(null);
   };
+
+  if (!canManageSalesmen) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-muted-foreground">
+            Access Denied
+          </h2>
+          <p className="text-muted-foreground mt-2">
+            You don't have permission to manage salesmen. Only ADMIN and MANAGER
+            roles can access this page.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading && salesmen.length === 0) {
     return (
@@ -126,10 +149,11 @@ export function SalesmenPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Employee ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Phone Number</TableHead>
-                  <TableHead>Address</TableHead>
+                  <TableHead>Username</TableHead>
+                  <TableHead>Mobile Number</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Aadhar Number</TableHead>
+                  <TableHead>PAN Number</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -137,22 +161,18 @@ export function SalesmenPage() {
               <TableBody>
                 {salesmen.map((salesman) => (
                   <TableRow key={salesman.id}>
-                    <TableCell>{salesman.employeeId}</TableCell>
                     <TableCell className="font-medium">
-                      {salesman.name}
+                      {salesman.username}
                     </TableCell>
-                    <TableCell>{salesman.contactNumber}</TableCell>
-                    <TableCell
-                      className="max-w-xs truncate"
-                      title={salesman.address}
-                    >
-                      {salesman.address}
-                    </TableCell>
+                    <TableCell>{salesman.mobileNumber}</TableCell>
+                    <TableCell>{salesman.email || '-'}</TableCell>
+                    <TableCell>{salesman.aadharNumber || '-'}</TableCell>
+                    <TableCell>{salesman.panNumber || '-'}</TableCell>
                     <TableCell>
                       <Badge
-                        variant={salesman.active ? 'default' : 'secondary'}
+                        variant={salesman.enabled ? 'default' : 'secondary'}
                       >
-                        {salesman.active ? 'Active' : 'Inactive'}
+                        {salesman.enabled ? 'Enabled' : 'Disabled'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">

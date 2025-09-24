@@ -15,11 +15,12 @@ import com.reallink.pump.dto.request.UpdateUserRequest;
 import com.reallink.pump.dto.response.LoginResponse;
 import com.reallink.pump.dto.response.UserResponse;
 import com.reallink.pump.entities.PumpInfoMaster;
+import com.reallink.pump.entities.Role;
 import com.reallink.pump.entities.User;
-import com.reallink.pump.entities.UserType;
 import com.reallink.pump.exception.PumpBusinessException;
 import com.reallink.pump.mapper.UserMapper;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
+import com.reallink.pump.repositories.RoleRepository;
 import com.reallink.pump.repositories.UserRepository;
 
 import jakarta.validation.Valid;
@@ -34,6 +35,7 @@ public class UserService {
 
     private final UserRepository repository;
     private final PumpInfoMasterRepository pumpInfoMasterRepository;
+    private final RoleRepository roleRepository;
     private final UserMapper mapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
@@ -98,6 +100,14 @@ public class UserService {
         }
         User user = mapper.toEntity(request);
         user.setPumpMaster(pumpMaster);
+
+        // Fetch role by name
+        Role role = roleRepository.findByRoleName(request.getRole()).orElse(null);
+        if (role == null) {
+            throw new PumpBusinessException("INVALID_ROLE", "Role '" + request.getRole() + "' does not exist");
+        }
+        user.setRole(role);
+
         // Encode the password before saving
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         User savedUser = repository.save(user);
@@ -121,6 +131,15 @@ public class UserService {
         }
 
         mapper.updateEntityFromRequest(request, existingUser);
+
+        // Update role if provided
+        if (request.getRole() != null) {
+            Role role = roleRepository.findByRoleName(request.getRole()).orElse(null);
+            if (role == null) {
+                throw new PumpBusinessException("INVALID_ROLE", "Role '" + request.getRole() + "' does not exist");
+            }
+            existingUser.setRole(role);
+        }
 
         // Encode password if it's being updated
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
@@ -177,7 +196,7 @@ public class UserService {
                 user.getId(),
                 user.getUsername(),
                 user.getPumpMaster().getId(),
-                user.getRole(),
+                user.getRole().getRoleName(),
                 user.getMobileNumber());
 
         // Create response
@@ -186,7 +205,7 @@ public class UserService {
         response.setUserId(user.getId());
         response.setUsername(user.getUsername());
         response.setPumpMasterId(user.getPumpMaster().getId());
-        response.setRole(user.getRole());
+        response.setRole(user.getRole().getRoleName());
         response.setMobileNumber(user.getMobileNumber());
         response.setEnabled(user.getEnabled());
 
@@ -212,7 +231,14 @@ public class UserService {
             user.setPumpMaster(pumpMaster);
             // Encode the password before saving
             user.setPassword(passwordEncoder.encode(request.getPassword()));
-            user.setRole(UserType.SUPER_ADMIN);
+
+            // Set SUPER_ADMIN role
+            Role superAdminRole = roleRepository.findByRoleName("SUPER_ADMIN").orElse(null);
+            if (superAdminRole == null) {
+                throw new PumpBusinessException("ROLE_NOT_FOUND", "SUPER_ADMIN role not found");
+            }
+            user.setRole(superAdminRole);
+
             User savedUser = repository.save(user);
             return mapper.toResponse(savedUser);
 

@@ -1,0 +1,4 @@
+- Follow Clean Code principles
+- We are building multitenant application so keep that in mind while writing code
+- Never Show any tenants data to other tenants in any api response always filter data by tenant
+- Use ./mvnw instead of mvn to run maven commands

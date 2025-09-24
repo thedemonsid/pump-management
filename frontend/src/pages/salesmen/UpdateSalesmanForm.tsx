@@ -10,22 +10,37 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Loader2 } from 'lucide-react';
 import { useSalesmanStore } from '@/store/salesman-store';
 import { z } from 'zod';
-import { SalesmanSchema } from '@/types';
 import type { Salesman } from '@/types';
 
 // Only use fields required by UpdateSalesmanRequest DTO
-const UpdateSalesmanSchema = SalesmanSchema.omit({
-  id: true,
-  pumpMasterId: true,
-  createdAt: true,
-  updatedAt: true,
-}).extend({
-  active: z.boolean(),
+const UpdateSalesmanSchema = z.object({
+  username: z
+    .string()
+    .min(3, 'Username is required')
+    .max(50, 'Username must be between 3 and 50 characters')
+    .optional(),
+  password: z
+    .string()
+    .min(6, 'Password must be at least 6 characters')
+    .optional(),
+  mobileNumber: z
+    .string()
+    .regex(/^\+?[1-9]\d{1,14}$/, 'Mobile number should be valid')
+    .optional(),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  aadharNumber: z
+    .string()
+    .max(12, 'Aadhar number cannot exceed 12 characters')
+    .optional(),
+  panNumber: z
+    .string()
+    .max(10, 'PAN number cannot exceed 10 characters')
+    .optional(),
+  enabled: z.boolean().optional(),
 });
 type UpdateSalesmanFormData = z.infer<typeof UpdateSalesmanSchema>;
 
@@ -43,17 +58,12 @@ export function UpdateSalesmanForm({
   const form = useForm<UpdateSalesmanFormData>({
     resolver: zodResolver(UpdateSalesmanSchema),
     defaultValues: {
-      name: salesman.name,
-      employeeId: salesman.employeeId,
-      contactNumber: salesman.contactNumber,
-      email:
-        salesman?.email && salesman.email.trim() !== ''
-          ? salesman.email
-          : undefined,
-      address: salesman.address || '',
-      aadharCardNumber: salesman.aadharCardNumber || '',
-      panCardNumber: salesman.panCardNumber || '',
-      active: salesman.active ?? true,
+      username: salesman.username,
+      mobileNumber: salesman.mobileNumber,
+      email: salesman.email || '',
+      aadharNumber: salesman.aadharNumber || '',
+      panNumber: salesman.panNumber || '',
+      enabled: salesman.enabled,
     },
   });
   const { formState, handleSubmit, control, reset } = form;
@@ -75,12 +85,12 @@ export function UpdateSalesmanForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={control}
-            name="name"
+            name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name *</FormLabel>
+                <FormLabel>Username</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter salesman name" {...field} />
+                  <Input placeholder="Enter username" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -88,12 +98,16 @@ export function UpdateSalesmanForm({
           />
           <FormField
             control={control}
-            name="employeeId"
+            name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Employee ID *</FormLabel>
+                <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter employee ID" {...field} />
+                  <Input
+                    type="password"
+                    placeholder="Enter new password (leave empty to keep current)"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -101,12 +115,12 @@ export function UpdateSalesmanForm({
           />
           <FormField
             control={control}
-            name="contactNumber"
+            name="mobileNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Phone Number *</FormLabel>
+                <FormLabel>Mobile Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter phone number" {...field} />
+                  <Input placeholder="Enter mobile number" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -131,14 +145,14 @@ export function UpdateSalesmanForm({
           />
           <FormField
             control={control}
-            name="aadharCardNumber"
+            name="aadharNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Aadhar Card Number (optional)</FormLabel>
+                <FormLabel>Aadhar Number (optional)</FormLabel>
                 <FormControl>
                   <Input
                     type="text"
-                    placeholder="Enter Aadhar card number"
+                    placeholder="Enter Aadhar number"
                     {...field}
                   />
                 </FormControl>
@@ -148,14 +162,14 @@ export function UpdateSalesmanForm({
           />
           <FormField
             control={control}
-            name="panCardNumber"
+            name="panNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Pan Card Number (optional)</FormLabel>
+                <FormLabel>PAN Number (optional)</FormLabel>
                 <FormControl>
                   <Input
                     type="text"
-                    placeholder="Enter Pan Card number"
+                    placeholder="Enter PAN number"
                     {...field}
                   />
                 </FormControl>
@@ -167,11 +181,11 @@ export function UpdateSalesmanForm({
         <div className="grid grid-cols-1 gap-4">
           <FormField
             control={control}
-            name="active"
+            name="enabled"
             render={({ field }) => (
               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
-                  <FormLabel className="text-base">Active Status *</FormLabel>
+                  <FormLabel className="text-base">Enabled Status</FormLabel>
                   <div className="text-sm text-muted-foreground">
                     Enable or disable this salesman
                   </div>
@@ -182,19 +196,6 @@ export function UpdateSalesmanForm({
                     onCheckedChange={field.onChange}
                   />
                 </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={control}
-            name="address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Address *</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="Enter salesman address" {...field} />
-                </FormControl>
-                <FormMessage />
               </FormItem>
             )}
           />

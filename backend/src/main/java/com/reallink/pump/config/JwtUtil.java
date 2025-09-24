@@ -9,8 +9,6 @@ import java.util.function.Function;
 
 import org.springframework.stereotype.Component;
 
-import com.reallink.pump.entities.UserType;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -31,7 +29,7 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(UUID userId, String username, UUID pumpMasterId, UserType role, String mobileNumber) {
+    public String generateToken(UUID userId, String username, UUID pumpMasterId, String role, String mobileNumber) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId.toString());
         claims.put("username", username);
@@ -39,7 +37,7 @@ public class JwtUtil {
         claims.put("role", role);
         claims.put("mobileNumber", mobileNumber);
 
-        return createToken(claims, username);
+        return createToken(claims, username + "@" + pumpMasterId.toString());
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
@@ -62,7 +60,16 @@ public class JwtUtil {
     }
 
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+        return extractClaim(token, Claims::getSubject).split("@")[0];
+    }
+
+    public UUID extractPumpMasterIdFromSubject(String token) {
+        String subject = extractClaim(token, Claims::getSubject);
+        String[] parts = subject.split("@");
+        if (parts.length == 2) {
+            return UUID.fromString(parts[1]);
+        }
+        return null;
     }
 
     public UUID extractUserId(String token) {

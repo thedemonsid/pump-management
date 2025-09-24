@@ -26,7 +26,6 @@ import {
 import { ProductsPage } from '@/pages/products/ProductsPage';
 import { TanksPage } from '@/pages/tanks/TanksPage';
 import { NozzlesPage } from '@/pages/nozzles/NozzlesPage';
-import { NozzleDetailPage } from '@/pages/nozzles/NozzleDetailPage';
 import { SalesmenPage } from '@/pages/salesmen/SalesmenPage';
 import { ShiftsPage } from '@/pages/shifts/ShiftsPage';
 import { SuppliersPage } from '@/pages/suppliers/SuppliersPage';
@@ -242,10 +241,6 @@ function App() {
                         element={<TankLedgerPage />}
                       />
                       <Route path="/nozzles" element={<NozzlesPage />} />
-                      <Route
-                        path="/nozzles/:id"
-                        element={<NozzleDetailPage />}
-                      />
                       <Route path="/suppliers" element={<SuppliersPage />} />
                       <Route
                         path="/suppliers/:id"

@@ -22,7 +22,6 @@ public interface NozzleMapper {
      */
     @Mapping(target = "pumpMaster.id", source = "pumpMasterId")
     @Mapping(target = "tank", ignore = true)
-    @Mapping(target = "readings", ignore = true)
     @Mapping(target = "previousReading", constant = "0.0")
     @Mapping(target = "status", constant = "ACTIVE")
     Nozzle toEntity(CreateNozzleRequest request);
@@ -56,7 +55,6 @@ public interface NozzleMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "version", ignore = true)
     @Mapping(target = "tank", ignore = true)
-    @Mapping(target = "readings", ignore = true)
     @Mapping(target = "previousReading", ignore = true)
     void updateEntity(UpdateNozzleRequest request, @MappingTarget Nozzle entity);
 
@@ -68,7 +66,6 @@ public interface NozzleMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "version", ignore = true)
     @Mapping(target = "tank", ignore = true)
-    @Mapping(target = "readings", ignore = true)
     @Mapping(target = "previousReading", ignore = true)
     void partialUpdate(CreateNozzleRequest request, @MappingTarget Nozzle entity);
 }

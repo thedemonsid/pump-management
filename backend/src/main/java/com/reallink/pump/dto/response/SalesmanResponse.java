@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
-@Schema(description = "Response DTO for salesman information")
+@Schema(description = "Response DTO for Salesman information")
 public class SalesmanResponse {
 
     @Schema(description = "Unique identifier", example = "123e4567-e89b-12d3-a456-426614174000")
@@ -16,33 +16,30 @@ public class SalesmanResponse {
     @Schema(description = "Pump Master ID", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID pumpMasterId;
 
-    @Schema(description = "Salesman full name", example = "John Doe")
-    private String name;
+    @Schema(description = "Username for login", example = "john_doe")
+    private String username;
 
-    @Schema(description = "Employee ID/Code", example = "EMP001")
-    private String employeeId;
-
-    @Schema(description = "Contact phone number", example = "+91-9876543210")
-    private String contactNumber;
+    @Schema(description = "Mobile number", example = "+919876543210")
+    private String mobileNumber;
 
     @Schema(description = "Email address", example = "john.doe@example.com")
     private String email;
 
-    @Schema(description = "Residential address", example = "123 Main St, City, Country")
-    private String address;
+    @Schema(description = "Aadhar card number", example = "123456789012")
+    private String aadharNumber;
 
-    @Schema(description = "Aadhar card number", example = "1234-5678-9012")
-    private String aadharCardNumber;
+    @Schema(description = "PAN card number", example = "ABCDE1234F")
+    private String panNumber;
 
-    @Schema(description = "Pan card number", example = "ABCDE1234F")
-    private String panCardNumber;
+    @Schema(description = "Whether the salesman is enabled", example = "true")
+    private Boolean enabled;
 
-    @Schema(description = "Whether salesman is currently active", example = "true")
-    private Boolean active;
-
-    @Schema(description = "Record creation timestamp")
+    @Schema(description = "Creation timestamp", example = "2023-10-01T12:00:00")
     private LocalDateTime createdAt;
 
-    @Schema(description = "Record last update timestamp")
+    @Schema(description = "Last update timestamp", example = "2023-10-01T12:00:00")
     private LocalDateTime updatedAt;
+
+    @Schema(description = "Version number", example = "1")
+    private Long version;
 }

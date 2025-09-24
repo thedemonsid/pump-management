@@ -1,0 +1,11 @@
+- Use React 19 Best Practices
+- Use TypeScript Effectively
+- Optimize for Performance
+
+- **Write Clean, DRY Code**
+- Modularize Components
+- Follow Consistent Coding Standards
+- Use Modern React Features
+- Use PNPM for Package Management
+- Use Zustand for State Management
+- Use Zod for Schema Validation

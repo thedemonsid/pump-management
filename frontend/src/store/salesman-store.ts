@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type { Salesman } from '@/types';
-import { SalesmanSchema, DEFAULT_PUMP_INFO } from '@/types';
 import { SalesmanService } from '@/services/api';
 import { toast } from 'sonner';
 
@@ -21,7 +20,10 @@ interface SalesmanState {
   // API methods
   fetchSalesmen: () => Promise<void>;
   createSalesman: (
-    salesman: Omit<Salesman, 'id' | 'createdAt' | 'updatedAt'>
+    salesman: Omit<
+      Salesman,
+      'id' | 'createdAt' | 'updatedAt' | 'pumpMasterId'
+    > & { password: string }
   ) => Promise<void>;
   editSalesman: (id: string, salesman: Partial<Salesman>) => Promise<void>;
   removeSalesman: (id: string) => Promise<void>;
@@ -86,21 +88,10 @@ export const useSalesmanStore = create<SalesmanState>()(
         setError(null);
 
         try {
-          // Validate the salesman data
-          const validatedSalesman = SalesmanSchema.parse({
-            ...salesmanData,
-            pumpMasterId: DEFAULT_PUMP_INFO.id,
-          });
-
-          // Remove id, createdAt, updatedAt from the data to be sent to the server
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { id, createdAt, updatedAt, ...salesmanToCreate } =
-            validatedSalesman;
-
           // Ensure email is always a string (empty string if undefined)
           const salesmanToCreateWithEmail = {
-            ...salesmanToCreate,
-            email: salesmanToCreate.email ?? '',
+            ...salesmanData,
+            email: salesmanData.email ?? '',
           };
 
           const createdSalesman = await SalesmanService.create(
@@ -129,13 +120,19 @@ export const useSalesmanStore = create<SalesmanState>()(
         setError(null);
 
         try {
-          // Remove id, createdAt, updatedAt from the data
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { id: _, createdAt, updatedAt, ...updateData } = salesmanData;
+          // Remove id, createdAt, updatedAt, version from the data
+          const updateData = { ...salesmanData };
+          delete updateData.id;
+          delete updateData.createdAt;
+          delete updateData.updatedAt;
+          delete updateData.version;
 
           const updatedSalesman = await SalesmanService.update(
             id,
-            updateData as Omit<Salesman, 'id' | 'createdAt' | 'updatedAt'>
+            updateData as Omit<
+              Salesman,
+              'id' | 'createdAt' | 'updatedAt' | 'version'
+            >
           );
           updateSalesman(id, updatedSalesman);
           toast.success('Salesman updated successfully');
