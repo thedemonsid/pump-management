@@ -157,7 +157,9 @@ function NavItem({ title, url, icon: Icon }: SidebarMenuItemProps) {
 
 const renderMenuItems = (items: SidebarMenuItemProps[]): React.ReactNode =>
   items.map((i) => <NavItem key={i.title} {...i} />);
-export function AppSidebar() {
+export function AppSidebar({ role }: { role: string }) {
+  const isAdminOrManager = role === 'ADMIN' || role === 'MANAGER';
+
   return (
     <Sidebar
       collapsible="icon"
@@ -183,30 +185,36 @@ export function AppSidebar() {
         </NavLink>
       </SidebarHeader>
       <SidebarContent className="flex-1 overflow-y-auto group-data-[state=collapsed]:px-1">
-        <SidebarGroup>
-          <SidebarGroupLabel className="uppercase tracking-wide text-[10px] font-semibold text-sidebar-foreground/60">
-            Pump Operations
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>{renderMenuItems(mainItems)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel className="uppercase tracking-wide text-[10px] font-semibold text-sidebar-foreground/60">
-            Partners
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>{renderMenuItems(partnersItems)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel className="uppercase tracking-wide text-[10px] font-semibold text-sidebar-foreground/60">
-            Staff & Shifts
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>{renderMenuItems(managementItems)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {isAdminOrManager && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="uppercase tracking-wide text-[10px] font-semibold text-sidebar-foreground/60">
+              Pump Operations
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>{renderMenuItems(mainItems)}</SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+        {isAdminOrManager && (
+          <>
+            <SidebarGroup>
+              <SidebarGroupLabel className="uppercase tracking-wide text-[10px] font-semibold text-sidebar-foreground/60">
+                Partners
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>{renderMenuItems(partnersItems)}</SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            <SidebarGroup>
+              <SidebarGroupLabel className="uppercase tracking-wide text-[10px] font-semibold text-sidebar-foreground/60">
+                Staff & Shifts
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>{renderMenuItems(managementItems)}</SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
         {/* <SidebarGroup>
           <SidebarGroupLabel className="uppercase tracking-wide text-[10px] font-semibold text-sidebar-foreground/60">
             System

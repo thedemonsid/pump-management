@@ -55,6 +55,149 @@ import { useAuth } from '@/hooks/useAuth';
 import { ProtectedRoute, PublicRoute } from '@/components/ProtectedRoute';
 import { Toaster } from 'sonner';
 
+const allRoutes = [
+  {
+    path: '/',
+    element: <DashboardPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/dashboard',
+    element: <DashboardPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/products',
+    element: <ProductsPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/products/report',
+    element: <ProductsReportPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/tanks',
+    element: <TanksPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/tanks/:id/ledger',
+    element: <TankLedgerPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/nozzles',
+    element: <NozzlesPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/suppliers',
+    element: <SuppliersPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/suppliers/:id',
+    element: <SupplierDetailPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/suppliers/:id/ledger',
+    element: <SupplierLedgerPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/suppliers/:id/ledger/report',
+    element: <SupplierLedgerReportPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/suppliers/report',
+    element: <SuppliersReportPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/customers',
+    element: <CustomersPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/customers/:id',
+    element: <CustomerDetailPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/customers/:id/ledger',
+    element: <CustomerLedgerPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/customers/:id/ledger/report',
+    element: <CustomerLedgerReportPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/customers/report',
+    element: <CustomersReportPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/purchases',
+    element: <PurchasesPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/salesmen',
+    element: <SalesmenPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/shifts',
+    element: <ShiftsPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/fuel-purchases',
+    element: <FuelPurchasesPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/bank-accounts',
+    element: <BankAccountsPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/bank-accounts/:id/ledger',
+    element: <BankAccountLedgerPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/bank-accounts/:id/ledger/report',
+    element: <BankAccountLedgerReportPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/bills',
+    element: <BillsPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/bills/:id',
+    element: <BillDetailPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/bills/bill-details',
+    element: <BillsDetailsPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '*',
+    element: <DashboardPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
+  },
+];
+
 const headerMap: Record<string, string> = {
   dashboard: 'Dashboard',
   pumps: 'Pumps',
@@ -193,11 +336,17 @@ export function MainHeader() {
   );
 }
 
-function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
+function AuthenticatedLayout({
+  children,
+  role,
+}: {
+  children: React.ReactNode;
+  role: string;
+}) {
   return (
     <SidebarProvider>
       <div className="flex w-full h-screen overflow-hidden">
-        <AppSidebar />
+        <AppSidebar role={role} />
         <SidebarInset className="flex flex-col flex-1 overflow-hidden">
           <MainHeader />
           <main className="flex-1 w-full p-8 overflow-y-auto">{children}</main>
@@ -205,6 +354,35 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
       </div>
       <Toaster></Toaster>
     </SidebarProvider>
+  );
+}
+
+// New component to handle role-based routing
+function RoleBasedApp({
+  allRoutes,
+}: {
+  allRoutes: Array<{
+    path: string;
+    element: React.ReactElement;
+    requiredRoles: string[];
+  }>;
+}) {
+  const { user } = useAuth();
+  const role = user?.role || 'USER'; // Default to 'USER' if no role
+
+  // Filter routes based on role
+  const allowedRoutes = allRoutes.filter((route) =>
+    route.requiredRoles.includes(role)
+  );
+
+  return (
+    <AuthenticatedLayout role={role}>
+      <Routes>
+        {allowedRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
+      </Routes>
+    </AuthenticatedLayout>
   );
 }
 
@@ -226,83 +404,7 @@ function App() {
               path="/*"
               element={
                 <ProtectedRoute>
-                  <AuthenticatedLayout>
-                    <Routes>
-                      <Route path="/" element={<DashboardPage />} />
-                      <Route path="/dashboard" element={<DashboardPage />} />
-                      <Route path="/products" element={<ProductsPage />} />
-                      <Route
-                        path="/products/report"
-                        element={<ProductsReportPage />}
-                      />
-                      <Route path="/tanks" element={<TanksPage />} />
-                      <Route
-                        path="/tanks/:id/ledger"
-                        element={<TankLedgerPage />}
-                      />
-                      <Route path="/nozzles" element={<NozzlesPage />} />
-                      <Route path="/suppliers" element={<SuppliersPage />} />
-                      <Route
-                        path="/suppliers/:id"
-                        element={<SupplierDetailPage />}
-                      />
-                      <Route
-                        path="/suppliers/:id/ledger"
-                        element={<SupplierLedgerPage />}
-                      />
-                      <Route
-                        path="/suppliers/:id/ledger/report"
-                        element={<SupplierLedgerReportPage />}
-                      />
-                      <Route
-                        path="/suppliers/report"
-                        element={<SuppliersReportPage />}
-                      />
-                      <Route path="/customers" element={<CustomersPage />} />
-                      <Route
-                        path="/customers/:id"
-                        element={<CustomerDetailPage />}
-                      />
-                      <Route
-                        path="/customers/:id/ledger"
-                        element={<CustomerLedgerPage />}
-                      />
-                      <Route
-                        path="/customers/:id/ledger/report"
-                        element={<CustomerLedgerReportPage />}
-                      />
-                      <Route
-                        path="/customers/report"
-                        element={<CustomersReportPage />}
-                      />
-                      <Route path="/purchases" element={<PurchasesPage />} />
-                      <Route path="/salesmen" element={<SalesmenPage />} />
-                      <Route path="/shifts" element={<ShiftsPage />} />
-                      <Route
-                        path="/fuel-purchases"
-                        element={<FuelPurchasesPage />}
-                      />
-                      <Route
-                        path="/bank-accounts"
-                        element={<BankAccountsPage />}
-                      />
-                      <Route
-                        path="/bank-accounts/:id/ledger"
-                        element={<BankAccountLedgerPage />}
-                      />
-                      <Route
-                        path="/bank-accounts/:id/ledger/report"
-                        element={<BankAccountLedgerReportPage />}
-                      />
-                      <Route path="/bills" element={<BillsPage />} />
-                      <Route path="/bills/:id" element={<BillDetailPage />} />
-                      <Route
-                        path="/bills/bill-details"
-                        element={<BillsDetailsPage />}
-                      />
-                      <Route path="*" element={<DashboardPage />} />
-                    </Routes>
-                  </AuthenticatedLayout>
+                  <RoleBasedApp allRoutes={allRoutes} />
                 </ProtectedRoute>
               }
             />
