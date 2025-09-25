@@ -17,6 +17,7 @@ import {
   Fuel,
   Eye,
   Receipt,
+  CreditCard,
 } from 'lucide-react';
 import {
   Table,
@@ -50,6 +51,7 @@ import { SalesmanService } from '@/services/salesman-service';
 import { SalesmanBillService } from '@/services/salesman-bill-service';
 import { CustomerService } from '@/services/customer-service';
 import { ProductService } from '@/services/product-service';
+import { CreateShiftPaymentForm } from '@/pages/salesman-shifts/CreateShiftPaymentForm';
 import { toast } from 'sonner';
 import type {
   Nozzle,
@@ -57,8 +59,9 @@ import type {
   SalesmanNozzleShiftResponse,
   Customer,
   Product,
+  SalesmanBillResponse,
+  CreateSalesmanBillRequest,
 } from '@/types';
-import type { SalesmanBillResponse, CreateSalesmanBillRequest } from '@/types';
 
 export function SalesmanShiftsPage() {
   const { user } = useAuth();
@@ -122,6 +125,11 @@ export function SalesmanShiftsPage() {
     vehicleNo: '',
     driverName: '',
   });
+
+  // Payment dialog state
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [selectedShiftForPayment, setSelectedShiftForPayment] =
+    useState<SalesmanNozzleShiftResponse | null>(null);
 
   // Load nozzles and salesmen for selection
   useEffect(() => {
@@ -289,6 +297,17 @@ export function SalesmanShiftsPage() {
     } finally {
       setLoadingBills(false);
     }
+  };
+
+  // Payment functions
+  const handleRecordPayment = (shift: SalesmanNozzleShiftResponse) => {
+    setSelectedShiftForPayment(shift);
+    setIsPaymentDialogOpen(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setIsPaymentDialogOpen(false);
+    setSelectedShiftForPayment(null);
   };
 
   const formatDateTime = (dateTimeStr: string) => {
@@ -472,6 +491,14 @@ export function SalesmanShiftsPage() {
                       >
                         <Eye className="mr-1 h-3 w-3" />
                         Bills
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRecordPayment(shift)}
+                      >
+                        <CreditCard className="mr-1 h-3 w-3" />
+                        Payment
                       </Button>
                       <Dialog
                         open={isCloseDialogOpen && selectedShiftId === shift.id}
@@ -809,7 +836,7 @@ export function SalesmanShiftsPage() {
                 {shiftBills.map((bill) => (
                   <Card key={bill.id} className="p-4">
                     <div className="flex justify-between items-start">
-                      <div className="space-y-1">
+                      <div className="space-y-1 flex-1">
                         <div className="flex items-center space-x-2">
                           <span className="font-semibold">
                             Bill #{bill.billNo}
@@ -831,19 +858,45 @@ export function SalesmanShiftsPage() {
                           </p>
                         )}
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold">
-                          {formatCurrency(bill.amount)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {format(new Date(bill.createdAt), 'HH:mm')}
-                        </p>
+                      <div className="text-right flex flex-col items-end space-y-2">
+                        <div>
+                          <p className="font-bold">
+                            {formatCurrency(bill.amount)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(bill.createdAt), 'HH:mm')}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </Card>
                 ))}
               </div>
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Dialog */}
+      <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Record Payment</DialogTitle>
+            <DialogDescription>
+              Record a payment for shift starting at{' '}
+              {selectedShiftForPayment &&
+                format(
+                  new Date(selectedShiftForPayment.startDateTime),
+                  'dd/MM/yyyy HH:mm'
+                )}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedShiftForPayment && (
+            <CreateShiftPaymentForm
+              salesmanNozzleShiftId={selectedShiftForPayment.id}
+              pumpMasterId={user?.pumpMasterId || ''}
+              onSuccess={handlePaymentSuccess}
+            />
           )}
         </DialogContent>
       </Dialog>

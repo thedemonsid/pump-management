@@ -46,6 +46,7 @@ import {
 } from 'lucide-react';
 import { CreateCustomerBillPaymentForm } from './CreateCustomerBillPaymentForm';
 import { UpdateCustomerBillPaymentForm } from './UpdateCustomerBillPaymentForm';
+import { SalesmanBillPaymentsManager } from './SalesmanBillPaymentsManager';
 import type { CustomerBillPaymentResponse } from '@/types';
 
 export function CustomerDetailPage() {
@@ -84,6 +85,10 @@ export function CustomerDetailPage() {
   const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(
     null
   );
+  const [selectedSalesmanBillId, setSelectedSalesmanBillId] = useState<
+    string | null
+  >(null);
+  const [isPaymentsDialogOpen, setIsPaymentsDialogOpen] = useState(false);
 
   const customer = customers.find((c) => c.id === id);
 
@@ -383,6 +388,23 @@ export function CustomerDetailPage() {
                 </div>
               </DialogContent>
             </Dialog>
+
+            {/* Salesman Bill Payments Dialog */}
+            <Dialog
+              open={isPaymentsDialogOpen}
+              onOpenChange={setIsPaymentsDialogOpen}
+            >
+              <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Salesman Bill Payments</DialogTitle>
+                </DialogHeader>
+                {selectedSalesmanBillId && (
+                  <SalesmanBillPaymentsManager
+                    salesmanBillId={selectedSalesmanBillId}
+                  />
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -468,6 +490,7 @@ export function CustomerDetailPage() {
                       <TableHead>Quantity</TableHead>
                       <TableHead>Rate</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -491,6 +514,19 @@ export function CustomerDetailPage() {
                         <TableCell>₹{bill.rate.toFixed(2)}</TableCell>
                         <TableCell className="text-right font-mono font-semibold">
                           ₹{bill.amount.toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedSalesmanBillId(bill.id);
+                              setIsPaymentsDialogOpen(true);
+                            }}
+                          >
+                            <CreditCard className="h-4 w-4 mr-2" />
+                            Payments
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}

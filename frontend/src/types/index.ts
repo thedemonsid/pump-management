@@ -33,6 +33,13 @@ export type {
   UpdateSalesmanBillRequest,
 } from './salesman-bill';
 
+// Explicitly re-export salesman bill payment types
+export type {
+  SalesmanBillPaymentResponse,
+  CreateSalesmanBillPaymentRequest,
+  UpdateSalesmanBillPaymentRequest,
+} from './salesman-bill-payment';
+
 // Explicitly re-export customer bill payment types from customer-bill-payment.ts
 export type {
   CustomerBillPaymentResponse,

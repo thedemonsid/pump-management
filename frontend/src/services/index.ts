@@ -13,6 +13,7 @@ export { FuelPurchaseService } from './fuel-purchase-service';
 export { BankAccountService } from './bank-account-service';
 export { BillService } from './bill-service';
 export { SalesmanBillService } from './salesman-bill-service';
+export { SalesmanBillPaymentService } from './salesman-bill-payment-service';
 export { CustomerBillPaymentService } from './customer-bill-payment-service';
 export { SupplierPaymentService } from './supplier-payment-service';
 
