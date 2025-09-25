@@ -3,8 +3,15 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useCustomerStore } from '@/store/customer-store';
 import { useBillStore } from '@/store/bill-store';
 import { useCustomerBillPaymentStore } from '@/store/customer-bill-payment-store';
+import { useSalesmanBillStore } from '@/store/salesman-bill-store';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -62,6 +69,12 @@ export function CustomerDetailPage() {
     fetchPaymentsByCustomerId,
   } = useCustomerBillPaymentStore();
 
+  const {
+    customerBills: salesmanBills,
+    loading: salesmanBillsLoading,
+    fetchBillsByCustomerId: fetchSalesmanBillsByCustomerId,
+  } = useSalesmanBillStore();
+
   const [activeTab, setActiveTab] = useState('bills');
   const [isCreatePaymentDialogOpen, setIsCreatePaymentDialogOpen] =
     useState(false);
@@ -84,11 +97,13 @@ export function CustomerDetailPage() {
     if (id) {
       fetchBillsByCustomerId(id);
       fetchPaymentsByCustomerId(id, customer?.pumpMasterId);
+      fetchSalesmanBillsByCustomerId(id);
     }
   }, [
     id,
     fetchBillsByCustomerId,
     fetchPaymentsByCustomerId,
+    fetchSalesmanBillsByCustomerId,
     customer?.pumpMasterId,
   ]);
 
@@ -254,10 +269,17 @@ export function CustomerDetailPage() {
       {/* Bills and Payments Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex items-center justify-between">
-          <TabsList className="grid w-fit grid-cols-2">
+          <TabsList className="grid w-fit grid-cols-3">
             <TabsTrigger value="bills" className="flex items-center gap-2">
               <Receipt className="h-4 w-4" />
               Bills ({bills.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="salesman-bills"
+              className="flex items-center gap-2"
+            >
+              <Receipt className="h-4 w-4" />
+              Salesman Bills ({salesmanBills.length})
             </TabsTrigger>
             <TabsTrigger value="payments" className="flex items-center gap-2">
               <CreditCard className="h-4 w-4" />
@@ -408,6 +430,67 @@ export function CustomerDetailPage() {
                         <TableCell>{bill.billItems.length} items</TableCell>
                         <TableCell className="text-right font-mono font-semibold">
                           ₹{bill.netAmount.toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="salesman-bills" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Salesman Bills</CardTitle>
+              <CardDescription>
+                Credit bills created by salesmen during fuel dispensing shifts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {salesmanBillsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                  <span className="ml-2">Loading salesman bills...</span>
+                </div>
+              ) : salesmanBills.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No salesman bills found for this customer
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Bill No</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead>Rate</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {salesmanBills.map((bill) => (
+                      <TableRow key={bill.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-1">
+                            <Receipt className="h-3 w-3 opacity-50" />
+                            {bill.billNo}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(bill.billDate).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {bill.productName || 'N/A'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{bill.quantity.toFixed(3)} L</TableCell>
+                        <TableCell>₹{bill.rate.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-mono font-semibold">
+                          ₹{bill.amount.toLocaleString()}
                         </TableCell>
                       </TableRow>
                     ))}

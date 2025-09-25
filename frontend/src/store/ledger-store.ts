@@ -8,6 +8,7 @@ import type {
 } from '@/types';
 import { BillService } from '@/services/bill-service';
 import { CustomerBillPaymentService } from '@/services/customer-bill-payment-service';
+import { SalesmanBillService } from '@/services/salesman-bill-service';
 import type {
   LedgerEntry,
   LedgerSummary,
@@ -71,9 +72,10 @@ export const useLedgerStore = create<LedgerStore>()(
         set({ loading: true, error: null });
 
         try {
-          // Fetch bills and payments for the customer
-          const [bills, payments] = await Promise.all([
+          // Fetch bills, salesman bills, and payments for the customer
+          const [bills, salesmanBills, payments] = await Promise.all([
             BillService.getByCustomerId(customerId),
+            SalesmanBillService.getByCustomer(customerId),
             CustomerBillPaymentService.getByCustomerId(customerId),
           ]);
 
@@ -110,12 +112,19 @@ export const useLedgerStore = create<LedgerStore>()(
             .filter((b) => new Date(b.billDate) < beforeDate)
             .reduce((sum, b) => sum + b.netAmount, 0);
 
+          const totalSalesmanBillsBefore = salesmanBills
+            .filter((b) => new Date(b.billDate) < beforeDate)
+            .reduce((sum, b) => sum + b.amount, 0);
+
           const totalPaidBefore = payments
             .filter((p) => new Date(p.paymentDate) < beforeDate)
             .reduce((sum, p) => sum + p.amount, 0);
 
           const totalDebtBefore =
-            openingBalance + totalBillsBefore - totalPaidBefore;
+            openingBalance +
+            totalBillsBefore +
+            totalSalesmanBillsBefore -
+            totalPaidBefore;
 
           // Create ledger entries for the date range
           const ledgerEntries: LedgerEntry[] = [];
@@ -145,6 +154,64 @@ export const useLedgerStore = create<LedgerStore>()(
                 comments: `Bill - ${bill.customerName || 'Customer'}`,
                 type: 'bill',
                 billDetails: bill,
+              });
+            });
+
+          // Add salesman bills
+          salesmanBills
+            .filter((bill) => {
+              const billDate = new Date(bill.billDate);
+              return billDate >= beforeDate && billDate <= new Date(toDate);
+            })
+            .forEach((bill) => {
+              ledgerEntries.push({
+                date: bill.billDate,
+                action: 'Salesman Bill',
+                invoiceNo: bill.billNo.toString(),
+                billAmount: bill.amount,
+                amountPaid: 0, // Salesman bills don't have integrated payments in this context
+                balanceAmount: 0, // Will be calculated later
+                debtAmount: 0, // Will be calculated later
+                entryBy: 'System',
+                comments: `Salesman Bill - ${bill.productName || 'Fuel'} (${
+                  bill.quantity
+                }L)`,
+                type: 'bill',
+                billDetails: {
+                  id: bill.id,
+                  pumpMasterId: '', // Will be set from context if needed
+                  billNo: bill.billNo,
+                  billDate: bill.billDate,
+                  customerId: bill.customerId,
+                  customerName: bill.customerName,
+                  billType: 'SALESMAN',
+                  rateType: 'EXCLUDING_GST',
+                  totalAmount: bill.amount,
+                  discountAmount: 0,
+                  taxAmount: 0,
+                  netAmount: bill.amount,
+                  vehicleNo: bill.vehicleNo,
+                  driverName: bill.driverName,
+                  createdAt: bill.createdAt,
+                  updatedAt: bill.updatedAt,
+                  billItems: [
+                    {
+                      id: bill.id + '-item',
+                      billId: bill.id,
+                      productId: bill.productId,
+                      productName: bill.productName,
+                      quantity: bill.quantity,
+                      rate: bill.rate,
+                      amount: bill.amount,
+                      discount: 0,
+                      discountAmount: 0,
+                      taxPercentage: 0,
+                      taxAmount: 0,
+                      netAmount: bill.amount,
+                      totalAmount: bill.amount,
+                    },
+                  ],
+                },
               });
             });
 
@@ -199,13 +266,15 @@ export const useLedgerStore = create<LedgerStore>()(
           // Compute summary
           const totalBillsTillDate =
             totalBillsBefore +
+            totalSalesmanBillsBefore +
             ledgerEntries.reduce((sum, entry) => sum + entry.billAmount, 0);
           const totalPaymentTillDate =
             totalPaidBefore +
             ledgerEntries.reduce((sum, entry) => sum + entry.amountPaid, 0);
           const totalDebtTillDate =
             openingBalance +
-            totalBillsBefore -
+            totalBillsBefore +
+            totalSalesmanBillsBefore -
             totalPaidBefore +
             ledgerEntries.reduce(
               (sum, entry) => sum + entry.billAmount - entry.amountPaid,
