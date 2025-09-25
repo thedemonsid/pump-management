@@ -29,8 +29,8 @@ export const tankLedgerColumns: ColumnDef<TankLedgerEntry>[] = [
     },
   },
   {
-    accessorKey: 'volume',
-    header: 'Volume (L)',
+    accessorKey: 'creditVolume',
+    header: 'Credit Volume (L)',
     cell: ({ row }) => {
       const entry = row.original;
       const formatVolume = (volume: number) => {
@@ -41,19 +41,34 @@ export const tankLedgerColumns: ColumnDef<TankLedgerEntry>[] = [
       };
 
       return (
-        <div
-          className={`text-right font-medium ${
-            entry.type === 'addition' ? 'text-green-600' : 'text-red-600'
-          }`}
-        >
-          {formatVolume(entry.volume)}
+        <div className="text-right font-medium text-green-600">
+          {entry.type === 'addition' ? formatVolume(entry.volume) : '-'}
         </div>
       );
     },
   },
   {
-    accessorKey: 'level',
-    header: 'Level After (L)',
+    accessorKey: 'debtVolume',
+    header: 'Debt Volume (L)',
+    cell: ({ row }) => {
+      const entry = row.original;
+      const formatVolume = (volume: number) => {
+        return new Intl.NumberFormat('en-IN', {
+          style: 'decimal',
+          maximumFractionDigits: 2,
+        }).format(volume);
+      };
+
+      return (
+        <div className="text-right font-medium text-red-600">
+          {entry.type === 'removal' ? formatVolume(entry.volume) : '-'}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: 'currentVolume',
+    header: 'Current Volume (L)',
     cell: ({ row }) => {
       const entry = row.original;
       const formatVolume = (volume: number) => {

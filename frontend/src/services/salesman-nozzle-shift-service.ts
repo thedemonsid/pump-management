@@ -92,4 +92,39 @@ export class SalesmanNozzleShiftService {
   static async delete(id: string): Promise<void> {
     await api.delete(`${this.BASE_PATH}/${id}/admin`);
   }
+
+  // Admin create shift
+  static async adminCreate(
+    shift: CreateSalesmanNozzleShift
+  ): Promise<SalesmanNozzleShift> {
+    const response = await api.post<SalesmanNozzleShift>(
+      `${this.BASE_PATH}/admin`,
+      shift
+    );
+    return response.data;
+  }
+
+  // Admin close shift
+  static async adminClose(
+    id: string,
+    closeData: CloseSalesmanNozzleShift
+  ): Promise<SalesmanNozzleShift> {
+    const response = await api.put<SalesmanNozzleShift>(
+      `${this.BASE_PATH}/${id}/admin/close`,
+      closeData
+    );
+    return response.data;
+  }
+
+  // Admin update shift
+  static async adminUpdate(
+    id: string,
+    updateData: Partial<CreateSalesmanNozzleShift>
+  ): Promise<SalesmanNozzleShift> {
+    const response = await api.put<SalesmanNozzleShift>(
+      `${this.BASE_PATH}/${id}/admin`,
+      updateData
+    );
+    return response.data;
+  }
 }

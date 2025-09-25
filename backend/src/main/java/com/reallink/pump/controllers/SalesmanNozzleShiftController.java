@@ -98,7 +98,6 @@ public class SalesmanNozzleShiftController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @Operation(summary = "Create salesman nozzle shift")
     public ResponseEntity<SalesmanNozzleShiftResponse> createSalesmanNozzleShift(@Valid @RequestBody CreateSalesmanNozzleShiftRequest request,
             HttpServletRequest httpRequest) {

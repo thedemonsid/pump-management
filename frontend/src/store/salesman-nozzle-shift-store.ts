@@ -28,10 +28,19 @@ interface SalesmanNozzleShiftState {
     toDate?: string;
     salesmanId?: string;
   }) => Promise<void>;
-  createShift: (shift: CreateSalesmanNozzleShift) => Promise<void>;
+  createShift: (
+    shift: CreateSalesmanNozzleShift,
+    admin?: boolean
+  ) => Promise<void>;
   closeShift: (
     id: string,
-    closeData: CloseSalesmanNozzleShift
+    closeData: CloseSalesmanNozzleShift,
+    admin?: boolean
+  ) => Promise<void>;
+  updateShiftApi: (
+    id: string,
+    shift: Partial<CreateSalesmanNozzleShift>,
+    admin?: boolean
   ) => Promise<void>;
   fetchActiveShifts: (salesmanId?: string) => Promise<void>;
 }
@@ -83,10 +92,12 @@ export const useSalesmanNozzleShiftStore = create<SalesmanNozzleShiftState>()(
         }
       },
 
-      createShift: async (shiftData) => {
+      createShift: async (shiftData, admin = false) => {
         try {
           set({ loading: true, error: null });
-          const newShift = await SalesmanNozzleShiftService.create(shiftData);
+          const newShift = admin
+            ? await SalesmanNozzleShiftService.adminCreate(shiftData)
+            : await SalesmanNozzleShiftService.create(shiftData);
           get().addShift(newShift);
           set((state) => ({
             activeShifts: [...state.activeShifts, newShift],
@@ -103,13 +114,12 @@ export const useSalesmanNozzleShiftStore = create<SalesmanNozzleShiftState>()(
         }
       },
 
-      closeShift: async (id, closeData) => {
+      closeShift: async (id, closeData, admin = false) => {
         try {
           set({ loading: true, error: null });
-          const updatedShift = await SalesmanNozzleShiftService.close(
-            id,
-            closeData
-          );
+          const updatedShift = admin
+            ? await SalesmanNozzleShiftService.adminClose(id, closeData)
+            : await SalesmanNozzleShiftService.close(id, closeData);
           get().updateShift(id, updatedShift);
           set((state) => ({
             activeShifts: state.activeShifts.filter((shift) => shift.id !== id),
@@ -118,6 +128,29 @@ export const useSalesmanNozzleShiftStore = create<SalesmanNozzleShiftState>()(
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : 'Failed to close shift';
+          set({ error: errorMessage });
+          toast.error(errorMessage);
+          throw error;
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      updateShiftApi: async (id, shiftData, admin = false) => {
+        if (!admin) {
+          throw new Error('Update not allowed for non-admin users');
+        }
+        try {
+          set({ loading: true, error: null });
+          const updatedShift = await SalesmanNozzleShiftService.adminUpdate(
+            id,
+            shiftData
+          );
+          get().updateShift(id, updatedShift);
+          toast.success('Shift updated successfully');
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Failed to update shift';
           set({ error: errorMessage });
           toast.error(errorMessage);
           throw error;

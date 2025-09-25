@@ -13,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 
 import com.reallink.pump.dto.request.CloseSalesmanNozzleShiftRequest;
 import com.reallink.pump.dto.request.CreateSalesmanNozzleShiftRequest;
+import com.reallink.pump.dto.request.CreateTankTransactionRequest;
 import com.reallink.pump.dto.request.UpdateSalesmanNozzleShiftRequest;
 import com.reallink.pump.dto.response.SalesmanNozzleShiftResponse;
 import com.reallink.pump.entities.Nozzle;
@@ -41,6 +42,7 @@ public class SalesmanNozzleShiftService {
     private final NozzleRepository nozzleRepository;
     private final PumpInfoMasterRepository pumpInfoMasterRepository;
     private final SalesmanNozzleShiftMapper mapper;
+    private final TankTransactionService tankTransactionService;
 
     public List<SalesmanNozzleShiftResponse> getAllByPumpMasterId(@NotNull UUID pumpMasterId) {
         return repository.findByPumpMasterIdOrderByStartDateTimeDesc(pumpMasterId).stream()
@@ -150,6 +152,17 @@ public class SalesmanNozzleShiftService {
         if (request.getClosingBalance() != null) {
             shift.setClosingBalance(request.getClosingBalance());
             shift.setStatus(SalesmanNozzleShift.ShiftStatus.CLOSED);
+            BigDecimal dispensedAmount = request.getClosingBalance().subtract(request.getOpeningBalance());
+            BigDecimal totalAmount = dispensedAmount.multiply(productPrice);
+            totalAmount = totalAmount.setScale(2, RoundingMode.HALF_UP);
+            shift.setTotalAmount(totalAmount);
+
+            // Create tank transaction for fuel removal
+            CreateTankTransactionRequest tankTransactionRequest = new CreateTankTransactionRequest();
+            tankTransactionRequest.setVolume(dispensedAmount);
+            tankTransactionRequest.setDescription("Fuel dispensed during shift creation closure for salesman: " + salesman.getUsername() + ", nozzle: " + nozzle.getNozzleName());
+            tankTransactionRequest.setTransactionDate(LocalDateTime.now(ZoneOffset.UTC));
+            tankTransactionService.createRemovalTransaction(nozzle.getTank().getId(), tankTransactionRequest);
         }
 
         SalesmanNozzleShift saved = repository.save(shift);
@@ -187,6 +200,13 @@ public class SalesmanNozzleShiftService {
 
         totalAmount = totalAmount.setScale(2, RoundingMode.HALF_UP);
         shift.setTotalAmount(totalAmount);
+
+        // Create tank transaction for fuel removal
+        CreateTankTransactionRequest tankTransactionRequest = new CreateTankTransactionRequest();
+        tankTransactionRequest.setVolume(dispensedAmount);
+        tankTransactionRequest.setDescription("Fuel dispensed during shift closure for salesman: " + shift.getSalesman().getUsername() + ", nozzle: " + shift.getNozzle().getNozzleName());
+        tankTransactionRequest.setTransactionDate(LocalDateTime.now(ZoneOffset.UTC));
+        tankTransactionService.createRemovalTransaction(shift.getNozzle().getTank().getId(), tankTransactionRequest);
 
         shift.closeShift(); // Set status to CLOSED
 
@@ -246,6 +266,13 @@ public class SalesmanNozzleShiftService {
             BigDecimal totalAmount = dispensedAmount.multiply(productPrice);
             totalAmount = totalAmount.setScale(2, RoundingMode.HALF_UP);
             shift.setTotalAmount(totalAmount);
+
+            // Create tank transaction for fuel removal
+            CreateTankTransactionRequest tankTransactionRequest = new CreateTankTransactionRequest();
+            tankTransactionRequest.setVolume(dispensedAmount);
+            tankTransactionRequest.setDescription("Fuel dispensed during admin shift creation closure for salesman: " + salesman.getUsername() + ", nozzle: " + nozzle.getNozzleName());
+            tankTransactionRequest.setTransactionDate(LocalDateTime.now(ZoneOffset.UTC));
+            tankTransactionService.createRemovalTransaction(nozzle.getTank().getId(), tankTransactionRequest);
         }
 
         SalesmanNozzleShift saved = repository.save(shift);
@@ -273,6 +300,13 @@ public class SalesmanNozzleShiftService {
 
         totalAmount = totalAmount.setScale(2, RoundingMode.HALF_UP);
         shift.setTotalAmount(totalAmount);
+
+        // Create tank transaction for fuel removal
+        CreateTankTransactionRequest tankTransactionRequest = new CreateTankTransactionRequest();
+        tankTransactionRequest.setVolume(dispensedAmount);
+        tankTransactionRequest.setDescription("Fuel dispensed during admin shift closure for salesman: " + shift.getSalesman().getUsername() + ", nozzle: " + shift.getNozzle().getNozzleName());
+        tankTransactionRequest.setTransactionDate(LocalDateTime.now(ZoneOffset.UTC));
+        tankTransactionService.createRemovalTransaction(shift.getNozzle().getTank().getId(), tankTransactionRequest);
 
         shift.closeShift(); // Set status to CLOSED
 
@@ -343,8 +377,42 @@ public class SalesmanNozzleShiftService {
         }
 
         // Recalculate total amount if balances or price changed
+        BigDecimal oldDispensedAmount = null;
         if (request.getOpeningBalance() != null || request.getClosingBalance() != null || request.getProductPrice() != null) {
+            // Store old dispensed amount before updating
+            if (shift.getClosingBalance() != null && shift.getOpeningBalance() != null) {
+                oldDispensedAmount = shift.getClosingBalance().subtract(shift.getOpeningBalance());
+            }
             shift.updateTotalAmount();
+        }
+
+        // Handle tank transaction if closing balance changed and shift is closed
+        if (request.getClosingBalance() != null && SalesmanNozzleShift.ShiftStatus.CLOSED.equals(shift.getStatus())) {
+            BigDecimal newDispensedAmount = shift.getClosingBalance().subtract(shift.getOpeningBalance());
+            BigDecimal transactionVolume;
+
+            if (oldDispensedAmount != null) {
+                // This is an update - calculate the difference
+                transactionVolume = newDispensedAmount.subtract(oldDispensedAmount);
+            } else {
+                // First time setting closing balance
+                transactionVolume = newDispensedAmount;
+            }
+
+            if (transactionVolume.compareTo(BigDecimal.ZERO) != 0) {
+                CreateTankTransactionRequest tankTransactionRequest = new CreateTankTransactionRequest();
+                tankTransactionRequest.setVolume(transactionVolume.abs());
+                tankTransactionRequest.setDescription("Fuel adjustment during admin shift update for salesman: " + shift.getSalesman().getUsername() + ", nozzle: " + shift.getNozzle().getNozzleName());
+                tankTransactionRequest.setTransactionDate(LocalDateTime.now(ZoneOffset.UTC));
+
+                if (transactionVolume.compareTo(BigDecimal.ZERO) > 0) {
+                    // More fuel dispensed - create removal transaction
+                    tankTransactionService.createRemovalTransaction(shift.getNozzle().getTank().getId(), tankTransactionRequest);
+                } else {
+                    // Less fuel dispensed - create addition transaction (fuel returned to tank)
+                    tankTransactionService.createAdditionTransaction(shift.getNozzle().getTank().getId(), tankTransactionRequest);
+                }
+            }
         }
 
         SalesmanNozzleShift saved = repository.save(shift);

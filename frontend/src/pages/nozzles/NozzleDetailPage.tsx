@@ -1,22 +1,28 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { NozzleService } from '@/services/nozzle-service';
 import { SalesmanNozzleShiftService } from '@/services/salesman-nozzle-shift-service';
-import type { Nozzle, SalesmanNozzleShift } from '@/types';
-import { formatCurrency } from '@/lib/utils/currency';
+import { SalesmanService } from '@/services/salesman-service';
+import type { Nozzle, SalesmanNozzleShift, Salesman } from '@/types';
 import { toast } from 'sonner';
+import { CreateShiftDialog } from '@/components/nozzles/CreateShiftDialog';
+import { EditShiftDialog } from '@/components/nozzles/EditShiftDialog';
+import { ShiftCard } from '@/components/nozzles/ShiftCard';
 
 export function NozzleDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const [nozzle, setNozzle] = useState<Nozzle | null>(null);
   const [shifts, setShifts] = useState<SalesmanNozzleShift[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedShift, setSelectedShift] =
+    useState<SalesmanNozzleShift | null>(null);
+  const [salesmen, setSalesmen] = useState<Salesman[]>([]);
 
   const fetchNozzleAndShifts = useCallback(async () => {
     if (!id) return;
@@ -38,9 +44,19 @@ export function NozzleDetailPage() {
     }
   }, [id]);
 
+  const fetchSalesmen = useCallback(async () => {
+    try {
+      const data = await SalesmanService.getAll();
+      setSalesmen(data);
+    } catch {
+      toast.error('Failed to load salesmen');
+    }
+  }, []);
+
   useEffect(() => {
     fetchNozzleAndShifts();
-  }, [fetchNozzleAndShifts]);
+    fetchSalesmen();
+  }, [fetchNozzleAndShifts, fetchSalesmen]);
 
   const formatFuelQuantity = (quantity: number) => {
     return (
@@ -52,12 +68,12 @@ export function NozzleDetailPage() {
   };
 
   const handleCreateShift = () => {
-    // Navigate to create shift with pre-selected nozzle
-    navigate('/shifts/create', { state: { nozzleId: id } });
+    setIsCreateDialogOpen(true);
   };
 
-  const handleEditShift = (shiftId: string) => {
-    navigate(`/shifts/${shiftId}/edit`);
+  const handleEditShift = (shift: SalesmanNozzleShift) => {
+    setSelectedShift(shift);
+    setIsEditDialogOpen(true);
   };
 
   const handleDeleteShift = async (shiftId: string) => {
@@ -146,78 +162,33 @@ export function NozzleDetailPage() {
           ) : (
             <div className="space-y-4">
               {shifts.map((shift) => (
-                <div key={shift.id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant={
-                          shift.status === 'ACTIVE' ? 'default' : 'secondary'
-                        }
-                      >
-                        {shift.status}
-                      </Badge>
-                      <span className="font-medium">
-                        {shift.salesmanUsername || 'Unknown'}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditShift(shift.id!)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteShift(shift.id!)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <label className="text-muted-foreground">Start</label>
-                      <p>{new Date(shift.startDateTime).toLocaleString()}</p>
-                    </div>
-                    {shift.endDateTime && (
-                      <div>
-                        <label className="text-muted-foreground">End</label>
-                        <p>{new Date(shift.endDateTime).toLocaleString()}</p>
-                      </div>
-                    )}
-                    <div>
-                      <label className="text-muted-foreground">Opening</label>
-                      <p>{formatFuelQuantity(shift.openingBalance)}</p>
-                    </div>
-                    {shift.closingBalance && (
-                      <div>
-                        <label className="text-muted-foreground">Closing</label>
-                        <p>{formatFuelQuantity(shift.closingBalance)}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {shift.totalAmount && (
-                    <>
-                      <Separator className="my-2" />
-                      <div className="flex justify-between text-sm">
-                        <span>Total Amount:</span>
-                        <span className="font-medium">
-                          {formatCurrency(shift.totalAmount)}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
+                <ShiftCard
+                  key={shift.id}
+                  shift={shift}
+                  onEdit={handleEditShift}
+                  onDelete={handleDeleteShift}
+                />
               ))}
             </div>
           )}
         </CardContent>
       </Card>
+
+      <CreateShiftDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        nozzleId={id!}
+        salesmen={salesmen}
+        onSuccess={fetchNozzleAndShifts}
+      />
+
+      <EditShiftDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        shift={selectedShift}
+        salesmen={salesmen}
+        onSuccess={fetchNozzleAndShifts}
+      />
     </div>
   );
 }
