@@ -72,7 +72,6 @@ export function CreateBillForm({ onSuccess }: CreateBillFormProps) {
   const form = useForm<CreateBillFormData>({
     resolver: zodResolver(CreateBillRequestSchema),
     defaultValues: {
-      pumpMasterId: DEFAULT_PUMP_INFO.id || '',
       billNo: nextBillNo || 0,
       billDate: new Date().toISOString().split('T')[0],
       customerId: '',

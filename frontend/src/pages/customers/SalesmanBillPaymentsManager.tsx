@@ -98,37 +98,6 @@ export function SalesmanBillPaymentsManager({
             Manage payments received from customer
           </p>
         </div>
-
-        {canEditPayment && (
-          <Dialog
-            open={updateDialogOpen && selectedPayment?.id === payment.id}
-            onOpenChange={(open) => {
-              setUpdateDialogOpen(open);
-              if (!open) setSelectedPayment(null);
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedPayment(payment)}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Update Payment</DialogTitle>
-              </DialogHeader>
-              {selectedPayment && (
-                <UpdateSalesmanBillPaymentForm
-                  payment={selectedPayment}
-                  onSuccess={handleUpdateSuccess}
-                />
-              )}
-            </DialogContent>
-          </Dialog>
-        )}
       </div>
 
       <Card>

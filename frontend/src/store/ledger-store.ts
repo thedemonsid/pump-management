@@ -9,6 +9,7 @@ import type {
 import { BillService } from '@/services/bill-service';
 import { CustomerBillPaymentService } from '@/services/customer-bill-payment-service';
 import { SalesmanBillService } from '@/services/salesman-bill-service';
+import { SalesmanBillPaymentService } from '@/services/salesman-bill-payment-service';
 import type {
   LedgerEntry,
   LedgerSummary,
@@ -73,11 +74,13 @@ export const useLedgerStore = create<LedgerStore>()(
 
         try {
           // Fetch bills, salesman bills, and payments for the customer
-          const [bills, salesmanBills, payments] = await Promise.all([
-            BillService.getByCustomerId(customerId),
-            SalesmanBillService.getByCustomer(customerId),
-            CustomerBillPaymentService.getByCustomerId(customerId),
-          ]);
+          const [bills, salesmanBills, payments, salesmanPayments] =
+            await Promise.all([
+              BillService.getByCustomerId(customerId),
+              SalesmanBillService.getByCustomer(customerId),
+              CustomerBillPaymentService.getByCustomerId(customerId),
+              SalesmanBillPaymentService.getByCustomerId(customerId),
+            ]);
 
           // Create a map of billId to payments (from both bill-embedded payments and standalone payments)
           const billPaymentsMap: Record<string, CustomerBillPaymentResponse[]> =
@@ -120,11 +123,15 @@ export const useLedgerStore = create<LedgerStore>()(
             .filter((p) => new Date(p.paymentDate) < beforeDate)
             .reduce((sum, p) => sum + p.amount, 0);
 
+          const totalSalesmanPaidBefore = salesmanPayments
+            .filter((p) => new Date(p.paymentDate) < beforeDate)
+            .reduce((sum, p) => sum + p.amount, 0);
+
           const totalDebtBefore =
             openingBalance +
             totalBillsBefore +
             totalSalesmanBillsBefore -
-            totalPaidBefore;
+            (totalPaidBefore + totalSalesmanPaidBefore);
 
           // Create ledger entries for the date range
           const ledgerEntries: LedgerEntry[] = [];
@@ -246,6 +253,37 @@ export const useLedgerStore = create<LedgerStore>()(
               });
             });
 
+          // Add salesman bill payments
+          salesmanPayments
+            .filter((p) => {
+              const paymentDate = new Date(p.paymentDate);
+              return (
+                paymentDate >= beforeDate && paymentDate <= new Date(toDate)
+              );
+            })
+            .forEach((payment) => {
+              ledgerEntries.push({
+                date: payment.paymentDate,
+                action: 'Salesman Payment',
+                invoiceNo: payment.referenceNumber || '',
+                billAmount: 0,
+                amountPaid: payment.amount,
+                balanceAmount: 0,
+                debtAmount: 0,
+                entryBy: 'System',
+                comments: `Salesman Payment - ${payment.paymentMethod} - ${
+                  payment.notes || ''
+                }`,
+                type: 'payment',
+                paymentDetails: {
+                  paymentMethod: payment.paymentMethod,
+                  referenceNumber: payment.referenceNumber,
+                  notes: payment.notes,
+                  amount: payment.amount,
+                },
+              });
+            });
+
           // Sort by date
           ledgerEntries.sort(
             (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
@@ -270,12 +308,13 @@ export const useLedgerStore = create<LedgerStore>()(
             ledgerEntries.reduce((sum, entry) => sum + entry.billAmount, 0);
           const totalPaymentTillDate =
             totalPaidBefore +
+            totalSalesmanPaidBefore +
             ledgerEntries.reduce((sum, entry) => sum + entry.amountPaid, 0);
           const totalDebtTillDate =
             openingBalance +
             totalBillsBefore +
             totalSalesmanBillsBefore -
-            totalPaidBefore +
+            (totalPaidBefore + totalSalesmanPaidBefore) +
             ledgerEntries.reduce(
               (sum, entry) => sum + entry.billAmount - entry.amountPaid,
               0

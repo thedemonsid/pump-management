@@ -4,6 +4,7 @@ import { useCustomerStore } from '@/store/customer-store';
 import { useBillStore } from '@/store/bill-store';
 import { useCustomerBillPaymentStore } from '@/store/customer-bill-payment-store';
 import { useSalesmanBillStore } from '@/store/salesman-bill-store';
+import { useSalesmanBillPaymentStore } from '@/store/salesman-bill-payment-store';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -47,6 +48,7 @@ import {
 import { CreateCustomerBillPaymentForm } from './CreateCustomerBillPaymentForm';
 import { UpdateCustomerBillPaymentForm } from './UpdateCustomerBillPaymentForm';
 import { SalesmanBillPaymentsManager } from './SalesmanBillPaymentsManager';
+import { CreateSalesmanBillPaymentForm } from './CreateSalesmanBillPaymentForm';
 import type { CustomerBillPaymentResponse } from '@/types';
 
 export function CustomerDetailPage() {
@@ -76,6 +78,12 @@ export function CustomerDetailPage() {
     fetchBillsByCustomerId: fetchSalesmanBillsByCustomerId,
   } = useSalesmanBillStore();
 
+  const {
+    customerPayments: salesmanBillPayments,
+    loading: salesmanBillPaymentsLoading,
+    fetchPaymentsByCustomerId: fetchSalesmanBillPaymentsByCustomerId,
+  } = useSalesmanBillPaymentStore();
+
   const [activeTab, setActiveTab] = useState('bills');
   const [isCreatePaymentDialogOpen, setIsCreatePaymentDialogOpen] =
     useState(false);
@@ -89,6 +97,10 @@ export function CustomerDetailPage() {
     string | null
   >(null);
   const [isPaymentsDialogOpen, setIsPaymentsDialogOpen] = useState(false);
+  const [
+    isCreateSalesmanBillPaymentDialogOpen,
+    setIsCreateSalesmanBillPaymentDialogOpen,
+  ] = useState(false);
 
   const customer = customers.find((c) => c.id === id);
 
@@ -103,12 +115,14 @@ export function CustomerDetailPage() {
       fetchBillsByCustomerId(id);
       fetchPaymentsByCustomerId(id, customer?.pumpMasterId);
       fetchSalesmanBillsByCustomerId(id);
+      fetchSalesmanBillPaymentsByCustomerId(id);
     }
   }, [
     id,
     fetchBillsByCustomerId,
     fetchPaymentsByCustomerId,
     fetchSalesmanBillsByCustomerId,
+    fetchSalesmanBillPaymentsByCustomerId,
     customer?.pumpMasterId,
   ]);
 
@@ -274,7 +288,7 @@ export function CustomerDetailPage() {
       {/* Bills and Payments Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex items-center justify-between">
-          <TabsList className="grid w-fit grid-cols-3">
+          <TabsList className="grid w-fit grid-cols-4">
             <TabsTrigger value="bills" className="flex items-center gap-2">
               <Receipt className="h-4 w-4" />
               Bills ({bills.length})
@@ -289,6 +303,13 @@ export function CustomerDetailPage() {
             <TabsTrigger value="payments" className="flex items-center gap-2">
               <CreditCard className="h-4 w-4" />
               Payments ({payments.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="salesman-payments"
+              className="flex items-center gap-2"
+            >
+              <CreditCard className="h-4 w-4" />
+              Salesman Payments ({salesmanBillPayments.length})
             </TabsTrigger>
           </TabsList>
 
@@ -360,6 +381,35 @@ export function CustomerDetailPage() {
               </DialogContent>
             </Dialog>
 
+            <Dialog
+              open={isCreateSalesmanBillPaymentDialogOpen}
+              onOpenChange={setIsCreateSalesmanBillPaymentDialogOpen}
+            >
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Salesman Payment
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Create Salesman Bill Payment</DialogTitle>
+                  <DialogDescription>
+                    Record a new payment for salesman bills from this customer
+                  </DialogDescription>
+                </DialogHeader>
+                <CreateSalesmanBillPaymentForm
+                  customerId={customer.id!}
+                  pumpMasterId={customer.pumpMasterId!}
+                  onSuccess={() => {
+                    setIsCreateSalesmanBillPaymentDialogOpen(false);
+                    // Refresh payments data
+                    fetchSalesmanBillPaymentsByCustomerId(customer.id!);
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
+
             {/* Delete Payment Confirmation Dialog */}
             <Dialog
               open={!!deletingPaymentId}
@@ -399,9 +449,7 @@ export function CustomerDetailPage() {
                   <DialogTitle>Salesman Bill Payments</DialogTitle>
                 </DialogHeader>
                 {selectedSalesmanBillId && (
-                  <SalesmanBillPaymentsManager
-                    salesmanBillId={selectedSalesmanBillId}
-                  />
+                  <SalesmanBillPaymentsManager customerId={id} />
                 )}
               </DialogContent>
             </Dialog>
@@ -615,6 +663,70 @@ export function CustomerDetailPage() {
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="salesman-payments" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">
+                Salesman Bill Payment History
+              </CardTitle>
+              <CardDescription>
+                Payments made for salesman bills during fuel dispensing shifts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {salesmanBillPaymentsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                  <span className="ml-2">Loading salesman payments...</span>
+                </div>
+              ) : salesmanBillPayments.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No salesman bill payments found for this customer
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Reference</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Method</TableHead>
+                      <TableHead>Shift</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {salesmanBillPayments.map((payment) => (
+                      <TableRow key={payment.id}>
+                        <TableCell className="font-medium font-mono text-sm">
+                          {payment.referenceNumber}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(payment.paymentDate).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {payment.paymentMethod}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm">
+                              Shift {payment.salesmanNozzleShiftId.slice(-8)}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-semibold text-green-600">
+                          ₹{payment.amount.toLocaleString()}
                         </TableCell>
                       </TableRow>
                     ))}
