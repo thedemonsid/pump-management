@@ -32,7 +32,10 @@ interface SalesmanBillPaymentState {
   fetchPayments: () => Promise<void>;
   fetchPaymentById: (id: string) => Promise<SalesmanBillPaymentResponse>;
   fetchPaymentsByShiftId: (salesmanNozzleShiftId: string) => Promise<void>;
-  fetchPaymentsByCustomerId: (customerId: string) => Promise<void>;
+  fetchPaymentsByCustomerId: (
+    customerId: string,
+    pumpMasterId?: string
+  ) => Promise<void>;
   getTotalByShiftId: (salesmanNozzleShiftId: string) => Promise<number>;
   createPayment: (
     payment: CreateSalesmanBillPaymentRequest
@@ -148,11 +151,17 @@ export const useSalesmanBillPaymentStore = create<SalesmanBillPaymentState>()(
         }
       },
 
-      fetchPaymentsByCustomerId: async (customerId: string) => {
+      fetchPaymentsByCustomerId: async (
+        customerId: string,
+        pumpMasterId?: string
+      ) => {
         set({ loading: true, error: null });
         try {
           const customerPayments =
-            await SalesmanBillPaymentService.getByCustomerId(customerId);
+            await SalesmanBillPaymentService.getByCustomerId(
+              customerId,
+              pumpMasterId
+            );
           set({ customerPayments, loading: false });
         } catch (error) {
           const errorMessage =

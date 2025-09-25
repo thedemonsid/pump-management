@@ -118,11 +118,17 @@ export const useCustomerBillPaymentStore = create<CustomerBillPaymentState>()(
         }
       },
 
-      fetchPaymentsByCustomerId: async (customerId: string) => {
+      fetchPaymentsByCustomerId: async (
+        customerId: string,
+        pumpMasterId?: string
+      ) => {
         set({ loading: true, error: null });
         try {
           const customerPayments =
-            await CustomerBillPaymentService.getByCustomerId(customerId);
+            await CustomerBillPaymentService.getByCustomerId(
+              customerId,
+              pumpMasterId
+            );
           set({ payments: customerPayments, loading: false });
         } catch (error) {
           const errorMessage =

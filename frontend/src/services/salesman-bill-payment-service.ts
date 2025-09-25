@@ -46,11 +46,13 @@ export class SalesmanBillPaymentService {
 
   // Get payments by customer ID
   static async getByCustomerId(
-    customerId: string
+    customerId: string,
+    pumpMasterId?: string
   ): Promise<SalesmanBillPaymentResponse[]> {
-    const response = await api.get<SalesmanBillPaymentResponse[]>(
-      `${this.BASE_PATH}/customer/${customerId}`
-    );
+    const url = pumpMasterId
+      ? `${this.BASE_PATH}/customer/${customerId}?pumpMasterId=${pumpMasterId}`
+      : `${this.BASE_PATH}/customer/${customerId}`;
+    const response = await api.get<SalesmanBillPaymentResponse[]>(url);
     return response.data;
   }
 

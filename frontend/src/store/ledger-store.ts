@@ -69,6 +69,7 @@ export const useLedgerStore = create<LedgerStore>()(
         fromDate,
         toDate,
         openingBalance,
+        pumpMasterId,
       }: ComputeLedgerParams) => {
         set({ loading: true, error: null });
 
@@ -78,8 +79,14 @@ export const useLedgerStore = create<LedgerStore>()(
             await Promise.all([
               BillService.getByCustomerId(customerId),
               SalesmanBillService.getByCustomer(customerId),
-              CustomerBillPaymentService.getByCustomerId(customerId),
-              SalesmanBillPaymentService.getByCustomerId(customerId),
+              CustomerBillPaymentService.getByCustomerId(
+                customerId,
+                pumpMasterId
+              ),
+              SalesmanBillPaymentService.getByCustomerId(
+                customerId,
+                pumpMasterId
+              ),
             ]);
 
           // Create a map of billId to payments (from both bill-embedded payments and standalone payments)

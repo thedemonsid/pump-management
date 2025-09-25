@@ -170,13 +170,14 @@ export function CustomerDetailPage() {
     );
   }
 
-  const totalBillsAmount = bills.reduce((sum, bill) => sum + bill.netAmount, 0);
-  const totalPaymentsAmount = payments.reduce(
-    (sum, payment) => sum + payment.amount,
-    0
-  );
+  const totalBillsAmount =
+    bills.reduce((sum, bill) => sum + bill.netAmount, 0) +
+    salesmanBills.reduce((sum, bill) => sum + bill.amount, 0);
+  const totalPaymentsAmount =
+    payments.reduce((sum, payment) => sum + payment.amount, 0) +
+    salesmanBillPayments.reduce((sum, payment) => sum + payment.amount, 0);
   const outstandingBalance =
-    totalBillsAmount - totalPaymentsAmount - (customer.openingBalance || 0);
+    (customer.openingBalance || 0) + totalBillsAmount - totalPaymentsAmount;
 
   return (
     <div className="space-y-6">

@@ -56,6 +56,7 @@ export interface ComputeLedgerParams {
   fromDate: string;
   toDate: string;
   openingBalance: number;
+  pumpMasterId?: string;
 }
 
 /**

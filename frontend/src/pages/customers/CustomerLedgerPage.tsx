@@ -46,6 +46,7 @@ export function CustomerLedgerPage() {
       fromDate: string;
       toDate: string;
       openingBalance: number;
+      pumpMasterId?: string;
     }) => Promise<void>;
   } = useLedgerStore();
 
@@ -67,6 +68,7 @@ export function CustomerLedgerPage() {
       fromDate,
       toDate,
       openingBalance: customer?.openingBalance || 0,
+      pumpMasterId: customer?.pumpMasterId,
     });
   };
 
