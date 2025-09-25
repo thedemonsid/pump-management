@@ -58,6 +58,11 @@ public class SalesmanBill extends BaseEntity {
     @JoinColumn(name = "product_id", nullable = false, foreignKey = @ForeignKey(name = "fk_salesman_bill_product"))
     private Product product;
 
+    @NotNull(message = "Salesman nozzle shift is required")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "salesman_nozzle_shift_id", nullable = false, foreignKey = @ForeignKey(name = "fk_salesman_bill_nozzle_shift"))
+    private SalesmanNozzleShift salesmanNozzleShift;
+
     @NotNull(message = "Rate type is required")
     @Enumerated(EnumType.STRING)
     @Column(name = "rate_type", nullable = false)

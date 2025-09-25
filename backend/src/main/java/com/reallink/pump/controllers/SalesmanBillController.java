@@ -74,6 +74,13 @@ public class SalesmanBillController {
         return ResponseEntity.ok(service.getByCustomerId(customerId));
     }
 
+    // Get Salesman Bills by Salesman Nozzle Shift ID
+    @GetMapping("/shift/{salesmanNozzleShiftId}")
+    @Operation(summary = "Get salesman bills by salesman nozzle shift ID")
+    public ResponseEntity<List<SalesmanBillResponse>> getSalesmanBillsBySalesmanNozzleShiftId(@PathVariable UUID salesmanNozzleShiftId) {
+        return ResponseEntity.ok(service.getBySalesmanNozzleShiftId(salesmanNozzleShiftId));
+    }
+
     @GetMapping("/next-bill-no")
     @Operation(summary = "Get next salesman bill number for pump master")
     public ResponseEntity<Long> getNextSalesmanBillNo(HttpServletRequest request) {

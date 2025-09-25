@@ -18,12 +18,14 @@ import com.reallink.pump.entities.Product;
 import com.reallink.pump.entities.ProductType;
 import com.reallink.pump.entities.PumpInfoMaster;
 import com.reallink.pump.entities.SalesmanBill;
+import com.reallink.pump.entities.SalesmanNozzleShift;
 import com.reallink.pump.exception.PumpBusinessException;
 import com.reallink.pump.mapper.SalesmanBillMapper;
 import com.reallink.pump.repositories.CustomerRepository;
 import com.reallink.pump.repositories.ProductRepository;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
 import com.reallink.pump.repositories.SalesmanBillRepository;
+import com.reallink.pump.repositories.SalesmanNozzleShiftRepository;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -39,6 +41,7 @@ public class SalesmanBillService {
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
     private final PumpInfoMasterRepository pumpInfoMasterRepository;
+    private final SalesmanNozzleShiftRepository salesmanNozzleShiftRepository;
     private final SalesmanBillMapper mapper;
 
     public List<SalesmanBillResponse> getAll() {
@@ -82,6 +85,17 @@ public class SalesmanBillService {
                     "Salesman bills can only contain FUEL products. Product " + product.getProductName() + " is of type " + product.getProductType());
         }
 
+        // Validate salesman nozzle shift exists and is open
+        SalesmanNozzleShift salesmanNozzleShift = salesmanNozzleShiftRepository.findById(request.getSalesmanNozzleShiftId()).orElse(null);
+        if (salesmanNozzleShift == null) {
+            throw new PumpBusinessException("INVALID_SALESMAN_NOZZLE_SHIFT",
+                    "Salesman nozzle shift with ID " + request.getSalesmanNozzleShiftId() + " does not exist");
+        }
+        if (!salesmanNozzleShift.getStatus().equals(SalesmanNozzleShift.ShiftStatus.OPEN)) {
+            throw new PumpBusinessException("SHIFT_NOT_OPEN",
+                    "Cannot create salesman bill for closed shift. Shift status: " + salesmanNozzleShift.getStatus());
+        }
+
         // Check for duplicate bill number
         if (repository.existsByBillNoAndPumpMaster_Id(request.getBillNo(), request.getPumpMasterId())) {
             throw new PumpBusinessException("DUPLICATE_SALESMAN_BILL_NO",
@@ -93,6 +107,7 @@ public class SalesmanBillService {
         bill.setPumpMaster(pumpMaster);
         bill.setCustomer(customer);
         bill.setProduct(product);
+        bill.setSalesmanNozzleShift(salesmanNozzleShift);
         bill.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
 
         // Calculate amounts
@@ -145,6 +160,20 @@ public class SalesmanBillService {
             existingBill.setProduct(product);
         }
 
+        // Validate salesman nozzle shift exists and is open if being updated
+        if (request.getSalesmanNozzleShiftId() != null) {
+            SalesmanNozzleShift salesmanNozzleShift = salesmanNozzleShiftRepository.findById(request.getSalesmanNozzleShiftId()).orElse(null);
+            if (salesmanNozzleShift == null) {
+                throw new PumpBusinessException("INVALID_SALESMAN_NOZZLE_SHIFT",
+                        "Salesman nozzle shift with ID " + request.getSalesmanNozzleShiftId() + " does not exist");
+            }
+            if (!salesmanNozzleShift.getStatus().equals(SalesmanNozzleShift.ShiftStatus.OPEN)) {
+                throw new PumpBusinessException("SHIFT_NOT_OPEN",
+                        "Cannot update salesman bill to closed shift. Shift status: " + salesmanNozzleShift.getStatus());
+            }
+            existingBill.setSalesmanNozzleShift(salesmanNozzleShift);
+        }
+
         // Update bill fields using mapper
         mapper.updateEntityFromRequest(request, existingBill);
 
@@ -188,6 +217,12 @@ public class SalesmanBillService {
 
     public List<SalesmanBillResponse> getByCustomerId(@NotNull UUID customerId) {
         return repository.findByCustomer_Id(customerId).stream()
+                .map(mapper::toResponse)
+                .toList();
+    }
+
+    public List<SalesmanBillResponse> getBySalesmanNozzleShiftId(@NotNull UUID salesmanNozzleShiftId) {
+        return repository.findBySalesmanNozzleShift_Id(salesmanNozzleShiftId).stream()
                 .map(mapper::toResponse)
                 .toList();
     }

@@ -38,6 +38,9 @@ public class SalesmanBillResponse {
     @Schema(description = "Product name", example = "Petrol")
     private String productName;
 
+    @Schema(description = "Salesman Nozzle Shift ID", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID salesmanNozzleShiftId;
+
     @Schema(description = "Vehicle number", example = "MH12AB1234")
     private String vehicleNo;
 

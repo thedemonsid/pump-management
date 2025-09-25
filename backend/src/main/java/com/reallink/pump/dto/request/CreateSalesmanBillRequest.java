@@ -38,6 +38,10 @@ public class CreateSalesmanBillRequest {
     @Schema(description = "Product ID (must be FUEL type)", example = "123e4567-e89b-12d3-a456-426614174000", required = true)
     private UUID productId;
 
+    @NotNull(message = "Salesman Nozzle Shift ID is required")
+    @Schema(description = "Salesman Nozzle Shift ID this bill belongs to", example = "123e4567-e89b-12d3-a456-426614174000", required = true)
+    private UUID salesmanNozzleShiftId;
+
     @NotBlank(message = "Vehicle number is required")
     @Size(max = 20, message = "Vehicle number cannot exceed 20 characters")
     @Schema(description = "Vehicle number", example = "MH12AB1234", required = true)

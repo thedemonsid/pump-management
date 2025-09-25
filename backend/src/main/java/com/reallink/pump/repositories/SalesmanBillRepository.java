@@ -24,4 +24,6 @@ public interface SalesmanBillRepository extends JpaRepository<SalesmanBill, UUID
     List<SalesmanBill> findByPumpMasterIdAndBillDateBetweenOrderByBillDateDesc(UUID pumpMasterId, LocalDate startDate, LocalDate endDate);
 
     List<SalesmanBill> findByCustomer_Id(UUID customerId);
+
+    List<SalesmanBill> findBySalesmanNozzleShift_Id(UUID salesmanNozzleShiftId);
 }

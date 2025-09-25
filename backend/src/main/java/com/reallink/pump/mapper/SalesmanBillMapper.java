@@ -25,6 +25,7 @@ public interface SalesmanBillMapper {
     @Mapping(target = "pumpMaster", ignore = true)
     @Mapping(target = "customer", ignore = true)
     @Mapping(target = "product", ignore = true)
+    @Mapping(target = "salesmanNozzleShift", ignore = true)
     SalesmanBill toEntity(CreateSalesmanBillRequest request);
 
     /**
@@ -35,6 +36,7 @@ public interface SalesmanBillMapper {
     @Mapping(target = "customerName", source = "customer.customerName")
     @Mapping(target = "productId", source = "product.id")
     @Mapping(target = "productName", source = "product.productName")
+    @Mapping(target = "salesmanNozzleShiftId", source = "salesmanNozzleShift.id")
     SalesmanBillResponse toResponse(SalesmanBill entity);
 
     /**
@@ -42,5 +44,6 @@ public interface SalesmanBillMapper {
      */
     // Do not map customer relation here; service handles setting a managed Customer when needed
     @Mapping(target = "product", ignore = true)
+    @Mapping(target = "salesmanNozzleShift", ignore = true)
     SalesmanBill updateEntityFromRequest(UpdateSalesmanBillRequest request, @MappingTarget SalesmanBill entity);
 }
