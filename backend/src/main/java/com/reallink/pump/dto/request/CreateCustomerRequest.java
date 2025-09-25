@@ -40,13 +40,9 @@ public class CreateCustomerRequest {
     @Schema(description = "Phone number", example = "9876543210")
     private String phoneNumber;
 
-    @NotBlank(message = "GST number is required")
-    @Size(min = 10, max = 20, message = "GST number must be greater than 10 and less than 20 characters")
     @Schema(description = "GST Identification Number", example = "22AAAAA0000A1Z5")
     private String gstNumber;
 
-    @NotBlank(message = "PAN number is required")
-    @Size(min = 10, max = 20, message = "PAN number must be greater than 10 and less than 20 characters")
     @Schema(description = "PAN Number", example = "ABCDE1234F")
     private String panNumber;
 

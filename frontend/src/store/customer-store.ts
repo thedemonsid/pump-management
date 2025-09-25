@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { Customer } from '@/types';
+import type { Customer, CreateCustomer } from '@/types';
 import { CustomerService } from '@/services/api';
 import { toast } from 'sonner';
 
@@ -19,9 +19,7 @@ interface CustomerState {
 
   // API methods
   fetchCustomers: () => Promise<void>;
-  createCustomer: (
-    customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt' | 'version'>
-  ) => Promise<void>;
+  createCustomer: (customer: CreateCustomer) => Promise<void>;
   editCustomer: (id: string, customer: Partial<Customer>) => Promise<void>;
   removeCustomer: (id: string) => Promise<void>;
 }
@@ -78,7 +76,12 @@ export const useCustomerStore = create<CustomerState>()(
       createCustomer: async (customer) => {
         set({ loading: true, error: null });
         try {
-          const newCustomer = await CustomerService.create(customer);
+          const customerToSend = {
+            ...customer,
+            gstNumber: customer.gstNumber === '' ? null : customer.gstNumber,
+            panNumber: customer.panNumber === '' ? null : customer.panNumber,
+          };
+          const newCustomer = await CustomerService.create(customerToSend);
 
           set((state) => ({
             customers: [...state.customers, newCustomer],
@@ -99,10 +102,10 @@ export const useCustomerStore = create<CustomerState>()(
       editCustomer: async (id, customerUpdate) => {
         set({ loading: true, error: null });
         try {
-          const updatedCustomer = await CustomerService.update(
-            id,
-            customerUpdate
-          );
+          const updateData = { ...customerUpdate };
+          if (updateData.gstNumber === '') updateData.gstNumber = null;
+          if (updateData.panNumber === '') updateData.panNumber = null;
+          const updatedCustomer = await CustomerService.update(id, updateData);
 
           set((state) => ({
             customers: state.customers.map((customer) =>

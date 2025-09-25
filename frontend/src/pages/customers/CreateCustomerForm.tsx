@@ -100,12 +100,16 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
             name="gstNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>GST Number *</FormLabel>
+                <FormLabel>GST Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., 22AAAAA0000A1Z5" {...field} />
+                  <Input
+                    placeholder="e.g., 22AAAAA0000A1Z5"
+                    {...field}
+                    value={field.value ?? ''}
+                  />
                 </FormControl>
                 <FormDescription>
-                  10-20 character GST identification number
+                  10-20 character GST identification number (optional)
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -117,11 +121,17 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
             name="panNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>PAN Number *</FormLabel>
+                <FormLabel>PAN Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., ABCDE1234F" {...field} />
+                  <Input
+                    placeholder="e.g., ABCDE1234F"
+                    {...field}
+                    value={field.value ?? ''}
+                  />
                 </FormControl>
-                <FormDescription>10-20 character PAN number</FormDescription>
+                <FormDescription>
+                  10-20 character PAN number (optional)
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -171,7 +181,7 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
             name="openingBalance"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Opening Balance</FormLabel>
+                <FormLabel>Opening Balance *</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -199,7 +209,7 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
             name="openingBalanceDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Opening Balance Date</FormLabel>
+                <FormLabel>Opening Balance Date *</FormLabel>
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>

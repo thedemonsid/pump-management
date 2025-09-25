@@ -22,12 +22,18 @@ export const CustomerSchema = z.object({
     .max(15, 'Phone number cannot exceed 15 characters'),
   gstNumber: z
     .string()
-    .min(10, 'GST number must be at least 10 characters')
-    .max(20, 'GST number cannot exceed 20 characters'),
+    .nullable()
+    .refine(
+      (val) => val === null || val === '' || (val.length >= 10 && val.length <= 20),
+      'GST number must be empty, null, or 10-20 characters'
+    ),
   panNumber: z
     .string()
-    .min(10, 'PAN number must be at least 10 characters')
-    .max(20, 'PAN number cannot exceed 20 characters'),
+    .nullable()
+    .refine(
+      (val) => val === null || val === '' || (val.length >= 10 && val.length <= 20),
+      'PAN number must be empty, null, or 10-20 characters'
+    ),
   creditLimit: z.number().min(0, 'Credit limit cannot be negative'),
   openingBalance: z.number().optional(),
   openingBalanceDate: z
@@ -44,6 +50,11 @@ export const CreateCustomerSchema = CustomerSchema.omit({
   createdAt: true,
   updatedAt: true,
   version: true,
+}).extend({
+  openingBalance: z.number().min(0, 'Opening balance must be >= 0'),
+  openingBalanceDate: z
+    .string()
+    .refine((val) => val && !isNaN(Date.parse(val)), 'Invalid date format'),
 });
 
 export const UpdateCustomerSchema = CreateCustomerSchema.partial();
