@@ -18,22 +18,31 @@ export const SalesmanNozzleSalesmanSummarySchema = z.object({
   mobileNumber: z.string(),
 });
 
-export const SalesmanNozzleShiftSchema = z.object({
-  id: z.string().optional(),
+// Salesman Nozzle Shift Response Schema (matches backend API response exactly)
+export const SalesmanNozzleShiftResponseSchema = z.object({
+  id: z.string(),
+  pumpMasterId: z.string(),
   salesmanId: z.string(),
+  salesmanUsername: z.string(),
   nozzleId: z.string(),
-  startDateTime: z.string(), // ISO datetime string
-  endDateTime: z.string().optional(), // ISO datetime string, optional
-  openingBalance: z.number().min(0), // Fuel quantity in liters
-  closingBalance: z.number().min(0).optional(), // Fuel quantity in liters
-  dispensedAmount: z.number().min(0).optional(), // closing - opening
-  productPrice: z.number().min(0).optional(), // Price per liter
-  totalAmount: z.number().min(0).optional(), // dispensedAmount × productPrice
-  status: z.enum(['ACTIVE', 'CLOSED']).default('ACTIVE'),
-  nozzle: SalesmanNozzleSummarySchema.optional(),
-  salesman: SalesmanNozzleSalesmanSummarySchema.optional(),
-  createdAt: z.string().optional(),
-  updatedAt: z.string().optional(),
+  nozzleName: z.string(),
+  nozzleCompanyName: z.string(),
+  nozzleLocation: z.string(),
+  nozzleStatus: z.string(),
+  tankId: z.string(),
+  tankName: z.string(),
+  productName: z.string(),
+  startDateTime: z.string(),
+  endDateTime: z.string().optional(),
+  openingBalance: z.number(),
+  closingBalance: z.number().optional(),
+  productPrice: z.number(),
+  totalAmount: z.number(),
+  status: z.enum(['ACTIVE', 'CLOSED', 'OPEN']),
+  dispensedAmount: z.number(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  version: z.number(),
 });
 
 export const CreateSalesmanNozzleShiftSchema = z.object({
@@ -48,7 +57,12 @@ export const CloseSalesmanNozzleShiftSchema = z.object({
   nextSalesmanId: z.string().optional(),
 });
 
-export type SalesmanNozzleShift = z.infer<typeof SalesmanNozzleShiftSchema>;
+export type SalesmanNozzleShift = z.infer<
+  typeof SalesmanNozzleShiftResponseSchema
+>;
+export type SalesmanNozzleShiftResponse = z.infer<
+  typeof SalesmanNozzleShiftResponseSchema
+>;
 export type CreateSalesmanNozzleShift = z.infer<
   typeof CreateSalesmanNozzleShiftSchema
 >;

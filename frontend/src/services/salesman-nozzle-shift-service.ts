@@ -79,4 +79,17 @@ export class SalesmanNozzleShiftService {
     );
     return response.data;
   }
+
+  // Get all shifts for a specific nozzle (admin endpoint)
+  static async getByNozzleId(nozzleId: string): Promise<SalesmanNozzleShift[]> {
+    const response = await api.get<SalesmanNozzleShift[]>(
+      `${this.BASE_PATH}/nozzle/${nozzleId}`
+    );
+    return response.data;
+  }
+
+  // Delete a shift (admin endpoint)
+  static async delete(id: string): Promise<void> {
+    await api.delete(`${this.BASE_PATH}/${id}/admin`);
+  }
 }

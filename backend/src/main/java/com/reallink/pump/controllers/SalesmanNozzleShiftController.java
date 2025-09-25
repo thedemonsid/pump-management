@@ -7,6 +7,8 @@ import java.util.UUID;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.reallink.pump.dto.request.CloseSalesmanNozzleShiftRequest;
 import com.reallink.pump.dto.request.CreateSalesmanNozzleShiftRequest;
+import com.reallink.pump.dto.request.UpdateSalesmanNozzleShiftRequest;
 import com.reallink.pump.dto.response.SalesmanNozzleShiftResponse;
 import com.reallink.pump.services.SalesmanNozzleShiftService;
 
@@ -85,7 +88,17 @@ public class SalesmanNozzleShiftController {
         return ResponseEntity.ok(service.getById(id));
     }
 
+    @GetMapping("/nozzle/{nozzleId}")
+    @Operation(summary = "Get shifts by nozzle ID", description = "Retrieve all shifts for a specific nozzle")
+    public ResponseEntity<List<SalesmanNozzleShiftResponse>> getShiftsByNozzleId(@PathVariable UUID nozzleId,
+            HttpServletRequest request) {
+        UUID pumpMasterId = extractPumpMasterId(request);
+        List<SalesmanNozzleShiftResponse> shifts = service.getByNozzleId(nozzleId, pumpMasterId);
+        return ResponseEntity.ok(shifts);
+    }
+
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @Operation(summary = "Create salesman nozzle shift")
     public ResponseEntity<SalesmanNozzleShiftResponse> createSalesmanNozzleShift(@Valid @RequestBody CreateSalesmanNozzleShiftRequest request,
             HttpServletRequest httpRequest) {
@@ -100,5 +113,45 @@ public class SalesmanNozzleShiftController {
             HttpServletRequest httpRequest) {
         UUID pumpMasterId = extractPumpMasterId(httpRequest);
         return ResponseEntity.ok(service.closeShift(id, request, pumpMasterId));
+    }
+
+    // Admin endpoints
+    @PostMapping("/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin create salesman nozzle shift")
+    public ResponseEntity<SalesmanNozzleShiftResponse> adminCreateSalesmanNozzleShift(@Valid @RequestBody CreateSalesmanNozzleShiftRequest request,
+            HttpServletRequest httpRequest) {
+        UUID pumpMasterId = extractPumpMasterId(httpRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.adminCreateShift(request, pumpMasterId));
+    }
+
+    @PutMapping("/{id}/admin/close")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin close salesman nozzle shift")
+    public ResponseEntity<SalesmanNozzleShiftResponse> adminCloseSalesmanNozzleShift(@PathVariable UUID id,
+            @Valid @RequestBody CloseSalesmanNozzleShiftRequest request,
+            HttpServletRequest httpRequest) {
+        UUID pumpMasterId = extractPumpMasterId(httpRequest);
+        return ResponseEntity.ok(service.adminCloseShift(id, request, pumpMasterId));
+    }
+
+    @PutMapping("/{id}/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin update salesman nozzle shift")
+    public ResponseEntity<SalesmanNozzleShiftResponse> adminUpdateSalesmanNozzleShift(@PathVariable UUID id,
+            @Valid @RequestBody UpdateSalesmanNozzleShiftRequest request,
+            HttpServletRequest httpRequest) {
+        UUID pumpMasterId = extractPumpMasterId(httpRequest);
+        return ResponseEntity.ok(service.adminUpdateShift(id, request, pumpMasterId));
+    }
+
+    @DeleteMapping("/{id}/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin delete salesman nozzle shift")
+    public ResponseEntity<Void> adminDeleteSalesmanNozzleShift(@PathVariable UUID id,
+            HttpServletRequest httpRequest) {
+        UUID pumpMasterId = extractPumpMasterId(httpRequest);
+        service.adminDeleteShift(id, pumpMasterId);
+        return ResponseEntity.noContent().build();
     }
 }

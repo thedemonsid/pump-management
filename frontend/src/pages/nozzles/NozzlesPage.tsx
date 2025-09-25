@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Plus, Pencil, Trash2, Loader2, Eye } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -174,12 +174,12 @@ export function NozzlesPage() {
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={() => navigate(`/nozzles/${nozzle.id}`)}
-                            title="View readings"
+                            title="Manage Shifts"
                           >
-                            <Eye className="h-4 w-4" />
+                            Manage Shifts
                           </Button>
                           <Button
                             variant="ghost"

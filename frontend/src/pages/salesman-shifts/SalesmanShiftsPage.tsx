@@ -326,7 +326,7 @@ export function SalesmanShiftsPage() {
               >
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center justify-between">
-                    <span>{shift.nozzle?.nozzleName}</span>
+                    <span>{shift.nozzleName}</span>
                     <Dialog
                       open={isCloseDialogOpen && selectedShiftId === shift.id}
                       onOpenChange={(open) => {
@@ -344,8 +344,7 @@ export function SalesmanShiftsPage() {
                         <DialogHeader>
                           <DialogTitle>End Current Shift</DialogTitle>
                           <DialogDescription>
-                            Close your active shift on nozzle{' '}
-                            {shift.nozzle?.nozzleName}
+                            Close your active shift on nozzle {shift.nozzleName}
                           </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
@@ -429,9 +428,7 @@ export function SalesmanShiftsPage() {
                       <span className="font-medium text-muted-foreground">
                         Product:
                       </span>
-                      <p className="font-semibold">
-                        {shift.nozzle?.productName}
-                      </p>
+                      <p className="font-semibold">{shift.productName}</p>
                     </div>
                     <div>
                       <span className="font-medium text-muted-foreground">
@@ -548,9 +545,9 @@ export function SalesmanShiftsPage() {
                     <TableRow key={shift.id}>
                       <TableCell className="font-medium">
                         <div className="flex flex-col">
-                          <span>{shift.nozzle?.nozzleName}</span>
+                          <span>{shift.nozzleName}</span>
                           <span className="text-xs text-muted-foreground">
-                            {shift.nozzle?.productName}
+                            {shift.productName}
                           </span>
                         </div>
                       </TableCell>

@@ -13,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 
 import com.reallink.pump.dto.request.CloseSalesmanNozzleShiftRequest;
 import com.reallink.pump.dto.request.CreateSalesmanNozzleShiftRequest;
+import com.reallink.pump.dto.request.UpdateSalesmanNozzleShiftRequest;
 import com.reallink.pump.dto.response.SalesmanNozzleShiftResponse;
 import com.reallink.pump.entities.Nozzle;
 import com.reallink.pump.entities.PumpInfoMaster;
@@ -87,6 +88,12 @@ public class SalesmanNozzleShiftService {
             throw new PumpBusinessException("SHIFT_NOT_FOUND", "Salesman nozzle shift with ID " + id + " not found");
         }
         return mapper.toResponse(shift);
+    }
+
+    public List<SalesmanNozzleShiftResponse> getByNozzleId(@NotNull UUID nozzleId, @NotNull UUID pumpMasterId) {
+        return repository.findByNozzleIdAndPumpMasterIdOrderByEndDateTimeDesc(nozzleId, pumpMasterId).stream()
+                .map(mapper::toResponse)
+                .toList();
     }
 
     @Transactional
@@ -191,6 +198,170 @@ public class SalesmanNozzleShiftService {
         }
 
         return mapper.toResponse(saved);
+    }
+
+    // Admin methods for managing shifts
+    @Transactional
+    public SalesmanNozzleShiftResponse adminCreateShift(@Valid CreateSalesmanNozzleShiftRequest request, @NotNull UUID pumpMasterId) {
+        PumpInfoMaster pumpMaster = pumpInfoMasterRepository.findById(pumpMasterId)
+                .orElseThrow(() -> new PumpBusinessException("PUMP_MASTER_NOT_FOUND", "Pump master not found"));
+
+        User salesman = salesmanRepository.findById(request.getSalesmanId())
+                .orElseThrow(() -> new PumpBusinessException("SALESMAN_NOT_FOUND", "Salesman not found"));
+        if (!"SALESMAN".equals(salesman.getRole().getRoleName())) {
+            throw new PumpBusinessException("INVALID_ROLE", "User is not a salesman");
+        }
+        if (!pumpMasterId.equals(salesman.getPumpMaster().getId())) {
+            throw new PumpBusinessException("TENANT_MISMATCH", "Salesman does not belong to this pump master");
+        }
+
+        Nozzle nozzle = nozzleRepository.findById(request.getNozzleId())
+                .orElseThrow(() -> new PumpBusinessException("NOZZLE_NOT_FOUND", "Nozzle not found"));
+        if (!pumpMasterId.equals(nozzle.getPumpMaster().getId())) {
+            throw new PumpBusinessException("TENANT_MISMATCH", "Nozzle does not belong to this pump master");
+        }
+
+        BigDecimal productPrice = nozzle.getTank().getProduct().getSalesRate();
+        if (productPrice == null) {
+            throw new PumpBusinessException("PRODUCT_PRICE_NOT_FOUND", "Product sales rate not found for nozzle");
+        }
+
+        SalesmanNozzleShift shift = new SalesmanNozzleShift(
+                salesman,
+                nozzle,
+                LocalDateTime.now(ZoneOffset.UTC), // Set start time automatically in UTC
+                request.getOpeningBalance(),
+                productPrice,
+                pumpMaster
+        );
+
+        if (request.getEndDateTime() != null) {
+            shift.setEndDateTime(request.getEndDateTime());
+            shift.setStatus(SalesmanNozzleShift.ShiftStatus.CLOSED);
+        }
+        if (request.getClosingBalance() != null) {
+            shift.setClosingBalance(request.getClosingBalance());
+            shift.setStatus(SalesmanNozzleShift.ShiftStatus.CLOSED);
+            BigDecimal dispensedAmount = request.getClosingBalance().subtract(request.getOpeningBalance());
+            BigDecimal totalAmount = dispensedAmount.multiply(productPrice);
+            totalAmount = totalAmount.setScale(2, RoundingMode.HALF_UP);
+            shift.setTotalAmount(totalAmount);
+        }
+
+        SalesmanNozzleShift saved = repository.save(shift);
+        return mapper.toResponse(saved);
+    }
+
+    @Transactional
+    public SalesmanNozzleShiftResponse adminCloseShift(@NotNull UUID shiftId, @Valid CloseSalesmanNozzleShiftRequest request, @NotNull UUID pumpMasterId) {
+        SalesmanNozzleShift shift = repository.findById(shiftId)
+                .orElseThrow(() -> new PumpBusinessException("SHIFT_NOT_FOUND", "Salesman nozzle shift with ID " + shiftId + " not found"));
+
+        // Validate tenant access
+        if (!pumpMasterId.equals(shift.getPumpMaster().getId())) {
+            throw new PumpBusinessException("TENANT_MISMATCH", "Shift does not belong to this pump master");
+        }
+
+        // Admin can force close even if already closed or with any balance
+        shift.setEndDateTime(LocalDateTime.now(ZoneOffset.UTC)); // Set end time automatically in UTC
+        shift.setClosingBalance(request.getClosingBalance());
+
+        // Calculate and set total amount: (closing - opening) * productPrice
+        BigDecimal dispensedAmount = request.getClosingBalance().subtract(shift.getOpeningBalance());
+        BigDecimal totalAmount = dispensedAmount.multiply(shift.getProductPrice());
+        System.out.println("Dispensed Amount: " + dispensedAmount + ", Product Price: " + shift.getProductPrice() + ", Total Amount: " + totalAmount);
+
+        totalAmount = totalAmount.setScale(2, RoundingMode.HALF_UP);
+        shift.setTotalAmount(totalAmount);
+
+        shift.closeShift(); // Set status to CLOSED
+
+        SalesmanNozzleShift saved = repository.save(shift);
+
+        // If next salesman is specified, create a new shift for them
+        if (request.getNextSalesmanId() != null) {
+            createNextShiftForSalesman(shift, request.getNextSalesmanId(), pumpMasterId);
+        }
+
+        return mapper.toResponse(saved);
+    }
+
+    @Transactional
+    public SalesmanNozzleShiftResponse adminUpdateShift(@NotNull UUID shiftId, @Valid UpdateSalesmanNozzleShiftRequest request, @NotNull UUID pumpMasterId) {
+        SalesmanNozzleShift shift = repository.findById(shiftId)
+                .orElseThrow(() -> new PumpBusinessException("SHIFT_NOT_FOUND", "Salesman nozzle shift with ID " + shiftId + " not found"));
+
+        // Validate tenant access
+        if (!pumpMasterId.equals(shift.getPumpMaster().getId())) {
+            throw new PumpBusinessException("TENANT_MISMATCH", "Shift does not belong to this pump master");
+        }
+
+        // Update fields if provided
+        if (request.getSalesmanId() != null) {
+            User salesman = salesmanRepository.findById(request.getSalesmanId())
+                    .orElseThrow(() -> new PumpBusinessException("SALESMAN_NOT_FOUND", "Salesman not found"));
+            if (!"SALESMAN".equals(salesman.getRole().getRoleName())) {
+                throw new PumpBusinessException("INVALID_ROLE", "User is not a salesman");
+            }
+            if (!pumpMasterId.equals(salesman.getPumpMaster().getId())) {
+                throw new PumpBusinessException("TENANT_MISMATCH", "Salesman does not belong to this pump master");
+            }
+            shift.setSalesman(salesman);
+        }
+
+        if (request.getNozzleId() != null) {
+            Nozzle nozzle = nozzleRepository.findById(request.getNozzleId())
+                    .orElseThrow(() -> new PumpBusinessException("NOZZLE_NOT_FOUND", "Nozzle not found"));
+            if (!pumpMasterId.equals(nozzle.getPumpMaster().getId())) {
+                throw new PumpBusinessException("TENANT_MISMATCH", "Nozzle does not belong to this pump master");
+            }
+            shift.setNozzle(nozzle);
+        }
+
+        if (request.getStartDateTime() != null) {
+            shift.setStartDateTime(request.getStartDateTime());
+        }
+
+        if (request.getEndDateTime() != null) {
+            shift.setEndDateTime(request.getEndDateTime());
+        }
+
+        if (request.getOpeningBalance() != null) {
+            shift.setOpeningBalance(request.getOpeningBalance());
+        }
+
+        if (request.getClosingBalance() != null) {
+            shift.setClosingBalance(request.getClosingBalance());
+        }
+
+        if (request.getProductPrice() != null) {
+            shift.setProductPrice(request.getProductPrice());
+        }
+
+        if (request.getStatus() != null) {
+            shift.setStatus(request.getStatus());
+        }
+
+        // Recalculate total amount if balances or price changed
+        if (request.getOpeningBalance() != null || request.getClosingBalance() != null || request.getProductPrice() != null) {
+            shift.updateTotalAmount();
+        }
+
+        SalesmanNozzleShift saved = repository.save(shift);
+        return mapper.toResponse(saved);
+    }
+
+    @Transactional
+    public void adminDeleteShift(@NotNull UUID shiftId, @NotNull UUID pumpMasterId) {
+        SalesmanNozzleShift shift = repository.findById(shiftId)
+                .orElseThrow(() -> new PumpBusinessException("SHIFT_NOT_FOUND", "Salesman nozzle shift with ID " + shiftId + " not found"));
+
+        // Validate tenant access
+        if (!pumpMasterId.equals(shift.getPumpMaster().getId())) {
+            throw new PumpBusinessException("TENANT_MISMATCH", "Shift does not belong to this pump master");
+        }
+
+        repository.delete(shift);
     }
 
     private void createNextShiftForSalesman(SalesmanNozzleShift previousShift, UUID nextSalesmanId, UUID pumpMasterId) {
