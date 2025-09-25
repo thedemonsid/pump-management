@@ -12,6 +12,7 @@ import { BillItemsTable } from '@/components/bills/BillItemsTable';
 import { PaymentsTable } from '@/components/bills/PaymentsTable';
 import { useBillStore } from '@/store/bill-store';
 import type { CreateBillRequest } from '@/types';
+import { DEFAULT_PUMP_INFO } from '@/types';
 
 interface LocalBillItem {
   product: string;
@@ -28,7 +29,7 @@ interface PaymentEntry {
 }
 
 const CreateBill = () => {
-  const { createBill, loading } = useBillStore();
+  const { createBill, loading, nextBillNo, getNextBillNo } = useBillStore();
   const [billItems, setBillItems] = useState<LocalBillItem[]>([]);
   const [quantity, setQuantity] = useState('');
   const [price, setPrice] = useState('');
@@ -83,6 +84,18 @@ const CreateBill = () => {
     loadData();
   }, []);
 
+  // Fetch next bill number on component mount
+  useEffect(() => {
+    const fetchNextBillNo = async () => {
+      try {
+        await getNextBillNo();
+      } catch (error) {
+        console.error('Failed to fetch next bill number:', error);
+      }
+    };
+    fetchNextBillNo();
+  }, [getNextBillNo]);
+
   // Calculate totals for passing to components
   const subtotal = billItems.reduce(
     (sum, item) => sum + parseFloat(item.total),
@@ -109,24 +122,29 @@ const CreateBill = () => {
     const customerId = selectedCustomer.id;
 
     const billRequest: CreateBillRequest = {
+      pumpMasterId: DEFAULT_PUMP_INFO.id!,
+      billNo: nextBillNo || 1,
       billDate,
       customerId,
-      billType: 'GENERAL',
-      paymentType: paymentType as 'CASH' | 'CREDIT',
+      paymentType: (paymentType?.toUpperCase() === 'CASH'
+        ? 'CASH'
+        : 'CREDIT') as 'CASH' | 'CREDIT',
       rateType: gstIncluded === 'including' ? 'INCLUDING_GST' : 'EXCLUDING_GST',
       billItems: billItems.map((item) => ({
         productId: item.productId,
-        quantity: parseFloat(item.quantity),
-        rate: parseFloat(item.price),
+        quantity: Math.round(parseFloat(item.quantity) * 100) / 100,
+        rate: Math.round(parseFloat(item.price) * 100) / 100,
+        gst: Math.round((parseFloat(gstPercent) || 0) * 100) / 100,
+        discount: Math.round((parseFloat(fixedDiscount) || 0) * 100) / 100,
       })),
       payments: payments
         .filter((payment) => payment.bankAccount.id)
         .map((payment) => ({
-          pumpMasterId: '', // This will be set by the backend
+          pumpMasterId: DEFAULT_PUMP_INFO.id!,
           billId: '', // Will be set after bill creation
           customerId,
           bankAccountId: payment.bankAccount.id!,
-          amount: parseFloat(payment.amount),
+          amount: Math.round(parseFloat(payment.amount) * 100) / 100,
           paymentDate: new Date().toISOString(),
           paymentMethod: payment.paymentMethod as
             | 'CASH'
@@ -147,7 +165,6 @@ const CreateBill = () => {
       setPayments([]);
       setSelectedCustomer(null);
       setPaymentType('');
-      setGstIncluded('');
     } catch (error) {
       console.error('Failed to create bill:', error);
     }

@@ -1,4 +1,4 @@
-import type { BillType, RateType, PaymentType } from './common';
+import type { RateType, PaymentType } from './common';
 import type {
   CustomerBillPaymentResponse,
   CreateCustomerBillPaymentRequest,
@@ -30,15 +30,12 @@ export interface Bill {
   billDate: string;
   customerId: string;
   customerName?: string;
-  billType: BillType;
   rateType: RateType;
   billItems: BillItem[];
   totalAmount?: number;
   discountAmount?: number;
   taxAmount?: number;
   netAmount?: number;
-  vehicleNo?: string;
-  driverName?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -59,8 +56,6 @@ export interface BillResponse {
   customerId: string;
   /** Customer name */
   customerName?: string;
-  /** Bill type */
-  billType: BillType;
   /** Rate type */
   rateType: RateType;
   /** Total amount */
@@ -71,10 +66,6 @@ export interface BillResponse {
   taxAmount: number;
   /** Net amount */
   netAmount: number;
-  /** Vehicle number (for salesman bills) */
-  vehicleNo?: string;
-  /** Driver name (for salesman bills) */
-  driverName?: string;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -97,31 +88,28 @@ export interface BillItemResponse {
   salesUnit?: string;
   quantity: number;
   rate: number;
-  amount?: number;
+  amount: number;
+  gst: number;
   discount: number;
-  discountAmount?: number;
-  taxPercentage: number;
-  taxAmount?: number;
-  netAmount?: number;
-  totalAmount?: number; // Keep for backward compatibility
-  description?: string;
+  netAmount: number;
 }
 
 export interface CreateBillItemRequest {
   productId: string;
   quantity: number;
   rate: number;
+  gst?: number;
+  discount?: number;
 }
 
 export interface CreateBillRequest {
+  pumpMasterId: string;
+  billNo: number;
   billDate: string;
   customerId: string;
-  billType: BillType;
   paymentType: PaymentType;
   rateType: RateType;
   billItems: CreateBillItemRequest[];
-  vehicleNo?: string;
-  driverName?: string;
   payments?: CreateCustomerBillPaymentRequest[];
 }
 
@@ -129,9 +117,6 @@ export interface UpdateBillRequest {
   billNo?: number;
   billDate?: string;
   customerId?: string;
-  billType?: BillType;
   rateType?: RateType;
   billItems?: CreateBillItemRequest[];
-  vehicleNo?: string;
-  driverName?: string;
 }

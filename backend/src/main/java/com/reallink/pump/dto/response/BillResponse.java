@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import com.reallink.pump.entities.BillType;
 import com.reallink.pump.entities.RateType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -33,15 +32,6 @@ public class BillResponse {
 
     @Schema(description = "Customer name", example = "VISHAL")
     private String customerName;
-
-    @Schema(description = "Bill type", example = "GENERAL")
-    private BillType billType;
-
-    @Schema(description = "Vehicle number (for SALESMAN bill type)", example = "MH12AB1234")
-    private String vehicleNo;
-
-    @Schema(description = "Driver name (for SALESMAN bill type)", example = "John Doe")
-    private String driverName;
 
     @Schema(description = "Rate type", example = "INCLUDING_GST")
     private RateType rateType;

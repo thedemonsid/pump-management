@@ -199,7 +199,6 @@ export function BillsDetailsPage() {
                   <TableHead className="font-semibold">Bill No</TableHead>
                   <TableHead className="font-semibold">Date</TableHead>
                   <TableHead className="font-semibold">Customer</TableHead>
-                  <TableHead className="font-semibold">Bill Type</TableHead>
                   <TableHead className="font-semibold">Rate Type</TableHead>
                   <TableHead className="font-semibold text-right">
                     Total Amount
@@ -213,8 +212,6 @@ export function BillsDetailsPage() {
                   <TableHead className="font-semibold text-right">
                     Net Amount
                   </TableHead>
-                  <TableHead className="font-semibold">Vehicle No</TableHead>
-                  <TableHead className="font-semibold">Driver</TableHead>
                   <TableHead className="font-semibold">Created</TableHead>
                   <TableHead className="font-semibold">Updated</TableHead>
                   <TableHead className="font-semibold text-center">
@@ -237,9 +234,6 @@ export function BillsDetailsPage() {
                       {bill.customerName}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{bill.billType}</Badge>
-                    </TableCell>
-                    <TableCell>
                       <Badge variant="secondary">{bill.rateType}</Badge>
                     </TableCell>
                     <TableCell className="text-right font-medium">
@@ -253,17 +247,6 @@ export function BillsDetailsPage() {
                     </TableCell>
                     <TableCell className="text-right font-semibold">
                       ₹{bill.netAmount.toFixed(2)}
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm bg-muted px-2 py-1 rounded">
-                        {bill.vehicleNo || 'N/A'}
-                      </span>
-                    </TableCell>
-                    <TableCell
-                      className="max-w-[120px] truncate"
-                      title={bill.driverName}
-                    >
-                      {bill.driverName || 'N/A'}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {new Date(bill.createdAt).toLocaleDateString()}
@@ -386,23 +369,13 @@ export function BillsDetailsPage() {
                       <p className="text-sm font-medium text-muted-foreground">
                         Discount
                       </p>
-                      <p className="text-lg">
-                        {item.discount.toFixed(2)}% <br />
-                        <span className="text-sm text-muted-foreground">
-                          (₹{item.discountAmount?.toFixed(2)})
-                        </span>
-                      </p>
+                      <p className="text-lg">{item.discount.toFixed(2)}%</p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm font-medium text-muted-foreground">
-                        Tax
+                        GST
                       </p>
-                      <p className="text-lg">
-                        {item.taxPercentage.toFixed(2)}% <br />
-                        <span className="text-sm text-muted-foreground">
-                          (₹{item.taxAmount?.toFixed(2)})
-                        </span>
-                      </p>
+                      <p className="text-lg">{item.gst.toFixed(2)}%</p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm font-medium text-muted-foreground">
@@ -412,28 +385,7 @@ export function BillsDetailsPage() {
                         ₹{item.netAmount?.toFixed(2)}
                       </p>
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Total Amount
-                      </p>
-                      <p className="text-xl font-bold">
-                        ₹{item.totalAmount?.toFixed(2)}
-                      </p>
-                    </div>
                   </div>
-                  {item.description && (
-                    <>
-                      <Separator className="my-4" />
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Description
-                        </p>
-                        <p className="text-sm bg-muted p-3 rounded-md">
-                          {item.description}
-                        </p>
-                      </div>
-                    </>
-                  )}
                 </CardContent>
               </Card>
             ))}

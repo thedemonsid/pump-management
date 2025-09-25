@@ -272,7 +272,7 @@ public class BillService {
     }
 
     private void calculateBillItemAmounts(BillItem billItem, CreateBillItemRequest request) {
-        BigDecimal quantity = BigDecimal.valueOf(request.getQuantity());
+        BigDecimal quantity = request.getQuantity();
         BigDecimal amount = request.getRate().multiply(quantity);
         billItem.setAmount(amount);
 
@@ -337,7 +337,7 @@ public class BillService {
         }
 
         existingItem.setProduct(product);
-        existingItem.setQuantity(BigDecimal.valueOf(request.getQuantity()));
+        existingItem.setQuantity(request.getQuantity());
         existingItem.setRate(request.getRate());
 
         // Calculate item amounts

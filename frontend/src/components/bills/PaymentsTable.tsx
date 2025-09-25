@@ -187,11 +187,12 @@ export const PaymentsTable = ({
                   setSelectedPaymentMethod(option?.value || '')
                 }
                 options={[
+                  { value: 'CASH', label: 'Cash' },
                   { value: 'UPI', label: 'UPI' },
-                  { value: 'Cash', label: 'Cash' },
-                  { value: 'Card', label: 'Card' },
-                  { value: 'Cheque', label: 'Cheque' },
-                  { value: 'Bank Transfer', label: 'Bank Transfer' },
+                  { value: 'RTGS', label: 'RTGS' },
+                  { value: 'NEFT', label: 'NEFT' },
+                  { value: 'IMPS', label: 'IMPS' },
+                  { value: 'CHEQUE', label: 'Cheque' },
                 ]}
                 placeholder="UPI/Cash/Card"
                 className="text-base"

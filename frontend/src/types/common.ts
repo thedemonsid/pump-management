@@ -25,10 +25,14 @@ export const BillTypeSchema = z.enum(['GENERAL', 'SALESMAN']);
 
 export const CreateBillItemRequestSchema = z.object({
   productId: z.string().min(1, 'Product is required'),
-  quantity: z.number().min(1, 'Quantity must be at least 1'),
-  rate: z.number().positive('Rate must be positive'),
+  quantity: z.number().min(0.01, 'Quantity must be at least 0.01'),
+  rate: z.number().min(0.01, 'Rate must be at least 0.01'),
+  gst: z
+    .number()
+    .min(0, 'GST must be non-negative')
+    .max(100, 'GST cannot exceed 100%')
+    .optional(),
   discount: z.number().min(0, 'Discount must be non-negative').optional(),
-  taxPercentage: z.number().min(0, 'Tax percentage must be non-negative'),
 });
 
 export const PaymentMethodSchema = z.enum([
@@ -62,49 +66,25 @@ export const UpdateBillRequestSchema = z.object({
   billNo: z.number().int().positive().optional(),
   billDate: z.string().optional(),
   customerId: z.string().optional(),
-  billType: BillTypeSchema.optional(),
   rateType: RateTypeEnum.optional(),
   billItems: z.array(CreateBillItemRequestSchema).optional(),
-  vehicleNo: z.string().optional(),
-  driverName: z.string().optional(),
 });
 
-export const CreateBillRequestSchema = z
-  .object({
-    billDate: z.string().min(1, 'Bill date is required'),
-    customerId: z.string().min(1, 'Customer ID is required'),
-    billType: BillTypeSchema,
-    paymentType: PaymentTypeEnum,
-    rateType: RateTypeEnum,
-    billItems: z
-      .array(CreateBillItemRequestSchema)
-      .min(1, 'At least one bill item is required'),
-    vehicleNo: z.string().optional(),
-    driverName: z.string().optional(),
-    payments: z.array(CreateBillPaymentRequestSchema).optional(),
-  })
-  .refine(
-    (data) => {
-      // For SALESMAN bill type, vehicleNo and driverName are required
-      if (data.billType === 'SALESMAN') {
-        return (
-          data.vehicleNo &&
-          data.driverName &&
-          data.vehicleNo.trim() !== '' &&
-          data.driverName.trim() !== ''
-        );
-      }
-      return true;
-    },
-    {
-      message: 'Vehicle number and driver name are required for salesman bills',
-      path: ['billType'], // This will show the error on the billType field
-    }
-  );
+export const CreateBillRequestSchema = z.object({
+  pumpMasterId: z.string().uuid('Pump Master ID must be a valid UUID'),
+  billNo: z.number().int().positive('Bill number must be positive'),
+  billDate: z.string().min(1, 'Bill date is required'),
+  customerId: z.string().min(1, 'Customer ID is required'),
+  paymentType: PaymentTypeEnum,
+  rateType: RateTypeEnum,
+  billItems: z
+    .array(CreateBillItemRequestSchema)
+    .min(1, 'At least one bill item is required'),
+  payments: z.array(CreateBillPaymentRequestSchema).optional(),
+});
 
 export type PumpInfoMaster = z.infer<typeof PumpInfoMasterSchema>;
 export type LocalTime = z.infer<typeof LocalTimeSchema>;
-export type BillType = z.infer<typeof BillTypeSchema>;
 export type CreateBillItemRequest = z.infer<typeof CreateBillItemRequestSchema>;
 export type CreateCustomerBillPaymentRequest = z.infer<
   typeof CreateBillPaymentRequestSchema

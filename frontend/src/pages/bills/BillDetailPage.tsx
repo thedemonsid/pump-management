@@ -61,7 +61,6 @@ export function BillDetailPage() {
               </CardTitle>
               <CardDescription>Bill details and items</CardDescription>
             </div>
-            <Badge variant="secondary">{bill.billType}</Badge>
           </div>
         </CardHeader>
         <CardContent>
@@ -119,11 +118,6 @@ export function BillDetailPage() {
                     <h4 className="font-medium">
                       {item.productName || `Product ${item.productId}`}
                     </h4>
-                    {item.description && (
-                      <p className="text-sm text-muted-foreground">
-                        {item.description}
-                      </p>
-                    )}
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <span>Qty: {item.quantity}</span>
                       {item.salesUnit && <span>Unit: {item.salesUnit}</span>}
@@ -134,15 +128,12 @@ export function BillDetailPage() {
                           Discount: ₹{item.discount.toLocaleString('en-IN')}
                         </span>
                       )}
-                      <span>Tax: {item.taxPercentage}%</span>
+                      <span>GST: {item.gst}%</span>
                     </div>
                   </div>
                   <div className="text-right space-y-1">
                     <div className="font-semibold text-lg">
-                      ₹
-                      {(item.netAmount || item.totalAmount || 0).toLocaleString(
-                        'en-IN'
-                      )}
+                      ₹{item.netAmount.toLocaleString('en-IN')}
                     </div>
                   </div>
                 </div>

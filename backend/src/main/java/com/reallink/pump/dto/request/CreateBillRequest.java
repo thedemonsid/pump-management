@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-import com.reallink.pump.entities.BillType;
 import com.reallink.pump.entities.PaymentType;
 import com.reallink.pump.entities.RateType;
 
@@ -34,19 +33,9 @@ public class CreateBillRequest {
     @Schema(description = "Customer ID", example = "123e4567-e89b-12d3-a456-426614174000", required = true)
     private UUID customerId;
 
-    @NotNull(message = "Bill type is required")
-    @Schema(description = "Bill type", example = "GENERAL", required = true)
-    private BillType billType;
-
     @NotNull(message = "Payment type is required")
     @Schema(description = "Payment type", example = "CASH", required = true)
     private PaymentType paymentType;
-
-    @Schema(description = "Vehicle number (required for SALESMAN bill type)", example = "MH12AB1234")
-    private String vehicleNo;
-
-    @Schema(description = "Driver name (required for SALESMAN bill type)", example = "John Doe")
-    private String driverName;
 
     @NotNull(message = "Rate type is required")
     @Schema(description = "Rate type", example = "INCLUDING_GST", required = true)

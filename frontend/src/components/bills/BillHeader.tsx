@@ -129,8 +129,8 @@ export const BillHeader = ({
           }
           onChange={(option) => setPaymentType(option?.value || '')}
           options={[
-            { value: 'cash', label: 'CASH' },
-            { value: 'credit', label: 'CREDIT' },
+            { value: 'CASH', label: 'CASH' },
+            { value: 'CREDIT', label: 'CREDIT' },
           ]}
           placeholder="Type of Payment"
           className="text-base"
