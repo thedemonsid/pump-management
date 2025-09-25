@@ -118,6 +118,9 @@ export const useLedgerStore = create<LedgerStore>()(
 
           // Calculate before date summaries
           const beforeDate = new Date(fromDate);
+          beforeDate.setHours(0, 0, 0, 0); // Start of day
+          const endDate = new Date(toDate);
+          endDate.setHours(23, 59, 59, 999); // End of day
           const totalBillsBefore = bills
             .filter((b) => new Date(b.billDate) < beforeDate)
             .reduce((sum, b) => sum + b.netAmount, 0);
@@ -144,152 +147,142 @@ export const useLedgerStore = create<LedgerStore>()(
           const ledgerEntries: LedgerEntry[] = [];
 
           // Add bills (with integrated payments)
-          bills
-            .filter((b) => {
-              const billDate = new Date(b.billDate);
-              return billDate >= beforeDate && billDate <= new Date(toDate);
-            })
-            .forEach((bill) => {
-              const billPayments = billPaymentsMap[bill.id] || [];
-              const totalPaymentAmount = billPayments.reduce(
-                (sum, p) => sum + p.amount,
-                0
-              );
+          const billsInRange = bills.filter((b) => {
+            const billDate = new Date(b.billDate);
+            return billDate >= beforeDate && billDate <= endDate;
+          });
 
-              ledgerEntries.push({
-                date: bill.billDate,
-                action: 'Bill',
-                invoiceNo: bill.billNo.toString(),
-                billAmount: bill.netAmount,
-                amountPaid: totalPaymentAmount,
-                balanceAmount: 0, // Will be calculated later
-                debtAmount: 0, // Will be calculated later
-                entryBy: 'System',
-                comments: `Bill - ${bill.customerName || 'Customer'}`,
-                type: 'bill',
-                billDetails: bill,
-              });
+          billsInRange.forEach((bill) => {
+            const billPayments = billPaymentsMap[bill.id] || [];
+            const totalPaymentAmount = billPayments.reduce(
+              (sum, p) => sum + p.amount,
+              0
+            );
+
+            ledgerEntries.push({
+              date: bill.billDate,
+              action: 'Bill',
+              invoiceNo: bill.billNo.toString(),
+              billAmount: bill.netAmount,
+              amountPaid: totalPaymentAmount,
+              balanceAmount: 0, // Will be calculated later
+              debtAmount: 0, // Will be calculated later
+              entryBy: 'System',
+              comments: `Bill - ${bill.customerName || 'Customer'}`,
+              type: 'bill',
+              billDetails: bill,
             });
+          });
 
           // Add salesman bills
-          salesmanBills
-            .filter((bill) => {
-              const billDate = new Date(bill.billDate);
-              return billDate >= beforeDate && billDate <= new Date(toDate);
-            })
-            .forEach((bill) => {
-              ledgerEntries.push({
-                date: bill.billDate,
-                action: 'Salesman Bill',
-                invoiceNo: bill.billNo.toString(),
-                billAmount: bill.amount,
-                amountPaid: 0, // Salesman bills don't have integrated payments in this context
-                balanceAmount: 0, // Will be calculated later
-                debtAmount: 0, // Will be calculated later
-                entryBy: 'System',
-                comments: `Salesman Bill - ${bill.productName || 'Fuel'} (${
-                  bill.quantity
-                }L)`,
-                type: 'bill',
-                billDetails: {
-                  id: bill.id,
-                  pumpMasterId: '', // Will be set from context if needed
-                  billNo: bill.billNo,
-                  billDate: bill.billDate,
-                  customerId: bill.customerId,
-                  customerName: bill.customerName,
-                  billType: 'SALESMAN',
-                  rateType: 'EXCLUDING_GST',
-                  totalAmount: bill.amount,
-                  discountAmount: 0,
-                  taxAmount: 0,
-                  netAmount: bill.amount,
-                  vehicleNo: bill.vehicleNo,
-                  driverName: bill.driverName,
-                  createdAt: bill.createdAt,
-                  updatedAt: bill.updatedAt,
-                  billItems: [
-                    {
-                      id: bill.id + '-item',
-                      billId: bill.id,
-                      productId: bill.productId,
-                      productName: bill.productName,
-                      quantity: bill.quantity,
-                      rate: bill.rate,
-                      amount: bill.amount,
-                      discount: 0,
-                      discountAmount: 0,
-                      taxPercentage: 0,
-                      taxAmount: 0,
-                      netAmount: bill.amount,
-                      totalAmount: bill.amount,
-                    },
-                  ],
-                },
-              });
+          const salesmanBillsInRange = salesmanBills.filter((bill) => {
+            const billDate = new Date(bill.billDate);
+            return billDate >= beforeDate && billDate <= endDate;
+          });
+
+          salesmanBillsInRange.forEach((bill) => {
+            ledgerEntries.push({
+              date: bill.billDate,
+              action: 'Salesman Bill',
+              invoiceNo: bill.billNo.toString(),
+              billAmount: bill.amount,
+              amountPaid: 0, // Salesman bills don't have integrated payments in this context
+              balanceAmount: 0, // Will be calculated later
+              debtAmount: 0, // Will be calculated later
+              entryBy: 'System',
+              comments: `Salesman Bill - ${bill.productName || 'Fuel'} (${
+                bill.quantity
+              }L)`,
+              type: 'bill',
+              billDetails: {
+                id: bill.id,
+                pumpMasterId: '', // Will be set from context if needed
+                billNo: bill.billNo,
+                billDate: bill.billDate,
+                customerId: bill.customerId,
+                customerName: bill.customerName,
+                billType: 'SALESMAN',
+                rateType: 'EXCLUDING_GST',
+                totalAmount: bill.amount,
+                discountAmount: 0,
+                taxAmount: 0,
+                netAmount: bill.amount,
+                vehicleNo: bill.vehicleNo,
+                driverName: bill.driverName,
+                createdAt: bill.createdAt,
+                updatedAt: bill.updatedAt,
+                billItems: [
+                  {
+                    id: bill.id + '-item',
+                    billId: bill.id,
+                    productId: bill.productId,
+                    productName: bill.productName,
+                    quantity: bill.quantity,
+                    rate: bill.rate,
+                    amount: bill.amount,
+                    discount: 0,
+                    discountAmount: 0,
+                    taxPercentage: 0,
+                    taxAmount: 0,
+                    netAmount: bill.amount,
+                    totalAmount: bill.amount,
+                  },
+                ],
+              },
             });
+          });
 
           // Add standalone payments (not linked to bills)
-          payments
-            .filter((p) => {
-              const paymentDate = new Date(p.paymentDate);
-              return (
-                paymentDate >= beforeDate &&
-                paymentDate <= new Date(toDate) &&
-                !p.billId
-              );
-            })
-            .forEach((payment) => {
-              ledgerEntries.push({
-                date: payment.paymentDate,
-                action: 'Payment',
-                invoiceNo: payment.referenceNumber || '',
-                billAmount: 0,
-                amountPaid: payment.amount,
-                balanceAmount: 0,
-                debtAmount: 0,
-                entryBy: 'System',
-                comments: `${payment.paymentMethod} - ${payment.notes || ''}`,
-                type: 'payment',
-                paymentDetails: {
-                  paymentMethod: payment.paymentMethod,
-                  referenceNumber: payment.referenceNumber,
-                  notes: payment.notes,
-                  amount: payment.amount,
-                },
-              });
+          const standalonePayments = payments.filter((p) => {
+            const paymentDate = new Date(p.paymentDate);
+            return (
+              paymentDate >= beforeDate && paymentDate <= endDate && !p.billId
+            );
+          });
+
+          standalonePayments.forEach((payment) => {
+            ledgerEntries.push({
+              date: payment.paymentDate,
+              action: 'Payment',
+              invoiceNo: payment.referenceNumber || '',
+              billAmount: 0,
+              amountPaid: payment.amount,
+              balanceAmount: 0,
+              debtAmount: 0,
+              entryBy: 'System',
+              comments: `${payment.paymentMethod} - ${payment.notes || ''}`,
+              type: 'payment',
+              paymentDetails: {
+                paymentMethod: payment.paymentMethod,
+                referenceNumber: payment.referenceNumber,
+                notes: payment.notes,
+                amount: payment.amount,
+              },
             });
+          });
 
           // Add salesman bill payments
-          salesmanPayments
-            .filter((p) => {
-              const paymentDate = new Date(p.paymentDate);
-              return (
-                paymentDate >= beforeDate && paymentDate <= new Date(toDate)
-              );
-            })
-            .forEach((payment) => {
-              ledgerEntries.push({
-                date: payment.paymentDate,
-                action: 'Salesman Payment',
-                invoiceNo: payment.referenceNumber || '',
-                billAmount: 0,
-                amountPaid: payment.amount,
-                balanceAmount: 0,
-                debtAmount: 0,
-                entryBy: 'System',
-                comments: `Salesman Payment - ${payment.paymentMethod} - ${
-                  payment.notes || ''
-                }`,
-                type: 'payment',
-                paymentDetails: {
-                  paymentMethod: payment.paymentMethod,
-                  referenceNumber: payment.referenceNumber,
-                  notes: payment.notes,
-                  amount: payment.amount,
-                },
-              });
+          const salesmanPaymentsInRange = salesmanPayments.filter((p) => {
+            const paymentDate = new Date(p.paymentDate);
+            return paymentDate >= beforeDate && paymentDate <= endDate;
+          });
+
+          salesmanPaymentsInRange.forEach((payment) => {
+            ledgerEntries.push({
+              date: payment.paymentDate,
+              action: 'Salesman Payment',
+              invoiceNo: payment.referenceNumber || '',
+              billAmount: 0,
+              amountPaid: payment.amount,
+              balanceAmount: 0,
+              debtAmount: 0,
+              entryBy: 'System',
+              comments: `Salesman Payment - ${payment.paymentMethod} - ${
+                payment.notes || ''
+              }`,
+              type: 'payment',
             });
+          });
 
           // Sort by date
           ledgerEntries.sort(
