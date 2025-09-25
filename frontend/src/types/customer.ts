@@ -24,14 +24,16 @@ export const CustomerSchema = z.object({
     .string()
     .nullable()
     .refine(
-      (val) => val === null || val === '' || (val.length >= 10 && val.length <= 20),
+      (val) =>
+        val === null || val === '' || (val.length >= 10 && val.length <= 20),
       'GST number must be empty, null, or 10-20 characters'
     ),
   panNumber: z
     .string()
     .nullable()
     .refine(
-      (val) => val === null || val === '' || (val.length >= 10 && val.length <= 20),
+      (val) =>
+        val === null || val === '' || (val.length >= 10 && val.length <= 20),
       'PAN number must be empty, null, or 10-20 characters'
     ),
   creditLimit: z.number().min(0, 'Credit limit cannot be negative'),
