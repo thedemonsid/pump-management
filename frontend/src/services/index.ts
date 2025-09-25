@@ -12,6 +12,7 @@ export { PurchaseService } from './purchase-service';
 export { FuelPurchaseService } from './fuel-purchase-service';
 export { BankAccountService } from './bank-account-service';
 export { BillService } from './bill-service';
+export { SalesmanBillService } from './salesman-bill-service';
 export { CustomerBillPaymentService } from './customer-bill-payment-service';
 export { SupplierPaymentService } from './supplier-payment-service';
 

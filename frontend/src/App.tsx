@@ -29,6 +29,7 @@ import { NozzlesPage } from '@/pages/nozzles/NozzlesPage';
 import { NozzleDetailPage } from '@/pages/nozzles/NozzleDetailPage';
 import { SalesmenPage } from '@/pages/salesmen/SalesmenPage';
 import { SalesmanShiftsPage } from '@/pages/salesman-shifts/SalesmanShiftsPage';
+import { SalesmanBillsPage } from '@/pages/salesman-bills/SalesmanBillsPage';
 import { ShiftsPage } from '@/pages/shifts/ShiftsPage';
 import { SuppliersPage } from '@/pages/suppliers/SuppliersPage';
 import { SupplierDetailPage } from '@/pages/suppliers/SupplierDetailPage';
@@ -202,6 +203,11 @@ const allRoutes = [
     path: '/salesman-shifts',
     element: <SalesmanShiftsPage />,
     requiredRoles: ['SALESMAN'],
+  },
+  {
+    path: '/salesman-bills',
+    element: <SalesmanBillsPage />,
+    requiredRoles: ['ADMIN', 'MANAGER'],
   },
   {
     path: '*',
