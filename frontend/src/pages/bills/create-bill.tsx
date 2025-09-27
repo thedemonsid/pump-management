@@ -76,6 +76,8 @@ const CreateBill = () => {
           ProductService.getAll(),
           BankAccountService.getAll(),
         ]);
+        console.log('Customer data:', customerData);
+        console.log('Product data:', productData);
         setCustomers(customerData);
         setProducts(productData);
         setBankAccounts(bankAccountData);

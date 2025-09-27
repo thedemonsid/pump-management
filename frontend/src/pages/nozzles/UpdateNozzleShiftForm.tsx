@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNozzleShiftStore } from '@/store/nozzle-shift-store';
+import { } from '@/store/salesman-nozzle-shift-store';
 import { useSalesmanStore } from '@/store/salesman-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -166,7 +166,7 @@ export function UpdateNozzleShiftForm({
                     </SelectItem>
                     {salesmen.map((salesman) => (
                       <SelectItem key={salesman.id} value={salesman.id!}>
-                        {salesman.name} ({salesman.employeeId})
+                        {salesman.username} ({salesman.mobileNumber})
                       </SelectItem>
                     ))}
                   </SelectContent>

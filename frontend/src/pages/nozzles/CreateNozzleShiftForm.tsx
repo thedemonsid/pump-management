@@ -179,7 +179,7 @@ export function CreateNozzleShiftForm({
                   <SelectContent>
                     {salesmen.map((salesman) => (
                       <SelectItem key={salesman.id} value={salesman.id!}>
-                        {salesman.name} ({salesman.employeeId})
+                        {salesman.username} ({salesman.mobileNumber})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -246,7 +246,7 @@ export function CreateNozzleShiftForm({
                   <SelectContent>
                     {salesmen.map((salesman) => (
                       <SelectItem key={salesman.id} value={salesman.id!}>
-                        {salesman.name} ({salesman.employeeId})
+                        {salesman.username} ({salesman.mobileNumber})
                       </SelectItem>
                     ))}
                   </SelectContent>

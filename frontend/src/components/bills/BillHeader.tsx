@@ -99,13 +99,19 @@ export const BillHeader = ({
               : null
           }
           onChange={(option) => {
-            const customer = customers.find((c) => c.id === option?.value);
+            const customer = Array.isArray(customers)
+              ? customers.find((c) => c.id === option?.value)
+              : null;
             setSelectedCustomer(customer || null);
           }}
-          options={customers.map((customer) => ({
-            value: customer.id,
-            label: customer.customerName,
-          }))}
+          options={
+            Array.isArray(customers)
+              ? customers.map((customer) => ({
+                  value: customer.id,
+                  label: customer.customerName,
+                }))
+              : []
+          }
           placeholder="Select Customer"
           className="text-base"
           styles={selectStyles}

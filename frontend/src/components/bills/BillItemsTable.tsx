@@ -182,10 +182,10 @@ export const BillItemsTable = ({
                     setPrice(option.value.salesRate.toString());
                   }
                 }}
-                options={products.map((product) => ({
+                options={Array.isArray(products) ? products.map((product) => ({
                   value: product,
                   label: product.productName,
-                }))}
+                })) : []}
                 placeholder="Select Product"
                 className="text-base"
                 styles={selectStyles}

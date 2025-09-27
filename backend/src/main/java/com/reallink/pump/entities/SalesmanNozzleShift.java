@@ -88,6 +88,10 @@ public class SalesmanNozzleShift extends BaseEntity {
     @Column(name = "status", nullable = false, length = 10, columnDefinition = "VARCHAR(10) DEFAULT 'OPEN'")
     private ShiftStatus status = ShiftStatus.OPEN;
 
+    @NotNull(message = "isAccountingDone is required")
+    @Column(name = "is_accounting_done", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean isAccountingDone = false;
+
     public SalesmanNozzleShift(User salesman, Nozzle nozzle, LocalDateTime startDateTime, BigDecimal openingBalance, BigDecimal productPrice, PumpInfoMaster pumpMaster) {
         this.salesman = salesman;
         this.nozzle = nozzle;
@@ -96,6 +100,7 @@ public class SalesmanNozzleShift extends BaseEntity {
         this.productPrice = productPrice;
         this.pumpMaster = pumpMaster;
         this.status = ShiftStatus.OPEN;
+        this.isAccountingDone = false;
     }
 
     // Business methods
