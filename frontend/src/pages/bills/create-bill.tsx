@@ -20,6 +20,8 @@ interface LocalBillItem {
   price: string;
   total: string;
   productId: string;
+  discount: string;
+  gst: string;
 }
 
 interface PaymentEntry {
@@ -39,8 +41,8 @@ const CreateBill = () => {
   });
   const [gstIncluded, setGstIncluded] = useState<string>('');
   const [paymentType, setPaymentType] = useState<string>('');
-  const [fixedDiscount, setFixedDiscount] = useState('');
-  const [gstPercent, setGstPercent] = useState('0');
+  const [itemDiscount, setItemDiscount] = useState('0');
+  const [itemGst, setItemGst] = useState('0');
   const [payments, setPayments] = useState<PaymentEntry[]>([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<string>('');
@@ -101,17 +103,7 @@ const CreateBill = () => {
     (sum, item) => sum + parseFloat(item.total),
     0
   );
-  const discountAmount = parseFloat(fixedDiscount) || 0;
-  const discountedSubtotal = subtotal - discountAmount;
-
-  let finalTotal = discountedSubtotal;
-
-  if (gstIncluded === 'excluding') {
-    const gstAmount = discountedSubtotal * (parseFloat(gstPercent) / 100 || 0);
-    finalTotal = discountedSubtotal + gstAmount;
-  } else if (gstIncluded === 'including') {
-    finalTotal = discountedSubtotal;
-  }
+  const finalTotal = subtotal;
 
   // Handle bill creation
   const handleCreateBill = async () => {
@@ -134,8 +126,8 @@ const CreateBill = () => {
         productId: item.productId,
         quantity: Math.round(parseFloat(item.quantity) * 100) / 100,
         rate: Math.round(parseFloat(item.price) * 100) / 100,
-        gst: Math.round((parseFloat(gstPercent) || 0) * 100) / 100,
-        discount: Math.round((parseFloat(fixedDiscount) || 0) * 100) / 100,
+        gst: Math.round((parseFloat(item.gst) || 0) * 100) / 100,
+        discount: Math.round((parseFloat(item.discount) || 0) * 100) / 100,
       })),
       payments: payments
         .filter((payment) => payment.bankAccount.id)
@@ -192,6 +184,8 @@ const CreateBill = () => {
           quantity: item.quantity,
           price: item.price,
           total: item.total,
+          discount: item.discount,
+          gst: item.gst,
         }))}
         setBillItems={(
           items: {
@@ -204,6 +198,8 @@ const CreateBill = () => {
           const transformedItems = items.map((item) => ({
             ...item,
             productId: selectedProduct?.id || '',
+            discount: '0',
+            gst: '0',
           }));
           setBillItems(transformedItems);
         }}
@@ -215,16 +211,17 @@ const CreateBill = () => {
         price={price}
         setPrice={setPrice}
         productSelectRef={productSelectRef}
-        fixedDiscount={fixedDiscount}
-        setFixedDiscount={setFixedDiscount}
-        gstPercent={gstPercent}
-        setGstPercent={setGstPercent}
-        gstIncluded={gstIncluded}
+        itemDiscount={itemDiscount}
+        setItemDiscount={setItemDiscount}
+        itemGst={itemGst}
+        setItemGst={setItemGst}
         onAddItem={(item) => {
           setBillItems([...billItems, item]);
           setSelectedProduct(null);
           setQuantity('');
           setPrice('');
+          setItemDiscount('0');
+          setItemGst('0');
         }}
       />
 

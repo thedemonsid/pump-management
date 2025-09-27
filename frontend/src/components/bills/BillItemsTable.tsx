@@ -19,6 +19,8 @@ interface BillItem {
   quantity: string;
   price: string;
   total: string;
+  discount: string;
+  gst: string;
 }
 
 interface BillItemsTableProps {
@@ -35,11 +37,10 @@ interface BillItemsTableProps {
     { value: Product; label: string },
     false
   > | null>;
-  fixedDiscount: string;
-  setFixedDiscount: (discount: string) => void;
-  gstPercent: string;
-  setGstPercent: (gst: string) => void;
-  gstIncluded: string;
+  itemDiscount: string;
+  setItemDiscount: (discount: string) => void;
+  itemGst: string;
+  setItemGst: (gst: string) => void;
   onAddItem?: (item: BillItem & { productId: string }) => void;
 }
 
@@ -54,11 +55,10 @@ export const BillItemsTable = ({
   price,
   setPrice,
   productSelectRef,
-  fixedDiscount,
-  setFixedDiscount,
-  gstPercent,
-  setGstPercent,
-  gstIncluded,
+  itemDiscount,
+  setItemDiscount,
+  itemGst,
+  setItemGst,
   onAddItem,
 }: BillItemsTableProps) => {
   // Match BillHeader select styles
@@ -109,21 +109,7 @@ export const BillItemsTable = ({
     (sum, item) => sum + parseFloat(item.total),
     0
   );
-  const discountAmount = parseFloat(fixedDiscount) || 0;
-  const discountedSubtotal = subtotal - discountAmount;
-
-  let gstAmount = 0;
-  let finalTotal = discountedSubtotal;
-
-  if (gstIncluded === 'excluding') {
-    gstAmount = discountedSubtotal * (parseFloat(gstPercent) / 100 || 0);
-    finalTotal = discountedSubtotal + gstAmount;
-  } else if (gstIncluded === 'including') {
-    gstAmount =
-      discountedSubtotal -
-      discountedSubtotal / (1 + (parseFloat(gstPercent) / 100 || 0));
-    finalTotal = discountedSubtotal;
-  }
+  const finalTotal = subtotal;
 
   const addItem = () => {
     if (selectedProduct && quantity && price) {
@@ -132,6 +118,8 @@ export const BillItemsTable = ({
         quantity,
         price,
         total,
+        discount: itemDiscount,
+        gst: itemGst,
         productId: selectedProduct.id || '',
       };
 
@@ -163,9 +151,11 @@ export const BillItemsTable = ({
           <TableRow>
             <TableHead className="w-8">#</TableHead>
             <TableHead>Product</TableHead>
-            <TableHead className="w-40">Qty</TableHead>
-            <TableHead className="w-40">Price</TableHead>
-            <TableHead className="w-48">Total</TableHead>
+            <TableHead className="w-32">Qty</TableHead>
+            <TableHead className="w-32">Price</TableHead>
+            <TableHead className="w-32">Discount %</TableHead>
+            <TableHead className="w-32">GST %</TableHead>
+            <TableHead className="w-40">Total</TableHead>
             <TableHead className="w-20">Action</TableHead>
           </TableRow>
         </TableHeader>
@@ -221,6 +211,24 @@ export const BillItemsTable = ({
                 onKeyPress={(e) => handleKeyPress(e, addItem)}
               />
             </TableCell>
+            <TableCell>
+              <Input
+                placeholder="0"
+                className="text-sm text-center h-8 bg-white border border-gray-200"
+                value={itemDiscount}
+                onChange={(e) => setItemDiscount(e.target.value)}
+                onKeyPress={(e) => handleKeyPress(e, addItem)}
+              />
+            </TableCell>
+            <TableCell>
+              <Input
+                placeholder="0"
+                className="text-sm text-center h-8 bg-white border border-gray-200"
+                value={itemGst}
+                onChange={(e) => setItemGst(e.target.value)}
+                onKeyPress={(e) => handleKeyPress(e, addItem)}
+              />
+            </TableCell>
             <TableCell className="text-center text-xs font-medium">
               ₹{total}
             </TableCell>
@@ -249,6 +257,10 @@ export const BillItemsTable = ({
               <TableCell className="text-center text-xs">
                 ₹{item.price}
               </TableCell>
+              <TableCell className="text-center text-xs">
+                {item.discount}%
+              </TableCell>
+              <TableCell className="text-center text-xs">{item.gst}%</TableCell>
               <TableCell className="text-center text-xs font-medium">
                 ₹{item.total}
               </TableCell>
@@ -283,56 +295,13 @@ export const BillItemsTable = ({
                 <TableCell></TableCell>
               </TableRow>
 
-              <TableRow>
-                <TableCell colSpan={3} className="text-right text-xs">
-                  Discount (₹):
-                </TableCell>
-                <TableCell>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    className="h-8 text-sm text-center w-40 bg-white border border-gray-200"
-                    value={fixedDiscount}
-                    onChange={(e) => setFixedDiscount(e.target.value)}
-                  />
-                </TableCell>
-                <TableCell className="text-center text-xs">
-                  -₹{discountAmount.toFixed(2)}
-                </TableCell>
-                <TableCell></TableCell>
-              </TableRow>
-
-              <TableRow>
-                <TableCell colSpan={3} className="text-right text-xs">
-                  GST (%):
-                </TableCell>
-                <TableCell>
-                  <Input
-                    type="number"
-                    placeholder="18"
-                    className="h-8 text-sm text-center w-40 bg-white border border-gray-200"
-                    value={gstPercent}
-                    onChange={(e) => setGstPercent(e.target.value)}
-                  />
-                </TableCell>
-                <TableCell className="text-center text-xs">
-                  {gstIncluded === 'excluding'
-                    ? `+₹${gstAmount.toFixed(2)}`
-                    : gstIncluded === 'including'
-                    ? `(₹${gstAmount.toFixed(2)})`
-                    : '-'}
-                </TableCell>
-                <TableCell></TableCell>
-              </TableRow>
-
               <TableRow className="border-t-2 bg-slate-100">
-                <TableCell colSpan={4} className="text-right font-bold">
+                <TableCell colSpan={6} className="text-right font-bold">
                   Total:
                 </TableCell>
                 <TableCell className="text-center font-bold text-base">
                   ₹{finalTotal.toFixed(2)}
                 </TableCell>
-                <TableCell></TableCell>
               </TableRow>
             </>
           )}

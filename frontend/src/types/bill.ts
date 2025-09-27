@@ -110,6 +110,7 @@ export interface CreateBillRequest {
   paymentType: PaymentType;
   rateType: RateType;
   billItems: CreateBillItemRequest[];
+  discountAmount?: number;
   payments?: CreateCustomerBillPaymentRequest[];
 }
 

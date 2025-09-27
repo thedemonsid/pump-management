@@ -32,7 +32,11 @@ export const CreateBillItemRequestSchema = z.object({
     .min(0, 'GST must be non-negative')
     .max(100, 'GST cannot exceed 100%')
     .optional(),
-  discount: z.number().min(0, 'Discount must be non-negative').optional(),
+  discount: z
+    .number()
+    .min(0, 'Discount must be non-negative')
+    .max(100, 'Discount cannot exceed 100%')
+    .optional(),
 });
 
 export const PaymentMethodSchema = z.enum([
@@ -80,6 +84,10 @@ export const CreateBillRequestSchema = z.object({
   billItems: z
     .array(CreateBillItemRequestSchema)
     .min(1, 'At least one bill item is required'),
+  discountAmount: z
+    .number()
+    .min(0, 'Discount amount must be non-negative')
+    .optional(),
   payments: z.array(CreateBillPaymentRequestSchema).optional(),
 });
 

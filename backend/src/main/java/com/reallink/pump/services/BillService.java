@@ -25,6 +25,7 @@ import com.reallink.pump.entities.Customer;
 import com.reallink.pump.entities.CustomerBillPayment;
 import com.reallink.pump.entities.Product;
 import com.reallink.pump.entities.PumpInfoMaster;
+import com.reallink.pump.entities.RateType;
 import com.reallink.pump.exception.PumpBusinessException;
 import com.reallink.pump.mapper.BillMapper;
 import com.reallink.pump.mapper.CustomerBillPaymentMapper;
@@ -114,7 +115,7 @@ public class BillService {
             billItem.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
 
             // Calculate item amounts
-            calculateBillItemAmounts(billItem, itemRequest);
+            calculateBillItemAmounts(billItem, itemRequest, bill.getRateType());
 
             bill.getBillItems().add(billItem);
         }
@@ -192,7 +193,7 @@ public class BillService {
                     billItem.setProduct(product);
 
                     // Calculate item amounts
-                    calculateBillItemAmounts(billItem, itemRequest);
+                    calculateBillItemAmounts(billItem, itemRequest, existingBill.getRateType());
 
                     BillItem savedItem = billItemRepository.save(billItem);
                     existingBill.getBillItems().add(savedItem);
@@ -271,18 +272,29 @@ public class BillService {
         bill.setNetAmount(totalNetAmount);
     }
 
-    private void calculateBillItemAmounts(BillItem billItem, CreateBillItemRequest request) {
+    private void calculateBillItemAmounts(BillItem billItem, CreateBillItemRequest request, RateType rateType) {
         BigDecimal quantity = request.getQuantity();
         BigDecimal amount = request.getRate().multiply(quantity);
         billItem.setAmount(amount);
 
         // Calculate discount amount (percentage)
         BigDecimal discountAmount = amount.multiply(request.getDiscount().divide(BigDecimal.valueOf(100)));
+        billItem.setDiscount(request.getDiscount());
+
         // Calculate GST amount on (amount - discount)
         BigDecimal taxableAmount = amount.subtract(discountAmount);
-        BigDecimal gstAmount = taxableAmount.multiply(request.getGst().divide(BigDecimal.valueOf(100)));
-        // Net amount = taxable amount + GST
-        BigDecimal netAmount = taxableAmount.add(gstAmount);
+
+        BigDecimal netAmount;
+        if (rateType == RateType.INCLUDING_GST) {
+            // GST is already included in the rate, so no additional GST
+            billItem.setGst(BigDecimal.ZERO);
+            netAmount = taxableAmount;
+        } else {
+            // EXCLUDING_GST: add GST
+            BigDecimal gstAmount = taxableAmount.multiply(request.getGst().divide(BigDecimal.valueOf(100)));
+            billItem.setGst(request.getGst());
+            netAmount = taxableAmount.add(gstAmount);
+        }
 
         billItem.setNetAmount(netAmount);
     }
@@ -308,7 +320,7 @@ public class BillService {
         billItem.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
 
         // Calculate item amounts
-        calculateBillItemAmounts(billItem, request);
+        calculateBillItemAmounts(billItem, request, bill.getRateType());
 
         BillItem savedItem = billItemRepository.save(billItem);
 
@@ -341,7 +353,7 @@ public class BillService {
         existingItem.setRate(request.getRate());
 
         // Calculate item amounts
-        calculateBillItemAmounts(existingItem, request);
+        calculateBillItemAmounts(existingItem, request, bill.getRateType());
 
         BillItem savedItem = billItemRepository.save(existingItem);
 
