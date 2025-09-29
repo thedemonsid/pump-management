@@ -154,7 +154,7 @@ export const columns: ColumnDef<Tank>[] = [
   },
   {
     accessorKey: 'isLowLevel',
-    header: 'Status',
+    header: 'Level Status',
     cell: ({ row, table }) => {
       const tank = row.original;
       const meta = table.options.meta as TableMeta | undefined;

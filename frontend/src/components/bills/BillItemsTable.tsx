@@ -106,7 +106,7 @@ export const BillItemsTable = ({
       : '0.00';
 
   const subtotal = billItems.reduce(
-    (sum, item) => sum + parseFloat(item.total),
+    (sum, item) => sum + (parseFloat(item.total) * (1 - parseFloat(item.discount || '0') / 100)),
     0
   );
   const finalTotal = subtotal;
@@ -156,6 +156,7 @@ export const BillItemsTable = ({
             <TableHead className="w-32">Discount %</TableHead>
             <TableHead className="w-32">GST %</TableHead>
             <TableHead className="w-40">Total</TableHead>
+            <TableHead className="w-40">After Discount</TableHead>
             <TableHead className="w-20">Action</TableHead>
           </TableRow>
         </TableHeader>
@@ -232,6 +233,9 @@ export const BillItemsTable = ({
             <TableCell className="text-center text-xs font-medium">
               ₹{total}
             </TableCell>
+            <TableCell className="text-center text-xs font-medium">
+              ₹{(parseFloat(total) * (1 - parseFloat(itemDiscount || '0') / 100)).toFixed(2)}
+            </TableCell>
             <TableCell>
               <Button
                 size="sm"
@@ -264,6 +268,9 @@ export const BillItemsTable = ({
               <TableCell className="text-center text-xs font-medium">
                 ₹{item.total}
               </TableCell>
+              <TableCell className="text-center text-xs font-medium">
+                ₹{(parseFloat(item.total) * (1 - parseFloat(item.discount || '0') / 100)).toFixed(2)}
+              </TableCell>
               <TableCell>
                 <Button
                   size="sm"
@@ -284,7 +291,7 @@ export const BillItemsTable = ({
             <>
               <TableRow className="border-t-2">
                 <TableCell
-                  colSpan={4}
+                  colSpan={7}
                   className="text-right text-xs font-medium"
                 >
                   Subtotal:
@@ -296,7 +303,7 @@ export const BillItemsTable = ({
               </TableRow>
 
               <TableRow className="border-t-2 bg-slate-100">
-                <TableCell colSpan={6} className="text-right font-bold">
+                <TableCell colSpan={7} className="text-right font-bold">
                   Total:
                 </TableCell>
                 <TableCell className="text-center font-bold text-base">

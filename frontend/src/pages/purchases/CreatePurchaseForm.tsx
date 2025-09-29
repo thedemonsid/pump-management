@@ -66,7 +66,7 @@ export function CreatePurchaseForm({ onSuccess }: CreatePurchaseFormProps) {
       paymentType: 'CASH',
       supplierId: '',
       invoiceNumber: '',
-      addToStock: false,
+      addToStock: true,
       productId: '',
       quantity: 0,
       purchaseRate: 0,

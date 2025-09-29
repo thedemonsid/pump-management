@@ -68,7 +68,7 @@ export function CreateFuelPurchaseForm({
       paymentType: 'CASH',
       supplierId: '',
       invoiceNumber: '',
-      addToStock: false,
+      addToStock: true,
       tankId: '',
       quantity: 0,
       purchaseRate: 0,
