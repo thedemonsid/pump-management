@@ -15,6 +15,7 @@ import { Calculator, IndianRupee } from 'lucide-react';
 import type {
   SalesmanNozzleShiftResponse,
   CreateSalesmanShiftAccountingRequest,
+  SalesmanShiftAccounting,
 } from '@/types';
 
 interface AccountingFormProps {
@@ -22,24 +23,49 @@ interface AccountingFormProps {
   onSubmit: (data: CreateSalesmanShiftAccountingRequest) => Promise<void>;
   onCancel: () => void;
   loading?: boolean;
+  existingAccounting?: SalesmanShiftAccounting | null;
+  isReadOnly?: boolean;
 }
 
-export function AccountingForm({ shift, onSubmit, onCancel, loading }: AccountingFormProps) {
-  const [formData, setFormData] = useState<CreateSalesmanShiftAccountingRequest>({
-    upiReceived: 0,
-    cardReceived: 0,
-    expenses: 0,
-    expenseReason: '',
-    notes2000: 0,
-    notes1000: 0,
-    notes500: 0,
-    notes200: 0,
-    notes100: 0,
-    notes50: 0,
-    notes20: 0,
-    notes10: 0,
-    coins: 0,
-  });
+export function AccountingForm({ 
+  shift, 
+  onSubmit, 
+  onCancel, 
+  loading,
+  existingAccounting,
+  isReadOnly = false 
+}: AccountingFormProps) {
+  const [formData, setFormData] = useState<CreateSalesmanShiftAccountingRequest>(
+    existingAccounting ? {
+      upiReceived: existingAccounting.upiReceived,
+      cardReceived: existingAccounting.cardReceived,
+      expenses: existingAccounting.expenses,
+      expenseReason: existingAccounting.expenseReason || '',
+      notes2000: existingAccounting.notes2000,
+      notes1000: existingAccounting.notes1000,
+      notes500: existingAccounting.notes500,
+      notes200: existingAccounting.notes200,
+      notes100: existingAccounting.notes100,
+      notes50: existingAccounting.notes50,
+      notes20: existingAccounting.notes20,
+      notes10: existingAccounting.notes10,
+      coins: existingAccounting.coins,
+    } : {
+      upiReceived: 0,
+      cardReceived: 0,
+      expenses: 0,
+      expenseReason: '',
+      notes2000: 0,
+      notes1000: 0,
+      notes500: 0,
+      notes200: 0,
+      notes100: 0,
+      notes50: 0,
+      notes20: 0,
+      notes10: 0,
+      coins: 0,
+    }
+  );
 
   // Calculate cash in hand from denominations
   const calculateCashInHand = () => {
@@ -58,7 +84,7 @@ export function AccountingForm({ shift, onSubmit, onCancel, loading }: Accountin
 
   // Calculate expected cash (system calculations would be done on backend)
   // For now, we'll show what the system should expect
-  const expectedCash = shift.totalAmount || 0; // This would come from backend calculations
+  const expectedCash = existingAccounting?.expectedCash || shift.totalAmount || 0;
   const cashInHand = calculateCashInHand();
   const totalReceived = formData.upiReceived + formData.cardReceived + cashInHand;
   const balanceAmount = totalReceived - expectedCash - formData.expenses;
@@ -89,10 +115,13 @@ export function AccountingForm({ shift, onSubmit, onCancel, loading }: Accountin
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calculator className="h-5 w-5" />
-            Shift Summary
+            {isReadOnly ? 'Accounting Details' : 'Shift Summary'}
           </CardTitle>
           <CardDescription>
-            Review shift details before creating accounting
+            {isReadOnly 
+              ? 'View accounting details for this shift' 
+              : 'Review shift details before creating accounting'
+            }
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -141,6 +170,7 @@ export function AccountingForm({ shift, onSubmit, onCancel, loading }: Accountin
                     onChange={(e) => handleInputChange('upiReceived', e.target.value)}
                     className="pl-10"
                     placeholder="0.00"
+                    disabled={isReadOnly}
                   />
                 </div>
               </div>
@@ -157,6 +187,7 @@ export function AccountingForm({ shift, onSubmit, onCancel, loading }: Accountin
                     onChange={(e) => handleInputChange('cardReceived', e.target.value)}
                     className="pl-10"
                     placeholder="0.00"
+                    disabled={isReadOnly}
                   />
                 </div>
               </div>
@@ -187,6 +218,7 @@ export function AccountingForm({ shift, onSubmit, onCancel, loading }: Accountin
                     onChange={(e) => handleInputChange('expenses', e.target.value)}
                     className="pl-10"
                     placeholder="0.00"
+                    disabled={isReadOnly}
                   />
                 </div>
               </div>
@@ -198,6 +230,7 @@ export function AccountingForm({ shift, onSubmit, onCancel, loading }: Accountin
                   onChange={(e) => handleInputChange('expenseReason', e.target.value)}
                   placeholder="Enter expense reason..."
                   rows={2}
+                  disabled={isReadOnly}
                 />
               </div>
             </div>
@@ -223,6 +256,7 @@ export function AccountingForm({ shift, onSubmit, onCancel, loading }: Accountin
                   value={formData.notes2000}
                   onChange={(e) => handleInputChange('notes2000', e.target.value)}
                   placeholder="0"
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -234,6 +268,7 @@ export function AccountingForm({ shift, onSubmit, onCancel, loading }: Accountin
                   value={formData.notes1000}
                   onChange={(e) => handleInputChange('notes1000', e.target.value)}
                   placeholder="0"
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -245,6 +280,7 @@ export function AccountingForm({ shift, onSubmit, onCancel, loading }: Accountin
                   value={formData.notes500}
                   onChange={(e) => handleInputChange('notes500', e.target.value)}
                   placeholder="0"
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -256,6 +292,7 @@ export function AccountingForm({ shift, onSubmit, onCancel, loading }: Accountin
                   value={formData.notes200}
                   onChange={(e) => handleInputChange('notes200', e.target.value)}
                   placeholder="0"
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -267,6 +304,7 @@ export function AccountingForm({ shift, onSubmit, onCancel, loading }: Accountin
                   value={formData.notes100}
                   onChange={(e) => handleInputChange('notes100', e.target.value)}
                   placeholder="0"
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -278,6 +316,7 @@ export function AccountingForm({ shift, onSubmit, onCancel, loading }: Accountin
                   value={formData.notes50}
                   onChange={(e) => handleInputChange('notes50', e.target.value)}
                   placeholder="0"
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -289,6 +328,7 @@ export function AccountingForm({ shift, onSubmit, onCancel, loading }: Accountin
                   value={formData.notes20}
                   onChange={(e) => handleInputChange('notes20', e.target.value)}
                   placeholder="0"
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="space-y-2">
@@ -300,6 +340,7 @@ export function AccountingForm({ shift, onSubmit, onCancel, loading }: Accountin
                   value={formData.notes10}
                   onChange={(e) => handleInputChange('notes10', e.target.value)}
                   placeholder="0"
+                  disabled={isReadOnly}
                 />
               </div>
             </div>
@@ -317,6 +358,7 @@ export function AccountingForm({ shift, onSubmit, onCancel, loading }: Accountin
                   onChange={(e) => handleInputChange('coins', e.target.value)}
                   className="pl-10"
                   placeholder="0.00"
+                  disabled={isReadOnly}
                 />
               </div>
             </div>
@@ -374,11 +416,13 @@ export function AccountingForm({ shift, onSubmit, onCancel, loading }: Accountin
         {/* Action Buttons */}
         <div className="flex justify-end space-x-4">
           <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
-            Cancel
+            {isReadOnly ? 'Close' : 'Cancel'}
           </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Creating Accounting...' : 'Create Accounting'}
-          </Button>
+          {!isReadOnly && (
+            <Button type="submit" disabled={loading}>
+              {existingAccounting ? 'Update Accounting' : 'Create Accounting'}
+            </Button>
+          )}
         </div>
       </form>
     </div>

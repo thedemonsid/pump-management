@@ -63,6 +63,7 @@ import type {
   SalesmanBillResponse,
   CreateSalesmanBillRequest,
   CreateSalesmanShiftAccountingRequest,
+  SalesmanShiftAccounting,
 } from '@/types';
 
 export function SalesmanShiftsPage() {
@@ -76,6 +77,7 @@ export function SalesmanShiftsPage() {
     createShift,
     closeShift,
     createAccounting,
+    getAccounting,
     fetchActiveShifts,
   } = useSalesmanNozzleShiftStore();
 
@@ -138,6 +140,7 @@ export function SalesmanShiftsPage() {
   const [isAccountingDialogOpen, setIsAccountingDialogOpen] = useState(false);
   const [selectedShiftForAccounting, setSelectedShiftForAccounting] =
     useState<SalesmanNozzleShiftResponse | null>(null);
+  const [existingAccounting, setExistingAccounting] = useState<SalesmanShiftAccounting | null>(null);
 
   // Load nozzles and salesmen for selection
   useEffect(() => {
@@ -332,8 +335,22 @@ export function SalesmanShiftsPage() {
   };
 
   // Accounting functions
-  const handleCreateAccounting = (shift: SalesmanNozzleShiftResponse) => {
+  const handleCreateAccounting = async (shift: SalesmanNozzleShiftResponse) => {
     setSelectedShiftForAccounting(shift);
+    
+    // For salesmen, if accounting is already done, fetch and show it in read-only mode
+    if (shift.isAccountingDone) {
+      try {
+        const accounting = await getAccounting(shift.id!);
+        setExistingAccounting(accounting);
+      } catch (error) {
+        console.error('Failed to fetch existing accounting:', error);
+        setExistingAccounting(null);
+      }
+    } else {
+      setExistingAccounting(null);
+    }
+    
     setIsAccountingDialogOpen(true);
   };
 
@@ -361,6 +378,7 @@ export function SalesmanShiftsPage() {
   const handleAccountingCancel = () => {
     setIsAccountingDialogOpen(false);
     setSelectedShiftForAccounting(null);
+    setExistingAccounting(null);
   };
 
   const formatDateTime = (dateTimeStr: string) => {
@@ -846,14 +864,14 @@ export function SalesmanShiftsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          {shift.status === 'CLOSED' && !shift.isAccountingDone && (
+                          {shift.status === 'CLOSED' && (
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleCreateAccounting(shift)}
                             >
                               <Receipt className="mr-1 h-3 w-3" />
-                              Accounting
+                              {shift.isAccountingDone ? 'View Accounting' : 'Create Accounting'}
                             </Button>
                           )}
                           {shift.status === 'ACTIVE' && (
@@ -1163,6 +1181,8 @@ export function SalesmanShiftsPage() {
               onSubmit={handleAccountingSubmit}
               onCancel={handleAccountingCancel}
               loading={loading}
+              existingAccounting={existingAccounting}
+              isReadOnly={true}
             />
           )}
         </DialogContent>

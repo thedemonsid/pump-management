@@ -29,6 +29,7 @@ import { NozzlesPage } from '@/pages/nozzles/NozzlesPage';
 import { NozzleDetailPage } from '@/pages/nozzles/NozzleDetailPage';
 import { SalesmenPage } from '@/pages/salesmen/SalesmenPage';
 import { SalesmanShiftsPage } from '@/pages/salesman-shifts/SalesmanShiftsPage';
+import { AdminSalesmanShiftsPage } from '@/pages/AdminSalesmanShiftsPage';
 import { SalesmanBillsPage } from '@/pages/salesman-bills/SalesmanBillsPage';
 import { ShiftsPage } from '@/pages/shifts/ShiftsPage';
 import { SuppliersPage } from '@/pages/suppliers/SuppliersPage';
@@ -205,6 +206,11 @@ const allRoutes = [
     requiredRoles: ['SALESMAN'],
   },
   {
+    path: '/admin/salesman-shifts',
+    element: <AdminSalesmanShiftsPage />,
+    requiredRoles: ['ADMIN'],
+  },
+  {
     path: '/salesman-bills',
     element: <SalesmanBillsPage />,
     requiredRoles: ['ADMIN', 'MANAGER'],
@@ -228,7 +234,8 @@ const headerMap: Record<string, string> = {
   purchases: 'Purchases',
   'fuel-purchases': 'Fuel Purchases',
   salesmen: 'Salesmen',
-  'salesman-shifts': 'My Shifts',
+  'salesman-shifts': 'Salesman Shifts',
+  'admin/salesman-shifts': 'All Salesman Shifts',
   shifts: 'Shifts',
   'bank-accounts': 'Bank Accounts',
   ledger: 'Ledger',
@@ -242,7 +249,7 @@ const headerMap: Record<string, string> = {
 export function MainHeader() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   // Generate breadcrumbs based on current path
   const generateBreadcrumbs = (): Array<{
@@ -291,9 +298,21 @@ export function MainHeader() {
       } else {
         // Use headerMap for known routes
         const routeKey = segment;
-        const label =
+        let label =
           headerMap[routeKey] ||
           segment.charAt(0).toUpperCase() + segment.slice(1);
+        
+        // Special handling for salesman-shifts based on user role
+        if (routeKey === 'salesman-shifts') {
+          if (user?.role === 'SALESMAN') {
+            label = 'My Shifts';
+          } else {
+            label = 'Salesman Shifts';
+          }
+        } else if (routeKey === 'admin/salesman-shifts') {
+          label = 'All Salesman Shifts';
+        }
+        
         breadcrumbs.push({
           label,
           path: isLast ? null : currentPath,

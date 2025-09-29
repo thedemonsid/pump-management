@@ -259,23 +259,23 @@ public class BillService {
 
         for (BillItem item : billItems) {
             totalAmount = totalAmount.add(item.getAmount());
-            BigDecimal discountAmount = item.getAmount().multiply(item.getDiscount().divide(BigDecimal.valueOf(100)));
+            BigDecimal discountAmount = item.getAmount().multiply(item.getDiscount().divide(BigDecimal.valueOf(100))).setScale(2, RoundingMode.HALF_UP);
             BigDecimal taxableAmount = item.getAmount().subtract(discountAmount);
-            BigDecimal gstAmount = taxableAmount.multiply(item.getGst().divide(BigDecimal.valueOf(100)));
+            BigDecimal gstAmount = taxableAmount.multiply(item.getGst().divide(BigDecimal.valueOf(100))).setScale(2, RoundingMode.HALF_UP);
             totalDiscount = totalDiscount.add(discountAmount);
             totalTax = totalTax.add(gstAmount);
             totalNetAmount = totalNetAmount.add(item.getNetAmount());
         }
 
-        bill.setTotalAmount(totalAmount);
-        bill.setDiscountAmount(totalDiscount);
-        bill.setTaxAmount(totalTax);
-        bill.setNetAmount(totalNetAmount);
+        bill.setTotalAmount(totalAmount.setScale(2, RoundingMode.HALF_UP));
+        bill.setDiscountAmount(totalDiscount.setScale(2, RoundingMode.HALF_UP));
+        bill.setTaxAmount(totalTax.setScale(2, RoundingMode.HALF_UP));
+        bill.setNetAmount(totalNetAmount.setScale(2, RoundingMode.HALF_UP));
     }
 
     private void calculateBillItemAmounts(BillItem billItem, CreateBillItemRequest request, RateType rateType) {
         BigDecimal quantity = request.getQuantity();
-        BigDecimal amount = request.getRate().multiply(quantity);
+        BigDecimal amount = request.getRate().multiply(quantity).setScale(2, RoundingMode.HALF_UP);
         billItem.setAmount(amount);
 
         // Calculate discount amount (percentage) - round to 2 decimal places
@@ -299,7 +299,7 @@ public class BillService {
             netAmount = taxableAmount.add(gstAmount);
         }
 
-        billItem.setNetAmount(netAmount);
+        billItem.setNetAmount(netAmount.setScale(2, RoundingMode.HALF_UP));
     }
 
     @Transactional

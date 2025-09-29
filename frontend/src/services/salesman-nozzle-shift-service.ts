@@ -107,6 +107,14 @@ export class SalesmanNozzleShiftService {
     return response.data;
   }
 
+  // Get accounting details for a shift
+  static async getAccounting(shiftId: string): Promise<SalesmanShiftAccounting> {
+    const response = await api.get<SalesmanShiftAccounting>(
+      `${this.BASE_PATH}/${shiftId}/accounting`
+    );
+    return response.data;
+  }
+
   // Admin create shift
   static async adminCreate(
     shift: CreateSalesmanNozzleShift

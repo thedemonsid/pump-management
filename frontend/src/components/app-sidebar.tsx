@@ -101,6 +101,11 @@ const managementItems = [
     url: '/shifts',
     icon: Clock,
   },
+  {
+    title: 'Salesman Shifts',
+    url: '/admin/salesman-shifts',
+    icon: Clock,
+  },
 ];
 
 const salesmanItems = [
