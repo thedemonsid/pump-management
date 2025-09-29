@@ -1,5 +1,6 @@
 package com.reallink.pump.repositories;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,4 +10,6 @@ import com.reallink.pump.entities.SalesmanShiftAccounting;
 
 @Repository
 public interface SalesmanShiftAccountingRepository extends JpaRepository<SalesmanShiftAccounting, UUID> {
+
+    Optional<SalesmanShiftAccounting> findBySalesmanNozzleShift_Id(UUID shiftId);
 }

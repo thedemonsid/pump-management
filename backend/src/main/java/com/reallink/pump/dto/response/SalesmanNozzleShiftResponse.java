@@ -71,6 +71,9 @@ public class SalesmanNozzleShiftResponse {
     @Schema(description = "Dispensed amount during the shift", example = "500.500")
     private BigDecimal dispensedAmount;
 
+    @Schema(description = "Indicates if accounting is done for the shift", example = "true")
+    private Boolean isAccountingDone;
+
     @Schema(description = "Creation timestamp", example = "2023-10-01T12:00:00")
     private LocalDateTime createdAt;
 

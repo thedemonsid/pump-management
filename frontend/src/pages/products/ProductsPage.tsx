@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react';
-import { useProductStore } from '@/store/product-store';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState, useCallback } from "react";
+import { useProductStore } from "@/store/product-store";
+import { useTankStore } from "@/store/tank-store";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+} from "@/components/ui/card";
+import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -16,8 +17,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -25,35 +26,125 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { ProductForm } from './ProductForm';
-import type { Product } from '@/types';
-import { formatCurrency } from '@/lib/utils/index';
-import { Link } from 'react-router-dom';
+} from "@/components/ui/dialog";
+import { ProductForm } from "./ProductForm";
+import type { Product } from "@/types";
+import { formatCurrency } from "@/lib/utils/index";
+import { Link } from "react-router-dom";
+import { TankTransactionService } from "@/services/tank-transaction-service";
 
 export function ProductsPage() {
   const { products, loading, error, fetchProducts, removeProduct } =
     useProductStore();
+  const { tanks, fetchTanks } = useTankStore();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [currentBalances, setCurrentBalances] = useState<
+    Record<string, number>
+  >({});
+  const [balancesLoading, setBalancesLoading] = useState<
+    Record<string, boolean>
+  >({});
 
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]);
+    fetchTanks();
+  }, [fetchProducts, fetchTanks]);
+
+  const calculateCurrentBalances = useCallback(async () => {
+    const today = new Date();
+    const twoDaysBefore = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
+    const twoDaysAfter = new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000);
+    const fromDate = twoDaysBefore.toISOString().split("T")[0];
+    const toDate = twoDaysAfter.toISOString().split("T")[0];
+
+    const balances: Record<string, number> = {};
+    const loadingStates: Record<string, boolean> = {};
+
+    // Start loading for all tanks
+    tanks.forEach((tank) => {
+      loadingStates[tank.id!] = true;
+    });
+    setBalancesLoading(loadingStates);
+
+    // Calculate balance for each tank
+    await Promise.all(
+      tanks.map(async (tank) => {
+        if (!tank.id) return;
+
+        try {
+          // Get opening level for 2 days before today
+          const levelBefore = await TankTransactionService.getOpeningLevel(
+            tank.id,
+            fromDate
+          );
+
+          // Get transactions for the date range
+          const transactions =
+            await TankTransactionService.getTransactionsWithDateRange(
+              tank.id,
+              fromDate,
+              toDate
+            );
+
+          // Calculate running level
+          let runningLevel = levelBefore;
+          transactions.forEach((transaction) => {
+            if (transaction.transactionType === "ADDITION") {
+              runningLevel += transaction.volume;
+            } else if (transaction.transactionType === "REMOVAL") {
+              runningLevel -= transaction.volume;
+            }
+          });
+
+          balances[tank.id] = Math.max(0, runningLevel); // Ensure non-negative
+        } catch (error) {
+          console.error(
+            `Failed to calculate balance for tank ${tank.id}:`,
+            error
+          );
+          // Fallback to tank's current level or 0
+          balances[tank.id] = tank.currentLevel || 0;
+        } finally {
+          loadingStates[tank.id] = false;
+        }
+      })
+    );
+
+    setCurrentBalances(balances);
+    setBalancesLoading(loadingStates);
+  }, [tanks]);
+
+  // Calculate current balances for all tanks
+  useEffect(() => {
+    if (tanks.length > 0) {
+      calculateCurrentBalances();
+    }
+  }, [tanks, calculateCurrentBalances]);
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this product?')) {
+    if (confirm("Are you sure you want to delete this product?")) {
       setDeletingId(id);
       try {
         await removeProduct(id);
       } catch (error) {
-        console.error('Failed to delete product:', error);
+        console.error("Failed to delete product:", error);
       } finally {
         setDeletingId(null);
       }
     }
+  };
+
+  // Compute tank quantities per product
+  const getTankQuantityForProduct = (productId: string) => {
+    const quantity = tanks
+      .filter((tank) => tank.productId === productId)
+      .reduce((sum, tank) => sum + (currentBalances[tank.id!] || 0), 0);
+
+    console.log("Computed quantity for product", productId, "is", quantity);
+    return quantity;
   };
 
   if (loading && products.length === 0) {
@@ -170,7 +261,7 @@ export function ProductsPage() {
                     <TableCell>
                       <Badge
                         variant={
-                          product.lowStockCount < 50 ? 'destructive' : 'outline'
+                          product.lowStockCount < 50 ? "destructive" : "outline"
                         }
                       >
                         {product.lowStockCount}
@@ -178,7 +269,8 @@ export function ProductsPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">
-                        {product.stockQuantity || 0} {product.salesUnit}
+                        {getTankQuantityForProduct(product.id!)}{" "}
+                        {product.salesUnit}
                       </Badge>
                     </TableCell>
                     <TableCell>

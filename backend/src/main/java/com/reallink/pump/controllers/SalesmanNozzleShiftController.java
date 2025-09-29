@@ -23,6 +23,7 @@ import com.reallink.pump.dto.request.CreateSalesmanNozzleShiftRequest;
 import com.reallink.pump.dto.request.CreateSalesmanShiftAccountingRequest;
 import com.reallink.pump.dto.request.UpdateSalesmanNozzleShiftRequest;
 import com.reallink.pump.dto.response.SalesmanNozzleShiftResponse;
+import com.reallink.pump.dto.response.SalesmanShiftAccountingResponse;
 import com.reallink.pump.entities.SalesmanShiftAccounting;
 import com.reallink.pump.services.SalesmanNozzleShiftService;
 
@@ -160,6 +161,16 @@ public class SalesmanNozzleShiftController {
                 request.getNotes50(), request.getNotes20(), request.getNotes10(),
                 request.getCoins5(), request.getCoins2(), request.getCoins1(), pumpMasterId);
         return ResponseEntity.status(HttpStatus.CREATED).body(accounting);
+    }
+
+    @GetMapping("/{id}/accounting")
+    @PreAuthorize("hasRole('SALESMAN') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @Operation(summary = "Get accounting for a salesman nozzle shift")
+    public ResponseEntity<SalesmanShiftAccountingResponse> getAccounting(@PathVariable UUID id,
+            HttpServletRequest httpRequest) {
+        UUID pumpMasterId = extractPumpMasterId(httpRequest);
+        SalesmanShiftAccountingResponse accounting = service.getAccountingByShiftId(id, pumpMasterId);
+        return ResponseEntity.ok(accounting);
     }
 
     @DeleteMapping("/{id}/admin")

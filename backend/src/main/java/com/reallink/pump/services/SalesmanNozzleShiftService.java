@@ -16,6 +16,7 @@ import com.reallink.pump.dto.request.CreateSalesmanNozzleShiftRequest;
 import com.reallink.pump.dto.request.CreateTankTransactionRequest;
 import com.reallink.pump.dto.request.UpdateSalesmanNozzleShiftRequest;
 import com.reallink.pump.dto.response.SalesmanNozzleShiftResponse;
+import com.reallink.pump.dto.response.SalesmanShiftAccountingResponse;
 import com.reallink.pump.entities.Nozzle;
 import com.reallink.pump.entities.PumpInfoMaster;
 import com.reallink.pump.entities.SalesmanNozzleShift;
@@ -24,6 +25,7 @@ import com.reallink.pump.entities.SalesmanBillPayment;
 import com.reallink.pump.entities.User;
 import com.reallink.pump.exception.PumpBusinessException;
 import com.reallink.pump.mapper.SalesmanNozzleShiftMapper;
+import com.reallink.pump.mapper.SalesmanShiftAccountingMapper;
 import com.reallink.pump.repositories.NozzleRepository;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
 import com.reallink.pump.repositories.SalesmanNozzleShiftRepository;
@@ -49,6 +51,7 @@ public class SalesmanNozzleShiftService {
     private final TankTransactionService tankTransactionService;
     private final SalesmanShiftAccountingRepository accountingRepository;
     private final SalesmanBillPaymentRepository paymentRepository;
+    private final SalesmanShiftAccountingMapper accountingMapper;
 
     public List<SalesmanNozzleShiftResponse> getAllByPumpMasterId(@NotNull UUID pumpMasterId) {
         return repository.findByPumpMasterIdOrderByStartDateTimeDesc(pumpMasterId).stream()
@@ -96,6 +99,21 @@ public class SalesmanNozzleShiftService {
             throw new PumpBusinessException("SHIFT_NOT_FOUND", "Salesman nozzle shift with ID " + id + " not found");
         }
         return mapper.toResponse(shift);
+    }
+
+    public SalesmanShiftAccountingResponse getAccountingByShiftId(@NotNull UUID shiftId, @NotNull UUID pumpMasterId) {
+        SalesmanNozzleShift shift = repository.findById(shiftId)
+                .orElseThrow(() -> new PumpBusinessException("SHIFT_NOT_FOUND", "Salesman nozzle shift with ID " + shiftId + " not found"));
+
+        // Validate tenant access
+        if (!pumpMasterId.equals(shift.getPumpMaster().getId())) {
+            throw new PumpBusinessException("TENANT_MISMATCH", "Shift does not belong to this pump master");
+        }
+
+        SalesmanShiftAccounting accounting = accountingRepository.findBySalesmanNozzleShift_Id(shiftId)
+                .orElseThrow(() -> new PumpBusinessException("ACCOUNTING_NOT_FOUND", "Accounting not found for shift with ID " + shiftId));
+
+        return accountingMapper.toResponse(accounting);
     }
 
     public List<SalesmanNozzleShiftResponse> getByNozzleId(@NotNull UUID nozzleId, @NotNull UUID pumpMasterId) {
