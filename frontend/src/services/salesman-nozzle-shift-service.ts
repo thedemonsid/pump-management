@@ -3,6 +3,8 @@ import type {
   SalesmanNozzleShift,
   CreateSalesmanNozzleShift,
   CloseSalesmanNozzleShift,
+  CreateSalesmanShiftAccountingRequest,
+  SalesmanShiftAccounting,
 } from '@/types';
 
 export class SalesmanNozzleShiftService {
@@ -91,6 +93,18 @@ export class SalesmanNozzleShiftService {
   // Delete a shift (admin endpoint)
   static async delete(id: string): Promise<void> {
     await api.delete(`${this.BASE_PATH}/${id}/admin`);
+  }
+
+  // Create accounting for a closed shift
+  static async createAccounting(
+    shiftId: string,
+    accountingData: CreateSalesmanShiftAccountingRequest
+  ): Promise<SalesmanShiftAccounting> {
+    const response = await api.post<SalesmanShiftAccounting>(
+      `${this.BASE_PATH}/${shiftId}/accounting`,
+      accountingData
+    );
+    return response.data;
   }
 
   // Admin create shift

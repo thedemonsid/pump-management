@@ -19,6 +19,8 @@ import com.reallink.pump.dto.response.SalesmanNozzleShiftResponse;
 import com.reallink.pump.entities.Nozzle;
 import com.reallink.pump.entities.PumpInfoMaster;
 import com.reallink.pump.entities.SalesmanNozzleShift;
+import com.reallink.pump.entities.SalesmanShiftAccounting;
+import com.reallink.pump.entities.SalesmanBillPayment;
 import com.reallink.pump.entities.User;
 import com.reallink.pump.exception.PumpBusinessException;
 import com.reallink.pump.mapper.SalesmanNozzleShiftMapper;
@@ -26,6 +28,8 @@ import com.reallink.pump.repositories.NozzleRepository;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
 import com.reallink.pump.repositories.SalesmanNozzleShiftRepository;
 import com.reallink.pump.repositories.SalesmanRepository;
+import com.reallink.pump.repositories.SalesmanShiftAccountingRepository;
+import com.reallink.pump.repositories.SalesmanBillPaymentRepository;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -43,6 +47,8 @@ public class SalesmanNozzleShiftService {
     private final PumpInfoMasterRepository pumpInfoMasterRepository;
     private final SalesmanNozzleShiftMapper mapper;
     private final TankTransactionService tankTransactionService;
+    private final SalesmanShiftAccountingRepository accountingRepository;
+    private final SalesmanBillPaymentRepository paymentRepository;
 
     public List<SalesmanNozzleShiftResponse> getAllByPumpMasterId(@NotNull UUID pumpMasterId) {
         return repository.findByPumpMasterIdOrderByStartDateTimeDesc(pumpMasterId).stream()
@@ -460,5 +466,105 @@ public class SalesmanNozzleShiftService {
         );
 
         repository.save(newShift);
+    }
+
+    @Transactional
+    public SalesmanShiftAccounting createAccounting(@NotNull UUID shiftId,
+            BigDecimal upiReceived,
+            BigDecimal cardReceived,
+            BigDecimal expenses,
+            String expenseReason,
+            Integer notes2000, Integer notes1000, Integer notes500,
+            Integer notes200, Integer notes100, Integer notes50,
+            Integer notes20, Integer notes10,
+            Integer coins5, Integer coins2, Integer coins1,
+            @NotNull UUID pumpMasterId) {
+        SalesmanNozzleShift shift = repository.findById(shiftId)
+                .orElseThrow(() -> new PumpBusinessException("SHIFT_NOT_FOUND", "Salesman nozzle shift with ID " + shiftId + " not found"));
+
+        // Validate tenant access
+        if (!pumpMasterId.equals(shift.getPumpMaster().getId())) {
+            throw new PumpBusinessException("TENANT_MISMATCH", "Shift does not belong to this pump master");
+        }
+
+        // Validate shift is closed
+        if (!SalesmanNozzleShift.ShiftStatus.CLOSED.equals(shift.getStatus())) {
+            throw new PumpBusinessException("SHIFT_NOT_CLOSED", "Shift must be closed before creating accounting");
+        }
+
+        // Validate not already accounted
+        if (Boolean.TRUE.equals(shift.getIsAccountingDone())) {
+            throw new PumpBusinessException("ALREADY_ACCOUNTED", "Accounting already done for this shift");
+        }
+
+        // Calculate system values
+        BigDecimal fuelSales = shift.getTotalAmount() != null ? shift.getTotalAmount() : BigDecimal.ZERO;
+
+        // Customer receipt: cash received from customers (from system)
+        List<SalesmanBillPayment> payments = paymentRepository.findBySalesmanNozzleShift_Id(shiftId);
+        BigDecimal customerReceipt = payments.stream()
+                .filter(p -> "CASH".equals(p.getPaymentMethod().name())) // Assuming PaymentMethod.CASH
+                .map(SalesmanBillPayment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal systemReceivedAmount = fuelSales.add(customerReceipt);
+
+        // Credit: automatic from system (credit payments)
+        BigDecimal credit = payments.stream()
+                .filter(p -> "CREDIT".equals(p.getPaymentMethod().name())) // Assuming PaymentMethod.CREDIT
+                .map(SalesmanBillPayment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Calculate cash in hand from denominations
+        BigDecimal cashInHand = BigDecimal.valueOf(2000).multiply(BigDecimal.valueOf(notes2000 != null ? notes2000 : 0))
+                .add(BigDecimal.valueOf(1000).multiply(BigDecimal.valueOf(notes1000 != null ? notes1000 : 0)))
+                .add(BigDecimal.valueOf(500).multiply(BigDecimal.valueOf(notes500 != null ? notes500 : 0)))
+                .add(BigDecimal.valueOf(200).multiply(BigDecimal.valueOf(notes200 != null ? notes200 : 0)))
+                .add(BigDecimal.valueOf(100).multiply(BigDecimal.valueOf(notes100 != null ? notes100 : 0)))
+                .add(BigDecimal.valueOf(50).multiply(BigDecimal.valueOf(notes50 != null ? notes50 : 0)))
+                .add(BigDecimal.valueOf(20).multiply(BigDecimal.valueOf(notes20 != null ? notes20 : 0)))
+                .add(BigDecimal.valueOf(10).multiply(BigDecimal.valueOf(notes10 != null ? notes10 : 0)))
+                .add(BigDecimal.valueOf(5).multiply(BigDecimal.valueOf(coins5 != null ? coins5 : 0)))
+                .add(BigDecimal.valueOf(2).multiply(BigDecimal.valueOf(coins2 != null ? coins2 : 0)))
+                .add(BigDecimal.valueOf(1).multiply(BigDecimal.valueOf(coins1 != null ? coins1 : 0)));
+
+        // Calculate balance amount: expected cash - actual cash
+        BigDecimal expectedCash = systemReceivedAmount.subtract(upiReceived).subtract(cardReceived).subtract(credit).subtract(expenses);
+        BigDecimal balanceAmount = expectedCash.subtract(cashInHand);
+
+        // Create accounting
+        SalesmanShiftAccounting accounting = new SalesmanShiftAccounting();
+        accounting.setSalesmanNozzleShift(shift);
+        accounting.setFuelSales(fuelSales);
+        accounting.setCustomerReceipt(customerReceipt);
+        accounting.setSystemReceivedAmount(systemReceivedAmount);
+        accounting.setUpiReceived(upiReceived != null ? upiReceived : BigDecimal.ZERO);
+        accounting.setCardReceived(cardReceived != null ? cardReceived : BigDecimal.ZERO);
+        accounting.setCredit(credit);
+        accounting.setExpenses(expenses != null ? expenses : BigDecimal.ZERO);
+        accounting.setExpenseReason(expenseReason);
+        accounting.setCashInHand(cashInHand);
+        accounting.setBalanceAmount(balanceAmount);
+
+        // Set denominations
+        accounting.setNotes2000(notes2000 != null ? notes2000 : 0);
+        accounting.setNotes1000(notes1000 != null ? notes1000 : 0);
+        accounting.setNotes500(notes500 != null ? notes500 : 0);
+        accounting.setNotes200(notes200 != null ? notes200 : 0);
+        accounting.setNotes100(notes100 != null ? notes100 : 0);
+        accounting.setNotes50(notes50 != null ? notes50 : 0);
+        accounting.setNotes20(notes20 != null ? notes20 : 0);
+        accounting.setNotes10(notes10 != null ? notes10 : 0);
+        accounting.setCoins5(coins5 != null ? coins5 : 0);
+        accounting.setCoins2(coins2 != null ? coins2 : 0);
+        accounting.setCoins1(coins1 != null ? coins1 : 0);
+
+        SalesmanShiftAccounting saved = accountingRepository.save(accounting);
+
+        // Mark shift as accounted
+        shift.setIsAccountingDone(true);
+        repository.save(shift);
+
+        return saved;
     }
 }

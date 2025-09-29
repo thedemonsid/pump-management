@@ -4,6 +4,7 @@ import type {
   SalesmanNozzleShift,
   CreateSalesmanNozzleShift,
   CloseSalesmanNozzleShift,
+  CreateSalesmanShiftAccountingRequest,
 } from '@/types';
 import { SalesmanNozzleShiftService } from '@/services/salesman-nozzle-shift-service';
 import { toast } from 'sonner';
@@ -36,6 +37,10 @@ interface SalesmanNozzleShiftState {
     id: string,
     closeData: CloseSalesmanNozzleShift,
     admin?: boolean
+  ) => Promise<void>;
+  createAccounting: (
+    shiftId: string,
+    accountingData: CreateSalesmanShiftAccountingRequest
   ) => Promise<void>;
   updateShiftApi: (
     id: string,
@@ -151,6 +156,28 @@ export const useSalesmanNozzleShiftStore = create<SalesmanNozzleShiftState>()(
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : 'Failed to update shift';
+          set({ error: errorMessage });
+          toast.error(errorMessage);
+          throw error;
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      createAccounting: async (shiftId, accountingData) => {
+        try {
+          set({ loading: true, error: null });
+          const accounting = await SalesmanNozzleShiftService.createAccounting(
+            shiftId,
+            accountingData
+          );
+          // Update the shift to mark it as accounted
+          get().updateShift(shiftId, { status: 'CLOSED', isAccountingDone: true });
+          toast.success('Accounting created successfully');
+          return accounting;
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Failed to create accounting';
           set({ error: errorMessage });
           toast.error(errorMessage);
           throw error;

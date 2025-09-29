@@ -52,6 +52,7 @@ import { SalesmanBillService } from '@/services/salesman-bill-service';
 import { CustomerService } from '@/services/customer-service';
 import { ProductService } from '@/services/product-service';
 import { CreateShiftPaymentForm } from '@/pages/salesman-shifts/CreateShiftPaymentForm';
+import { AccountingForm } from '@/pages/salesman-shifts/AccountingForm';
 import { toast } from 'sonner';
 import type {
   Nozzle,
@@ -61,6 +62,7 @@ import type {
   Product,
   SalesmanBillResponse,
   CreateSalesmanBillRequest,
+  CreateSalesmanShiftAccountingRequest,
 } from '@/types';
 
 export function SalesmanShiftsPage() {
@@ -73,6 +75,7 @@ export function SalesmanShiftsPage() {
     fetchShifts,
     createShift,
     closeShift,
+    createAccounting,
     fetchActiveShifts,
   } = useSalesmanNozzleShiftStore();
 
@@ -131,6 +134,11 @@ export function SalesmanShiftsPage() {
   const [selectedShiftForPayment, setSelectedShiftForPayment] =
     useState<SalesmanNozzleShiftResponse | null>(null);
 
+  // Accounting dialog state
+  const [isAccountingDialogOpen, setIsAccountingDialogOpen] = useState(false);
+  const [selectedShiftForAccounting, setSelectedShiftForAccounting] =
+    useState<SalesmanNozzleShiftResponse | null>(null);
+
   // Load nozzles and salesmen for selection
   useEffect(() => {
     const loadNozzles = async () => {
@@ -161,6 +169,11 @@ export function SalesmanShiftsPage() {
       loadNozzles();
       loadSalesmen();
       fetchActiveShifts(user.userId);
+    } else if (user?.role === 'ADMIN') {
+      loadNozzles();
+      loadSalesmen();
+      // For admin, fetch all active shifts or handle differently
+      fetchActiveShifts();
     }
   }, [user?.role, user?.userId, fetchActiveShifts]);
 
@@ -168,6 +181,8 @@ export function SalesmanShiftsPage() {
   useEffect(() => {
     if (user?.role === 'SALESMAN' && user?.userId) {
       fetchShifts({ fromDate, toDate, salesmanId: user.userId });
+    } else if (user?.role === 'ADMIN') {
+      fetchShifts({ fromDate, toDate }); // Admin sees all shifts
     }
   }, [fetchShifts, fromDate, toDate, user?.role, user?.userId]);
 
@@ -203,6 +218,9 @@ export function SalesmanShiftsPage() {
       if (user?.role === 'SALESMAN' && user?.userId) {
         fetchShifts({ fromDate, toDate, salesmanId: user.userId });
         fetchActiveShifts(user.userId);
+      } else if (user?.role === 'ADMIN') {
+        fetchShifts({ fromDate, toDate });
+        fetchActiveShifts();
       }
     } catch {
       toast.error('Failed to close shift');
@@ -275,6 +293,9 @@ export function SalesmanShiftsPage() {
       if (user?.role === 'SALESMAN' && user?.userId) {
         fetchShifts({ fromDate, toDate, salesmanId: user.userId });
         fetchActiveShifts(user.userId);
+      } else if (user?.role === 'ADMIN') {
+        fetchShifts({ fromDate, toDate });
+        fetchActiveShifts();
       }
     } catch {
       toast.error('Failed to create bill');
@@ -308,6 +329,38 @@ export function SalesmanShiftsPage() {
   const handlePaymentSuccess = () => {
     setIsPaymentDialogOpen(false);
     setSelectedShiftForPayment(null);
+  };
+
+  // Accounting functions
+  const handleCreateAccounting = (shift: SalesmanNozzleShiftResponse) => {
+    setSelectedShiftForAccounting(shift);
+    setIsAccountingDialogOpen(true);
+  };
+
+  const handleAccountingSubmit = async (accountingData: CreateSalesmanShiftAccountingRequest) => {
+    if (!selectedShiftForAccounting) return;
+
+    try {
+      await createAccounting(selectedShiftForAccounting.id, accountingData);
+      toast.success('Accounting created successfully');
+      setIsAccountingDialogOpen(false);
+      setSelectedShiftForAccounting(null);
+      // Refresh shifts
+      if (user?.role === 'SALESMAN' && user?.userId) {
+        fetchShifts({ fromDate, toDate, salesmanId: user.userId });
+        fetchActiveShifts(user.userId);
+      } else if (user?.role === 'ADMIN') {
+        fetchShifts({ fromDate, toDate });
+        fetchActiveShifts();
+      }
+    } catch  {
+      toast.error('Failed to create accounting');
+    }
+  };
+
+  const handleAccountingCancel = () => {
+    setIsAccountingDialogOpen(false);
+    setSelectedShiftForAccounting(null);
   };
 
   const formatDateTime = (dateTimeStr: string) => {
@@ -348,7 +401,7 @@ export function SalesmanShiftsPage() {
     return 0;
   };
 
-  if (user?.role !== 'SALESMAN') {
+  if (user?.role !== 'SALESMAN' && user?.role !== 'ADMIN') {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -356,7 +409,7 @@ export function SalesmanShiftsPage() {
             Access Denied
           </h2>
           <p className="text-muted-foreground mt-2">
-            This page is only accessible to salesmen.
+            This page is only accessible to salesmen and administrators.
           </p>
         </div>
       </div>
@@ -369,22 +422,26 @@ export function SalesmanShiftsPage() {
       <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-            My Shifts
+            {user?.role === 'ADMIN' ? 'All Salesman Shifts' : 'My Shifts'}
           </h1>
           <p className="text-sm md:text-base text-muted-foreground">
-            Manage your nozzle shifts and track fuel dispensing
+            {user?.role === 'ADMIN' 
+              ? 'Manage all salesman nozzle shifts and track fuel dispensing' 
+              : 'Manage your nozzle shifts and track fuel dispensing'
+            }
           </p>
         </div>
 
         {/* Action buttons - stack on mobile */}
         <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
-          <Dialog open={isStartDialogOpen} onOpenChange={setIsStartDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto">
-                <Play className="mr-2 h-4 w-4" />
-                Start Shift
-              </Button>
-            </DialogTrigger>
+          {user?.role === 'SALESMAN' && (
+            <Dialog open={isStartDialogOpen} onOpenChange={setIsStartDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full sm:w-auto">
+                  <Play className="mr-2 h-4 w-4" />
+                  Start Shift
+                </Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Start New Shift</DialogTitle>
@@ -454,6 +511,7 @@ export function SalesmanShiftsPage() {
               </div>
             </DialogContent>
           </Dialog>
+          )}
         </div>
       </div>
 
@@ -715,6 +773,7 @@ export function SalesmanShiftsPage() {
                     </TableHead>
                     <TableHead className="min-w-[80px]">Bills</TableHead>
                     <TableHead className="min-w-[80px]">Status</TableHead>
+                    <TableHead className="min-w-[120px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -770,13 +829,44 @@ export function SalesmanShiftsPage() {
                         </Button>
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            shift.status === 'ACTIVE' ? 'default' : 'secondary'
-                          }
-                        >
-                          {shift.status}
-                        </Badge>
+                        <div className="flex flex-col space-y-1">
+                          <Badge
+                            variant={
+                              shift.status === 'ACTIVE' ? 'default' : 'secondary'
+                            }
+                          >
+                            {shift.status}
+                          </Badge>
+                          {shift.status === 'CLOSED' && shift.isAccountingDone && (
+                            <Badge variant="outline" className="text-xs">
+                              ✓ Accounted
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          {shift.status === 'CLOSED' && !shift.isAccountingDone && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleCreateAccounting(shift)}
+                            >
+                              <Receipt className="mr-1 h-3 w-3" />
+                              Accounting
+                            </Button>
+                          )}
+                          {shift.status === 'ACTIVE' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleCloseShift(shift.id)}
+                            >
+                              <Square className="mr-1 h-3 w-3" />
+                              Close
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -841,31 +931,18 @@ export function SalesmanShiftsPage() {
                           <span className="font-semibold">
                             Bill #{bill.billNo}
                           </span>
-                          <Badge variant="outline">{bill.rateType}</Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {bill.customerName} •{' '}
-                          {format(new Date(bill.billDate), 'dd/MM/yyyy')}
-                        </p>
-                        <p className="text-sm">
-                          {bill.quantity} L × {formatCurrency(bill.rate)} ={' '}
-                          {formatCurrency(bill.amount)}
-                        </p>
-                        {bill.vehicleNo && (
-                          <p className="text-sm text-muted-foreground">
-                            Vehicle: {bill.vehicleNo}
-                            {bill.driverName && ` • Driver: ${bill.driverName}`}
+                        <div className="text-sm text-muted-foreground">
+                          <p>
+                            Customer: {bill.customerName}
+                            {bill.vehicleNo && ` | Vehicle: ${bill.vehicleNo}`}
                           </p>
-                        )}
-                      </div>
-                      <div className="text-right flex flex-col items-end space-y-2">
-                        <div>
-                          <p className="font-bold">
-                            {formatCurrency(bill.amount)}
+                          <p>Product: {bill.productName}</p>
+                          <p>
+                            Quantity: {bill.quantity} L | Rate:{' '}
+                            {formatCurrency(bill.rate)}/L
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            {format(new Date(bill.createdAt), 'HH:mm')}
-                          </p>
+                          <p>Total: {formatCurrency(bill.amount)}</p>
                         </div>
                       </div>
                     </div>
@@ -1068,6 +1145,26 @@ export function SalesmanShiftsPage() {
               Create Bill
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Accounting Dialog */}
+      <Dialog open={isAccountingDialogOpen} onOpenChange={setIsAccountingDialogOpen}>
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create Accounting</DialogTitle>
+            <DialogDescription>
+              Enter accounting details for the closed shift
+            </DialogDescription>
+          </DialogHeader>
+          {selectedShiftForAccounting && (
+            <AccountingForm
+              shift={selectedShiftForAccounting}
+              onSubmit={handleAccountingSubmit}
+              onCancel={handleAccountingCancel}
+              loading={loading}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

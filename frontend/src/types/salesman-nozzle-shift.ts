@@ -40,6 +40,7 @@ export const SalesmanNozzleShiftResponseSchema = z.object({
   totalAmount: z.number(),
   status: z.enum(['ACTIVE', 'CLOSED', 'OPEN']),
   dispensedAmount: z.number(),
+  isAccountingDone: z.boolean().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
   version: z.number(),
@@ -57,6 +58,50 @@ export const CloseSalesmanNozzleShiftSchema = z.object({
   nextSalesmanId: z.string().optional(),
 });
 
+// Accounting schemas
+export const CreateSalesmanShiftAccountingRequestSchema = z.object({
+  upiReceived: z.number().min(0).default(0),
+  cardReceived: z.number().min(0).default(0),
+  expenses: z.number().min(0).default(0),
+  expenseReason: z.string().optional(),
+  notes2000: z.number().min(0).default(0),
+  notes1000: z.number().min(0).default(0),
+  notes500: z.number().min(0).default(0),
+  notes200: z.number().min(0).default(0),
+  notes100: z.number().min(0).default(0),
+  notes50: z.number().min(0).default(0),
+  notes20: z.number().min(0).default(0),
+  notes10: z.number().min(0).default(0),
+  coins: z.number().min(0).default(0), // For coins less than 10 rupees
+});
+
+export const SalesmanShiftAccountingResponseSchema = z.object({
+  id: z.string(),
+  salesmanNozzleShiftId: z.string(),
+  fuelSales: z.number(),
+  customerReceipt: z.number(),
+  systemReceivedAmount: z.number(),
+  credit: z.number(),
+  upiReceived: z.number(),
+  cardReceived: z.number(),
+  expenses: z.number(),
+  expenseReason: z.string().optional(),
+  cashInHand: z.number(),
+  expectedCash: z.number(),
+  balanceAmount: z.number(),
+  notes2000: z.number(),
+  notes1000: z.number(),
+  notes500: z.number(),
+  notes200: z.number(),
+  notes100: z.number(),
+  notes50: z.number(),
+  notes20: z.number(),
+  notes10: z.number(),
+  coins: z.number(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
 export type SalesmanNozzleShift = z.infer<
   typeof SalesmanNozzleShiftResponseSchema
 >;
@@ -68,4 +113,10 @@ export type CreateSalesmanNozzleShift = z.infer<
 >;
 export type CloseSalesmanNozzleShift = z.infer<
   typeof CloseSalesmanNozzleShiftSchema
+>;
+export type CreateSalesmanShiftAccountingRequest = z.infer<
+  typeof CreateSalesmanShiftAccountingRequestSchema
+>;
+export type SalesmanShiftAccounting = z.infer<
+  typeof SalesmanShiftAccountingResponseSchema
 >;

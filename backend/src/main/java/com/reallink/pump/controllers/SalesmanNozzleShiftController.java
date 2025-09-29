@@ -20,8 +20,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.reallink.pump.dto.request.CloseSalesmanNozzleShiftRequest;
 import com.reallink.pump.dto.request.CreateSalesmanNozzleShiftRequest;
+import com.reallink.pump.dto.request.CreateSalesmanShiftAccountingRequest;
 import com.reallink.pump.dto.request.UpdateSalesmanNozzleShiftRequest;
 import com.reallink.pump.dto.response.SalesmanNozzleShiftResponse;
+import com.reallink.pump.entities.SalesmanShiftAccounting;
 import com.reallink.pump.services.SalesmanNozzleShiftService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -142,6 +144,22 @@ public class SalesmanNozzleShiftController {
             HttpServletRequest httpRequest) {
         UUID pumpMasterId = extractPumpMasterId(httpRequest);
         return ResponseEntity.ok(service.adminUpdateShift(id, request, pumpMasterId));
+    }
+
+    @PostMapping("/{id}/accounting")
+    @PreAuthorize("hasRole('SALESMAN') or hasRole('MANAGER') or hasRole('ADMIN')")
+    @Operation(summary = "Create accounting for a closed salesman nozzle shift")
+    public ResponseEntity<SalesmanShiftAccounting> createAccounting(@PathVariable UUID id,
+            @Valid @RequestBody CreateSalesmanShiftAccountingRequest request,
+            HttpServletRequest httpRequest) {
+        UUID pumpMasterId = extractPumpMasterId(httpRequest);
+        SalesmanShiftAccounting accounting = service.createAccounting(id,
+                request.getUpiReceived(), request.getCardReceived(), request.getExpenses(),
+                request.getExpenseReason(), request.getNotes2000(), request.getNotes1000(),
+                request.getNotes500(), request.getNotes200(), request.getNotes100(),
+                request.getNotes50(), request.getNotes20(), request.getNotes10(),
+                request.getCoins5(), request.getCoins2(), request.getCoins1(), pumpMasterId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(accounting);
     }
 
     @DeleteMapping("/{id}/admin")
