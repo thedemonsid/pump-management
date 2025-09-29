@@ -91,9 +91,11 @@ export function AccountingForm({
     );
   };
 
-  // Calculate expected cash (use system received amount from backend if available)
+  // Calculate expected cash (fuel sales + customer payments - credit sales)
   const expectedCash = existingAccounting
-    ? existingAccounting.systemReceivedAmount
+    ? existingAccounting.fuelSales +
+      existingAccounting.customerReceipt -
+      existingAccounting.credit
     : shift.totalAmount || 0;
   const cashInHand = calculateCashInHand();
   const totalReceived =
@@ -443,32 +445,100 @@ export function AccountingForm({
                   <div className="text-sm text-muted-foreground">
                     Fuel Sales
                   </div>
-                  <div className="font-semibold text-lg">
+                  <div className="font-semibold text-lg text-green-600">
                     {formatCurrency(existingAccounting.fuelSales)}
                   </div>
+                  <div className="text-xs text-muted-foreground">
+                    Paid fuel purchases
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="text-sm text-muted-foreground">
-                    Customer Receipt
+                    Customer Payments
                   </div>
-                  <div className="font-semibold text-lg">
+                  <div className="font-semibold text-lg text-blue-600">
                     {formatCurrency(existingAccounting.customerReceipt)}
                   </div>
+                  <div className="text-xs text-muted-foreground">
+                    Previous credit payments
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="text-sm text-muted-foreground">
-                    Credit Amount
+                    Credit Sales
                   </div>
-                  <div className="font-semibold text-lg">
+                  <div className="font-semibold text-lg text-orange-600">
                     {formatCurrency(existingAccounting.credit)}
                   </div>
+                  <div className="text-xs text-muted-foreground">
+                    Fuel sold on credit
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="text-sm text-muted-foreground">
-                    System Received
+                    Total Expected
                   </div>
-                  <div className="font-semibold text-lg">
-                    {formatCurrency(existingAccounting.systemReceivedAmount)}
+                  <div className="font-semibold text-lg text-purple-600">
+                    {formatCurrency(
+                      existingAccounting.fuelSales +
+                        existingAccounting.customerReceipt -
+                        existingAccounting.credit
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Fuel sales + payments - credit sales
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Expected Amount Preview for Creation */}
+            {!existingAccounting && !isReadOnly && (
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className="text-sm text-muted-foreground">
+                      Fuel Sales (Cash)
+                    </div>
+                    <div className="font-semibold text-lg text-green-600">
+                      {formatCurrency(shift.totalAmount || 0)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Total fuel dispensed
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-muted-foreground">
+                      Customer Payments
+                    </div>
+                    <div className="font-semibold text-lg text-blue-600">
+                      To be calculated
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      From credit payments received
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-muted-foreground">
+                      Credit Sales
+                    </div>
+                    <div className="font-semibold text-lg text-orange-600">
+                      To be calculated
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      From bills created during shift
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-muted-foreground">
+                      Total Expected
+                    </div>
+                    <div className="font-semibold text-lg text-purple-600">
+                      To be calculated
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Fuel sales + payments - credit
+                    </div>
                   </div>
                 </div>
               </div>

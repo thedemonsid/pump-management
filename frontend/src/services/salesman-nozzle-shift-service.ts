@@ -115,6 +115,18 @@ export class SalesmanNozzleShiftService {
     return response.data;
   }
 
+  // Update accounting for a closed shift
+  static async updateAccounting(
+    shiftId: string,
+    accountingData: CreateSalesmanShiftAccountingRequest
+  ): Promise<SalesmanShiftAccounting> {
+    const response = await api.put<SalesmanShiftAccounting>(
+      `${this.BASE_PATH}/${shiftId}/accounting`,
+      accountingData
+    );
+    return response.data;
+  }
+
   // Admin create shift
   static async adminCreate(
     shift: CreateSalesmanNozzleShift

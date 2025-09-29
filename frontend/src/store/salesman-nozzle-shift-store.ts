@@ -42,6 +42,10 @@ interface SalesmanNozzleShiftState {
     shiftId: string,
     accountingData: CreateSalesmanShiftAccountingRequest
   ) => Promise<void>;
+  updateAccounting: (
+    shiftId: string,
+    accountingData: CreateSalesmanShiftAccountingRequest
+  ) => Promise<void>;
   getAccounting: (shiftId: string) => Promise<import('@/types').SalesmanShiftAccounting>;
   updateShiftApi: (
     id: string,
@@ -179,6 +183,26 @@ export const useSalesmanNozzleShiftStore = create<SalesmanNozzleShiftState>()(
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : 'Failed to create accounting';
+          set({ error: errorMessage });
+          toast.error(errorMessage);
+          throw error;
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      updateAccounting: async (shiftId, accountingData) => {
+        try {
+          set({ loading: true, error: null });
+          const updatedAccounting = await SalesmanNozzleShiftService.updateAccounting(
+            shiftId,
+            accountingData
+          );
+          toast.success('Accounting updated successfully');
+          return updatedAccounting;
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Failed to update accounting';
           set({ error: errorMessage });
           toast.error(errorMessage);
           throw error;
