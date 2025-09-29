@@ -42,12 +42,12 @@ export function UpdateSupplierForm({
       supplierName: supplier.supplierName,
       contactPersonName: supplier.contactPersonName,
       contactNumber: supplier.contactNumber,
-      email: supplier.email || '',
-      gstNumber: supplier.gstNumber,
-      taxIdentificationNumber: supplier.taxIdentificationNumber,
+      email: supplier.email ?? null,
+      gstNumber: supplier.gstNumber ?? null,
+      taxIdentificationNumber: supplier.taxIdentificationNumber ?? null,
       address: supplier.address,
-      openingBalance: supplier.openingBalance,
-      openingBalanceDate: supplier.openingBalanceDate,
+      openingBalance: supplier.openingBalance ?? null,
+      openingBalanceDate: supplier.openingBalanceDate ?? null,
     },
   });
 
@@ -123,6 +123,8 @@ export function UpdateSupplierForm({
                     type="email"
                     placeholder="e.g., john.doe@abc.com"
                     {...field}
+                    value={field.value || ''}
+                    onChange={(e) => field.onChange(e.target.value === '' ? null : e.target.value)}
                   />
                 </FormControl>
                 <FormMessage />
@@ -139,7 +141,12 @@ export function UpdateSupplierForm({
               <FormItem>
                 <FormLabel>GST Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., 22AAAAA0000A1Z5" {...field} />
+                  <Input
+                    placeholder="e.g., 22AAAAA0000A1Z5"
+                    {...field}
+                    value={field.value || ''}
+                    onChange={(e) => field.onChange(e.target.value === '' ? null : e.target.value)}
+                  />
                 </FormControl>
                 <FormDescription>
                   15-character GST identification number
@@ -156,7 +163,12 @@ export function UpdateSupplierForm({
               <FormItem>
                 <FormLabel>Tax Identification Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., 12345678901" {...field} />
+                  <Input
+                    placeholder="e.g., 12345678901"
+                    {...field}
+                    value={field.value || ''}
+                    onChange={(e) => field.onChange(e.target.value === '' ? null : e.target.value)}
+                  />
                 </FormControl>
                 <FormDescription>
                   11-character tax identification number
@@ -201,9 +213,10 @@ export function UpdateSupplierForm({
                     step="0.01"
                     placeholder="e.g., 1000.00"
                     {...field}
+                    value={field.value?.toString() || ''}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value ? Number(e.target.value) : undefined
+                        e.target.value === '' ? null : Number(e.target.value)
                       )
                     }
                   />
@@ -224,7 +237,12 @@ export function UpdateSupplierForm({
               <FormItem>
                 <FormLabel>Opening Balance Date</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input
+                    type="date"
+                    {...field}
+                    value={field.value || ''}
+                    onChange={(e) => field.onChange(e.target.value === '' ? null : e.target.value)}
+                  />
                 </FormControl>
                 <FormDescription>
                   Date when the opening balance was recorded

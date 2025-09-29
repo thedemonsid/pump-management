@@ -38,12 +38,12 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
       supplierName: '',
       contactPersonName: '',
       contactNumber: '',
-      email: '',
-      gstNumber: '',
-      taxIdentificationNumber: '',
+      email: null,
+      gstNumber: null,
+      taxIdentificationNumber: null,
       address: '',
-      openingBalance: 0,
-      openingBalanceDate: '',
+      openingBalance: null,
+      openingBalanceDate: null,
     },
   });
 
@@ -120,6 +120,8 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
                     type="email"
                     placeholder="e.g., john.doe@abc.com"
                     {...field}
+                    value={field.value || ''}
+                    onChange={(e) => field.onChange(e.target.value === '' ? null : e.target.value)}
                   />
                 </FormControl>
                 <FormMessage />
@@ -136,7 +138,12 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
               <FormItem>
                 <FormLabel>GST Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., 22AAAAA0000A1Z5" {...field} />
+                  <Input
+                    placeholder="e.g., 22AAAAA0000A1Z5"
+                    {...field}
+                    value={field.value || ''}
+                    onChange={(e) => field.onChange(e.target.value === '' ? null : e.target.value)}
+                  />
                 </FormControl>
                 <FormDescription>
                   15-character GST identification number
@@ -153,7 +160,12 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
               <FormItem>
                 <FormLabel>Tax Identification Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., 12345678901" {...field} />
+                  <Input
+                    placeholder="e.g., 12345678901"
+                    {...field}
+                    value={field.value || ''}
+                    onChange={(e) => field.onChange(e.target.value === '' ? null : e.target.value)}
+                  />
                 </FormControl>
                 <FormDescription>
                   11-character tax identification number
@@ -198,9 +210,10 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
                     step="0.01"
                     placeholder="e.g., 1000.00"
                     {...field}
+                    value={field.value?.toString() || ''}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value ? Number(e.target.value) : undefined
+                        e.target.value === '' ? null : Number(e.target.value)
                       )
                     }
                   />
@@ -221,7 +234,12 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
               <FormItem>
                 <FormLabel>Opening Balance Date</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input
+                    type="date"
+                    {...field}
+                    value={field.value ?? ''}
+                    onChange={(e) => field.onChange(e.target.value === '' ? null : e.target.value)}
+                  />
                 </FormControl>
                 <FormDescription>
                   Date when the opening balance was recorded

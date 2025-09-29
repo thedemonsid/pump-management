@@ -38,14 +38,10 @@ public class CreateSupplierRequest {
     @Schema(description = "Email address", example = "john.doe@abc.com")
     private String email;
 
-    @NotBlank(message = "GST Number is required")
-    @Size(min = 15, max = 15, message = "GST Number must be exactly 15 characters")
-    @Schema(description = "GST Identification Number", example = "22AAAAA0000A1Z5")
+    @Schema(description = "GST Identification Number", example = "22AAAAA0000A1Z5", required = false)
     private String gstNumber;
 
-    @NotBlank(message = "Tax Identification Number is required")
-    @Size(min = 11, max = 11, message = "Tax Identification Number must be exactly 11 characters")
-    @Schema(description = "Tax Identification Number", example = "12345678901")
+    @Schema(description = "Tax Identification Number", example = "12345678901", required = false)
     private String taxIdentificationNumber;
 
     @NotBlank(message = "Address is required")

@@ -104,7 +104,11 @@ export function UpdateCustomerForm({
               <FormItem>
                 <FormLabel>GST Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., 22AAAAA0000A1Z5" {...field} />
+                  <Input
+                    placeholder="e.g., 22AAAAA0000A1Z5"
+                    {...field}
+                    value={field.value ?? ''}
+                  />
                 </FormControl>
                 <FormDescription>
                   10-20 character GST identification number
@@ -121,7 +125,7 @@ export function UpdateCustomerForm({
               <FormItem>
                 <FormLabel>PAN Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., ABCDE1234F" {...field} />
+                  <Input placeholder="e.g., ABCDE1234F" {...field} value={field.value ?? ''} />
                 </FormControl>
                 <FormDescription>10-20 character PAN number</FormDescription>
                 <FormMessage />

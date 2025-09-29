@@ -1,6 +1,7 @@
 package com.reallink.pump.services;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -277,11 +278,13 @@ public class BillService {
         BigDecimal amount = request.getRate().multiply(quantity);
         billItem.setAmount(amount);
 
-        // Calculate discount amount (percentage)
-        BigDecimal discountAmount = amount.multiply(request.getDiscount().divide(BigDecimal.valueOf(100)));
-        billItem.setDiscount(request.getDiscount());
+        // Calculate discount amount (percentage) - round to 2 decimal places
+        BigDecimal discount = request.getDiscount().setScale(2, RoundingMode.HALF_UP);
+        billItem.setDiscount(discount);
+        BigDecimal discountAmount = amount.multiply(discount.divide(BigDecimal.valueOf(100)));
 
-        // Calculate GST amount on (amount - discount)
+        // Calculate GST amount on (amount - discount) - round GST to 2 decimal places
+        BigDecimal gst = request.getGst().setScale(2, RoundingMode.HALF_UP);
         BigDecimal taxableAmount = amount.subtract(discountAmount);
 
         BigDecimal netAmount;
@@ -291,8 +294,8 @@ public class BillService {
             netAmount = taxableAmount;
         } else {
             // EXCLUDING_GST: add GST
-            BigDecimal gstAmount = taxableAmount.multiply(request.getGst().divide(BigDecimal.valueOf(100)));
-            billItem.setGst(request.getGst());
+            BigDecimal gstAmount = taxableAmount.multiply(gst.divide(BigDecimal.valueOf(100)));
+            billItem.setGst(gst);
             netAmount = taxableAmount.add(gstAmount);
         }
 
