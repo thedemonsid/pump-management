@@ -72,12 +72,14 @@ export const CreateSalesmanShiftAccountingRequestSchema = z.object({
   notes50: z.number().min(0).default(0),
   notes20: z.number().min(0).default(0),
   notes10: z.number().min(0).default(0),
-  coins: z.number().min(0).default(0), // For coins less than 10 rupees
+  coins5: z.number().min(0).default(0), // Separate coin fields to match backend
+  coins2: z.number().min(0).default(0),
+  coins1: z.number().min(0).default(0),
 });
 
 export const SalesmanShiftAccountingResponseSchema = z.object({
   id: z.string(),
-  salesmanNozzleShiftId: z.string(),
+  shiftId: z.string(), // Changed from salesmanNozzleShiftId to match backend
   fuelSales: z.number(),
   customerReceipt: z.number(),
   systemReceivedAmount: z.number(),
@@ -87,7 +89,6 @@ export const SalesmanShiftAccountingResponseSchema = z.object({
   expenses: z.number(),
   expenseReason: z.string().optional(),
   cashInHand: z.number(),
-  expectedCash: z.number(),
   balanceAmount: z.number(),
   notes2000: z.number(),
   notes1000: z.number(),
@@ -97,9 +98,12 @@ export const SalesmanShiftAccountingResponseSchema = z.object({
   notes50: z.number(),
   notes20: z.number(),
   notes10: z.number(),
-  coins: z.number(),
+  coins5: z.number(), // Separate coin fields to match backend
+  coins2: z.number(),
+  coins1: z.number(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  version: z.number(), // Added version field from backend
 });
 
 export type SalesmanNozzleShift = z.infer<
