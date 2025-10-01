@@ -174,12 +174,12 @@ export function DataTable<TData, TValue>({
       {/* Table */}
       <div className="rounded-md border">
         <Table>
-          <TableHeader>
+          <TableHeader className="border-t border-gray-300">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
+                {headerGroup.headers.map((header, index) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className={`border-r border-gray-300 ${index === 0 ? 'border-l' : ''} last:border-r-0`}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -199,8 +199,8 @@ export function DataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                  {row.getVisibleCells().map((cell, index) => (
+                    <TableCell key={cell.id} className={`border-r border-gray-300 ${index === 0 ? 'border-l' : ''} last:border-r-0`}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'react';
-import { useBillStore } from '@/store/bill-store';
-import { useCustomerBillPaymentStore } from '@/store/customer-bill-payment-store';
+import { useEffect, useState } from "react";
+import { useBillStore } from "@/store/bill-store";
+import { useCustomerBillPaymentStore } from "@/store/customer-bill-payment-store";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -18,7 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Loader2,
   Receipt,
@@ -27,8 +27,8 @@ import {
   MapPin,
   Calendar,
   DollarSign,
-} from 'lucide-react';
-import type { Customer } from '@/types';
+} from "lucide-react";
+import type { Customer } from "@/types";
 
 interface CustomerDetailDialogProps {
   customer: Customer | null;
@@ -53,7 +53,7 @@ export function CustomerDetailDialog({
     fetchPaymentsByCustomerId,
   } = useCustomerBillPaymentStore();
 
-  const [activeTab, setActiveTab] = useState('bills');
+  const [activeTab, setActiveTab] = useState("bills");
 
   useEffect(() => {
     if (customer?.id && open) {
@@ -109,13 +109,13 @@ export function CustomerDetailDialog({
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">GST:</span>
                   <span className="font-mono text-sm">
-                    {customer.gstNumber || 'N/A'}
+                    {customer.gstNumber || "N/A"}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">PAN:</span>
                   <span className="font-mono text-sm">
-                    {customer.panNumber || 'N/A'}
+                    {customer.panNumber || "N/A"}
                   </span>
                 </div>
               </div>
@@ -133,11 +133,11 @@ export function CustomerDetailDialog({
                   <span
                     className={`font-mono ${
                       customer.openingBalance && customer.openingBalance < 0
-                        ? 'text-red-600'
-                        : 'text-green-600'
+                        ? "text-red-600"
+                        : "text-green-600"
                     }`}
                   >
-                    ₹{customer.openingBalance?.toLocaleString() || '0'}
+                    ₹{customer.openingBalance?.toLocaleString() || "0"}
                   </span>
                 </div>
               </div>
@@ -166,14 +166,14 @@ export function CustomerDetailDialog({
                   <div
                     className={`text-2xl font-bold ${
                       outstandingBalance >= 0
-                        ? 'text-red-600'
-                        : 'text-green-600'
+                        ? "text-red-600"
+                        : "text-green-600"
                     }`}
                   >
                     ₹{Math.abs(outstandingBalance).toLocaleString()}
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {outstandingBalance >= 0 ? 'Outstanding' : 'Credit Balance'}
+                    {outstandingBalance >= 0 ? "Outstanding" : "Credit Balance"}
                   </div>
                 </div>
               </div>
@@ -233,7 +233,7 @@ export function CustomerDetailDialog({
                             {new Date(bill.billDate).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="secondary">{bill.billType}</Badge>
+                            <Badge variant="secondary">{bill.rateType}</Badge>
                           </TableCell>
                           <TableCell>{bill.billItems.length} items</TableCell>
                           <TableCell className="text-right font-mono font-semibold">

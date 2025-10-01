@@ -1,19 +1,19 @@
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { } from '@/store/salesman-nozzle-shift-store';
-import { useSalesmanStore } from '@/store/salesman-store';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useNozzleShiftStore } from "@/store/nozzle-shift-store";
+import { useSalesmanStore } from "@/store/salesman-store";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Form,
   FormControl,
@@ -21,9 +21,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Loader2 } from 'lucide-react';
-import type { UpdateNozzleShiftRequest, NozzleShiftResponse } from '@/types';
+} from "@/components/ui/form";
+import { Loader2 } from "lucide-react";
+import type { UpdateNozzleShiftRequest, NozzleShiftResponse } from "@/types";
 
 const updateNozzleShiftSchema = z.object({
   closingTime: z.string().optional(),
@@ -57,7 +57,7 @@ export function UpdateNozzleShiftForm({
       closingTime: shift.closingTime || new Date().toTimeString().slice(0, 5),
       closingReading: shift.closingReading || 0,
       fuelPrice: shift.fuelPrice,
-      nextSalesmanId: shift.nextSalesmanId || 'none',
+      nextSalesmanId: shift.nextSalesmanId || "none",
       closed: shift.closed,
     },
   });
@@ -75,14 +75,14 @@ export function UpdateNozzleShiftForm({
         closingReading: data.closingReading,
         fuelPrice: data.fuelPrice,
         nextSalesmanId:
-          data.nextSalesmanId === 'none' ? undefined : data.nextSalesmanId,
+          data.nextSalesmanId === "none" ? undefined : data.nextSalesmanId,
         closed: data.closed,
       };
 
       await editNozzleShift(shift.id, request);
       onSuccess?.();
     } catch (error) {
-      console.error('Failed to update nozzle shift:', error);
+      console.error("Failed to update nozzle shift:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -208,7 +208,7 @@ export function UpdateNozzleShiftForm({
                 <div className="font-medium">
                   {(
                     shift.closingReading - shift.openingReading
-                  ).toLocaleString()}{' '}
+                  ).toLocaleString()}{" "}
                   L
                 </div>
               </div>
@@ -239,7 +239,7 @@ export function UpdateNozzleShiftForm({
                 Updating...
               </>
             ) : (
-              'Update Shift'
+              "Update Shift"
             )}
           </Button>
         </div>

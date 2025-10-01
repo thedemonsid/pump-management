@@ -6,46 +6,46 @@ import {
   StyleSheet,
   Font,
   PDFViewer,
-} from '@react-pdf/renderer';
+} from "@react-pdf/renderer";
 import type {
   Supplier,
   Purchase,
   FuelPurchase,
   SupplierPaymentResponse,
-} from '@/types';
-import { normalizeNumberString } from '@/lib/utils/index';
+} from "@/types";
+import { normalizeNumberString } from "@/lib/utils/index";
 
 // Register font
 Font.register({
-  family: 'Wotfard',
-  src: '/fonts/wotfard-regular-webfont.ttf',
+  family: "Wotfard",
+  src: "/fonts/wotfard-regular-webfont.ttf",
 });
 
 // Create styles with better responsive design
 const styles = StyleSheet.create({
   page: {
-    flexDirection: 'column',
-    backgroundColor: '#ffffff',
+    flexDirection: "column",
+    backgroundColor: "#ffffff",
     padding: 10,
     fontSize: 8,
   },
   header: {
     marginBottom: 20,
-    textAlign: 'center',
-    borderBottom: '1pt solid #000',
+    textAlign: "center",
+    borderBottom: "1pt solid #000",
     paddingBottom: 10,
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
-    fontFamily: 'Wotfard',
+    fontWeight: "bold",
+    fontFamily: "Wotfard",
     marginBottom: 5,
-    color: '#333',
+    color: "#333",
   },
   subtitle: {
     fontSize: 10,
-    fontFamily: 'Wotfard',
-    color: '#666',
+    fontFamily: "Wotfard",
+    color: "#666",
     marginBottom: 3,
   },
   section: {
@@ -53,17 +53,17 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 12,
-    fontWeight: 'bold',
-    fontFamily: 'Wotfard',
+    fontWeight: "bold",
+    fontFamily: "Wotfard",
     marginBottom: 8,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
     padding: 5,
-    textAlign: 'center',
+    textAlign: "center",
     borderRadius: 2,
   },
   summaryGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 10,
     gap: 5,
   },
@@ -71,159 +71,159 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 3,
-    backgroundColor: '#fafafa',
-    alignItems: 'center',
+    backgroundColor: "#fafafa",
+    alignItems: "center",
   },
   summaryLabel: {
     fontSize: 8,
-    fontFamily: 'Wotfard',
-    color: '#666',
+    fontFamily: "Wotfard",
+    color: "#666",
     marginBottom: 3,
-    textAlign: 'center',
+    textAlign: "center",
   },
   summaryValue: {
     fontSize: 11,
-    fontWeight: 'bold',
-    fontFamily: 'Wotfard',
-    textAlign: 'center',
-    color: '#000',
+    fontWeight: "bold",
+    fontFamily: "Wotfard",
+    textAlign: "center",
+    color: "#000",
   },
   // Table styles with better alignment
   tableContainer: {
     borderWidth: 1,
-    borderColor: '#000',
+    borderColor: "#000",
     borderRadius: 3,
   },
   tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#e8e8e8',
+    flexDirection: "row",
+    backgroundColor: "#e8e8e8",
     borderBottomWidth: 2,
-    borderBottomColor: '#000',
+    borderBottomColor: "#000",
     minHeight: 25,
   },
   tableRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    borderBottomColor: "#ccc",
     minHeight: 20,
   },
   // Column definitions with exact widths that sum to 100%
   colSupplierName: {
-    width: '14%',
+    width: "14%",
     borderRightWidth: 1,
-    borderRightColor: '#ccc',
+    borderRightColor: "#ccc",
     padding: 3,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   colContactPerson: {
-    width: '14%',
+    width: "14%",
     borderRightWidth: 1,
-    borderRightColor: '#ccc',
+    borderRightColor: "#ccc",
     padding: 3,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   colContactNumber: {
-    width: '11%',
+    width: "11%",
     borderRightWidth: 1,
-    borderRightColor: '#ccc',
+    borderRightColor: "#ccc",
     padding: 3,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   colGstNumber: {
-    width: '12%',
+    width: "12%",
     borderRightWidth: 1,
-    borderRightColor: '#ccc',
+    borderRightColor: "#ccc",
     padding: 3,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   colOpeningBalance: {
-    width: '10%',
+    width: "10%",
     borderRightWidth: 1,
-    borderRightColor: '#ccc',
+    borderRightColor: "#ccc",
     padding: 3,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
+    justifyContent: "center",
+    alignItems: "flex-end",
   },
   colTotalPurchases: {
-    width: '10%',
+    width: "10%",
     borderRightWidth: 1,
-    borderRightColor: '#ccc',
+    borderRightColor: "#ccc",
     padding: 3,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
+    justifyContent: "center",
+    alignItems: "flex-end",
   },
   colTotalPaid: {
-    width: '10%',
+    width: "10%",
     borderRightWidth: 1,
-    borderRightColor: '#ccc',
+    borderRightColor: "#ccc",
     padding: 3,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
+    justifyContent: "center",
+    alignItems: "flex-end",
   },
   colBalance: {
-    width: '10%',
+    width: "10%",
     borderRightWidth: 1,
-    borderRightColor: '#ccc',
+    borderRightColor: "#ccc",
     padding: 3,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
+    justifyContent: "center",
+    alignItems: "flex-end",
   },
   colBalanceDate: {
-    width: '5%',
+    width: "5%",
     padding: 3,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   // Text styles
   headerText: {
     fontSize: 8,
-    fontWeight: 'bold',
-    fontFamily: 'Wotfard',
-    textAlign: 'center',
-    color: '#333',
+    fontWeight: "bold",
+    fontFamily: "Wotfard",
+    textAlign: "center",
+    color: "#333",
   },
   cellText: {
     fontSize: 7,
-    fontFamily: 'Wotfard',
-    color: '#000',
+    fontFamily: "Wotfard",
+    color: "#000",
   },
   cellTextCenter: {
     fontSize: 7,
-    fontFamily: 'Wotfard',
-    textAlign: 'center',
-    color: '#000',
+    fontFamily: "Wotfard",
+    textAlign: "center",
+    color: "#000",
   },
   cellTextRight: {
     fontSize: 7,
-    fontFamily: 'Wotfard',
-    textAlign: 'right',
-    color: '#000',
+    fontFamily: "Wotfard",
+    textAlign: "right",
+    color: "#000",
   },
   // Summary section
   financialSummary: {
     marginTop: 20,
     padding: 10,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 3,
   },
   summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 5,
   },
   summaryRowLabel: {
     fontSize: 10,
-    fontFamily: 'Wotfard',
-    color: '#333',
+    fontFamily: "Wotfard",
+    color: "#333",
   },
   summaryRowValue: {
     fontSize: 10,
-    fontWeight: 'bold',
-    fontFamily: 'Wotfard',
-    color: '#000',
+    fontWeight: "bold",
+    fontFamily: "Wotfard",
+    color: "#000",
   },
 });
 
@@ -241,14 +241,14 @@ export function SuppliersReport({
   payments,
 }: SuppliersReportProps) {
   const formatNumber = (num: number) => {
-    return normalizeNumberString(new Intl.NumberFormat('en-IN').format(num));
+    return normalizeNumberString(new Intl.NumberFormat("en-IN").format(num));
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      year: '2-digit',
-      month: '2-digit',
-      day: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      year: "2-digit",
+      month: "2-digit",
+      day: "2-digit",
     });
   };
 
@@ -304,10 +304,10 @@ export function SuppliersReport({
         <View style={styles.header}>
           <Text style={styles.title}>SUPPLIERS REPORT</Text>
           <Text style={styles.subtitle}>
-            Generated on {new Date().toLocaleDateString('en-IN')} at{' '}
-            {new Date().toLocaleTimeString('en-IN', {
-              hour: '2-digit',
-              minute: '2-digit',
+            Generated on {new Date().toLocaleDateString("en-IN")} at{" "}
+            {new Date().toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
               hour12: true,
             })}
           </Text>
@@ -410,9 +410,9 @@ export function SuppliersReport({
                 </View>
                 <View style={styles.colOpeningBalance}>
                   <Text style={styles.cellTextRight}>
-                    {supplier.openingBalance !== undefined
+                    {supplier.openingBalance != null
                       ? `${formatNumber(supplier.openingBalance)}`
-                      : '-'}
+                      : "-"}
                   </Text>
                 </View>
                 <View style={styles.colTotalPurchases}>
@@ -434,7 +434,7 @@ export function SuppliersReport({
                   <Text style={styles.cellTextCenter}>
                     {supplier.openingBalanceDate
                       ? formatDate(supplier.openingBalanceDate)
-                      : '-'}
+                      : "-"}
                   </Text>
                 </View>
               </View>
@@ -465,7 +465,7 @@ export function SuppliersReportViewer({
         width="100%"
         height="100%"
         style={{
-          border: 'none',
+          border: "none",
         }}
         showToolbar={true}
       >

@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import {
   Loader2,
   Users,
@@ -18,12 +18,13 @@ import {
   CreditCard,
   Search,
   FileText,
-} from 'lucide-react';
-import { useCustomerStore } from '@/store/customer-store';
-import { useLedgerStore } from '@/store/ledger-store';
-import { DataTable } from '@/components/ui/data-table';
-import { ledgerColumns } from './ledger-columns';
-import type { LedgerEntry, LedgerSummary } from '@/types/ledger';
+} from "lucide-react";
+import { useCustomerStore } from "@/store/customer-store";
+import { useLedgerStore } from "@/store/ledger-store";
+import { useProductStore } from "@/store/product-store";
+import { DataTable } from "@/components/ui/data-table";
+import { ledgerColumns } from "./ledger-columns";
+import type { LedgerEntry, LedgerSummary } from "@/types/ledger";
 
 export function CustomerLedgerPage() {
   const { id } = useParams<{ id: string }>();
@@ -49,17 +50,50 @@ export function CustomerLedgerPage() {
       pumpMasterId?: string;
     }) => Promise<void>;
   } = useLedgerStore();
+  const { products, fetchProducts } = useProductStore();
 
-  const [fromDate, setFromDate] = useState('2020-04-01');
-  const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+  const [fromDate, setFromDate] = useState("2020-04-01");
+  const [toDate, setToDate] = useState(new Date().toISOString().split("T")[0]);
 
   const customer = customers.find((c) => c.id === id);
+
+  // Compute product sales from ledger data
+  const productSales = useMemo(() => {
+    const salesMap = new Map<
+      string,
+      { productName: string; quantity: number; unit: string }
+    >();
+
+    ledgerData.forEach((entry) => {
+      if (entry.type === "bill" && entry.billDetails?.billItems) {
+        entry.billDetails.billItems.forEach((item) => {
+          const product = products.find((p) => p.id === item.productId);
+          const key = item.productId;
+          const existing = salesMap.get(key) || {
+            productName: item.productName || product?.productName || "Unknown",
+            quantity: 0,
+            unit: product?.salesUnit || "",
+          };
+          existing.quantity += item.quantity;
+          salesMap.set(key, existing);
+        });
+      }
+    });
+
+    return Array.from(salesMap.values()).filter((s) => s.quantity > 0);
+  }, [ledgerData, products]);
 
   useEffect(() => {
     if (customers.length === 0) {
       fetchCustomers();
     }
   }, [customers.length, fetchCustomers]);
+
+  useEffect(() => {
+    if (products.length === 0) {
+      fetchProducts();
+    }
+  }, [products.length, fetchProducts]);
 
   const handleFetchLedger = () => {
     if (!id) return;
@@ -86,30 +120,30 @@ export function CustomerLedgerPage() {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
   };
 
   // Separate ledger entries by type
   const regularBillEntries = ledgerData.filter(
-    (entry) => entry.action === 'Bill'
+    (entry) => entry.action === "Bill"
   );
   const salesmanBillEntries = ledgerData.filter(
-    (entry) => entry.action === 'Salesman Bill'
+    (entry) => entry.action === "Salesman Bill"
   );
-  const paymentEntries = ledgerData.filter((entry) => entry.type === 'payment');
+  const paymentEntries = ledgerData.filter((entry) => entry.type === "payment");
 
   // Use summary values directly from store (calculations are done in store)
   const totalBillsTillDate = summary.totalBillsTillDate;
@@ -247,12 +281,12 @@ export function CustomerLedgerPage() {
                   <p
                     className={`text-2xl font-bold ${
                       summary.totalDebtBefore >= 0
-                        ? 'text-red-600'
-                        : 'text-green-600'
+                        ? "text-red-600"
+                        : "text-green-600"
                     }`}
                   >
                     {formatCurrency(Math.abs(summary.totalDebtBefore))}
-                    {summary.totalDebtBefore < 0 && ' (Credit)'}
+                    {summary.totalDebtBefore < 0 && " (Credit)"}
                   </p>
                 </div>
               </div>
@@ -372,6 +406,41 @@ export function CustomerLedgerPage() {
             </CardContent>
           </Card>
 
+          {/* Product Sales Summary */}
+          {productSales.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Product Sales Summary
+                </CardTitle>
+                <CardDescription>
+                  Products sold to customer in the selected date range
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {productSales.map((sale, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between items-center p-4 border rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium">{sale.productName}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Unit: {sale.unit}
+                        </p>
+                      </div>
+                      <p className="text-lg font-bold">
+                        {sale.quantity} {sale.unit}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Summary Totals */}
           <Card>
             <CardHeader>
@@ -410,13 +479,13 @@ export function CustomerLedgerPage() {
                   </p>
                   <p
                     className={`text-xl font-bold ${
-                      totalDebtTillDate >= 0 ? 'text-red-700' : 'text-green-700'
+                      totalDebtTillDate >= 0 ? "text-red-700" : "text-green-700"
                     }`}
                   >
                     {formatCurrency(Math.abs(totalDebtTillDate))}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {totalDebtTillDate < 0 ? 'Credit Balance' : 'Amount Due'}
+                    {totalDebtTillDate < 0 ? "Credit Balance" : "Amount Due"}
                   </p>
                 </div>
                 <div className="text-center p-4 border rounded-lg">

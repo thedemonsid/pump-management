@@ -1,41 +1,43 @@
-'use client';
+"use client";
 
-import type { ColumnDef } from '@tanstack/react-table';
+import type { ColumnDef } from "@tanstack/react-table";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
-import type { LedgerEntry } from '@/types/ledger';
+} from "@/components/ui/tooltip";
+import { Eye } from "lucide-react";
+import { Link } from "react-router-dom";
+import type { LedgerEntry } from "@/types/ledger";
 
 export const ledgerColumns: ColumnDef<LedgerEntry>[] = [
   {
-    accessorKey: 'date',
-    header: 'Date',
+    accessorKey: "date",
+    header: "Date",
     cell: ({ row }) => {
       const entry = row.original;
       return (
         <div className="font-medium">
-          {new Date(entry.date).toLocaleDateString('en-IN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
+          {new Date(entry.date).toLocaleDateString("en-IN", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
           })}
         </div>
       );
     },
   },
   {
-    accessorKey: 'invoiceNo',
-    header: 'Invoice No.',
+    accessorKey: "invoiceNo",
+    header: "Invoice No.",
     cell: ({ row }) => {
       const entry = row.original;
       return <div className="font-mono text-sm">{entry.invoiceNo}</div>;
     },
   },
   {
-    accessorKey: 'billDetails',
-    header: 'Bill Details',
+    accessorKey: "billDetails",
+    header: "Bill Details",
     cell: ({ row }) => {
       const entry = row.original;
       return entry.billDetails ? (
@@ -46,19 +48,19 @@ export const ledgerColumns: ColumnDef<LedgerEntry>[] = [
           </div>
         </div>
       ) : (
-        '-'
+        "-"
       );
     },
   },
   {
-    accessorKey: 'billAmount',
-    header: 'Bill Amount',
+    accessorKey: "billAmount",
+    header: "Bill Amount",
     cell: ({ row }) => {
       const entry = row.original;
       const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-IN', {
-          style: 'currency',
-          currency: 'INR',
+        return new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         }).format(amount);
@@ -66,30 +68,30 @@ export const ledgerColumns: ColumnDef<LedgerEntry>[] = [
 
       return (
         <div className="text-right font-medium">
-          {entry.billAmount > 0 ? formatCurrency(entry.billAmount) : '-'}
+          {entry.billAmount > 0 ? formatCurrency(entry.billAmount) : "-"}
         </div>
       );
     },
   },
   {
-    accessorKey: 'amountPaid',
-    header: 'Payment Amount',
+    accessorKey: "amountPaid",
+    header: "Payment Amount",
     cell: ({ row }) => {
       const entry = row.original;
       const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-IN', {
-          style: 'currency',
-          currency: 'INR',
+        return new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         }).format(amount);
       };
 
       const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-IN', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
+        return new Date(dateString).toLocaleDateString("en-IN", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
         });
       };
 
@@ -105,7 +107,7 @@ export const ledgerColumns: ColumnDef<LedgerEntry>[] = [
               <TooltipContent>
                 <div className="text-sm">
                   <div className="font-medium">Payment Details</div>
-                  {entry.type === 'bill' && entry.billDetails?.payments ? (
+                  {entry.type === "bill" && entry.billDetails?.payments ? (
                     <div className="mt-1 space-y-1">
                       {entry.billDetails.payments.map((p, idx) => (
                         <div key={idx}>
@@ -119,7 +121,7 @@ export const ledgerColumns: ColumnDef<LedgerEntry>[] = [
                         </div>
                       ))}
                     </div>
-                  ) : entry.type === 'payment' && entry.paymentDetails ? (
+                  ) : entry.type === "payment" && entry.paymentDetails ? (
                     <div className="mt-1 space-y-1">
                       <div>Method: {entry.paymentDetails.paymentMethod}</div>
                       <div>
@@ -137,21 +139,21 @@ export const ledgerColumns: ColumnDef<LedgerEntry>[] = [
               </TooltipContent>
             </Tooltip>
           ) : (
-            '-'
+            "-"
           )}
         </div>
       );
     },
   },
   {
-    accessorKey: 'balanceAmount',
-    header: 'Running Balance',
+    accessorKey: "balanceAmount",
+    header: "Running Balance",
     cell: ({ row }) => {
       const entry = row.original;
       const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-IN', {
-          style: 'currency',
-          currency: 'INR',
+        return new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         }).format(amount);
@@ -160,18 +162,18 @@ export const ledgerColumns: ColumnDef<LedgerEntry>[] = [
       return (
         <div
           className={`text-right font-bold ${
-            entry.balanceAmount >= 0 ? 'text-red-600' : 'text-green-600'
+            entry.balanceAmount >= 0 ? "text-red-600" : "text-green-600"
           }`}
         >
           {formatCurrency(Math.abs(entry.balanceAmount))}
-          {entry.balanceAmount < 0 && ' (Credit)'}
+          {entry.balanceAmount < 0 && " (Credit)"}
         </div>
       );
     },
   },
   {
-    accessorKey: 'entryBy',
-    header: 'Entry By',
+    accessorKey: "entryBy",
+    header: "Entry By",
     cell: ({ row }) => {
       const entry = row.original;
       return (
@@ -180,11 +182,28 @@ export const ledgerColumns: ColumnDef<LedgerEntry>[] = [
     },
   },
   {
-    accessorKey: 'comments',
-    header: 'Comments',
+    accessorKey: "comments",
+    header: "Comments",
     cell: ({ row }) => {
       const entry = row.original;
       return <div className="text-sm max-w-xs truncate">{entry.comments}</div>;
+    },
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => {
+      const entry = row.original;
+
+      if (entry.type === "bill" && entry.billDetails) {
+        return (
+          <Link to={`/bills/${entry.billDetails!.id}`}>
+            <Eye className="h-4 w-4 text-blue-600 hover:text-blue-800 cursor-pointer" />
+          </Link>
+        );
+      }
+
+      return null;
     },
   },
 ];

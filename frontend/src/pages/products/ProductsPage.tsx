@@ -44,9 +44,6 @@ export function ProductsPage() {
   const [currentBalances, setCurrentBalances] = useState<
     Record<string, number>
   >({});
-  const [balancesLoading, setBalancesLoading] = useState<
-    Record<string, boolean>
-  >({});
 
   useEffect(() => {
     fetchProducts();
@@ -67,7 +64,6 @@ export function ProductsPage() {
     tanks.forEach((tank) => {
       loadingStates[tank.id!] = true;
     });
-    setBalancesLoading(loadingStates);
 
     // Calculate balance for each tank
     await Promise.all(
@@ -114,7 +110,6 @@ export function ProductsPage() {
     );
 
     setCurrentBalances(balances);
-    setBalancesLoading(loadingStates);
   }, [tanks]);
 
   // Calculate current balances for all tanks
