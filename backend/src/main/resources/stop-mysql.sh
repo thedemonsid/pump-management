@@ -5,10 +5,10 @@
 echo "Stopping MySQL and phpMyAdmin containers..."
 
 # Navigate to the resources directory where docker-compose.yml is located
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" || exit
 
 # Stop Docker containers (keeps volumes and data)
-docker compose stop
+docker compose -p pump stop
 
 echo "Containers stopped successfully!"
 echo ""

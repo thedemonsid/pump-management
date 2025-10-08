@@ -5,10 +5,10 @@
 echo "Starting MySQL and phpMyAdmin containers..."
 
 # Navigate to the resources directory where docker-compose.yml is located
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" || exit
 
 # Start Docker containers
-docker compose up -d
+docker compose -p pump up -d
 
 echo "Waiting for MySQL to be ready..."
 echo "Checking MySQL health status..."
@@ -27,7 +27,7 @@ echo "phpMyAdmin is available at http://localhost:8080"
 echo ""
 echo "Database Connection Details:"
 echo "Host: localhost"
-echo "Port: 3307"
+echo "Port: 3306"
 echo "Database: pump_db"
 echo "Username: pump_user"
 echo "Password: pump_password"

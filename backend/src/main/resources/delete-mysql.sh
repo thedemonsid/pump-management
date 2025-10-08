@@ -15,10 +15,10 @@ fi
 echo "Stopping and removing MySQL containers, volumes, and networks..."
 
 # Navigate to the resources directory where docker-compose.yml is located
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" || exit
 
 # Stop and remove containers, networks, volumes, and images
-docker compose down -v --remove-orphans
+docker compose -p pump down -v --remove-orphans
 
 # Additional cleanup - remove the specific volume if it still exists
 docker volume rm pump_mysql_data 2>/dev/null || true

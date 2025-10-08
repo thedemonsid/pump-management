@@ -72,7 +72,6 @@ export const useCustomerStore = create<CustomerState>()(
           toast.error(errorMessage);
         }
       },
-
       createCustomer: async (customer) => {
         set({ loading: true, error: null });
         try {
