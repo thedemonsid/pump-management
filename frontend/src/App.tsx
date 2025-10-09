@@ -1,13 +1,13 @@
-import * as React from 'react';
+import * as React from "react";
 import {
   SidebarProvider,
   SidebarTrigger,
   SidebarInset,
-} from '@/components/ui/sidebar';
-import { ThemeProvider } from '@/components/ui/theme-toggle';
-import { AppSidebar } from '@/components/app-sidebar';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+} from "@/components/ui/sidebar";
+import { ThemeProvider } from "@/components/ui/theme-toggle";
+import { AppSidebar } from "@/components/app-sidebar";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,235 +15,235 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+} from "@/components/ui/breadcrumb";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   useLocation,
   useNavigate,
-} from 'react-router-dom';
-import { ProductsPage } from '@/pages/products/ProductsPage';
-import { TanksPage } from '@/pages/tanks/TanksPage';
-import { NozzlesPage } from '@/pages/nozzles/NozzlesPage';
-import { NozzleDetailPage } from '@/pages/nozzles/NozzleDetailPage';
-import { SalesmenPage } from '@/pages/salesmen/SalesmenPage';
-import { SalesmanShiftsPage } from '@/pages/salesman-shifts/SalesmanShiftsPage';
-import { AdminSalesmanShiftsPage } from '@/pages/AdminSalesmanShiftsPage';
-import { SalesmanBillsPage } from '@/pages/salesman-bills/SalesmanBillsPage';
-import { ShiftsPage } from '@/pages/shifts/ShiftsPage';
-import { SuppliersPage } from '@/pages/suppliers/SuppliersPage';
-import { SupplierDetailPage } from '@/pages/suppliers/SupplierDetailPage';
-import { SupplierLedgerPage } from '@/pages/suppliers/SupplierLedgerPage';
-import { CustomersPage } from '@/pages/customers/CustomersPage';
-import { CustomerDetailPage } from '@/pages/customers/CustomerDetailPage';
-import { CustomerLedgerPage } from '@/pages/customers/CustomerLedgerPage';
-import { CustomerLedgerReportPage } from '@/pages/customers/CustomerLedgerReportPage';
-import { PurchasesPage } from '@/pages/purchases/PurchasesPage';
-import { DashboardPage } from '@/pages/DashboardPage';
-import { FuelPurchasesPage } from './pages/fuel-purchases/FuelPurchasesPage';
-import { BankAccountsPage } from './pages/bank-accounts/BankAccountsPage';
-import { BankAccountLedgerPage } from './pages/bank-accounts/BankAccountLedgerPage';
-import { BankAccountLedgerReportPage } from './pages/bank-accounts/BankAccountLedgerReportPage';
-import { BillsPage } from './pages/bills/BillsPage';
-import { BillDetailPage } from './pages/bills/BillDetailPage';
-import { BillsDetailsPage } from './pages/bills/BillsDetailsPage';
-import { TankLedgerPage } from './pages/tanks/TankLedgerPage';
-import { ProductsReportPage } from '@/pages/ProductsReportPage';
-import { CustomersReportPage } from '@/pages/customers/CustomersReportPage';
-import { SuppliersReportPage } from '@/pages/suppliers/SuppliersReportPage';
-import { SupplierLedgerReportPage } from '@/pages/suppliers/SupplierLedgerReportPage';
-import { LoginPage } from '@/pages/LoginPage';
-import { AuthProvider } from '@/hooks/AuthContext';
-import { useAuth } from '@/hooks/useAuth';
-import { ProtectedRoute, PublicRoute } from '@/components/ProtectedRoute';
-import { Toaster } from 'sonner';
+} from "react-router-dom";
+import { ProductsPage } from "@/pages/products/ProductsPage";
+import { TanksPage } from "@/pages/tanks/TanksPage";
+import { NozzlesPage } from "@/pages/nozzles/NozzlesPage";
+import { NozzleDetailPage } from "@/pages/nozzles/NozzleDetailPage";
+import { SalesmenPage } from "@/pages/salesmen/SalesmenPage";
+import { SalesmanShiftsPage } from "@/pages/salesman-shifts/SalesmanShiftsPage";
+import { AdminSalesmanShiftsPage } from "@/pages/AdminSalesmanShiftsPage";
+import { SalesmanBillsPage } from "@/pages/salesman-bills/SalesmanBillsPage";
+import { ShiftsPage } from "@/pages/shifts/ShiftsPage";
+import { SuppliersPage } from "@/pages/suppliers/SuppliersPage";
+import { SupplierDetailPage } from "@/pages/suppliers/SupplierDetailPage";
+import { SupplierLedgerPage } from "@/pages/suppliers/SupplierLedgerPage";
+import { CustomersPage } from "@/pages/customers/CustomersPage";
+import { CustomerDetailPage } from "@/pages/customers/CustomerDetailPage";
+import { CustomerLedgerPage } from "@/pages/customers/CustomerLedgerPage";
+import { CustomerLedgerReportPage } from "@/pages/customers/CustomerLedgerReportPage";
+import { PurchasesPage } from "@/pages/purchases/PurchasesPage";
+import { DashboardPage } from "@/pages/DashboardPage";
+import { FuelPurchasesPage } from "./pages/fuel-purchases/FuelPurchasesPage";
+import { BankAccountsPage } from "./pages/bank-accounts/BankAccountsPage";
+import { BankAccountLedgerPage } from "./pages/bank-accounts/BankAccountLedgerPage";
+import { BankAccountLedgerReportPage } from "./pages/bank-accounts/BankAccountLedgerReportPage";
+import { BillsPage } from "./pages/bills/BillsPage";
+import { BillDetailPage } from "./pages/bills/BillDetailPage";
+import { BillsDetailsPage } from "./pages/bills/BillsDetailsPage";
+import { TankLedgerPage } from "./pages/tanks/TankLedgerPage";
+import { ProductsReportPage } from "@/pages/ProductsReportPage";
+import { CustomersReportPage } from "@/pages/customers/CustomersReportPage";
+import { SuppliersReportPage } from "@/pages/suppliers/SuppliersReportPage";
+import { SupplierLedgerReportPage } from "@/pages/suppliers/SupplierLedgerReportPage";
+import { LoginPage } from "@/pages/LoginPage";
+import { AuthProvider } from "@/hooks/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
+import { ProtectedRoute, PublicRoute } from "@/components/ProtectedRoute";
+import { Toaster } from "sonner";
 
 const allRoutes = [
   {
-    path: '/',
+    path: "/",
     element: <DashboardPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/dashboard',
+    path: "/dashboard",
     element: <DashboardPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/products',
+    path: "/products",
     element: <ProductsPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/products/report',
+    path: "/products/report",
     element: <ProductsReportPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/tanks',
+    path: "/tanks",
     element: <TanksPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/tanks/:id/ledger',
+    path: "/tanks/:id/ledger",
     element: <TankLedgerPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/nozzles',
+    path: "/nozzles",
     element: <NozzlesPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/nozzles/:id',
+    path: "/nozzles/:id",
     element: <NozzleDetailPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/suppliers',
+    path: "/suppliers",
     element: <SuppliersPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/suppliers/:id',
+    path: "/suppliers/:id",
     element: <SupplierDetailPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/suppliers/:id/ledger',
+    path: "/suppliers/:id/ledger",
     element: <SupplierLedgerPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/suppliers/:id/ledger/report',
+    path: "/suppliers/:id/ledger/report",
     element: <SupplierLedgerReportPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/suppliers/report',
+    path: "/suppliers/report",
     element: <SuppliersReportPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/customers',
+    path: "/customers",
     element: <CustomersPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/customers/:id',
+    path: "/customers/:id",
     element: <CustomerDetailPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/customers/:id/ledger',
+    path: "/customers/:id/ledger",
     element: <CustomerLedgerPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/customers/:id/ledger/report',
+    path: "/customers/:id/ledger/report",
     element: <CustomerLedgerReportPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/customers/report',
+    path: "/customers/report",
     element: <CustomersReportPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/purchases',
+    path: "/purchases",
     element: <PurchasesPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/salesmen',
+    path: "/salesmen",
     element: <SalesmenPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/shifts',
+    path: "/shifts",
     element: <ShiftsPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/fuel-purchases',
+    path: "/fuel-purchases",
     element: <FuelPurchasesPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/bank-accounts',
+    path: "/bank-accounts",
     element: <BankAccountsPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/bank-accounts/:id/ledger',
+    path: "/bank-accounts/:id/ledger",
     element: <BankAccountLedgerPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/bank-accounts/:id/ledger/report',
+    path: "/bank-accounts/:id/ledger/report",
     element: <BankAccountLedgerReportPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/bills',
+    path: "/bills",
     element: <BillsPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/bills/:id',
+    path: "/bills/:id",
     element: <BillDetailPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/bills/bill-details',
+    path: "/bills/bill-details",
     element: <BillsDetailsPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '/salesman-shifts',
+    path: "/salesman-shifts",
     element: <SalesmanShiftsPage />,
-    requiredRoles: ['SALESMAN'],
+    requiredRoles: ["SALESMAN"],
   },
   {
-    path: '/admin/salesman-shifts',
+    path: "/admin/salesman-shifts",
     element: <AdminSalesmanShiftsPage />,
-    requiredRoles: ['ADMIN'],
+    requiredRoles: ["ADMIN"],
   },
   {
-    path: '/salesman-bills',
+    path: "/salesman-bills",
     element: <SalesmanBillsPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
-    path: '*',
+    path: "*",
     element: <DashboardPage />,
-    requiredRoles: ['ADMIN', 'MANAGER'],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
 ];
 
 const headerMap: Record<string, string> = {
-  dashboard: 'Dashboard',
-  pumps: 'Pumps',
-  nozzles: 'Nozzles',
-  'nozzle-readings': 'Nozzle Readings',
-  tanks: 'Tanks',
-  products: 'Products',
-  suppliers: 'Suppliers',
-  customers: 'Customers',
-  purchases: 'Purchases',
-  'fuel-purchases': 'Fuel Purchases',
-  salesmen: 'Salesmen',
-  'salesman-shifts': 'Salesman Shifts',
-  'admin/salesman-shifts': 'All Salesman Shifts',
-  shifts: 'Shifts',
-  'bank-accounts': 'Bank Accounts',
-  ledger: 'Ledger',
-  bills: 'Bills',
-  'bill-details': 'Bill Details',
-  'salesman-bills': 'Salesman Bills',
-  settings: 'Settings',
-  report: 'Report',
+  dashboard: "Dashboard",
+  pumps: "Pumps",
+  nozzles: "Nozzles",
+  "nozzle-readings": "Nozzle Readings",
+  tanks: "Tanks",
+  products: "Products",
+  suppliers: "Suppliers",
+  customers: "Customers",
+  purchases: "Purchases",
+  "fuel-purchases": "Fuel Purchases",
+  salesmen: "Salesmen",
+  "salesman-shifts": "Salesman Shifts",
+  "admin/salesman-shifts": "All Salesman Shifts",
+  shifts: "Shifts",
+  "bank-accounts": "Bank Accounts",
+  ledger: "Ledger",
+  bills: "Bills",
+  "bill-details": "Bill Details",
+  "salesman-bills": "Salesman Bills",
+  settings: "Settings",
+  report: "Report",
 };
 
 export function MainHeader() {
@@ -256,12 +256,12 @@ export function MainHeader() {
     label: string;
     path: string | null;
   }> => {
-    const pathSegments = location.pathname.split('/').filter(Boolean);
+    const pathSegments = location.pathname.split("/").filter(Boolean);
     const breadcrumbs: Array<{ label: string; path: string | null }> = [
-      { label: 'Home', path: '/' },
+      { label: "Home", path: "/" },
     ];
 
-    let currentPath = '';
+    let currentPath = "";
     pathSegments.forEach((segment, index) => {
       currentPath += `/${segment}`;
       const isLast = index === pathSegments.length - 1;
@@ -273,22 +273,22 @@ export function MainHeader() {
         )
       ) {
         // Determine more specific labels based on parent route
-        let detailLabel = 'Details';
+        let detailLabel = "Details";
         const parentSegment = pathSegments[index - 1];
-        if (parentSegment === 'customers') {
-          detailLabel = 'Customer Details';
-        } else if (parentSegment === 'nozzles') {
-          detailLabel = 'Nozzle Details';
-        } else if (parentSegment === 'bank-accounts') {
-          detailLabel = 'Bank Account Details';
-        } else if (parentSegment === 'tanks') {
-          detailLabel = 'Tank Details';
-        } else if (parentSegment === 'bills') {
-          detailLabel = 'Bill Details';
-        } else if (parentSegment === 'salesman-bills') {
-          detailLabel = 'Salesman Bill Details';
-        } else if (parentSegment === 'suppliers') {
-          detailLabel = 'Supplier Details';
+        if (parentSegment === "customers") {
+          detailLabel = "Customer Details";
+        } else if (parentSegment === "nozzles") {
+          detailLabel = "Nozzle Details";
+        } else if (parentSegment === "bank-accounts") {
+          detailLabel = "Bank Account Details";
+        } else if (parentSegment === "tanks") {
+          detailLabel = "Tank Details";
+        } else if (parentSegment === "bills") {
+          detailLabel = "Bill Details";
+        } else if (parentSegment === "salesman-bills") {
+          detailLabel = "Salesman Bill Details";
+        } else if (parentSegment === "suppliers") {
+          detailLabel = "Supplier Details";
         }
 
         breadcrumbs.push({
@@ -301,18 +301,18 @@ export function MainHeader() {
         let label =
           headerMap[routeKey] ||
           segment.charAt(0).toUpperCase() + segment.slice(1);
-        
+
         // Special handling for salesman-shifts based on user role
-        if (routeKey === 'salesman-shifts') {
-          if (user?.role === 'SALESMAN') {
-            label = 'My Shifts';
+        if (routeKey === "salesman-shifts") {
+          if (user?.role === "SALESMAN") {
+            label = "My Shifts";
           } else {
-            label = 'Salesman Shifts';
+            label = "Salesman Shifts";
           }
-        } else if (routeKey === 'admin/salesman-shifts') {
-          label = 'All Salesman Shifts';
+        } else if (routeKey === "admin/salesman-shifts") {
+          label = "All Salesman Shifts";
         }
-        
+
         breadcrumbs.push({
           label,
           path: isLast ? null : currentPath,
@@ -362,7 +362,7 @@ export function MainHeader() {
             size="sm"
             onClick={() => {
               logout();
-              navigate('/login');
+              navigate("/login");
             }}
             className="hidden sm:flex text-red-400 hover:text-red-500 focus:text-red-500"
           >
@@ -406,7 +406,7 @@ function RoleBasedApp({
   }>;
 }) {
   const { user } = useAuth();
-  const role = user?.role || 'USER'; // Default to 'USER' if no role
+  const role = user?.role || "USER"; // Default to 'USER' if no role
 
   // Filter routes based on role
   const allowedRoutes = allRoutes.filter((route) =>

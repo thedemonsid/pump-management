@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.5</version>
+        <version>3.5.6</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.reallink</groupId>
@@ -123,6 +123,7 @@
     </dependencies>
 
     <build>
+        <finalName>${artifactId}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -147,6 +148,7 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+        
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -159,6 +161,46 @@
                     </excludes>
                 </configuration>
             </plugin>
+
+            <!-- Plugin to copy frontend build files to static resources -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-frontend-build</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <!-- Build the frontend first -->
+                                <exec executable="pnpm" dir="../frontend" failonerror="true">
+                                    <arg value="install"/>
+                                </exec>
+                                <exec executable="pnpm" dir="../frontend" failonerror="true">
+                                    <arg value="run"/>
+                                    <arg value="build"/>
+                                </exec>
+                                
+                                <!-- Create static directory if it doesn't exist -->
+                                <mkdir dir="${project.build.directory}/classes/static"/>
+                                
+                                <!-- Copy frontend build files to static resources -->
+                                <copy todir="${project.build.directory}/classes/static" overwrite="true">
+                                    <fileset dir="../frontend/dist">
+                                        <include name="**/*"/>
+                                    </fileset>
+                                </copy>
+                                
+                                <echo message="Frontend build files copied to static resources"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 
