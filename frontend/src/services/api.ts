@@ -1,11 +1,24 @@
 import axios from "axios";
 import { handleTokenExpiration } from "@/hooks/useAuth";
 
-// Create axios instance
-// In development: Vite proxy handles routing to backend
-// In production: Served from same origin (Spring Boot serves React app)
+// Create axios instance with dynamic base URL
+// Development: Uses empty string to leverage Vite proxy
+// Production: Uses /pump context path
+const getApiBaseUrl = () => {
+  // Get base URL from environment variable
+  const envBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+  // If explicitly set in env, use that
+  if (envBaseUrl !== undefined) {
+    return envBaseUrl;
+  }
+
+  // Fallback: empty for dev (proxy), /pump for prod
+  return import.meta.env.DEV ? "" : "/pump";
+};
+
 const api = axios.create({
-  baseURL: "", // Use relative URLs - proxy/same-origin will handle routing
+  baseURL: getApiBaseUrl(),
   headers: {
     "Content-Type": "application/json",
   },

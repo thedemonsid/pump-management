@@ -426,7 +426,7 @@ function RoleBasedApp({
 
 function App() {
   return (
-    <Router>
+    <Router basename="pump">
       <AuthProvider>
         <ThemeProvider>
           <Routes>

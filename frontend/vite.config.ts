@@ -16,11 +16,12 @@ export default defineConfig({
     proxy: {
       // Proxy API requests to Spring Boot backend
       "/api": {
-        target: "http://localhost:8080",
+        target: process.env.VITE_PROXY_TARGET || "http://localhost:8080/pump",
         changeOrigin: true,
         secure: false,
-        // Remove /api prefix when forwarding to backend since backend expects /api/v1/...
-        // The backend already has /api/v1/... endpoints, so we keep the path as is
+        configure: (_, options) => {
+          console.log(`🔄 Proxying /api requests to: ${options.target}`);
+        },
       },
     },
   },
