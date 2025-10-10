@@ -14,7 +14,7 @@ const getApiBaseUrl = () => {
   }
 
   // Fallback: empty for dev (proxy), /pump for prod
-  return import.meta.env.DEV ? "" : "/pump";
+  return import.meta.env.DEV ? "" : "";
 };
 
 const api = axios.create({
