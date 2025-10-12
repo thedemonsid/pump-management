@@ -117,7 +117,7 @@
     </dependencies>
 
     <build>
-        <finalName>${artifactId}</finalName>
+        <finalName>${project.artifactId}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -156,46 +156,56 @@
                 </configuration>
             </plugin>
 
-            <!-- Plugin to copy frontend build files to static resources -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-frontend-build</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <target>
-                                <!-- Build the frontend first -->
-                                <exec executable="pnpm" dir="../frontend" failonerror="true">
-                                    <arg value="install"/>
-                                </exec>
-                                <exec executable="pnpm" dir="../frontend" failonerror="true">
-                                    <arg value="run"/>
-                                    <arg value="build"/>
-                                </exec>
-                                
-                                <!-- Create static directory if it doesn't exist -->
-                                <mkdir dir="${project.build.directory}/classes/static"/>
-                                
-                                <!-- Copy frontend build files to static resources -->
-                                <copy todir="${project.build.directory}/classes/static" overwrite="true">
-                                    <fileset dir="../frontend/dist">
-                                        <include name="**/*"/>
-                                    </fileset>
-                                </copy>
-                                
-                                <echo message="Frontend build files copied to static resources"/>
-                            </target>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Production profile - builds and includes frontend -->
+        <profile>
+            <id>production</id>
+            <build>
+                <plugins>
+                    <!-- Plugin to copy frontend build files to static resources -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy-frontend-build</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <!-- Build the frontend first -->
+                                        <exec executable="pnpm" dir="../frontend" failonerror="true">
+                                            <arg value="install"/>
+                                        </exec>
+                                        <exec executable="pnpm" dir="../frontend" failonerror="true">
+                                            <arg value="run"/>
+                                            <arg value="build"/>
+                                        </exec>
+                                        
+                                        <!-- Create static directory if it doesn't exist -->
+                                        <mkdir dir="${project.build.directory}/classes/static"/>
+                                        
+                                        <!-- Copy frontend build files to static resources -->
+                                        <copy todir="${project.build.directory}/classes/static" overwrite="true">
+                                            <fileset dir="../frontend/dist">
+                                                <include name="**/*"/>
+                                            </fileset>
+                                        </copy>
+                                        
+                                        <echo message="Frontend build files copied to static resources"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
