@@ -29,13 +29,17 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(UUID userId, String username, UUID pumpMasterId, String role, String mobileNumber) {
+    public String generateToken(UUID userId, String username, UUID pumpMasterId, String role, String mobileNumber,
+            String pumpName, Integer pumpId, String pumpCode) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId.toString());
         claims.put("username", username);
         claims.put("pumpMasterId", pumpMasterId.toString());
         claims.put("role", role);
         claims.put("mobileNumber", mobileNumber);
+        claims.put("pumpName", pumpName);
+        claims.put("pumpId", pumpId);
+        claims.put("pumpCode", pumpCode);
 
         return createToken(claims, username + "@" + pumpMasterId.toString());
     }
@@ -88,6 +92,18 @@ public class JwtUtil {
 
     public String extractMobileNumber(String token) {
         return extractClaim(token, claims -> claims.get("mobileNumber", String.class));
+    }
+
+    public String extractPumpName(String token) {
+        return extractClaim(token, claims -> claims.get("pumpName", String.class));
+    }
+
+    public Integer extractPumpId(String token) {
+        return extractClaim(token, claims -> claims.get("pumpId", Integer.class));
+    }
+
+    public String extractPumpCode(String token) {
+        return extractClaim(token, claims -> claims.get("pumpCode", String.class));
     }
 
     public Date extractExpiration(String token) {

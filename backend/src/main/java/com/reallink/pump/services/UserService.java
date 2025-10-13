@@ -197,7 +197,10 @@ public class UserService {
                 user.getUsername(),
                 user.getPumpMaster().getId(),
                 user.getRole().getRoleName(),
-                user.getMobileNumber());
+                user.getMobileNumber(),
+                user.getPumpMaster().getPumpName(),
+                user.getPumpMaster().getPumpId(),
+                user.getPumpMaster().getPumpCode());
 
         // Create response
         LoginResponse response = new LoginResponse();

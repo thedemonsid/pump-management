@@ -11,9 +11,9 @@ import {
   SidebarFooter,
   SidebarMenuBadge,
   SidebarSeparator,
-} from '@/components/ui/sidebar';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { NavLink, useLocation } from 'react-router-dom';
+} from "@/components/ui/sidebar";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Fuel,
@@ -27,91 +27,91 @@ import {
   UserCircle,
   CreditCard,
   Receipt,
-} from 'lucide-react';
+} from "lucide-react";
 
 const mainItems = [
   {
-    title: 'Dashboard',
-    url: '/',
+    title: "Dashboard",
+    url: "/",
     icon: LayoutDashboard,
   },
   {
-    title: 'Products',
-    url: '/products',
+    title: "Products",
+    url: "/products",
     icon: Fuel,
   },
   {
-    title: 'Tanks',
-    url: '/tanks',
+    title: "Tanks",
+    url: "/tanks",
     icon: Database,
   },
   {
-    title: 'Nozzles',
-    url: '/nozzles',
+    title: "Nozzles",
+    url: "/nozzles",
     icon: Gauge,
   },
 ];
 
 const partnersItems = [
   {
-    title: 'Suppliers',
-    url: '/suppliers',
+    title: "Suppliers",
+    url: "/suppliers",
     icon: Truck,
   },
   {
-    title: 'Customers',
-    url: '/customers',
+    title: "Customers",
+    url: "/customers",
     icon: UserCircle,
   },
   {
-    title: 'Purchases',
-    url: '/purchases',
+    title: "Purchases",
+    url: "/purchases",
     icon: Sparkles,
   },
   {
-    title: 'Fuel Purchases',
-    url: '/fuel-purchases',
+    title: "Fuel Purchases",
+    url: "/fuel-purchases",
     icon: Fuel,
   },
   {
-    title: 'Bank Accounts',
-    url: '/bank-accounts',
+    title: "Bank Accounts",
+    url: "/bank-accounts",
     icon: CreditCard,
   },
   {
-    title: 'Bills',
-    url: '/bills',
+    title: "Bills",
+    url: "/bills",
     icon: Receipt,
   },
 ];
 
 const managementItems = [
   {
-    title: 'Salesmen',
-    url: '/salesmen',
+    title: "Salesmen",
+    url: "/salesmen",
     icon: Users,
   },
   {
-    title: 'Salesman Bills',
-    url: '/salesman-bills',
+    title: "Salesman Bills",
+    url: "/salesman-bills",
     icon: Receipt,
   },
   {
-    title: 'Shifts',
-    url: '/shifts',
+    title: "Shifts",
+    url: "/shifts",
     icon: Clock,
   },
   {
-    title: 'Salesman Shifts',
-    url: '/admin/salesman-shifts',
+    title: "Salesman Shifts",
+    url: "/admin/salesman-shifts",
     icon: Clock,
   },
 ];
 
 const salesmanItems = [
   {
-    title: 'My Shifts',
-    url: '/salesman-shifts',
+    title: "My Shifts",
+    url: "/salesman-shifts",
     icon: Clock,
   },
 ];
@@ -135,29 +135,29 @@ function NavItem({ title, url, icon: Icon }: SidebarMenuItemProps) {
   const isActive =
     location.pathname === url ||
     (location.pathname.startsWith(url) &&
-      (location.pathname[url.length] === '/' ||
+      (location.pathname[url.length] === "/" ||
         location.pathname.length === url.length)) ||
-    (title === 'Dashboard' && location.pathname === '/dashboard');
+    (title === "Dashboard" && location.pathname === "/dashboard");
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild>
         <NavLink
           to={url}
-          data-active={isActive ? 'true' : undefined}
+          data-active={isActive ? "true" : undefined}
           className={[
-            'relative flex items-center gap-2 rounded-md transition-colors duration-150',
-            'text-sm px-2.5 py-2 font-medium outline-none ring-0 focus-visible:ring-2 focus-visible:ring-ring/50',
-            'hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
-            'data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground',
+            "relative flex items-center gap-2 rounded-md transition-colors duration-150",
+            "text-sm px-2.5 py-2 font-medium outline-none ring-0 focus-visible:ring-2 focus-visible:ring-ring/50",
+            "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+            "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground",
             isActive
-              ? 'bg-sidebar-accent/70 text-sidebar-accent-foreground shadow-xs after:absolute after:left-0 after:top-1 after:bottom-1 after:w-[3px] after:rounded-r-sm after:bg-primary/90'
-              : 'text-sidebar-foreground/85',
-          ].join(' ')}
+              ? "bg-sidebar-accent/70 text-sidebar-accent-foreground shadow-xs after:absolute after:left-0 after:top-1 after:bottom-1 after:w-[3px] after:rounded-r-sm after:bg-primary/90"
+              : "text-sidebar-foreground/85",
+          ].join(" ")}
         >
           <Icon className="h-4 w-4 shrink-0" />
           <span className="truncate">{title}</span>
-          {title === 'Nozzle Readings' && (
+          {title === "Nozzle Readings" && (
             <SidebarMenuBadge className="ml-auto bg-primary/10 text-primary-foreground/80 dark:bg-primary/20">
               •
             </SidebarMenuBadge>
@@ -170,8 +170,14 @@ function NavItem({ title, url, icon: Icon }: SidebarMenuItemProps) {
 
 const renderMenuItems = (items: SidebarMenuItemProps[]): React.ReactNode =>
   items.map((i) => <NavItem key={i.title} {...i} />);
-export function AppSidebar({ role }: { role: string }) {
-  const isAdminOrManager = role === 'ADMIN' || role === 'MANAGER';
+
+interface AppSidebarProps {
+  role: string;
+  pumpName?: string;
+}
+
+export function AppSidebar({ role, pumpName }: AppSidebarProps) {
+  const isAdminOrManager = role === "ADMIN" || role === "MANAGER";
 
   return (
     <Sidebar
@@ -228,7 +234,7 @@ export function AppSidebar({ role }: { role: string }) {
             </SidebarGroup>
           </>
         )}
-        {role === 'SALESMAN' && (
+        {role === "SALESMAN" && (
           <SidebarGroup>
             <SidebarGroupLabel className="uppercase tracking-wide text-[10px] font-semibold text-sidebar-foreground/60">
               My Work
@@ -262,8 +268,10 @@ export function AppSidebar({ role }: { role: string }) {
             <ThemeToggle compact />
           </div>
           <div className="rounded-md border bg-background/50 backdrop-blur-sm p-3 flex flex-col gap-1 shadow-xs w-full group-data-[state=collapsed]:hidden">
-            <div className="text-xs text-muted-foreground/80">Station</div>
-            <div className="text-sm font-medium">Main Pump Station</div>
+            <div className="text-xs text-muted-foreground/80">Pump Station</div>
+            <div className="text-sm font-medium">
+              {pumpName || "Main Pump Station"}
+            </div>
           </div>
           <div className="text-[10px] text-muted-foreground/70 tracking-wide group-data-[state=collapsed]:hidden">
             &copy; {new Date().getFullYear()} Fuel Pump System

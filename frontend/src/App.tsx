@@ -377,14 +377,16 @@ export function MainHeader() {
 function AuthenticatedLayout({
   children,
   role,
+  pumpName,
 }: {
   children: React.ReactNode;
   role: string;
+  pumpName?: string;
 }) {
   return (
     <SidebarProvider>
       <div className="flex w-full h-screen overflow-hidden">
-        <AppSidebar role={role} />
+        <AppSidebar role={role} pumpName={pumpName} />
         <SidebarInset className="flex flex-col flex-1 overflow-hidden">
           <MainHeader />
           <main className="flex-1 w-full p-8 overflow-y-auto">{children}</main>
@@ -414,7 +416,7 @@ function RoleBasedApp({
   );
 
   return (
-    <AuthenticatedLayout role={role}>
+    <AuthenticatedLayout role={role} pumpName={user?.pumpName}>
       <Routes>
         {allowedRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />

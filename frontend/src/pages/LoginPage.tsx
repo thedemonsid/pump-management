@@ -1,7 +1,7 @@
-import * as React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import * as React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import {
   Card,
   CardContent,
@@ -9,10 +9,10 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import {
   Form,
   FormControl,
@@ -20,14 +20,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useNavigate, useLocation } from 'react-router-dom';
+} from "@/components/ui/popover";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Loader2,
   Eye,
@@ -38,24 +38,25 @@ import {
   Phone,
   Building2,
   Globe,
-} from 'lucide-react';
-import api from '@/services/api';
-import { useAuth } from '@/hooks/useAuth';
+} from "lucide-react";
+import api from "@/services/api";
+import { useAuth } from "@/hooks/useAuth";
+import { jwtDecode } from "jwt-decode";
 
 // Validation schema
 const loginSchema = z.object({
   username: z
     .string()
-    .min(1, 'Username is required')
-    .min(3, 'Username must be at least 3 characters'),
+    .min(1, "Username is required")
+    .min(3, "Username must be at least 3 characters"),
   password: z
     .string()
-    .min(1, 'Password is required')
-    .min(6, 'Password must be at least 6 characters'),
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters"),
   pumpCode: z
     .string()
-    .min(1, 'Pump Code is required')
-    .min(4, 'Pump Code must be at least 4 characters'),
+    .min(1, "Pump Code is required")
+    .min(4, "Pump Code must be at least 4 characters"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -76,6 +77,17 @@ interface LoginResponse {
   role: string;
   mobileNumber: string;
   enabled: boolean;
+}
+
+interface DecodedToken {
+  userId: string;
+  username: string;
+  pumpMasterId: string;
+  role: string;
+  mobileNumber: string;
+  pumpName?: string;
+  pumpId?: number;
+  pumpCode?: string;
 }
 
 // Company Info Component
@@ -127,9 +139,9 @@ export function LoginPage() {
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: '',
-      password: '',
-      pumpCode: '',
+      username: "",
+      password: "",
+      pumpCode: "",
     },
   });
 
@@ -139,10 +151,13 @@ export function LoginPage() {
 
     try {
       const response = await api.post<LoginResponse>(
-        '/api/v1/users/login',
+        "/api/v1/users/login",
         data as LoginRequest
       );
       const loginData = response.data;
+
+      // Decode JWT token to extract pump information
+      const decodedToken = jwtDecode<DecodedToken>(loginData.token);
 
       // Use auth context to login
       login(loginData.token, {
@@ -152,15 +167,18 @@ export function LoginPage() {
         role: loginData.role,
         mobileNumber: loginData.mobileNumber,
         enabled: loginData.enabled,
+        pumpName: decodedToken.pumpName,
+        pumpId: decodedToken.pumpId,
+        pumpCode: decodedToken.pumpCode,
       });
 
       // Redirect to intended page or dashboard
-      const from = location.state?.from?.pathname || '/dashboard';
+      const from = location.state?.from?.pathname || "/dashboard";
       navigate(from, { replace: true });
     } catch (err) {
-      console.error('Login error:', err);
+      console.error("Login error:", err);
       setError(
-        err instanceof Error ? err.message : 'Login failed. Please try again.'
+        err instanceof Error ? err.message : "Login failed. Please try again."
       );
     } finally {
       setIsLoading(false);
@@ -232,7 +250,7 @@ export function LoginPage() {
                       <FormControl>
                         <div className="relative">
                           <Input
-                            type={showPassword ? 'text' : 'password'}
+                            type={showPassword ? "text" : "password"}
                             placeholder="Enter your password"
                             className="h-10 pr-10"
                             {...field}
@@ -286,7 +304,7 @@ export function LoginPage() {
                   {isLoading && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  {isLoading ? 'Signing in...' : 'Sign In'}
+                  {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
             </Form>
