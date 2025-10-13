@@ -4,9 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import com.reallink.pump.entities.PaymentType;
-import com.reallink.pump.entities.RateType;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -26,14 +23,6 @@ public class CreateFuelPurchaseRequest {
     @NotNull(message = "Purchase date is required")
     @Schema(description = "Purchase date", example = "2023-10-01")
     private LocalDate purchaseDate;
-
-    @NotNull(message = "Rate type is required")
-    @Schema(description = "Rate type", example = "INCLUDING_GST")
-    private RateType rateType;
-
-    @NotNull(message = "Payment type is required")
-    @Schema(description = "Payment type", example = "CASH")
-    private PaymentType paymentType;
 
     @NotNull(message = "Supplier ID is required")
     @Schema(description = "Supplier ID", example = "123e4567-e89b-12d3-a456-426614174000")
@@ -69,9 +58,13 @@ public class CreateFuelPurchaseRequest {
     @Schema(description = "Amount", example = "5000.00")
     private BigDecimal amount;
 
-    @Size(max = 100, message = "Vehicle cannot exceed 100 characters")
-    @Schema(description = "Vehicle", example = "Truck ABC")
-    private String vehicle;
+    @Size(max = 100, message = "Vehicle number cannot exceed 100 characters")
+    @Schema(description = "Vehicle number", example = "Truck ABC-1234")
+    private String vehicleNumber;
+
+    @Size(max = 45, message = "Driver name cannot exceed 45 characters")
+    @Schema(description = "Driver name", example = "John Smith")
+    private String driverName;
 
     @Size(max = 100, message = "Goods received by cannot exceed 100 characters")
     @Schema(description = "Goods received by", example = "John Doe")
@@ -93,15 +86,27 @@ public class CreateFuelPurchaseRequest {
     @Schema(description = "Reading km", example = "12345.67")
     private BigDecimal readingKm;
 
-    @NotNull(message = "Density is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Density must be positive")
-    @Digits(integer = 5, fraction = 3, message = "Density must have at most 5 digits and 3 decimal places")
-    @Schema(description = "Fuel density", example = "0.850")
-    private BigDecimal density;
+    @NotNull(message = "Before density is required")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Before density must be positive")
+    @Digits(integer = 5, fraction = 3, message = "Before density must have at most 5 digits and 3 decimal places")
+    @Schema(description = "Before fuel density", example = "0.850")
+    private BigDecimal bfrDensity;
 
-    @NotNull(message = "DIP reading is required")
-    @DecimalMin(value = "0.0", inclusive = true, message = "DIP reading must be non-negative")
-    @Digits(integer = 10, fraction = 2, message = "DIP reading must have at most 10 digits and 2 decimal places")
-    @Schema(description = "DIP reading", example = "1500.50")
-    private BigDecimal dipReading;
+    @NotNull(message = "After density is required")
+    @DecimalMin(value = "0.0", inclusive = false, message = "After density must be positive")
+    @Digits(integer = 5, fraction = 3, message = "After density must have at most 5 digits and 3 decimal places")
+    @Schema(description = "After fuel density", example = "0.852")
+    private BigDecimal aftDensity;
+
+    @NotNull(message = "Before DIP reading is required")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Before DIP reading must be non-negative")
+    @Digits(integer = 10, fraction = 2, message = "Before DIP reading must have at most 10 digits and 2 decimal places")
+    @Schema(description = "Before DIP reading", example = "1500.50")
+    private BigDecimal bfrDipReading;
+
+    @NotNull(message = "After DIP reading is required")
+    @DecimalMin(value = "0.0", inclusive = true, message = "After DIP reading must be non-negative")
+    @Digits(integer = 10, fraction = 2, message = "After DIP reading must have at most 10 digits and 2 decimal places")
+    @Schema(description = "After DIP reading", example = "1600.75")
+    private BigDecimal aftDipReading;
 }

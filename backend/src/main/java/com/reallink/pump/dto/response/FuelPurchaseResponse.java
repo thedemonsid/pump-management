@@ -5,9 +5,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import com.reallink.pump.entities.PaymentType;
-import com.reallink.pump.entities.RateType;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -26,12 +23,6 @@ public class FuelPurchaseResponse {
 
     @Schema(description = "Purchase date", example = "2023-10-01")
     private LocalDate purchaseDate;
-
-    @Schema(description = "Rate type", example = "INCLUDING_GST")
-    private RateType rateType;
-
-    @Schema(description = "Payment type", example = "CASH")
-    private PaymentType paymentType;
 
     @Schema(description = "Supplier ID", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID supplierId;
@@ -66,8 +57,11 @@ public class FuelPurchaseResponse {
     @Schema(description = "Amount", example = "5000.00")
     private BigDecimal amount;
 
-    @Schema(description = "Vehicle", example = "Truck ABC")
-    private String vehicle;
+    @Schema(description = "Vehicle number", example = "Truck ABC-1234")
+    private String vehicleNumber;
+
+    @Schema(description = "Driver name", example = "John Smith")
+    private String driverName;
 
     @Schema(description = "Goods received by", example = "John Doe")
     private String goodsReceivedBy;
@@ -81,11 +75,17 @@ public class FuelPurchaseResponse {
     @Schema(description = "Reading km", example = "12345.67")
     private BigDecimal readingKm;
 
-    @Schema(description = "Fuel density", example = "0.850")
-    private BigDecimal density;
+    @Schema(description = "Before fuel density", example = "0.850")
+    private BigDecimal bfrDensity;
 
-    @Schema(description = "DIP reading", example = "1500.50")
-    private BigDecimal dipReading;
+    @Schema(description = "After fuel density", example = "0.852")
+    private BigDecimal aftDensity;
+
+    @Schema(description = "Before DIP reading", example = "1500.50")
+    private BigDecimal bfrDipReading;
+
+    @Schema(description = "After DIP reading", example = "1600.75")
+    private BigDecimal aftDipReading;
 
     @Schema(description = "Creation timestamp", example = "2023-10-01T12:00:00")
     private LocalDateTime createdAt;

@@ -46,14 +46,6 @@ public class FuelPurchase extends BaseEntity {
     @Column(name = "purchase_date", nullable = false)
     private LocalDate purchaseDate;
 
-    @NotNull(message = "Rate type is required")
-    @Column(name = "rate_type", nullable = false)
-    private RateType rateType;
-
-    @NotNull(message = "Payment type is required")
-    @Column(name = "payment_type", nullable = false)
-    private PaymentType paymentType;
-
     @NotNull(message = "Supplier is required")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "supplier_id", nullable = false, foreignKey = @ForeignKey(name = "fk_fuel_purchase_supplier"))
@@ -90,9 +82,13 @@ public class FuelPurchase extends BaseEntity {
     @Column(name = "amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
 
-    @Size(max = 100, message = "Vehicle cannot exceed 100 characters")
-    @Column(name = "vehicle", length = 100)
-    private String vehicle;
+    @Size(max = 100, message = "Vehicle number cannot exceed 100 characters")
+    @Column(name = "vehicle_number", length = 100)
+    private String vehicleNumber;
+
+    @Size(max = 45, message = "Driver name cannot exceed 45 characters")
+    @Column(name = "driver_name", length = 45, columnDefinition = "VARCHAR(45) DEFAULT 'N/A'")
+    private String driverName;
 
     @Size(max = 100, message = "Goods received by cannot exceed 100 characters")
     @Column(name = "goods_received_by", length = 100)
@@ -114,15 +110,27 @@ public class FuelPurchase extends BaseEntity {
     @Column(name = "reading_km", precision = 12, scale = 2)
     private BigDecimal readingKm;
 
-    @NotNull(message = "Density is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Density must be positive")
-    @Digits(integer = 5, fraction = 3, message = "Density must have at most 5 digits and 3 decimal places")
-    @Column(name = "density", nullable = false, precision = 8, scale = 3)
-    private BigDecimal density;
+    @NotNull(message = "Before density is required")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Before density must be positive")
+    @Digits(integer = 5, fraction = 3, message = "Before density must have at most 5 digits and 3 decimal places")
+    @Column(name = "bfr_density", nullable = false, precision = 8, scale = 3)
+    private BigDecimal bfrDensity;
 
-    @NotNull(message = "DIP reading is required")
-    @DecimalMin(value = "0.0", inclusive = true, message = "DIP reading must be non-negative")
-    @Digits(integer = 10, fraction = 2, message = "DIP reading must have at most 10 digits and 2 decimal places")
-    @Column(name = "dip_reading", nullable = false, precision = 12, scale = 2)
-    private BigDecimal dipReading;
+    @NotNull(message = "After density is required")
+    @DecimalMin(value = "0.0", inclusive = false, message = "After density must be positive")
+    @Digits(integer = 5, fraction = 3, message = "After density must have at most 5 digits and 3 decimal places")
+    @Column(name = "aft_density", nullable = false, precision = 8, scale = 3)
+    private BigDecimal aftDensity;
+
+    @NotNull(message = "Before DIP reading is required")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Before DIP reading must be non-negative")
+    @Digits(integer = 10, fraction = 2, message = "Before DIP reading must have at most 10 digits and 2 decimal places")
+    @Column(name = "bfr_dip_reading", nullable = false, precision = 12, scale = 2)
+    private BigDecimal bfrDipReading;
+
+    @NotNull(message = "After DIP reading is required")
+    @DecimalMin(value = "0.0", inclusive = true, message = "After DIP reading must be non-negative")
+    @Digits(integer = 10, fraction = 2, message = "After DIP reading must have at most 10 digits and 2 decimal places")
+    @Column(name = "aft_dip_reading", nullable = false, precision = 12, scale = 2)
+    private BigDecimal aftDipReading;
 }

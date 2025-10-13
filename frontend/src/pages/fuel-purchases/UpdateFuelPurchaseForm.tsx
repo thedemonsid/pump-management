@@ -1,19 +1,18 @@
-import { useState, useEffect } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useFuelPurchaseStore } from '@/store/fuel-purchase-store';
-import { useSupplierStore } from '@/store/supplier-store';
-import { useTankStore } from '@/store/tank-store';
+import { useState, useEffect } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useFuelPurchaseStore } from "@/store/fuel-purchase-store";
+import { useSupplierStore } from "@/store/supplier-store";
+import { useTankStore } from "@/store/tank-store";
+import { useProductStore } from "@/store/product-store";
 import {
   UpdateFuelPurchaseSchema,
   type UpdateFuelPurchase,
   type FuelPurchase,
-  type RateType,
-  type PaymentType,
-} from '@/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
+} from "@/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -22,30 +21,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+} from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
 
 interface UpdateFuelPurchaseFormProps {
   fuelPurchase: FuelPurchase;
   onSuccess: () => void;
 }
-
-const RATE_TYPES: { value: RateType; label: string }[] = [
-  { value: 'INCLUDING_GST', label: 'Including GST' },
-  { value: 'EXCLUDING_GST', label: 'Excluding GST' },
-];
-
-const PAYMENT_TYPES: { value: PaymentType; label: string }[] = [
-  { value: 'CASH', label: 'Cash' },
-  { value: 'CREDIT', label: 'Credit' },
-];
 
 export function UpdateFuelPurchaseForm({
   fuelPurchase,
@@ -54,19 +43,19 @@ export function UpdateFuelPurchaseForm({
   const { editFuelPurchase, loading } = useFuelPurchaseStore();
   const { suppliers, fetchSuppliers } = useSupplierStore();
   const { tanks, fetchTanks } = useTankStore();
+  const { products, fetchProducts } = useProductStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchSuppliers();
     fetchTanks();
-  }, [fetchSuppliers, fetchTanks]);
+    fetchProducts();
+  }, [fetchSuppliers, fetchTanks, fetchProducts]);
 
   const form = useForm({
     resolver: zodResolver(UpdateFuelPurchaseSchema),
     defaultValues: {
       purchaseDate: fuelPurchase.purchaseDate,
-      rateType: fuelPurchase.rateType,
-      paymentType: fuelPurchase.paymentType,
       supplierId: fuelPurchase.supplierId,
       invoiceNumber: fuelPurchase.invoiceNumber,
       addToStock: fuelPurchase.addToStock,
@@ -74,30 +63,55 @@ export function UpdateFuelPurchaseForm({
       quantity: fuelPurchase.quantity,
       purchaseRate: fuelPurchase.purchaseRate,
       amount: fuelPurchase.amount,
-      vehicle: fuelPurchase.vehicle || '',
-      goodsReceivedBy: fuelPurchase.goodsReceivedBy || '',
+      vehicleNumber: fuelPurchase.vehicleNumber || "",
+      driverName: fuelPurchase.driverName || "",
+      goodsReceivedBy: fuelPurchase.goodsReceivedBy || "",
       purchaseUnit: fuelPurchase.purchaseUnit,
       taxPercentage: fuelPurchase.taxPercentage,
       readingKm: fuelPurchase.readingKm || 0,
-      density: fuelPurchase.density,
-      dipReading: fuelPurchase.dipReading,
+      bfrDensity: fuelPurchase.bfrDensity,
+      aftDensity: fuelPurchase.aftDensity,
+      bfrDipReading: fuelPurchase.bfrDipReading,
+      aftDipReading: fuelPurchase.aftDipReading,
     },
   });
 
   const watchedQuantity = useWatch({
     control: form.control,
-    name: 'quantity',
+    name: "quantity",
   });
 
   const watchedPurchaseRate = useWatch({
     control: form.control,
-    name: 'purchaseRate',
+    name: "purchaseRate",
   });
+
+  const watchedTankId = useWatch({
+    control: form.control,
+    name: "tankId",
+  });
+
+  // Auto-set purchase rate and unit when tank is selected
+  useEffect(() => {
+    if (watchedTankId) {
+      const selectedTank = tanks.find((tank) => tank.id === watchedTankId);
+      if (selectedTank?.product?.id) {
+        // Find the full product details from the products list
+        const product = products.find((p) => p.id === selectedTank.product?.id);
+        if (product) {
+          // Set the purchase rate from the product
+          form.setValue("purchaseRate", product.purchaseRate);
+          // Set the purchase unit from the product
+          form.setValue("purchaseUnit", product.purchaseUnit);
+        }
+      }
+    }
+  }, [watchedTankId, tanks, products, form]);
 
   useEffect(() => {
     const calculatedAmount =
       (watchedQuantity || 0) * (watchedPurchaseRate || 0);
-    form.setValue('amount', calculatedAmount);
+    form.setValue("amount", calculatedAmount);
   }, [watchedQuantity, watchedPurchaseRate, form]);
 
   const onSubmit = async (data: UpdateFuelPurchase) => {
@@ -106,7 +120,7 @@ export function UpdateFuelPurchaseForm({
       await editFuelPurchase(fuelPurchase.id!, data);
       onSuccess();
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -197,57 +211,7 @@ export function UpdateFuelPurchaseForm({
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <FormField
-            control={form.control}
-            name="rateType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Rate Type *</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select rate type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {RATE_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="paymentType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Payment Type *</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select payment type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {PAYMENT_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
+        <div className="grid grid-cols-1 gap-4">
           <FormField
             control={form.control}
             name="purchaseUnit"
@@ -354,10 +318,10 @@ export function UpdateFuelPurchaseForm({
 
           <FormField
             control={form.control}
-            name="density"
+            name="bfrDensity"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Density *</FormLabel>
+                <FormLabel>Before Density *</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -376,10 +340,56 @@ export function UpdateFuelPurchaseForm({
 
           <FormField
             control={form.control}
-            name="dipReading"
+            name="aftDensity"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>DIP Reading *</FormLabel>
+                <FormLabel>After Density *</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.001"
+                    placeholder="0.852"
+                    {...field}
+                    onChange={(e) =>
+                      field.onChange(parseFloat(e.target.value) || 0)
+                    }
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="bfrDipReading"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Before DIP Reading *</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    {...field}
+                    onChange={(e) =>
+                      field.onChange(parseFloat(e.target.value) || 0)
+                    }
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="aftDipReading"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>After DIP Reading *</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -421,15 +431,29 @@ export function UpdateFuelPurchaseForm({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <FormField
             control={form.control}
-            name="vehicle"
+            name="vehicleNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Vehicle</FormLabel>
+                <FormLabel>Vehicle Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Truck ABC" {...field} />
+                  <Input placeholder="e.g., Truck ABC-1234" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="driverName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Driver Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., John Smith" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -485,7 +509,7 @@ export function UpdateFuelPurchaseForm({
                 Updating...
               </>
             ) : (
-              'Update Fuel Purchase'
+              "Update Fuel Purchase"
             )}
           </Button>
         </div>

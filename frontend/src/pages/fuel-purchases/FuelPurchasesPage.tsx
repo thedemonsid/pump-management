@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react';
-import { useFuelPurchaseStore } from '@/store/fuel-purchase-store';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import { useFuelPurchaseStore } from "@/store/fuel-purchase-store";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Plus, Pencil, Trash2, Loader2, Calendar, Fuel } from 'lucide-react';
+} from "@/components/ui/card";
+import { Plus, Pencil, Trash2, Loader2, Calendar, Fuel } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -16,7 +16,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -24,12 +24,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { CreateFuelPurchaseForm } from './CreateFuelPurchaseForm';
-import { UpdateFuelPurchaseForm } from './UpdateFuelPurchaseForm';
-import type { FuelPurchase } from '@/types';
-import { formatCurrency, formatDate } from '@/lib/utils/index';
+} from "@/components/ui/dialog";
+import { CreateFuelPurchaseForm } from "./CreateFuelPurchaseForm";
+import { UpdateFuelPurchaseForm } from "./UpdateFuelPurchaseForm";
+import type { FuelPurchase } from "@/types";
+import { formatCurrency, formatDate } from "@/lib/utils/index";
 
 export function FuelPurchasesPage() {
   const {
@@ -50,12 +49,12 @@ export function FuelPurchasesPage() {
   }, [fetchFuelPurchases]);
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this fuel purchase?')) {
+    if (confirm("Are you sure you want to delete this fuel purchase?")) {
       setDeletingId(id);
       try {
         await removeFuelPurchase(id);
       } catch (error) {
-        console.error('Failed to delete fuel purchase:', error);
+        console.error("Failed to delete fuel purchase:", error);
       } finally {
         setDeletingId(null);
       }
@@ -135,9 +134,9 @@ export function FuelPurchasesPage() {
                   <TableHead>Quantity</TableHead>
                   <TableHead>Rate</TableHead>
                   <TableHead>Amount</TableHead>
-                  <TableHead>Density</TableHead>
-                  <TableHead>DIP Reading</TableHead>
-                  <TableHead>Payment Type</TableHead>
+                  <TableHead>Vehicle</TableHead>
+                  <TableHead>Before Density</TableHead>
+                  <TableHead>After Density</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -164,19 +163,9 @@ export function FuelPurchasesPage() {
                     <TableCell className="font-semibold">
                       {formatCurrency(fuelPurchase.amount)}
                     </TableCell>
-                    <TableCell>{fuelPurchase.density}</TableCell>
-                    <TableCell>{fuelPurchase.dipReading}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          fuelPurchase.paymentType === 'CASH'
-                            ? 'default'
-                            : 'secondary'
-                        }
-                      >
-                        {fuelPurchase.paymentType}
-                      </Badge>
-                    </TableCell>
+                    <TableCell>{fuelPurchase.vehicleNumber || "N/A"}</TableCell>
+                    <TableCell>{fuelPurchase.bfrDensity}</TableCell>
+                    <TableCell>{fuelPurchase.aftDensity}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Dialog
