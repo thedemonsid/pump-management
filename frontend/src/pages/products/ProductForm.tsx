@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useProductStore } from '@/store/product-store';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useProductStore } from "@/store/product-store";
 import {
   ProductSchema,
   type Product,
   ProductType,
   DEFAULT_PUMP_INFO,
-} from '@/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+} from "@/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -18,16 +18,16 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
-import { z } from 'zod';
+} from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
+import { z } from "zod";
 
 // Form schema without id, pumpMasterId (these are handled by the store)
 // Ensure productType is required for the form
@@ -45,11 +45,13 @@ interface ProductFormProps {
   onSuccess: () => void;
 }
 
-const FUEL_UNITS = ['Liters', 'Kg', 'Gallons', 'Cubic Meters'];
+const FUEL_UNITS = ["Liters", "Numbers", "Kg", "Gallons", "Cubic Meters"];
 
 export function ProductForm({ product, onSuccess }: ProductFormProps) {
   const { createProduct, editProduct, loading } = useProductStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ratioNumerator, setRatioNumerator] = useState("1");
+  const [ratioDenominator, setRatioDenominator] = useState("1");
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(ProductFormSchema),
@@ -68,17 +70,38 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
         }
       : {
           productType: ProductType.GENERAL,
-          productName: '',
-          alias: '',
+          productName: "",
+          alias: "",
           lowStockCount: 100,
           purchaseRate: 0,
           salesRate: 0,
-          hsnCode: '',
-          salesUnit: 'Liters',
-          purchaseUnit: 'Liters',
+          hsnCode: "",
+          salesUnit: "Liters",
+          purchaseUnit: "Liters",
           stockConversionRatio: 1.0,
         },
   });
+
+  // Initialize ratio inputs from product data
+  useState(() => {
+    if (product?.stockConversionRatio) {
+      // If ratio is a whole number or simple decimal, show as is
+      if (product.stockConversionRatio === 1) {
+        setRatioNumerator("1");
+        setRatioDenominator("1");
+      } else {
+        setRatioNumerator(product.stockConversionRatio.toString());
+        setRatioDenominator("1");
+      }
+    }
+  });
+
+  const updateConversionRatio = (numerator: string, denominator: string) => {
+    const num = parseFloat(numerator) || 1;
+    const den = parseFloat(denominator) || 1;
+    const ratio = num / den;
+    form.setValue("stockConversionRatio", ratio);
+  };
 
   const onSubmit = async (data: ProductFormData) => {
     setIsSubmitting(true);
@@ -101,7 +124,7 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
       onSuccess();
       form.reset();
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -109,30 +132,34 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="productType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Product Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select product type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value={ProductType.FUEL}>Fuel</SelectItem>
-                  <SelectItem value={ProductType.GENERAL}>General</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {/* Row 1: Product Type, Name, Alias */}
+        <div className="grid grid-cols-3 gap-4">
+          <FormField
+            control={form.control}
+            name="productType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Type</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value={ProductType.FUEL}>Fuel</SelectItem>
+                    <SelectItem value={ProductType.GENERAL}>General</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="productName"
@@ -156,31 +183,28 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
                 <FormControl>
                   <Input placeholder="e.g., PET" {...field} />
                 </FormControl>
-                <FormDescription>Short code for this product</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="hsnCode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>HSN Code</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., 27101910" {...field} />
-              </FormControl>
-              <FormDescription>
-                Harmonized System of Nomenclature code for tax purposes
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Row 2: HSN Code, Purchase Rate, Sales Rate */}
+        <div className="grid grid-cols-3 gap-4">
+          <FormField
+            control={form.control}
+            name="hsnCode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>HSN Code</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., 27101910" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="purchaseRate"
@@ -226,6 +250,7 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
           />
         </div>
 
+        {/* Row 3: Sales Unit, Purchase Unit, Conversion Ratio */}
         <div className="grid grid-cols-3 gap-4">
           <FormField
             control={form.control}
@@ -290,18 +315,50 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
               <FormItem>
                 <FormLabel>Conversion Ratio</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="1.0"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(parseFloat(e.target.value) || 1)
-                    }
-                  />
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="1"
+                      value={ratioDenominator}
+                      onChange={(e) => {
+                        setRatioDenominator(e.target.value);
+                        updateConversionRatio(ratioNumerator, e.target.value);
+                      }}
+                      onBlur={() => {
+                        updateConversionRatio(ratioNumerator, ratioDenominator);
+                        field.onChange(
+                          (parseFloat(ratioNumerator) || 1) /
+                            (parseFloat(ratioDenominator) || 1)
+                        );
+                      }}
+                      className="flex-1"
+                    />
+                    <span className="text-lg font-semibold text-muted-foreground">
+                      :
+                    </span>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="1"
+                      value={ratioNumerator}
+                      onChange={(e) => {
+                        setRatioNumerator(e.target.value);
+                        updateConversionRatio(e.target.value, ratioDenominator);
+                      }}
+                      onBlur={() => {
+                        updateConversionRatio(ratioNumerator, ratioDenominator);
+                        field.onChange(
+                          (parseFloat(ratioNumerator) || 1) /
+                            (parseFloat(ratioDenominator) || 1)
+                        );
+                      }}
+                      className="flex-1"
+                    />
+                  </div>
                 </FormControl>
-                <FormDescription>
-                  Sales unit to purchase unit ratio
+                <FormDescription className="text-xs">
+                  Purchase : Sales ratio
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -309,31 +366,32 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="lowStockCount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Low Stock Alert Level</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="100"
-                  {...field}
-                  onChange={(e) =>
-                    field.onChange(parseInt(e.target.value) || 0)
-                  }
-                />
-              </FormControl>
-              <FormDescription>
-                Alert when stock falls below this level
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Row 4: Low Stock Alert */}
+        <div className="grid grid-cols-3 gap-4">
+          <FormField
+            control={form.control}
+            name="lowStockCount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Low Stock Alert</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="100"
+                    {...field}
+                    onChange={(e) =>
+                      field.onChange(parseInt(e.target.value) || 0)
+                    }
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
-        <div className="flex justify-end gap-3">
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-3 pt-2">
           <Button type="button" variant="outline" onClick={onSuccess}>
             Cancel
           </Button>
@@ -341,12 +399,12 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {product ? 'Updating...' : 'Creating...'}
+                {product ? "Updating..." : "Creating..."}
               </>
             ) : product ? (
-              'Update Product'
+              "Update Product"
             ) : (
-              'Create Product'
+              "Create Product"
             )}
           </Button>
         </div>
