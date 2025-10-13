@@ -1,25 +1,24 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useCustomerStore } from '@/store/customer-store';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useCustomerStore } from "@/store/customer-store";
 import {
   CreateCustomerSchema,
   type CreateCustomer,
   DEFAULT_PUMP_INFO,
-} from '@/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Loader2 } from 'lucide-react';
+} from "@/components/ui/form";
+import { Loader2 } from "lucide-react";
 
 type CreateCustomerFormData = CreateCustomer;
 
@@ -35,15 +34,15 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
     resolver: zodResolver(CreateCustomerSchema),
     defaultValues: {
       pumpMasterId: DEFAULT_PUMP_INFO.id,
-      customerName: '',
-      address: '',
-      pincode: '',
-      phoneNumber: '',
-      gstNumber: '',
-      panNumber: '',
+      customerName: "",
+      address: "",
+      pincode: "",
+      phoneNumber: "",
+      gstNumber: "",
+      panNumber: "",
       creditLimit: 0,
       openingBalance: 0,
-      openingBalanceDate: '',
+      openingBalanceDate: "",
     },
   });
 
@@ -54,7 +53,7 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
       onSuccess();
       form.reset();
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -62,7 +61,7 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -71,7 +70,7 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
               <FormItem>
                 <FormLabel>Customer Name *</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Rajesh Kumar" {...field} />
+                  <Input placeholder="Rajesh Kumar" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -85,9 +84,8 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
               <FormItem>
                 <FormLabel>Phone Number *</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., 9876543210" {...field} />
+                  <Input placeholder="9876543210" {...field} />
                 </FormControl>
-                <FormDescription>10-15 digit phone number</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -103,14 +101,11 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
                 <FormLabel>GST Number</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="e.g., 22AAAAA0000A1Z5"
+                    placeholder="22AAAAA0000A1Z5"
                     {...field}
-                    value={field.value ?? ''}
+                    value={field.value ?? ""}
                   />
                 </FormControl>
-                <FormDescription>
-                  10-20 character GST identification number (optional)
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -124,14 +119,11 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
                 <FormLabel>PAN Number</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="e.g., ABCDE1234F"
+                    placeholder="ABCDE1234F"
                     {...field}
-                    value={field.value ?? ''}
+                    value={field.value ?? ""}
                   />
                 </FormControl>
-                <FormDescription>
-                  10-20 character PAN number (optional)
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -146,9 +138,8 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
               <FormItem>
                 <FormLabel>Pincode *</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., 123456" {...field} />
+                  <Input placeholder="123456" {...field} />
                 </FormControl>
-                <FormDescription>5-10 digit pincode</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -159,16 +150,15 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
             name="creditLimit"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Credit Limit *</FormLabel>
+                <FormLabel>Credit Limit (₹) *</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
-                    placeholder="e.g., 50000"
+                    placeholder="50000"
                     {...field}
                     onChange={(e) => field.onChange(Number(e.target.value))}
                   />
                 </FormControl>
-                <FormDescription>Credit limit in rupees (₹)</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -181,12 +171,12 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
             name="openingBalance"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Opening Balance *</FormLabel>
+                <FormLabel>Opening Balance (₹) *</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
                     step="0.01"
-                    placeholder="e.g., 1000.00"
+                    placeholder="1000.00"
                     {...field}
                     onChange={(e) =>
                       field.onChange(
@@ -195,10 +185,6 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
                     }
                   />
                 </FormControl>
-                <FormDescription>
-                  Opening balance amount (₹). Use negative for outstanding
-                  balance
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -213,9 +199,6 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>
-                <FormDescription>
-                  Date when the opening balance was recorded
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -230,14 +213,11 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
               <FormLabel>Address *</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="e.g., 123 Main Street, City, State, PIN 123456"
-                  className="min-h-[100px]"
+                  placeholder="123 Main Street, City, State"
+                  className="min-h-[80px]"
                   {...field}
                 />
               </FormControl>
-              <FormDescription>
-                Complete address of the customer (5-255 characters)
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -254,7 +234,7 @@ export function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
                 Creating...
               </>
             ) : (
-              'Create Customer'
+              "Create Customer"
             )}
           </Button>
         </div>

@@ -1,25 +1,24 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useSupplierStore } from '@/store/supplier-store';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useSupplierStore } from "@/store/supplier-store";
 import {
   CreateSupplierSchema,
   type CreateSupplier,
   DEFAULT_PUMP_INFO,
-} from '@/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Loader2 } from 'lucide-react';
+} from "@/components/ui/form";
+import { Loader2 } from "lucide-react";
 
 type CreateSupplierFormData = CreateSupplier;
 
@@ -35,13 +34,13 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
     resolver: zodResolver(CreateSupplierSchema),
     defaultValues: {
       pumpMasterId: DEFAULT_PUMP_INFO.id,
-      supplierName: '',
-      contactPersonName: '',
-      contactNumber: '',
+      supplierName: "",
+      contactPersonName: "",
+      contactNumber: "",
       email: null,
       gstNumber: null,
       taxIdentificationNumber: null,
-      address: '',
+      address: "",
       openingBalance: null,
       openingBalanceDate: null,
     },
@@ -54,7 +53,7 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
       onSuccess();
       form.reset();
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -62,7 +61,7 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -71,7 +70,7 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
               <FormItem>
                 <FormLabel>Supplier Name *</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., ABC Fuels Ltd" {...field} />
+                  <Input placeholder="ABC Fuels Ltd" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -85,7 +84,7 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
               <FormItem>
                 <FormLabel>Contact Person Name *</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., John Doe" {...field} />
+                  <Input placeholder="John Doe" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -101,9 +100,8 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
               <FormItem>
                 <FormLabel>Contact Number *</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., 9876543210" {...field} />
+                  <Input placeholder="9876543210" {...field} />
                 </FormControl>
-                <FormDescription>10-15 digit contact number</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -118,10 +116,14 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
                 <FormControl>
                   <Input
                     type="email"
-                    placeholder="e.g., john.doe@abc.com"
+                    placeholder="john.doe@abc.com"
                     {...field}
-                    value={field.value || ''}
-                    onChange={(e) => field.onChange(e.target.value === '' ? null : e.target.value)}
+                    value={field.value || ""}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === "" ? null : e.target.value
+                      )
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -139,15 +141,16 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
                 <FormLabel>GST Number</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="e.g., 22AAAAA0000A1Z5"
+                    placeholder="22AAAAA0000A1Z5"
                     {...field}
-                    value={field.value || ''}
-                    onChange={(e) => field.onChange(e.target.value === '' ? null : e.target.value)}
+                    value={field.value || ""}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === "" ? null : e.target.value
+                      )
+                    }
                   />
                 </FormControl>
-                <FormDescription>
-                  15-character GST identification number
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -161,15 +164,16 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
                 <FormLabel>Tax Identification Number</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="e.g., 12345678901"
+                    placeholder="12345678901"
                     {...field}
-                    value={field.value || ''}
-                    onChange={(e) => field.onChange(e.target.value === '' ? null : e.target.value)}
+                    value={field.value || ""}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === "" ? null : e.target.value
+                      )
+                    }
                   />
                 </FormControl>
-                <FormDescription>
-                  11-character tax identification number
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -184,14 +188,11 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
               <FormLabel>Address *</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="e.g., 123 Main Street, City, State, PIN 123456"
-                  className="min-h-[100px]"
+                  placeholder="123 Main Street, City, State"
+                  className="min-h-[80px]"
                   {...field}
                 />
               </FormControl>
-              <FormDescription>
-                Complete address of the supplier (5-255 characters)
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -203,25 +204,21 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
             name="openingBalance"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Opening Balance</FormLabel>
+                <FormLabel>Opening Balance (₹)</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
                     step="0.01"
-                    placeholder="e.g., 1000.00"
+                    placeholder="1000.00"
                     {...field}
-                    value={field.value?.toString() || ''}
+                    value={field.value?.toString() || ""}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === '' ? null : Number(e.target.value)
+                        e.target.value === "" ? null : Number(e.target.value)
                       )
                     }
                   />
                 </FormControl>
-                <FormDescription>
-                  Opening balance amount (₹). Use negative for outstanding
-                  balance
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -237,13 +234,14 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
                   <Input
                     type="date"
                     {...field}
-                    value={field.value ?? ''}
-                    onChange={(e) => field.onChange(e.target.value === '' ? null : e.target.value)}
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === "" ? null : e.target.value
+                      )
+                    }
                   />
                 </FormControl>
-                <FormDescription>
-                  Date when the opening balance was recorded
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -261,7 +259,7 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
                 Creating...
               </>
             ) : (
-              'Create Supplier'
+              "Create Supplier"
             )}
           </Button>
         </div>
