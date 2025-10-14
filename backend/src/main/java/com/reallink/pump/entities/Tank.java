@@ -55,11 +55,6 @@ public class Tank extends BaseEntity {
     @Column(name = "capacity", nullable = false, precision = 12, scale = 2)
     private BigDecimal capacity;
 
-    @DecimalMin(value = "0.0", message = "Current level cannot be negative")
-    @Digits(integer = 10, fraction = 2, message = "Current level must have at most 10 digits and 2 decimal places")
-    @Column(name = "current_level", precision = 12, scale = 2, columnDefinition = "DECIMAL(12,2) DEFAULT 0.00")
-    private BigDecimal currentLevel = BigDecimal.ZERO;
-
     @NotNull(message = "Opening level is required")
     @DecimalMin(value = "0.00", message = "Opening level must be greater than or equal to 0.00")
     @Column(name = "opening_level", nullable = false, precision = 12, scale = 2)
@@ -95,25 +90,24 @@ public class Tank extends BaseEntity {
         this.tankLocation = tankLocation;
         this.product = product;
         this.pumpMaster = pumpMaster;
-        this.currentLevel = BigDecimal.ZERO;
         this.openingLevel = BigDecimal.ZERO;
         this.openingLevelDate = LocalDate.now();
     }
 
-    // Business methods
-    public boolean isLowLevel() {
+    // Business methods - accepting currentLevel as parameter since it's calculated dynamically
+    public boolean isLowLevel(BigDecimal currentLevel) {
         return lowLevelAlert != null && currentLevel != null
                 && currentLevel.compareTo(lowLevelAlert) <= 0;
     }
 
-    public BigDecimal getAvailableCapacity() {
+    public BigDecimal getAvailableCapacity(BigDecimal currentLevel) {
         if (capacity == null || currentLevel == null) {
             return BigDecimal.ZERO;
         }
         return capacity.subtract(currentLevel);
     }
 
-    public BigDecimal getFillPercentage() {
+    public BigDecimal getFillPercentage(BigDecimal currentLevel) {
         if (capacity == null || currentLevel == null || capacity.compareTo(BigDecimal.ZERO) == 0) {
             return BigDecimal.ZERO;
         }

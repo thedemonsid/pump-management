@@ -1,5 +1,6 @@
 package com.reallink.pump.controllers;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,6 +56,13 @@ public class TankController {
     public ResponseEntity<TankResponse> getTankById(@PathVariable UUID id) {
         TankResponse tank = service.getById(id);
         return ResponseEntity.ok(tank);
+    }
+
+    @Operation(summary = "Get current fuel level of a tank", description = "Retrieve the current fuel level (closing balance of today) of a specific tank")
+    @GetMapping("/{tankId}/fuel-level")
+    public ResponseEntity<BigDecimal> getCurrentTankFuelLevel(@PathVariable UUID tankId) {
+        BigDecimal currentLevel = service.getCurrentFuelLevel(tankId);
+        return ResponseEntity.ok(currentLevel);
     }
 
     @Operation(summary = "Get tanks by pump master ID", description = "Retrieve tanks by pump master ID")

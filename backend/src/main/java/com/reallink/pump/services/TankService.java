@@ -41,7 +41,11 @@ public class TankService {
     private final DailyTankLevelRepository dailyTankLevelRepository;
 
     public Page<TankResponse> getAllPaginated(Pageable pageable) {
-        return repository.findAll(pageable).map(mapper::toResponse);
+        return repository.findAll(pageable).map(tank -> {
+            TankResponse response = mapper.toResponse(tank);
+            setCurrentLevel(response, tank);
+            return response;
+        });
     }
 
     public List<TankResponse> getAll() {
@@ -65,7 +69,13 @@ public class TankService {
     }
 
     public List<TankResponse> getByPumpMasterId(@NotNull UUID pumpMasterId) {
-        return repository.findByPumpMaster_Id(pumpMasterId).stream().map(mapper::toResponse).toList();
+        return repository.findByPumpMaster_Id(pumpMasterId).stream()
+                .map(tank -> {
+                    TankResponse response = mapper.toResponse(tank);
+                    setCurrentLevel(response, tank);
+                    return response;
+                })
+                .toList();
     }
 
     @Transactional
@@ -82,7 +92,9 @@ public class TankService {
         tank.setProduct(product);
         tank.setPumpMaster(pumpMaster);
         Tank savedTank = repository.save(tank);
-        return mapper.toResponse(savedTank);
+        TankResponse response = mapper.toResponse(savedTank);
+        setCurrentLevel(response, savedTank);
+        return response;
     }
 
     @Transactional
@@ -93,7 +105,9 @@ public class TankService {
         }
         mapper.updateEntity(request, existingTank);
         Tank updatedTank = repository.save(existingTank);
-        return mapper.toResponse(updatedTank);
+        TankResponse response = mapper.toResponse(updatedTank);
+        setCurrentLevel(response, updatedTank);
+        return response;
     }
 
     @Transactional
@@ -106,6 +120,35 @@ public class TankService {
 
     private void setCurrentLevel(TankResponse response, Tank tank) {
         BigDecimal cumulativeNetUpToToday = dailyTankLevelRepository.getCumulativeNetUpToDate(tank.getId(), LocalDate.now());
-        response.setCurrentLevel(tank.getOpeningLevel().add(cumulativeNetUpToToday));
+        BigDecimal currentLevel = tank.getOpeningLevel().add(cumulativeNetUpToToday);
+
+        // Set current level
+        response.setCurrentLevel(currentLevel);
+
+        // Set calculated fields that depend on current level
+        response.setAvailableCapacity(tank.getAvailableCapacity(currentLevel));
+        response.setFillPercentage(tank.getFillPercentage(currentLevel));
+        response.setIsLowLevel(tank.isLowLevel(currentLevel));
+    }
+
+    /**
+     * Calculate the current fuel level of a tank (closing balance of today)
+     * This is calculated as: Opening Level + Cumulative Net (Additions -
+     * Removals) up to today
+     *
+     * @param tankId the ID of the tank
+     * @return the current fuel level as of today
+     */
+    public BigDecimal getCurrentFuelLevel(@NotNull UUID tankId) {
+        Tank tank = repository.findById(tankId).orElse(null);
+        if (tank == null) {
+            throw new PumpBusinessException("TANK_NOT_FOUND", "Tank with ID " + tankId + " not found");
+        }
+
+        // Get cumulative net (additions - removals) up to today
+        BigDecimal cumulativeNetUpToToday = dailyTankLevelRepository.getCumulativeNetUpToDate(tankId, LocalDate.now());
+
+        // Current level = Opening level + Cumulative net
+        return tank.getOpeningLevel().add(cumulativeNetUpToToday);
     }
 }

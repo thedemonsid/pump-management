@@ -15,45 +15,47 @@ import com.reallink.pump.entities.Tank;
 @Repository
 public interface TankRepository extends JpaRepository<Tank, UUID> {
 
-  @Query("SELECT t FROM Tank t JOIN FETCH t.product")
-  List<Tank> findAllWithProducts();
+    @Query("SELECT t FROM Tank t JOIN FETCH t.product")
+    List<Tank> findAllWithProducts();
 
-  List<Tank> findByPumpMaster_Id(UUID pumpMasterId);
+    List<Tank> findByPumpMaster_Id(UUID pumpMasterId);
 
-  Optional<Tank> findByTankNameAndPumpMaster_Id(String tankName, UUID pumpMasterId);
+    Optional<Tank> findByTankNameAndPumpMaster_Id(String tankName, UUID pumpMasterId);
 
-  boolean existsByTankNameAndPumpMaster_Id(String tankName, UUID pumpMasterId);
+    boolean existsByTankNameAndPumpMaster_Id(String tankName, UUID pumpMasterId);
 
-  boolean existsByTankNameAndPumpMaster_IdAndIdNot(String tankName, UUID pumpMasterId, UUID id);
+    boolean existsByTankNameAndPumpMaster_IdAndIdNot(String tankName, UUID pumpMasterId, UUID id);
 
-  List<Tank> findByProductId(UUID productId);
+    List<Tank> findByProductId(UUID productId);
 
-  List<Tank> findByTankNameContainingIgnoreCase(String tankName);
+    List<Tank> findByTankNameContainingIgnoreCase(String tankName);
 
-  @Query("SELECT t FROM Tank t WHERE t.currentLevel <= t.lowLevelAlert AND t.lowLevelAlert IS NOT NULL")
-  List<Tank> findLowLevelTanks();
+    // NOTE: currentLevel is now calculated dynamically, not stored in DB
+    // Low level tanks should be determined by calculating current level in service layer
+    // @Query("SELECT t FROM Tank t WHERE t.currentLevel <= t.lowLevelAlert AND t.lowLevelAlert IS NOT NULL")
+    // List<Tank> findLowLevelTanks();
+    @Query("SELECT t FROM Tank t WHERE "
+            + "(:tankName IS NULL OR LOWER(t.tankName) LIKE LOWER(CONCAT('%', :tankName, '%'))) AND "
+            + "(:pumpMasterId IS NULL OR t.pumpMaster.id = :pumpMasterId) AND "
+            + "(:productId IS NULL OR t.product.id = :productId)")
+    List<Tank> findBySearchCriteria(@Param("tankName") String tankName,
+            @Param("pumpMasterId") UUID pumpMasterId,
+            @Param("productId") UUID productId);
 
-  @Query("SELECT t FROM Tank t WHERE "
-      + "(:tankName IS NULL OR LOWER(t.tankName) LIKE LOWER(CONCAT('%', :tankName, '%'))) AND "
-      + "(:pumpMasterId IS NULL OR t.pumpMaster.id = :pumpMasterId) AND "
-      + "(:productId IS NULL OR t.product.id = :productId)")
-  List<Tank> findBySearchCriteria(@Param("tankName") String tankName,
-      @Param("pumpMasterId") UUID pumpMasterId,
-      @Param("productId") UUID productId);
+    @Query("SELECT t FROM Tank t WHERE t.capacity BETWEEN :minCapacity AND :maxCapacity")
+    List<Tank> findByCapacityBetween(@Param("minCapacity") BigDecimal minCapacity,
+            @Param("maxCapacity") BigDecimal maxCapacity);
 
-  @Query("SELECT t FROM Tank t WHERE t.capacity BETWEEN :minCapacity AND :maxCapacity")
-  List<Tank> findByCapacityBetween(@Param("minCapacity") BigDecimal minCapacity,
-      @Param("maxCapacity") BigDecimal maxCapacity);
+    @Query("SELECT COUNT(t) FROM Tank t WHERE t.pumpMaster.id = :pumpMasterId")
+    long countByPumpMasterId(@Param("pumpMasterId") UUID pumpMasterId);
 
-  @Query("SELECT COUNT(t) FROM Tank t WHERE t.pumpMaster.id = :pumpMasterId")
-  long countByPumpMasterId(@Param("pumpMasterId") UUID pumpMasterId);
+    @Query("SELECT SUM(t.capacity) FROM Tank t WHERE t.pumpMaster.id = :pumpMasterId")
+    BigDecimal getTotalCapacityByPumpMasterId(@Param("pumpMasterId") UUID pumpMasterId);
 
-  @Query("SELECT SUM(t.capacity) FROM Tank t WHERE t.pumpMaster.id = :pumpMasterId")
-  BigDecimal getTotalCapacityByPumpMasterId(@Param("pumpMasterId") UUID pumpMasterId);
-
-  @Query("SELECT SUM(t.currentLevel) FROM Tank t WHERE t.pumpMaster.id = :pumpMasterId")
-  BigDecimal getTotalCurrentLevelByPumpMasterId(@Param("pumpMasterId") UUID pumpMasterId);
-
-  @Query("SELECT t FROM Tank t WHERE SIZE(t.nozzles) = 0")
-  List<Tank> findTanksWithoutNozzles();
+    // NOTE: currentLevel is now calculated dynamically, not stored in DB
+    // Total current level should be calculated in service layer by summing individual tank levels
+    // @Query("SELECT SUM(t.currentLevel) FROM Tank t WHERE t.pumpMaster.id = :pumpMasterId")
+    // BigDecimal getTotalCurrentLevelByPumpMasterId(@Param("pumpMasterId") UUID pumpMasterId);
+    @Query("SELECT t FROM Tank t WHERE SIZE(t.nozzles) = 0")
+    List<Tank> findTanksWithoutNozzles();
 }

@@ -1,6 +1,5 @@
 package com.reallink.pump.services;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -161,13 +160,12 @@ public class FuelPurchaseService {
     }
 
     private void updateTankLevelAndCreateTransaction(FuelPurchase fuelPurchase) {
-        // Update tank's current level
-        Tank tank = fuelPurchase.getTank();
-        BigDecimal newLevel = tank.getCurrentLevel().add(fuelPurchase.getQuantity());
-        tank.setCurrentLevel(newLevel);
-        tankRepository.save(tank);
+        // NOTE: Tank's current level is now calculated dynamically from transactions
+        // No need to update tank.currentLevel anymore
 
-        // Create tank transaction
+        Tank tank = fuelPurchase.getTank();
+
+        // Create tank transaction - this will be used to calculate current level
         CreateTankTransactionRequest transactionRequest = new CreateTankTransactionRequest();
         transactionRequest.setVolume(fuelPurchase.getQuantity());
         transactionRequest.setTransactionDate(fuelPurchase.getPurchaseDate().atStartOfDay());

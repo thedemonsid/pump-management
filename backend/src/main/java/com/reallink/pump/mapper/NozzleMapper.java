@@ -27,14 +27,15 @@ public interface NozzleMapper {
     Nozzle toEntity(CreateNozzleRequest request);
 
     /**
-     * Maps Nozzle entity to NozzleResponse
+     * Maps Nozzle entity to NozzleResponse NOTE: tank.currentLevel will be set
+     * separately in service layer as it's calculated dynamically
      */
     @Mapping(target = "pumpMasterId", source = "pumpMaster.id")
     @Mapping(target = "tankId", source = "tank.id")
     @Mapping(target = "productName", source = "tank.product.productName")
     @Mapping(target = "tank.id", source = "tank.id")
     @Mapping(target = "tank.tankName", source = "tank.tankName")
-    @Mapping(target = "tank.currentLevel", source = "tank.currentLevel")
+    @Mapping(target = "tank.currentLevel", ignore = true)
     @Mapping(target = "tank.capacity", source = "tank.capacity")
     @Mapping(target = "tank.product.id", source = "tank.product.id")
     @Mapping(target = "tank.product.productName", source = "tank.product.productName")

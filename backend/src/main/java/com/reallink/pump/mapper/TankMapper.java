@@ -30,16 +30,19 @@ public interface TankMapper {
     Tank toEntity(CreateTankRequest request);
 
     /**
-     * Maps Tank entity to TankResponse
+     * Maps Tank entity to TankResponse NOTE: currentLevel, availableCapacity,
+     * fillPercentage, and isLowLevel will be set separately in service layer as
+     * they require calculated currentLevel
      */
     @Mapping(target = "pumpMasterId", source = "pumpMaster.id")
     @Mapping(target = "product.id", source = "product.id")
     @Mapping(target = "product.productName", source = "product.productName")
     @Mapping(target = "product.salesUnit", source = "product.salesUnit")
     @Mapping(target = "nozzleCount", expression = "java(entity.getNozzles() != null ? entity.getNozzles().size() : 0)")
-    @Mapping(target = "availableCapacity", expression = "java(entity.getAvailableCapacity())")
-    @Mapping(target = "fillPercentage", expression = "java(entity.getFillPercentage())")
-    @Mapping(target = "isLowLevel", expression = "java(entity.isLowLevel())")
+    @Mapping(target = "currentLevel", ignore = true)
+    @Mapping(target = "availableCapacity", ignore = true)
+    @Mapping(target = "fillPercentage", ignore = true)
+    @Mapping(target = "isLowLevel", ignore = true)
     TankResponse toResponse(Tank entity);
 
     /**
