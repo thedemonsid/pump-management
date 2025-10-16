@@ -238,7 +238,7 @@ const allRoutes = [
   {
     path: "/admin/salesman-shifts",
     element: <AdminSalesmanShiftsPage />,
-    requiredRoles: ["ADMIN"],
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
     path: "/salesman-bills",
