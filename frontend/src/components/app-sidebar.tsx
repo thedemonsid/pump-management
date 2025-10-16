@@ -27,6 +27,7 @@ import {
   UserCircle,
   CreditCard,
   Receipt,
+  BarChart3,
 } from "lucide-react";
 
 const mainItems = [
@@ -34,6 +35,11 @@ const mainItems = [
     title: "Dashboard",
     url: "/",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Reports",
+    url: "/reports",
+    icon: BarChart3,
   },
   {
     title: "Products",
@@ -96,11 +102,11 @@ const managementItems = [
     url: "/salesman-bills",
     icon: Receipt,
   },
-  {
-    title: "Shifts",
-    url: "/shifts",
-    icon: Clock,
-  },
+  // {
+  //   title: "Shifts",
+  //   url: "/shifts",
+  //   icon: Clock,
+  // },
   {
     title: "Salesman Shifts",
     url: "/admin/salesman-shifts",
@@ -115,7 +121,6 @@ const salesmanItems = [
     icon: Clock,
   },
 ];
-
 // const systemItems = [
 //   {
 //     title: 'Settings',

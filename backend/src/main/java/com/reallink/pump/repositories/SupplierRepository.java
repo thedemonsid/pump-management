@@ -26,7 +26,6 @@ public interface SupplierRepository extends JpaRepository<Supplier, UUID> {
 
     List<Supplier> findByContactPersonNameContainingIgnoreCase(String contactPersonName);
 
-
     @Query("SELECT s FROM Supplier s WHERE "
             + "(:supplierName IS NULL OR LOWER(s.supplierName) LIKE LOWER(CONCAT('%', :supplierName, '%'))) AND "
             + "(:contactPersonName IS NULL OR LOWER(s.contactPersonName) LIKE LOWER(CONCAT('%', :contactPersonName, '%'))) AND "
@@ -34,7 +33,7 @@ public interface SupplierRepository extends JpaRepository<Supplier, UUID> {
             + "(:gstNumber IS NULL OR s.gstNumber = :gstNumber) AND "
             + "(:taxIdentificationNumber IS NULL OR s.taxIdentificationNumber = :taxIdentificationNumber) AND "
             + "(:pumpMasterId IS NULL OR s.pumpMaster.id = :pumpMasterId)")
-            
+
     List<Supplier> findBySearchCriteria(@Param("supplierName") String supplierName,
             @Param("contactPersonName") String contactPersonName,
             @Param("address") String address,
@@ -47,4 +46,10 @@ public interface SupplierRepository extends JpaRepository<Supplier, UUID> {
 
     @Query("SELECT DISTINCT s.contactPersonName FROM Supplier s")
     List<String> findDistinctContactPersonNames();
+
+    @Query("SELECT COUNT(DISTINCT fp.supplier.id) FROM FuelPurchase fp WHERE fp.pumpMaster.id = :pumpMasterId AND fp.createdAt BETWEEN :startDate AND :endDate AND fp.amount > 0")
+    Long countSuppliersWithDebitInPeriod(@Param("pumpMasterId") UUID pumpMasterId, @Param("startDate") java.time.LocalDateTime startDate, @Param("endDate") java.time.LocalDateTime endDate);
+
+    @Query("SELECT s.supplierName, SUM(fp.amount) FROM FuelPurchase fp JOIN fp.supplier s WHERE fp.pumpMaster.id = :pumpMasterId AND fp.createdAt BETWEEN :startDate AND :endDate GROUP BY s.supplierName ORDER BY SUM(fp.amount) DESC")
+    List<Object[]> findTopSupplierByDebitInPeriod(@Param("pumpMasterId") UUID pumpMasterId, @Param("startDate") java.time.LocalDateTime startDate, @Param("endDate") java.time.LocalDateTime endDate);
 }

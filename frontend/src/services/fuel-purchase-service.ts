@@ -1,12 +1,12 @@
-import api from './api';
+import api from "./api";
 import type {
   FuelPurchase,
   CreateFuelPurchase,
   UpdateFuelPurchase,
-} from '@/types';
+} from "@/types";
 
 export class FuelPurchaseService {
-  private static readonly BASE_PATH = '/api/v1/fuel-purchases';
+  private static readonly BASE_PATH = "/api/v1/fuel-purchases";
 
   // Get all fuel purchases
   static async getAll(): Promise<FuelPurchase[]> {
@@ -20,23 +20,12 @@ export class FuelPurchaseService {
     return response.data;
   }
 
-  // Get fuel purchases by pump master ID
-  static async getByPumpMasterId(
-    pumpMasterId: string
-  ): Promise<FuelPurchase[]> {
-    const response = await api.get<FuelPurchase[]>(
-      `${this.BASE_PATH}/pump/${pumpMasterId}`
-    );
-    return response.data;
-  }
-
   // Get fuel purchase by sequential fuel purchase ID within a pump master
   static async getByPumpMasterIdAndFuelPurchaseId(
-    pumpMasterId: string,
     fuelPurchaseId: number
   ): Promise<FuelPurchase> {
     const response = await api.get<FuelPurchase>(
-      `${this.BASE_PATH}/pump/${pumpMasterId}/fuel-purchase/${fuelPurchaseId}`
+      `${this.BASE_PATH}/fuel-purchase/${fuelPurchaseId}`
     );
     return response.data;
   }

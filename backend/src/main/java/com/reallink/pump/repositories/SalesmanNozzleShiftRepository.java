@@ -45,4 +45,7 @@ public interface SalesmanNozzleShiftRepository extends JpaRepository<SalesmanNoz
 
     @Query("SELECT s FROM SalesmanNozzleShift s LEFT JOIN FETCH s.nozzle n LEFT JOIN FETCH n.tank t LEFT JOIN FETCH t.product WHERE s.id = :id")
     Optional<SalesmanNozzleShift> findByIdWithDetails(@Param("id") UUID id);
+
+    @Query("SELECT COALESCE(SUM(s.closingBalance - s.openingBalance), 0) FROM SalesmanNozzleShift s WHERE s.pumpMaster.id = :pumpMasterId AND s.createdAt BETWEEN :startDate AND :endDate AND s.closingBalance IS NOT NULL")
+    java.math.BigDecimal findTotalFuelDispensedInPeriod(@Param("pumpMasterId") UUID pumpMasterId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 }

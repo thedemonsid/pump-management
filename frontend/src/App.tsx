@@ -54,6 +54,11 @@ import { CustomersReportPage } from "@/pages/customers/CustomersReportPage";
 import { SuppliersReportPage } from "@/pages/suppliers/SuppliersReportPage";
 import { SupplierLedgerReportPage } from "@/pages/suppliers/SupplierLedgerReportPage";
 import { LoginPage } from "@/pages/LoginPage";
+import Reports from "./pages/Reports";
+import BankAccountReportPage from "./pages/reports/BankAccountReportPage";
+import TankLevelReportPage from "./pages/reports/TankLevelReportPage";
+import SupplierDebtReportPage from "./pages/reports/SupplierDebtReportPage";
+import CustomerCreditReportPage from "./pages/reports/CustomerCreditReportPage";
 import { AuthProvider } from "@/hooks/AuthContext";
 import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute, PublicRoute } from "@/components/ProtectedRoute";
@@ -68,6 +73,31 @@ const allRoutes = [
   {
     path: "/dashboard",
     element: <DashboardPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/reports",
+    element: <Reports />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/reports/bank-account",
+    element: <BankAccountReportPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/reports/tank-levels",
+    element: <TankLevelReportPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/reports/supplier-debt",
+    element: <SupplierDebtReportPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/reports/customer-credit",
+    element: <CustomerCreditReportPage />,
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {

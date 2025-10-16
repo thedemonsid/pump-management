@@ -1,6 +1,7 @@
 package com.reallink.pump.repositories;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,4 +39,10 @@ public interface BillRepository extends JpaRepository<Bill, UUID> {
 
     @Query("SELECT COALESCE(MAX(b.billNo), 0) FROM Bill b WHERE b.pumpMaster.id = :pumpMasterId")
     Long findMaxBillNoByPumpMasterId(@Param("pumpMasterId") UUID pumpMasterId);
+
+    @Query("SELECT COALESCE(SUM(b.netAmount), 0) FROM Bill b WHERE b.pumpMaster.id = :pumpMasterId AND b.createdAt BETWEEN :startDate AND :endDate")
+    java.math.BigDecimal findTotalCreditBillsInPeriod(@Param("pumpMasterId") UUID pumpMasterId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+
+    @Query("SELECT COUNT(b) FROM Bill b WHERE b.pumpMaster.id = :pumpMasterId AND b.createdAt BETWEEN :startDate AND :endDate")
+    Long countBillsInPeriod(@Param("pumpMasterId") UUID pumpMasterId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 }

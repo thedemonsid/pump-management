@@ -1,12 +1,12 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import type {
   FuelPurchase,
   CreateFuelPurchase,
   UpdateFuelPurchase,
-} from '@/types';
-import { FuelPurchaseService } from '@/services/api';
-import { toast } from 'sonner';
+} from "@/types";
+import { FuelPurchaseService } from "@/services/api";
+import { toast } from "sonner";
 
 interface FuelPurchaseState {
   fuelPurchases: FuelPurchase[];
@@ -76,24 +76,23 @@ export const useFuelPurchaseStore = create<FuelPurchaseState>()(
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to fetch fuel purchases';
+              : "Failed to fetch fuel purchases";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
         }
       },
 
-      fetchFuelPurchasesByPumpMasterId: async (pumpMasterId: string) => {
+      fetchFuelPurchasesByPumpMasterId: async () => {
+        // pumpMasterId is now handled by the backend automatically from security context
         set({ loading: true, error: null });
         try {
-          const fuelPurchases = await FuelPurchaseService.getByPumpMasterId(
-            pumpMasterId
-          );
+          const fuelPurchases = await FuelPurchaseService.getAll();
           set({ fuelPurchases, loading: false });
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to fetch fuel purchases by pump master';
+              : "Failed to fetch fuel purchases by pump master";
           set({ error: errorMessage, loading: false });
         }
       },
@@ -108,12 +107,12 @@ export const useFuelPurchaseStore = create<FuelPurchaseState>()(
             fuelPurchases: [...state.fuelPurchases, newFuelPurchase],
             loading: false,
           }));
-          toast.success('Fuel purchase created successfully');
+          toast.success("Fuel purchase created successfully");
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to create fuel purchase';
+              : "Failed to create fuel purchase";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -133,12 +132,12 @@ export const useFuelPurchaseStore = create<FuelPurchaseState>()(
             ),
             loading: false,
           }));
-          toast.success('Fuel purchase updated successfully');
+          toast.success("Fuel purchase updated successfully");
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to update fuel purchase';
+              : "Failed to update fuel purchase";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -155,12 +154,12 @@ export const useFuelPurchaseStore = create<FuelPurchaseState>()(
             ),
             loading: false,
           }));
-          toast.success('Fuel purchase deleted successfully');
+          toast.success("Fuel purchase deleted successfully");
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to delete fuel purchase';
+              : "Failed to delete fuel purchase";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -177,14 +176,14 @@ export const useFuelPurchaseStore = create<FuelPurchaseState>()(
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to fetch fuel purchase';
+              : "Failed to fetch fuel purchase";
           set({ error: errorMessage, loading: false });
           throw error;
         }
       },
     }),
     {
-      name: 'fuel-purchase-store',
+      name: "fuel-purchase-store",
     }
   )
 );

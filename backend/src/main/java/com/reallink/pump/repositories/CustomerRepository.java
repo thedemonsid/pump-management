@@ -40,4 +40,10 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID> {
 
     @Query("SELECT COUNT(c) FROM Customer c WHERE c.pumpMaster.id = :pumpMasterId")
     long countByPumpMasterId(@Param("pumpMasterId") UUID pumpMasterId);
+
+    @Query("SELECT COUNT(DISTINCT b.customer.id) FROM Bill b WHERE b.pumpMaster.id = :pumpMasterId AND b.createdAt BETWEEN :startDate AND :endDate AND b.netAmount > 0")
+    Long countCustomersWithCreditInPeriod(@Param("pumpMasterId") UUID pumpMasterId, @Param("startDate") java.time.LocalDateTime startDate, @Param("endDate") java.time.LocalDateTime endDate);
+
+    @Query("SELECT c.customerName, SUM(b.netAmount) FROM Bill b JOIN b.customer c WHERE b.pumpMaster.id = :pumpMasterId AND b.createdAt BETWEEN :startDate AND :endDate GROUP BY c.customerName ORDER BY SUM(b.netAmount) DESC")
+    List<Object[]> findTopCustomerByCreditInPeriod(@Param("pumpMasterId") UUID pumpMasterId, @Param("startDate") java.time.LocalDateTime startDate, @Param("endDate") java.time.LocalDateTime endDate);
 }

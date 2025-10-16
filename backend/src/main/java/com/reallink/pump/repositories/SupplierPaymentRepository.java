@@ -30,4 +30,7 @@ public interface SupplierPaymentRepository extends JpaRepository<SupplierPayment
 
     @Query("SELECT COALESCE(SUM(sp.amount), 0) FROM SupplierPayment sp WHERE sp.fuelPurchase.id = :fuelPurchaseId")
     BigDecimal getTotalPaidAmountByFuelPurchaseId(@Param("fuelPurchaseId") UUID fuelPurchaseId);
+
+    @Query("SELECT COALESCE(SUM(sp.amount), 0) FROM SupplierPayment sp WHERE sp.pumpMaster.id = :pumpMasterId AND sp.paymentDate BETWEEN :startDate AND :endDate")
+    java.math.BigDecimal findTotalPaymentsInPeriod(@Param("pumpMasterId") UUID pumpMasterId, @Param("startDate") java.time.LocalDateTime startDate, @Param("endDate") java.time.LocalDateTime endDate);
 }

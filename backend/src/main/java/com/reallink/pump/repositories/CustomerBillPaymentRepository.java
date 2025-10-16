@@ -32,4 +32,7 @@ public interface CustomerBillPaymentRepository extends JpaRepository<CustomerBil
 
     @Query("SELECT p FROM CustomerBillPayment p WHERE p.pumpMaster.id = :pumpMasterId AND p.bill IS NULL ORDER BY p.paymentDate DESC")
     List<CustomerBillPayment> findGeneralPaymentsByPumpMasterId(@Param("pumpMasterId") UUID pumpMasterId);
+
+    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM CustomerBillPayment p WHERE p.pumpMaster.id = :pumpMasterId AND p.paymentDate BETWEEN :startDate AND :endDate")
+    java.math.BigDecimal findTotalPaymentsInPeriod(@Param("pumpMasterId") UUID pumpMasterId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 }
