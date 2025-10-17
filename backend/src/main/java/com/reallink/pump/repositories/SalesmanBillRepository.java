@@ -1,5 +1,6 @@
 package com.reallink.pump.repositories;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -26,4 +27,7 @@ public interface SalesmanBillRepository extends JpaRepository<SalesmanBill, UUID
     List<SalesmanBill> findByCustomer_Id(UUID customerId);
 
     List<SalesmanBill> findBySalesmanNozzleShift_Id(UUID salesmanNozzleShiftId);
+
+    @Query("SELECT COALESCE(SUM(b.netAmount), 0) FROM SalesmanBill b WHERE b.salesmanNozzleShift.id = :shiftId")
+    BigDecimal getTotalCreditForShift(@Param("shiftId") UUID shiftId);
 }

@@ -62,6 +62,15 @@ public class SalesmanBillResponse {
     @Schema(description = "Net amount", example = "5000.00")
     private BigDecimal netAmount;
 
+    @Schema(description = "Meter image ID", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID meterImageId;
+
+    @Schema(description = "Vehicle image ID", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID vehicleImageId;
+
+    @Schema(description = "Extra image ID", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID extraImageId;
+
     @Schema(description = "Creation timestamp", example = "2025-09-14T10:00:00")
     private LocalDateTime createdAt;
 

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 // Salesman Nozzle Shift schemas
 export const SalesmanNozzleSummarySchema = z.object({
@@ -38,9 +38,11 @@ export const SalesmanNozzleShiftResponseSchema = z.object({
   closingBalance: z.number().optional(),
   productPrice: z.number(),
   totalAmount: z.number(),
-  status: z.enum(['ACTIVE', 'CLOSED', 'OPEN']),
+  status: z.enum(["ACTIVE", "CLOSED", "OPEN"]),
   dispensedAmount: z.number(),
   isAccountingDone: z.boolean().optional(),
+  customerReceipt: z.number().optional(), // Payment received from credit customers
+  credit: z.number().optional(), // Credit given to customers during this shift
   createdAt: z.string(),
   updatedAt: z.string(),
   version: z.number(),

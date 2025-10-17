@@ -101,4 +101,16 @@ public class SalesmanBill extends BaseEntity {
     @Digits(integer = 10, fraction = 2, message = "Net amount must have at most 10 digits and 2 decimal places")
     @Column(name = "net_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal netAmount = BigDecimal.ZERO;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "meter_image_id", foreignKey = @ForeignKey(name = "fk_salesman_bill_meter_image"))
+    private FileStorage meterImage;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vehicle_image_id", foreignKey = @ForeignKey(name = "fk_salesman_bill_vehicle_image"))
+    private FileStorage vehicleImage;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "extra_image_id", foreignKey = @ForeignKey(name = "fk_salesman_bill_extra_image"))
+    private FileStorage extraImage;
 }

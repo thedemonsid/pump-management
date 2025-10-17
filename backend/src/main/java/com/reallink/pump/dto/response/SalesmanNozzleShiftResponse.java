@@ -74,6 +74,12 @@ public class SalesmanNozzleShiftResponse {
     @Schema(description = "Indicates if accounting is done for the shift", example = "true")
     private Boolean isAccountingDone;
 
+    @Schema(description = "Customer receipt (payment received from credit customers)", example = "5000.00")
+    private BigDecimal customerReceipt;
+
+    @Schema(description = "Credit given to customers during this shift", example = "3000.00")
+    private BigDecimal credit;
+
     @Schema(description = "Creation timestamp", example = "2023-10-01T12:00:00")
     private LocalDateTime createdAt;
 

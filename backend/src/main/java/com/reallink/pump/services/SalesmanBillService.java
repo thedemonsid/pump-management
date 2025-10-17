@@ -9,11 +9,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.reallink.pump.dto.request.CreateSalesmanBillRequest;
 import com.reallink.pump.dto.request.UpdateSalesmanBillRequest;
 import com.reallink.pump.dto.response.SalesmanBillResponse;
 import com.reallink.pump.entities.Customer;
+import com.reallink.pump.entities.FileStorage;
 import com.reallink.pump.entities.Product;
 import com.reallink.pump.entities.ProductType;
 import com.reallink.pump.entities.PumpInfoMaster;
@@ -43,6 +45,7 @@ public class SalesmanBillService {
     private final PumpInfoMasterRepository pumpInfoMasterRepository;
     private final SalesmanNozzleShiftRepository salesmanNozzleShiftRepository;
     private final SalesmanBillMapper mapper;
+    private final FileStorageService fileStorageService;
 
     public List<SalesmanBillResponse> getAll() {
         return repository.findAll().stream()
@@ -109,6 +112,100 @@ public class SalesmanBillService {
         bill.setProduct(product);
         bill.setSalesmanNozzleShift(salesmanNozzleShift);
         bill.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
+
+        // Calculate amounts
+        BigDecimal amount = request.getQuantity().multiply(request.getRate());
+        bill.setAmount(amount);
+        bill.setNetAmount(amount); // No tax, no discount
+
+        // Save bill
+        SalesmanBill savedBill = repository.save(bill);
+
+        return mapper.toResponse(savedBill);
+    }
+
+    @Transactional
+    public SalesmanBillResponse createWithImages(
+            @Valid CreateSalesmanBillRequest request,
+            MultipartFile meterImage,
+            MultipartFile vehicleImage,
+            MultipartFile extraImage,
+            @NotNull UUID pumpMasterId) {
+
+        // Validate pump master exists
+        PumpInfoMaster pumpMaster = pumpInfoMasterRepository.findById(request.getPumpMasterId()).orElse(null);
+        if (pumpMaster == null) {
+            throw new PumpBusinessException("INVALID_PUMP_MASTER",
+                    "Pump master with ID " + request.getPumpMasterId() + " does not exist");
+        }
+
+        // Validate customer exists
+        Customer customer = customerRepository.findById(request.getCustomerId()).orElse(null);
+        if (customer == null) {
+            throw new PumpBusinessException("INVALID_CUSTOMER",
+                    "Customer with ID " + request.getCustomerId() + " does not exist");
+        }
+
+        // Validate product exists and is FUEL type
+        Product product = productRepository.findById(request.getProductId()).orElse(null);
+        if (product == null) {
+            throw new PumpBusinessException("INVALID_PRODUCT",
+                    "Product with ID " + request.getProductId() + " does not exist");
+        }
+        if (product.getProductType() != ProductType.FUEL) {
+            throw new PumpBusinessException("INVALID_PRODUCT_TYPE",
+                    "Salesman bills can only contain FUEL products. Product " + product.getProductName() + " is of type " + product.getProductType());
+        }
+
+        // Validate salesman nozzle shift exists and is open
+        SalesmanNozzleShift salesmanNozzleShift = salesmanNozzleShiftRepository.findById(request.getSalesmanNozzleShiftId()).orElse(null);
+        if (salesmanNozzleShift == null) {
+            throw new PumpBusinessException("INVALID_SALESMAN_NOZZLE_SHIFT",
+                    "Salesman nozzle shift with ID " + request.getSalesmanNozzleShiftId() + " does not exist");
+        }
+        if (!salesmanNozzleShift.getStatus().equals(SalesmanNozzleShift.ShiftStatus.OPEN)) {
+            throw new PumpBusinessException("SHIFT_NOT_OPEN",
+                    "Cannot create salesman bill for closed shift. Shift status: " + salesmanNozzleShift.getStatus());
+        }
+
+        // Check for duplicate bill number
+        if (repository.existsByBillNoAndPumpMaster_Id(request.getBillNo(), request.getPumpMasterId())) {
+            throw new PumpBusinessException("DUPLICATE_SALESMAN_BILL_NO",
+                    "Salesman bill with number " + request.getBillNo() + " already exists for this pump master");
+        }
+
+        // Handle image uploads
+        FileStorage meterImageFile = null;
+        FileStorage vehicleImageFile = null;
+        FileStorage extraImageFile = null;
+
+        if (meterImage != null && !meterImage.isEmpty()) {
+            meterImageFile = fileStorageService.storeFile(meterImage, pumpMasterId, "SALESMAN_BILL_METER",
+                    "Meter image for bill: " + request.getBillNo());
+        }
+
+        if (vehicleImage != null && !vehicleImage.isEmpty()) {
+            vehicleImageFile = fileStorageService.storeFile(vehicleImage, pumpMasterId, "SALESMAN_BILL_VEHICLE",
+                    "Vehicle image for bill: " + request.getBillNo());
+        }
+
+        if (extraImage != null && !extraImage.isEmpty()) {
+            extraImageFile = fileStorageService.storeFile(extraImage, pumpMasterId, "SALESMAN_BILL_EXTRA",
+                    "Extra image for bill: " + request.getBillNo());
+        }
+
+        // Create salesman bill entity
+        SalesmanBill bill = mapper.toEntity(request);
+        bill.setPumpMaster(pumpMaster);
+        bill.setCustomer(customer);
+        bill.setProduct(product);
+        bill.setSalesmanNozzleShift(salesmanNozzleShift);
+        bill.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
+
+        // Set images
+        bill.setMeterImage(meterImageFile);
+        bill.setVehicleImage(vehicleImageFile);
+        bill.setExtraImage(extraImageFile);
 
         // Calculate amounts
         BigDecimal amount = request.getQuantity().multiply(request.getRate());

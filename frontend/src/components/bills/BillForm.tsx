@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { Loader2 } from "lucide-react";
 import type { Customer, Product, SalesmanNozzleShiftResponse } from "@/types";
 
@@ -23,8 +24,15 @@ export interface BillFormData {
   driverName: string;
 }
 
+export interface BillFormImages {
+  meterImage: File | null;
+  vehicleImage: File | null;
+  extraImage: File | null;
+}
+
 interface BillFormProps {
   formData: BillFormData;
+  images?: BillFormImages;
   customers: Customer[];
   products: Product[];
   activeShifts?: SalesmanNozzleShiftResponse[];
@@ -34,6 +42,7 @@ interface BillFormProps {
   onSubmit: () => void;
   onCancel: () => void;
   onChange: (field: keyof BillFormData, value: string) => void;
+  onImageChange?: (field: keyof BillFormImages, file: File | null) => void;
 }
 
 export function BillForm({
@@ -47,6 +56,7 @@ export function BillForm({
   onSubmit,
   onCancel,
   onChange,
+  onImageChange,
 }: BillFormProps) {
   return (
     <div className="grid gap-4 py-4">
@@ -207,6 +217,34 @@ export function BillForm({
           />
         </div>
       </div>
+
+      {!isEditMode && onImageChange && (
+        <>
+          <div className="border-t pt-4 mt-2">
+            <h3 className="text-sm font-medium mb-4">Attachments (Optional)</h3>
+            <div className="grid gap-4">
+              <ImageUpload
+                id="meter-image"
+                label="Meter Reading Image"
+                onChange={(file) => onImageChange("meterImage", file)}
+                disabled={loading}
+              />
+              <ImageUpload
+                id="vehicle-image"
+                label="Vehicle Image"
+                onChange={(file) => onImageChange("vehicleImage", file)}
+                disabled={loading}
+              />
+              <ImageUpload
+                id="extra-image"
+                label="Additional Image"
+                onChange={(file) => onImageChange("extraImage", file)}
+                disabled={loading}
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="flex justify-end space-x-2 pt-4">
         <Button variant="outline" onClick={onCancel}>

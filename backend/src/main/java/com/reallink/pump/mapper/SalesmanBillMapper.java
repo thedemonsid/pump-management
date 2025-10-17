@@ -37,6 +37,9 @@ public interface SalesmanBillMapper {
     @Mapping(target = "productId", source = "product.id")
     @Mapping(target = "productName", source = "product.productName")
     @Mapping(target = "salesmanNozzleShiftId", source = "salesmanNozzleShift.id")
+    @Mapping(target = "meterImageId", source = "meterImage.id")
+    @Mapping(target = "vehicleImageId", source = "vehicleImage.id")
+    @Mapping(target = "extraImageId", source = "extraImage.id")
     SalesmanBillResponse toResponse(SalesmanBill entity);
 
     /**

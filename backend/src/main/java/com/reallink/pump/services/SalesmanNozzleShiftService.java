@@ -56,6 +56,25 @@ public class SalesmanNozzleShiftService {
     private final SalesmanBillRepository billRepository;
     private final SalesmanShiftAccountingMapper accountingMapper;
 
+    /**
+     * Helper method to enrich shift response with accounting data
+     * (customerReceipt and credit) calculated from SalesmanBill and
+     * SalesmanBillPayment tables
+     */
+    private SalesmanNozzleShiftResponse enrichWithAccountingData(SalesmanNozzleShift shift) {
+        SalesmanNozzleShiftResponse response = mapper.toResponse(shift);
+
+        // Calculate credit (sum of all bills for this shift)
+        BigDecimal creditGiven = billRepository.getTotalCreditForShift(shift.getId());
+        response.setCredit(creditGiven);
+
+        // Calculate customer receipt (sum of all payments received during this shift)
+        BigDecimal customerReceipt = paymentRepository.getTotalPaymentsForShift(shift.getId());
+        response.setCustomerReceipt(customerReceipt);
+
+        return response;
+    }
+
     public List<SalesmanNozzleShiftResponse> getAllByPumpMasterId(@NotNull UUID pumpMasterId) {
         return repository.findByPumpMasterIdOrderByStartDateTimeDesc(pumpMasterId).stream()
                 .map(mapper::toResponse)
@@ -101,7 +120,8 @@ public class SalesmanNozzleShiftService {
         if (shift == null) {
             throw new PumpBusinessException("SHIFT_NOT_FOUND", "Salesman nozzle shift with ID " + id + " not found");
         }
-        return mapper.toResponse(shift);
+
+        return enrichWithAccountingData(shift);
     }
 
     public SalesmanShiftAccountingResponse getAccountingByShiftId(@NotNull UUID shiftId, @NotNull UUID pumpMasterId) {
@@ -557,7 +577,6 @@ public class SalesmanNozzleShiftService {
         accounting.setSalesmanNozzleShift(shift);
         accounting.setFuelSales(fuelSales);
         accounting.setCustomerReceipt(customerReceipt);
-        accounting.setSystemReceivedAmount(systemReceivedAmount);
         accounting.setUpiReceived(upiReceived != null ? upiReceived : BigDecimal.ZERO);
         accounting.setCardReceived(cardReceived != null ? cardReceived : BigDecimal.ZERO);
         accounting.setCredit(credit);
@@ -654,7 +673,6 @@ public class SalesmanNozzleShiftService {
         // Update accounting fields
         accounting.setFuelSales(fuelSales);
         accounting.setCustomerReceipt(customerReceipt);
-        accounting.setSystemReceivedAmount(systemReceivedAmount);
         accounting.setUpiReceived(upiReceived != null ? upiReceived : BigDecimal.ZERO);
         accounting.setCardReceived(cardReceived != null ? cardReceived : BigDecimal.ZERO);
         accounting.setCredit(credit);

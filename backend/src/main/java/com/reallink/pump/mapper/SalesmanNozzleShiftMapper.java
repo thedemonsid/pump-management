@@ -1,9 +1,13 @@
 package com.reallink.pump.mapper;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
 
@@ -45,6 +49,8 @@ public interface SalesmanNozzleShiftMapper {
     @Mapping(target = "status", expression = "java(entity.getStatus().name())")
     @Mapping(target = "dispensedAmount", expression = "java(entity.getDispensedAmount())")
     @Mapping(target = "totalAmount", expression = "java(entity.getTotalAmount())")
+    @Mapping(target = "startDateTime", source = "startDateTime", qualifiedByName = "toIST")
+    @Mapping(target = "endDateTime", source = "endDateTime", qualifiedByName = "toIST")
     SalesmanNozzleShiftResponse toResponse(SalesmanNozzleShift entity);
 
     /**
@@ -52,4 +58,23 @@ public interface SalesmanNozzleShiftMapper {
      * SalesmanNozzleShiftResponse
      */
     List<SalesmanNozzleShiftResponse> toResponseList(List<SalesmanNozzleShift> entities);
+
+    /**
+     * Convert UTC LocalDateTime to IST LocalDateTime
+     */
+    @Named("toIST")
+    default LocalDateTime toIST(LocalDateTime utcDateTime) {
+        if (utcDateTime == null) {
+            return null;
+        }
+
+        // Assume the LocalDateTime from DB is in UTC
+        ZonedDateTime utcZoned = utcDateTime.atZone(ZoneId.of("UTC"));
+
+        // Convert to IST
+        ZonedDateTime istZoned = utcZoned.withZoneSameInstant(ZoneId.of("Asia/Kolkata"));
+
+        // Return as LocalDateTime
+        return istZoned.toLocalDateTime();
+    }
 }

@@ -67,4 +67,13 @@ public class CreateSalesmanBillRequest {
     @Digits(integer = 10, fraction = 2, message = "Rate must have at most 10 digits and 2 decimal places")
     @Schema(description = "Fuel rate per unit", example = "100.00", required = true)
     private BigDecimal rate;
+
+    @Schema(description = "Meter image ID (optional)", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID meterImageId;
+
+    @Schema(description = "Vehicle image ID (optional)", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID vehicleImageId;
+
+    @Schema(description = "Extra image ID (optional)", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID extraImageId;
 }

@@ -5,16 +5,20 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.reallink.pump.dto.request.CreateSalesmanBillRequest;
 import com.reallink.pump.dto.request.UpdateSalesmanBillRequest;
@@ -88,13 +92,19 @@ public class SalesmanBillController {
         return ResponseEntity.ok(service.getNextBillNo(pumpMasterId));
     }
 
-    @PostMapping
-    @Operation(summary = "Create salesman bill")
-    public ResponseEntity<SalesmanBillResponse> createSalesmanBill(@Valid @RequestBody CreateSalesmanBillRequest request, HttpServletRequest httpRequest) {
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Create salesman bill with optional images")
+    public ResponseEntity<SalesmanBillResponse> createSalesmanBill(
+            @Valid @RequestPart("data") CreateSalesmanBillRequest request,
+            @RequestPart(value = "meterImage", required = false) MultipartFile meterImage,
+            @RequestPart(value = "vehicleImage", required = false) MultipartFile vehicleImage,
+            @RequestPart(value = "extraImage", required = false) MultipartFile extraImage,
+            HttpServletRequest httpRequest) {
         UUID pumpMasterId = extractPumpMasterId(httpRequest);
         request.setPumpMasterId(pumpMasterId);
         request.setBillNo(service.getNextBillNo(pumpMasterId));
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(request));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(service.createWithImages(request, meterImage, vehicleImage, extraImage, pumpMasterId));
     }
 
     @PutMapping("/{id}")

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSalesmanNozzleShiftStore } from "@/store/salesman-nozzle-shift-store";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Calendar,
   Loader2,
   Fuel,
   Eye,
@@ -39,27 +39,18 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import ReactSelect, { type CSSObjectWithLabel } from "react-select";
 import { format } from "date-fns";
 import { SalesmanBillService } from "@/services/salesman-bill-service";
 import { NozzleService } from "@/services/nozzle-service";
 import { SalesmanService } from "@/services/salesman-service";
 import { CustomerService } from "@/services/customer-service";
 import { ProductService } from "@/services/product-service";
-import { AccountingForm } from "@/pages/salesman-shifts/AccountingForm";
 import { CreateShiftPaymentForm } from "@/pages/salesman-shifts/CreateShiftPaymentForm";
 import { toast } from "sonner";
 import type {
   SalesmanNozzleShiftResponse,
   SalesmanBillResponse,
-  CreateSalesmanShiftAccountingRequest,
-  SalesmanShiftAccounting,
   Nozzle,
   Salesman,
   Customer,
@@ -67,7 +58,50 @@ import type {
   CreateSalesmanBillRequest,
 } from "@/types";
 
+// ReactSelect styling to match create-bill
+const selectStyles = {
+  control: (provided: CSSObjectWithLabel) => ({
+    ...provided,
+    minHeight: "36px",
+    borderColor: "#e5e7eb", // gray-200
+    backgroundColor: "#ffffff", // white
+    "&:hover": {
+      borderColor: "#9ca3af", // gray-400
+    },
+    boxShadow: "none",
+    "&:focus-within": {
+      borderColor: "#3b82f6", // blue-500
+      boxShadow: "0 0 0 1px #3b82f6",
+    },
+    fontSize: "16px",
+  }),
+  option: (
+    provided: CSSObjectWithLabel,
+    state: { isSelected: boolean; isFocused: boolean }
+  ) => ({
+    ...provided,
+    backgroundColor: state.isSelected
+      ? "#3b82f6" // blue-500
+      : state.isFocused
+      ? "#dbeafe" // blue-100
+      : "#ffffff", // white
+    color: state.isSelected ? "#ffffff" : "#111827", // white : gray-900
+    "&:hover": {
+      backgroundColor: state.isSelected ? "#2563eb" : "#dbeafe", // blue-600 : blue-100
+    },
+    fontSize: "16px",
+  }),
+  menu: (provided: CSSObjectWithLabel) => ({
+    ...provided,
+    zIndex: 9999,
+    backgroundColor: "#ffffff", // white
+    border: "1px solid #e5e7eb", // gray-200
+  }),
+  menuPortal: (base: CSSObjectWithLabel) => ({ ...base, zIndex: 9999 }),
+};
+
 export function AdminSalesmanShiftsPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const {
     shifts,
@@ -78,18 +112,23 @@ export function AdminSalesmanShiftsPage() {
     fetchActiveShifts,
     createShift,
     closeShift,
-    createAccounting,
-    updateAccounting,
-    getAccounting,
   } = useSalesmanNozzleShiftStore();
 
-  // Date filtering
-  const [fromDate, setFromDate] = useState(() => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    return format(yesterday, "yyyy-MM-dd");
-  });
-  const [toDate, setToDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  // Date filtering - single date that will be converted to from/to for backend
+  const [selectedDate, setSelectedDate] = useState(() =>
+    format(new Date(), "yyyy-MM-dd")
+  );
+
+  // Convert selected date to Indian timezone and create from/to dates
+  const getIndianDateRange = (dateStr: string) => {
+    // For the backend, we send the same date for both fromDate and toDate
+    // The backend will handle the date range (start of day to end of day) in IST
+    // Since we're using a single date picker, both from and to will be the same date
+    const fromDate = dateStr;
+    const toDate = dateStr;
+
+    return { fromDate, toDate };
+  };
 
   // Nozzles and salesmen for shift management
   const [nozzles, setNozzles] = useState<Nozzle[]>([]);
@@ -97,8 +136,7 @@ export function AdminSalesmanShiftsPage() {
   const [salesmen, setSalesmen] = useState<Salesman[]>([]);
   const [loadingSalesmen, setLoadingSalesmen] = useState(false);
 
-  // Start shift dialog state
-  const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
+  // Start shift form state (no dialog needed)
   const [startForm, setStartForm] = useState({
     salesmanId: "",
     nozzleId: "",
@@ -141,13 +179,6 @@ export function AdminSalesmanShiftsPage() {
   const [selectedShiftForPayment, setSelectedShiftForPayment] =
     useState<SalesmanNozzleShiftResponse | null>(null);
 
-  // Accounting dialog state
-  const [isAccountingDialogOpen, setIsAccountingDialogOpen] = useState(false);
-  const [selectedShiftForAccounting, setSelectedShiftForAccounting] =
-    useState<SalesmanNozzleShiftResponse | null>(null);
-  const [existingAccounting, setExistingAccounting] =
-    useState<SalesmanShiftAccounting | null>(null);
-
   // Load nozzles and salesmen for shift management
   useEffect(() => {
     const loadNozzles = async () => {
@@ -184,9 +215,10 @@ export function AdminSalesmanShiftsPage() {
   // Load shifts with date filter for admin (all shifts)
   useEffect(() => {
     if (user?.role === "ADMIN" || user?.role === "MANAGER") {
+      const { fromDate, toDate } = getIndianDateRange(selectedDate);
       fetchShifts({ fromDate, toDate });
     }
-  }, [fetchShifts, fromDate, toDate, user?.role]);
+  }, [fetchShifts, selectedDate, user?.role]);
 
   // Handler for starting a new shift
   const handleStartShift = async () => {
@@ -204,13 +236,14 @@ export function AdminSalesmanShiftsPage() {
         openingBalance: parseFloat(startForm.openingBalance),
       });
       toast.success("Shift started successfully");
-      setIsStartDialogOpen(false);
+      // Reset form
       setStartForm({
         salesmanId: "",
         nozzleId: "",
         openingBalance: "",
       });
       // Refresh shifts
+      const { fromDate, toDate } = getIndianDateRange(selectedDate);
       fetchShifts({ fromDate, toDate });
       fetchActiveShifts();
     } catch (error) {
@@ -228,6 +261,7 @@ export function AdminSalesmanShiftsPage() {
       setSelectedShiftId(null);
       setCloseForm({ closingBalance: 0, nextSalesmanId: "" });
       // Refresh shifts
+      const { fromDate, toDate } = getIndianDateRange(selectedDate);
       fetchShifts({ fromDate, toDate });
       fetchActiveShifts();
     } catch (error) {
@@ -301,6 +335,7 @@ export function AdminSalesmanShiftsPage() {
         driverName: "",
       });
       // Refresh shifts
+      const { fromDate, toDate } = getIndianDateRange(selectedDate);
       fetchShifts({ fromDate, toDate });
       fetchActiveShifts();
     } catch (error) {
@@ -319,6 +354,7 @@ export function AdminSalesmanShiftsPage() {
     setIsPaymentDialogOpen(false);
     setSelectedShiftForPayment(null);
     // Refresh shifts
+    const { fromDate, toDate } = getIndianDateRange(selectedDate);
     fetchShifts({ fromDate, toDate });
     fetchActiveShifts();
   };
@@ -338,63 +374,18 @@ export function AdminSalesmanShiftsPage() {
     }
   };
 
-  const handleCreateAccounting = async (shift: SalesmanNozzleShiftResponse) => {
-    setSelectedShiftForAccounting(shift);
-
-    // Admin can always edit accounting, try to fetch existing if available
-    if (shift.isAccountingDone) {
-      try {
-        const accounting = await getAccounting(shift.id!);
-        setExistingAccounting(accounting);
-      } catch (error) {
-        console.error("Failed to fetch existing accounting:", error);
-        setExistingAccounting(null);
-      }
-    } else {
-      setExistingAccounting(null);
-    }
-
-    setIsAccountingDialogOpen(true);
-  };
-
-  const handleAccountingSubmit = async (
-    data: CreateSalesmanShiftAccountingRequest
-  ) => {
-    if (!selectedShiftForAccounting?.id) return;
-
-    try {
-      if (existingAccounting) {
-        await updateAccounting(selectedShiftForAccounting.id, data);
-        toast.success("Accounting updated successfully");
-      } else {
-        await createAccounting(selectedShiftForAccounting.id, data);
-        toast.success("Accounting created successfully");
-      }
-      setIsAccountingDialogOpen(false);
-      setSelectedShiftForAccounting(null);
-      setExistingAccounting(null);
-      // Refresh shifts to show updated accounting status
-      fetchShifts({ fromDate, toDate });
-      fetchActiveShifts();
-    } catch (error) {
-      console.error(
-        `Failed to ${existingAccounting ? "update" : "create"} accounting:`,
-        error
-      );
-      toast.error(
-        `Failed to ${existingAccounting ? "update" : "create"} accounting`
-      );
-    }
-  };
-
-  const handleAccountingCancel = () => {
-    setIsAccountingDialogOpen(false);
-    setSelectedShiftForAccounting(null);
-    setExistingAccounting(null);
+  const handleCreateAccounting = (shift: SalesmanNozzleShiftResponse) => {
+    // Navigate to the new accounting table page
+    navigate(`/admin/salesman-shifts/${shift.id}/accounting`);
   };
 
   const formatDateTime = (dateString: string) => {
     return format(new Date(dateString), "dd/MM/yyyy HH:mm");
+  };
+
+  const formatTime = (dateString: string) => {
+    // Backend sends IST dates, format in 12-hour AM/PM format
+    return format(new Date(dateString), "hh:mm a");
   };
 
   const formatFuelQuantity = (quantity: number) => {
@@ -439,89 +430,116 @@ export function AdminSalesmanShiftsPage() {
   return (
     <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-            All Salesman Shifts
-          </h1>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Manage all salesman nozzle shifts and track fuel dispensing across
-            all salesmen
-          </p>
-        </div>
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+          All Salesman Shifts
+        </h1>
+        <p className="text-sm md:text-base text-muted-foreground">
+          Manage all salesman nozzle shifts and track fuel dispensing across all
+          salesmen
+        </p>
+      </div>
 
-        {/* Start Shift Button */}
-        <Dialog open={isStartDialogOpen} onOpenChange={setIsStartDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto">
-              <Play className="mr-2 h-4 w-4" />
-              Start New Shift
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Start New Shift</DialogTitle>
-              <DialogDescription>
-                Start a new shift for a salesman by selecting nozzle and
-                entering opening balance
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="salesman">Salesman *</Label>
-                <Select
-                  value={startForm.salesmanId}
-                  onValueChange={(value) =>
-                    setStartForm({ ...startForm, salesmanId: value })
+      {/* Start New Shift Form - Always Visible Compact Form */}
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Start New Shift</CardTitle>
+            <CardDescription>
+              Select salesman and nozzle to begin a new shift
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
+              <div className="space-y-2">
+                <Label htmlFor="salesman" className="text-sm font-medium">
+                  Salesman *
+                </Label>
+                <ReactSelect
+                  value={
+                    startForm.salesmanId
+                      ? salesmen.find((s) => s.id === startForm.salesmanId)
+                        ? {
+                            value: startForm.salesmanId,
+                            label: salesmen.find(
+                              (s) => s.id === startForm.salesmanId
+                            )!.username,
+                          }
+                        : null
+                      : null
                   }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a salesman" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {loadingSalesmen ? (
-                      <SelectItem value="" disabled>
-                        Loading salesmen...
-                      </SelectItem>
-                    ) : (
-                      salesmen.map((salesman) => (
-                        <SelectItem key={salesman.id} value={salesman.id!}>
-                          {salesman.username}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="nozzle">Nozzle *</Label>
-                <Select
-                  value={startForm.nozzleId}
-                  onValueChange={(value) =>
-                    setStartForm({ ...startForm, nozzleId: value })
+                  onChange={(option) =>
+                    setStartForm({
+                      ...startForm,
+                      salesmanId: option?.value || "",
+                    })
                   }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a nozzle" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {loadingNozzles ? (
-                      <SelectItem value="" disabled>
-                        Loading nozzles...
-                      </SelectItem>
-                    ) : (
-                      nozzles.map((nozzle) => (
-                        <SelectItem key={nozzle.id} value={nozzle.id!}>
-                          {nozzle.nozzleName} -{" "}
-                          {nozzle.productName || "No Product"}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                  options={salesmen.map((s) => ({
+                    value: s.id!,
+                    label: s.username,
+                  }))}
+                  placeholder="Select a salesman"
+                  styles={selectStyles}
+                  menuPortalTarget={document.body}
+                  isLoading={loadingSalesmen}
+                  noOptionsMessage={() =>
+                    loadingSalesmen
+                      ? "Loading salesmen..."
+                      : "No salesmen available"
+                  }
+                  isClearable
+                />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="opening-balance">
+
+              <div className="space-y-2">
+                <Label htmlFor="nozzle" className="text-sm font-medium">
+                  Nozzle *
+                </Label>
+                <ReactSelect
+                  value={
+                    startForm.nozzleId
+                      ? nozzles.find((n) => n.id === startForm.nozzleId)
+                        ? {
+                            value: startForm.nozzleId,
+                            label: `${
+                              nozzles.find((n) => n.id === startForm.nozzleId)!
+                                .nozzleName
+                            } - ${
+                              nozzles.find((n) => n.id === startForm.nozzleId)!
+                                .productName || "No Product"
+                            }`,
+                          }
+                        : null
+                      : null
+                  }
+                  onChange={(option) =>
+                    setStartForm({
+                      ...startForm,
+                      nozzleId: option?.value || "",
+                    })
+                  }
+                  options={nozzles.map((n) => ({
+                    value: n.id!,
+                    label: `${n.nozzleName} - ${n.productName || "No Product"}`,
+                  }))}
+                  placeholder="Select a nozzle"
+                  styles={selectStyles}
+                  menuPortalTarget={document.body}
+                  isLoading={loadingNozzles}
+                  noOptionsMessage={() =>
+                    loadingNozzles
+                      ? "Loading nozzles..."
+                      : "No nozzles available"
+                  }
+                  isClearable
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="opening-balance"
+                  className="text-sm font-medium"
+                >
                   Opening Fuel Balance (L) *
                 </Label>
                 <Input
@@ -536,23 +554,24 @@ export function AdminSalesmanShiftsPage() {
                       openingBalance: e.target.value,
                     })
                   }
+                  className="w-full"
                 />
               </div>
             </div>
-            <div className="flex justify-end space-x-2">
+
+            <div className="flex justify-center pt-4">
               <Button
-                variant="outline"
-                onClick={() => setIsStartDialogOpen(false)}
+                onClick={handleStartShift}
+                disabled={loading}
+                className="px-8"
               >
-                Cancel
-              </Button>
-              <Button onClick={handleStartShift} disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Play className="mr-2 h-4 w-4" />
                 Start Shift
               </Button>
             </div>
-          </DialogContent>
-        </Dialog>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Active shifts cards */}
@@ -643,35 +662,43 @@ export function AdminSalesmanShiftsPage() {
                               <Label htmlFor="next-salesman">
                                 Next Salesman (Optional)
                               </Label>
-                              <Select
-                                value={closeForm.nextSalesmanId}
-                                onValueChange={(value) =>
+                              <ReactSelect
+                                value={
+                                  closeForm.nextSalesmanId
+                                    ? salesmen.find(
+                                        (s) => s.id === closeForm.nextSalesmanId
+                                      )
+                                      ? {
+                                          value: closeForm.nextSalesmanId,
+                                          label: salesmen.find(
+                                            (s) =>
+                                              s.id === closeForm.nextSalesmanId
+                                          )!.username,
+                                        }
+                                      : null
+                                    : null
+                                }
+                                onChange={(option) =>
                                   setCloseForm({
                                     ...closeForm,
-                                    nextSalesmanId: value,
+                                    nextSalesmanId: option?.value || "",
                                   })
                                 }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select next salesman (optional)" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {loadingSalesmen ? (
-                                    <SelectItem value="" disabled>
-                                      Loading salesmen...
-                                    </SelectItem>
-                                  ) : (
-                                    salesmen.map((salesman) => (
-                                      <SelectItem
-                                        key={salesman.id}
-                                        value={salesman.id!}
-                                      >
-                                        {salesman.username}
-                                      </SelectItem>
-                                    ))
-                                  )}
-                                </SelectContent>
-                              </Select>
+                                options={salesmen.map((s) => ({
+                                  value: s.id!,
+                                  label: s.username,
+                                }))}
+                                placeholder="Select next salesman (optional)"
+                                styles={selectStyles}
+                                menuPortalTarget={document.body}
+                                isLoading={loadingSalesmen}
+                                noOptionsMessage={() =>
+                                  loadingSalesmen
+                                    ? "Loading salesmen..."
+                                    : "No salesmen available"
+                                }
+                                isClearable
+                              />
                             </div>
                           </div>
                           <div className="flex justify-end space-x-2">
@@ -734,52 +761,28 @@ export function AdminSalesmanShiftsPage() {
         </div>
       )}
 
-      {/* Date filters */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center">
-            <Calendar className="mr-2 h-4 w-4" />
-            Filter Shifts
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col space-y-3 md:flex-row md:space-y-0 md:space-x-4">
-            <div className="flex-1">
-              <Label htmlFor="from-date" className="text-sm font-medium">
-                From Date
-              </Label>
-              <Input
-                id="from-date"
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            <div className="flex-1">
-              <Label htmlFor="to-date" className="text-sm font-medium">
-                To Date
-              </Label>
-              <Input
-                id="to-date"
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Shifts table */}
       <Card>
         <CardHeader>
-          <CardTitle>Salesman Shift History</CardTitle>
-          <CardDescription>
-            All completed shifts within the selected date range across all
-            salesmen
-          </CardDescription>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <CardTitle>Salesman Shift History</CardTitle>
+              <CardDescription>
+                All completed shifts for the selected date across all salesmen
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex flex-col">
+                <Input
+                  id="selected-date"
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-[180px]"
+                />
+              </div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {error && (
@@ -807,8 +810,8 @@ export function AdminSalesmanShiftsPage() {
                   <TableRow>
                     <TableHead className="min-w-[120px]">Salesman</TableHead>
                     <TableHead className="min-w-[120px]">Nozzle</TableHead>
-                    <TableHead className="min-w-[140px]">Start Time</TableHead>
-                    <TableHead className="min-w-[140px]">End Time</TableHead>
+                    <TableHead className="min-w-[100px]">Start Time</TableHead>
+                    <TableHead className="min-w-[100px]">End Time</TableHead>
                     <TableHead className="min-w-[100px]">
                       Opening Fuel
                     </TableHead>
@@ -841,12 +844,10 @@ export function AdminSalesmanShiftsPage() {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        {formatDateTime(shift.startDateTime)}
-                      </TableCell>
+                      <TableCell>{formatTime(shift.startDateTime)}</TableCell>
                       <TableCell>
                         {shift.endDateTime
-                          ? formatDateTime(shift.endDateTime)
+                          ? formatTime(shift.endDateTime)
                           : "-"}
                       </TableCell>
                       <TableCell>
@@ -981,35 +982,46 @@ export function AdminSalesmanShiftsPage() {
                                     <Label htmlFor="next-salesman-table">
                                       Next Salesman (Optional)
                                     </Label>
-                                    <Select
-                                      value={closeForm.nextSalesmanId}
-                                      onValueChange={(value) =>
+                                    <ReactSelect
+                                      value={
+                                        closeForm.nextSalesmanId
+                                          ? salesmen.find(
+                                              (s) =>
+                                                s.id ===
+                                                closeForm.nextSalesmanId
+                                            )
+                                            ? {
+                                                value: closeForm.nextSalesmanId,
+                                                label: salesmen.find(
+                                                  (s) =>
+                                                    s.id ===
+                                                    closeForm.nextSalesmanId
+                                                )!.username,
+                                              }
+                                            : null
+                                          : null
+                                      }
+                                      onChange={(option) =>
                                         setCloseForm({
                                           ...closeForm,
-                                          nextSalesmanId: value,
+                                          nextSalesmanId: option?.value || "",
                                         })
                                       }
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select next salesman (optional)" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {loadingSalesmen ? (
-                                          <SelectItem value="" disabled>
-                                            Loading salesmen...
-                                          </SelectItem>
-                                        ) : (
-                                          salesmen.map((salesman) => (
-                                            <SelectItem
-                                              key={salesman.id}
-                                              value={salesman.id!}
-                                            >
-                                              {salesman.username}
-                                            </SelectItem>
-                                          ))
-                                        )}
-                                      </SelectContent>
-                                    </Select>
+                                      options={salesmen.map((s) => ({
+                                        value: s.id!,
+                                        label: s.username,
+                                      }))}
+                                      placeholder="Select next salesman (optional)"
+                                      styles={selectStyles}
+                                      menuPortalTarget={document.body}
+                                      isLoading={loadingSalesmen}
+                                      noOptionsMessage={() =>
+                                        loadingSalesmen
+                                          ? "Loading salesmen..."
+                                          : "No salesmen available"
+                                      }
+                                      isClearable
+                                    />
                                   </div>
                                 </div>
                                 <div className="flex justify-end space-x-2">
@@ -1135,35 +1147,6 @@ export function AdminSalesmanShiftsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Accounting Dialog */}
-      <Dialog
-        open={isAccountingDialogOpen}
-        onOpenChange={setIsAccountingDialogOpen}
-      >
-        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {existingAccounting ? "Edit Accounting" : "Create Accounting"}
-            </DialogTitle>
-            <DialogDescription>
-              {existingAccounting
-                ? "Update accounting details for this shift"
-                : `Enter accounting details for the closed shift by ${selectedShiftForAccounting?.salesmanUsername}`}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedShiftForAccounting && (
-            <AccountingForm
-              shift={selectedShiftForAccounting}
-              onSubmit={handleAccountingSubmit}
-              onCancel={handleAccountingCancel}
-              loading={loading}
-              existingAccounting={existingAccounting}
-              isReadOnly={false}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
       {/* Payment Dialog */}
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
         <DialogContent className="max-w-2xl">
@@ -1209,51 +1192,72 @@ export function AdminSalesmanShiftsPage() {
           <div className="space-y-4">
             <div className="grid gap-2">
               <Label htmlFor="customer">Customer *</Label>
-              <Select
-                value={billForm.customerId}
-                onValueChange={(value) =>
-                  setBillForm({ ...billForm, customerId: value })
+              <ReactSelect
+                value={
+                  billForm.customerId
+                    ? customers.find((c) => c.id === billForm.customerId)
+                      ? {
+                          value: billForm.customerId,
+                          label: customers.find(
+                            (c) => c.id === billForm.customerId
+                          )!.customerName,
+                        }
+                      : null
+                    : null
                 }
-                disabled={loadingCustomers}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select customer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers
-                    .filter((customer) => customer.id)
-                    .map((customer) => (
-                      <SelectItem key={customer.id!} value={customer.id!}>
-                        {customer.customerName}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+                onChange={(option) =>
+                  setBillForm({ ...billForm, customerId: option?.value || "" })
+                }
+                options={customers
+                  .filter((customer) => customer.id)
+                  .map((c) => ({
+                    value: c.id!,
+                    label: c.customerName,
+                  }))}
+                placeholder="Select customer"
+                styles={selectStyles}
+                menuPortalTarget={document.body}
+                isLoading={loadingCustomers}
+                isClearable
+              />
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="product">Product *</Label>
-              <Select
-                value={billForm.productId}
-                onValueChange={(value) =>
-                  setBillForm({ ...billForm, productId: value })
+              <ReactSelect
+                value={
+                  billForm.productId
+                    ? products.find((p) => p.id === billForm.productId)
+                      ? {
+                          value: billForm.productId,
+                          label: `${
+                            products.find((p) => p.id === billForm.productId)!
+                              .productName
+                          } - ${formatCurrency(
+                            products.find((p) => p.id === billForm.productId)!
+                              .salesRate
+                          )}/L`,
+                        }
+                      : null
+                    : null
                 }
-                disabled={loadingProducts}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select product" />
-                </SelectTrigger>
-                <SelectContent>
-                  {products
-                    .filter((product) => product.id)
-                    .map((product) => (
-                      <SelectItem key={product.id!} value={product.id!}>
-                        {product.productName} -{" "}
-                        {formatCurrency(product.salesRate)}/L
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+                onChange={(option) =>
+                  setBillForm({ ...billForm, productId: option?.value || "" })
+                }
+                options={products
+                  .filter((product) => product.id)
+                  .map((p) => ({
+                    value: p.id!,
+                    label: `${p.productName} - ${formatCurrency(
+                      p.salesRate
+                    )}/L`,
+                  }))}
+                placeholder="Select product"
+                styles={selectStyles}
+                menuPortalTarget={document.body}
+                isLoading={loadingProducts}
+                isClearable
+              />
             </div>
 
             <div className="grid gap-2">

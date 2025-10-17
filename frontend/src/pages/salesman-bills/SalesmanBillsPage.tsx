@@ -1,31 +1,38 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { useBillsData } from '@/hooks/useBillsData';
-import { useBillForm } from '@/hooks/useBillForm';
-import { useFormData } from '@/hooks/useFormData';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useBillsData } from "@/hooks/useBillsData";
+import { useBillForm } from "@/hooks/useBillForm";
+import { useFormData } from "@/hooks/useFormData";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Plus, Loader2, Receipt } from 'lucide-react';
+} from "@/components/ui/card";
+import { Loader2, Receipt } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { DateRangeFilter } from '@/components/bills/DateRangeFilter';
-import { BillForm } from '@/components/bills/BillForm';
-import { BillsTable } from '@/components/bills/BillsTable';
-import { SalesmanBillService } from '@/services/salesman-bill-service';
-import { getDefaultStartDate, getTodayFormatted, formatDate } from '@/utils/bill-utils';
-import type { SalesmanBillResponse } from '@/types';
+} from "@/components/ui/dialog";
+import { DateRangeFilter } from "@/components/bills/DateRangeFilter";
+import {
+  CompactBillForm,
+  type BillFormImages,
+} from "@/components/bills/CompactBillForm";
+import { BillForm } from "@/components/bills/BillForm";
+import { BillsTable } from "@/components/bills/BillsTable";
+import { SalesmanBillService } from "@/services/salesman-bill-service";
+import {
+  getDefaultStartDate,
+  getTodayFormatted,
+  formatDate,
+} from "@/utils/bill-utils";
+import type { SalesmanBillResponse } from "@/types";
+import { toast } from "sonner";
 
 export function SalesmanBillsPage() {
   const { user } = useAuth();
@@ -36,11 +43,22 @@ export function SalesmanBillsPage() {
     endDate: getTodayFormatted(),
   });
 
-  // Dialog states
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  // Dialog states (only for edit now)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedBill, setSelectedBill] = useState<SalesmanBillResponse | null>(null);
+  const [selectedBill, setSelectedBill] = useState<SalesmanBillResponse | null>(
+    null
+  );
   const [operationLoading, setOperationLoading] = useState(false);
+
+  // Image state for creation
+  const [billImages, setBillImages] = useState<BillFormImages>({
+    meterImage: null,
+    vehicleImage: null,
+    extraImage: null,
+  });
+
+  // Key to force image upload component reset
+  const [imageUploadKey, setImageUploadKey] = useState(0);
 
   // Custom hooks
   const { bills, loading, error, loadBills } = useBillsData(
@@ -48,13 +66,8 @@ export function SalesmanBillsPage() {
     dateRange.endDate
   );
 
-  const {
-    billForm,
-    updateField,
-    resetForm,
-    loadBillData,
-    setNextBillNo,
-  } = useBillForm();
+  const { billForm, updateField, resetForm, loadBillData, setNextBillNo } =
+    useBillForm();
 
   const {
     customers,
@@ -63,28 +76,23 @@ export function SalesmanBillsPage() {
     loadingFormData,
     loadFormData,
     getNextBillNo,
-  } = useFormData(isCreateDialogOpen, isEditDialogOpen);
+  } = useFormData(true, isEditDialogOpen); // Always load form data for compact form
 
   // Load bills on mount and when date range changes
   useEffect(() => {
     loadBills();
   }, [loadBills]);
 
-  // Load form data when dialogs open
+  // Load form data on mount and get next bill number - ONLY ONCE
   useEffect(() => {
-    if (isCreateDialogOpen || isEditDialogOpen) {
-      loadFormData();
-
-      // Get next bill number for create mode
-      if (isCreateDialogOpen && !isEditDialogOpen) {
-        getNextBillNo().then((billNo) => {
-          if (billNo !== null) {
-            setNextBillNo(billNo);
-          }
-        });
+    loadFormData();
+    getNextBillNo().then((billNo) => {
+      if (billNo !== null) {
+        setNextBillNo(billNo);
       }
-    }
-  }, [isCreateDialogOpen, isEditDialogOpen, loadFormData, getNextBillNo, setNextBillNo]);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty array means run only once on mount
 
   const handleCreateBill = async () => {
     if (!user?.pumpMasterId) return;
@@ -98,22 +106,65 @@ export function SalesmanBillsPage() {
         customerId: billForm.customerId,
         productId: billForm.productId,
         salesmanNozzleShiftId: billForm.salesmanNozzleShiftId,
-        rateType: 'INCLUDING_GST' as const,
+        rateType: "INCLUDING_GST" as const,
         quantity: parseFloat(billForm.quantity),
         rate: parseFloat(billForm.rate),
         vehicleNo: billForm.vehicleNo || undefined,
         driverName: billForm.driverName || undefined,
       };
 
-      await SalesmanBillService.create(billData);
-      setIsCreateDialogOpen(false);
+      const images = {
+        meterImage: billImages.meterImage || undefined,
+        vehicleImage: billImages.vehicleImage || undefined,
+        extraImage: billImages.extraImage || undefined,
+      };
+
+      await SalesmanBillService.create(billData, images);
+
+      // Success toast
+      toast.success("Bill created successfully", {
+        description: `Bill #${billForm.billNo} has been saved`,
+      });
+
       resetForm();
+      // Reset images
+      setBillImages({
+        meterImage: null,
+        vehicleImage: null,
+        extraImage: null,
+      });
+      // Force image upload components to reset by changing key
+      setImageUploadKey((prev) => prev + 1);
+
+      // Get next bill number
+      getNextBillNo().then((billNo) => {
+        if (billNo !== null) {
+          setNextBillNo(billNo);
+        }
+      });
       loadBills();
     } catch (error) {
-      console.error('Failed to create bill:', error);
+      console.error("Failed to create bill:", error);
+      // Error toast
+      toast.error("Failed to create bill", {
+        description:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while saving the bill",
+      });
     } finally {
       setOperationLoading(false);
     }
+  };
+
+  const handleImageChange = (
+    field: keyof BillFormImages,
+    file: File | null
+  ) => {
+    setBillImages((prev) => ({
+      ...prev,
+      [field]: file,
+    }));
   };
 
   const handleEditBill = async () => {
@@ -133,25 +184,51 @@ export function SalesmanBillsPage() {
       };
 
       await SalesmanBillService.update(selectedBill.id, billData);
+
+      // Success toast
+      toast.success("Bill updated successfully", {
+        description: `Bill #${billForm.billNo} has been updated`,
+      });
+
       setIsEditDialogOpen(false);
       setSelectedBill(null);
       resetForm();
       loadBills();
     } catch (error) {
-      console.error('Failed to update bill:', error);
+      console.error("Failed to update bill:", error);
+      // Error toast
+      toast.error("Failed to update bill", {
+        description:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while updating the bill",
+      });
     } finally {
       setOperationLoading(false);
     }
   };
 
   const handleDeleteBill = async (billId: string) => {
-    if (!confirm('Are you sure you want to delete this bill?')) return;
+    if (!confirm("Are you sure you want to delete this bill?")) return;
 
     try {
       await SalesmanBillService.delete(billId);
+
+      // Success toast
+      toast.success("Bill deleted successfully", {
+        description: "The bill has been removed",
+      });
+
       loadBills();
     } catch (error) {
-      console.error('Failed to delete bill:', error);
+      console.error("Failed to delete bill:", error);
+      // Error toast
+      toast.error("Failed to delete bill", {
+        description:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while deleting the bill",
+      });
     }
   };
 
@@ -161,18 +238,13 @@ export function SalesmanBillsPage() {
     setIsEditDialogOpen(true);
   };
 
-  const handleCloseCreateDialog = () => {
-    setIsCreateDialogOpen(false);
-    resetForm();
-  };
-
   const handleCloseEditDialog = () => {
     setIsEditDialogOpen(false);
     setSelectedBill(null);
     resetForm();
   };
 
-  if (user?.role !== 'ADMIN' && user?.role !== 'MANAGER') {
+  if (user?.role !== "ADMIN" && user?.role !== "MANAGER") {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -190,69 +262,50 @@ export function SalesmanBillsPage() {
   return (
     <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col space-y-4">
-        <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              Salesman Bills
-            </h1>
-            <p className="text-sm md:text-base text-muted-foreground">
-              Manage credit bills created by salesmen during shifts
-            </p>
-          </div>
-
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Bill
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Create Salesman Bill</DialogTitle>
-                <DialogDescription>
-                  Create a new credit bill for a customer purchase during a shift
-                </DialogDescription>
-              </DialogHeader>
-              <BillForm
-                formData={billForm}
-                customers={customers}
-                products={products}
-                activeShifts={activeShifts}
-                loadingFormData={loadingFormData}
-                loading={operationLoading}
-                isEditMode={false}
-                onSubmit={handleCreateBill}
-                onCancel={handleCloseCreateDialog}
-                onChange={updateField}
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {/* Date Range Filter */}
-        <DateRangeFilter
-          startDate={dateRange.startDate}
-          endDate={dateRange.endDate}
-          onStartDateChange={(date) =>
-            setDateRange((prev) => ({ ...prev, startDate: date }))
-          }
-          onEndDateChange={(date) =>
-            setDateRange((prev) => ({ ...prev, endDate: date }))
-          }
-          onApplyFilter={loadBills}
-          loading={loading}
-        />
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+          Salesman Bills
+        </h1>
+        <p className="text-sm md:text-base text-muted-foreground">
+          Manage credit bills created by salesmen during shifts
+        </p>
       </div>
+
+      {/* Compact Bill Form - No wrapper card as form has its own cards */}
+      <CompactBillForm
+        formData={billForm}
+        images={billImages}
+        customers={customers}
+        products={products}
+        activeShifts={activeShifts}
+        loadingFormData={loadingFormData}
+        loading={operationLoading}
+        onSubmit={handleCreateBill}
+        onChange={updateField}
+        onImageChange={handleImageChange}
+        resetKey={imageUploadKey}
+      />
+
+      {/* Date Range Filter */}
+      <DateRangeFilter
+        startDate={dateRange.startDate}
+        endDate={dateRange.endDate}
+        onStartDateChange={(date) =>
+          setDateRange((prev) => ({ ...prev, startDate: date }))
+        }
+        onEndDateChange={(date) =>
+          setDateRange((prev) => ({ ...prev, endDate: date }))
+        }
+        onApplyFilter={loadBills}
+        loading={loading}
+      />
 
       {/* Bills Table */}
       <Card>
         <CardHeader>
           <CardTitle>Credit Bills</CardTitle>
           <CardDescription>
-            Showing bills from{' '}
-            {formatDate(new Date(dateRange.startDate))} to{' '}
+            Showing bills from {formatDate(new Date(dateRange.startDate))} to{" "}
             {formatDate(new Date(dateRange.endDate))}
           </CardDescription>
         </CardHeader>

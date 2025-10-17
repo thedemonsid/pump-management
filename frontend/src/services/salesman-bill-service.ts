@@ -1,12 +1,12 @@
-import api from './api';
+import api from "./api";
 import type {
   CreateSalesmanBillRequest,
   UpdateSalesmanBillRequest,
   SalesmanBillResponse,
-} from '@/types';
+} from "@/types";
 
 export class SalesmanBillService {
-  private static readonly BASE_PATH = '/api/v1/salesman-bills';
+  private static readonly BASE_PATH = "/api/v1/salesman-bills";
 
   // Get all salesman bills
   static async getAll(): Promise<SalesmanBillResponse[]> {
@@ -65,11 +65,43 @@ export class SalesmanBillService {
     return response.data;
   }
 
-  // Create new salesman bill
+  // Create new salesman bill with images
   static async create(
-    bill: CreateSalesmanBillRequest
+    bill: CreateSalesmanBillRequest,
+    images?: {
+      meterImage?: File;
+      vehicleImage?: File;
+      extraImage?: File;
+    }
   ): Promise<SalesmanBillResponse> {
-    const response = await api.post<SalesmanBillResponse>(this.BASE_PATH, bill);
+    const formData = new FormData();
+
+    // Append bill data as JSON blob
+    formData.append(
+      "data",
+      new Blob([JSON.stringify(bill)], { type: "application/json" })
+    );
+
+    // Append images if provided
+    if (images?.meterImage) {
+      formData.append("meterImage", images.meterImage);
+    }
+    if (images?.vehicleImage) {
+      formData.append("vehicleImage", images.vehicleImage);
+    }
+    if (images?.extraImage) {
+      formData.append("extraImage", images.extraImage);
+    }
+
+    const response = await api.post<SalesmanBillResponse>(
+      this.BASE_PATH,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
     return response.data;
   }
 

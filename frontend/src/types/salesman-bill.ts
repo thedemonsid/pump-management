@@ -22,7 +22,7 @@ export interface SalesmanBillResponse {
   /** Salesman Nozzle Shift ID - links bill to specific shift */
   salesmanNozzleShiftId: string;
   /** Rate type */
-  rateType: 'EXCLUDING_GST' | 'INCLUDING_GST';
+  rateType: "EXCLUDING_GST" | "INCLUDING_GST";
   /** Quantity in liters */
   quantity: number;
   /** Rate per liter */
@@ -33,6 +33,12 @@ export interface SalesmanBillResponse {
   vehicleNo?: string;
   /** Driver name */
   driverName?: string;
+  /** Meter image ID */
+  meterImageId?: string;
+  /** Vehicle image ID */
+  vehicleImageId?: string;
+  /** Extra image ID */
+  extraImageId?: string;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -53,7 +59,7 @@ export interface CreateSalesmanBillRequest {
   /** Salesman Nozzle Shift ID - required for linking to shift */
   salesmanNozzleShiftId: string;
   /** Rate type */
-  rateType: 'EXCLUDING_GST' | 'INCLUDING_GST';
+  rateType: "EXCLUDING_GST" | "INCLUDING_GST";
   /** Quantity in liters */
   quantity: number;
   /** Rate per liter */
