@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
-import { useSupplierStore } from '@/store/supplier-store';
-import { useSupplierLedgerStore } from '@/store/supplier-ledger-store';
-import { SupplierLedgerReportViewer } from '@/components/reports/SupplierLedgerReport';
-import { Loader2 } from 'lucide-react';
+import { useEffect } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
+import { useSupplierStore } from "@/store/supplier-store";
+import { useSupplierLedgerStore } from "@/store/supplier-ledger-store";
+import { SupplierLedgerReportViewer } from "@/components/reports/SupplierLedgerReport";
+import { Loader2 } from "lucide-react";
 
 export function SupplierLedgerReportPage() {
   const { id } = useParams<{ id: string }>();
@@ -13,9 +13,9 @@ export function SupplierLedgerReportPage() {
   const { ledgerData, summary, loading, hasSearched, computeLedgerData } =
     useSupplierLedgerStore();
 
-  const fromDate = searchParams.get('fromDate') || '2020-04-01';
+  const fromDate = searchParams.get("fromDate") || "2020-04-01";
   const toDate =
-    searchParams.get('toDate') || new Date().toISOString().split('T')[0];
+    searchParams.get("toDate") || new Date().toISOString().split("T")[0];
 
   const supplier = suppliers.find((s) => s.id === id);
 
@@ -57,8 +57,10 @@ export function SupplierLedgerReportPage() {
           purchaseUnit: entry.fuelPurchaseDetails.purchaseUnit,
           taxPercentage: entry.fuelPurchaseDetails.taxPercentage,
           tankName: entry.fuelPurchaseDetails.tankName,
-          density: entry.fuelPurchaseDetails.density,
-          dipReading: entry.fuelPurchaseDetails.dipReading,
+          bfrDensity: entry.fuelPurchaseDetails.bfrDensity,
+          aftDensity: entry.fuelPurchaseDetails.aftDensity,
+          bfrDipReading: entry.fuelPurchaseDetails.bfrDipReading,
+          aftDipReading: entry.fuelPurchaseDetails.aftDipReading,
         }
       : undefined,
   }));

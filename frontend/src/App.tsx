@@ -239,6 +239,11 @@ const allRoutes = [
     requiredRoles: ["SALESMAN"],
   },
   {
+    path: "/salesman/shifts/:shiftId/accounting",
+    element: <AccountingTablePage />,
+    requiredRoles: ["SALESMAN"],
+  },
+  {
     path: "/admin/salesman-shifts",
     element: <AdminSalesmanShiftsPage />,
     requiredRoles: ["ADMIN", "MANAGER"],

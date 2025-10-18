@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSalesmanNozzleShiftStore } from "@/store/salesman-nozzle-shift-store";
+import { useSalesmanBillPaymentStore } from "@/store/salesman-bill-payment-store";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,13 +12,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Play,
-  Square,
-  Calendar,
   Loader2,
   Fuel,
   Eye,
   Receipt,
+  Square,
+  Play,
   CreditCard,
 } from "lucide-react";
 import {
@@ -34,39 +35,72 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import ReactSelect, { type CSSObjectWithLabel } from "react-select";
 import { format } from "date-fns";
+import { SalesmanBillService } from "@/services/salesman-bill-service";
 import { NozzleService } from "@/services/nozzle-service";
 import { SalesmanService } from "@/services/salesman-service";
-import { SalesmanBillService } from "@/services/salesman-bill-service";
 import { CustomerService } from "@/services/customer-service";
 import { ProductService } from "@/services/product-service";
 import { CreateShiftPaymentForm } from "@/pages/salesman-shifts/CreateShiftPaymentForm";
-import { AccountingForm } from "@/pages/salesman-shifts/AccountingForm";
 import { toast } from "sonner";
 import type {
+  SalesmanNozzleShiftResponse,
+  SalesmanBillResponse,
   Nozzle,
   Salesman,
-  SalesmanNozzleShiftResponse,
   Customer,
   Product,
-  SalesmanBillResponse,
   CreateSalesmanBillRequest,
-  CreateSalesmanShiftAccountingRequest,
-  SalesmanShiftAccounting,
 } from "@/types";
 
+// ReactSelect styling to match create-bill
+const selectStyles = {
+  control: (provided: CSSObjectWithLabel) => ({
+    ...provided,
+    minHeight: "36px",
+    borderColor: "#e5e7eb", // gray-200
+    backgroundColor: "#ffffff", // white
+    "&:hover": {
+      borderColor: "#9ca3af", // gray-400
+    },
+    boxShadow: "none",
+    "&:focus-within": {
+      borderColor: "#3b82f6", // blue-500
+      boxShadow: "0 0 0 1px #3b82f6",
+    },
+    fontSize: "16px",
+  }),
+  option: (
+    provided: CSSObjectWithLabel,
+    state: { isSelected: boolean; isFocused: boolean }
+  ) => ({
+    ...provided,
+    backgroundColor: state.isSelected
+      ? "#3b82f6" // blue-500
+      : state.isFocused
+      ? "#dbeafe" // blue-100
+      : "#ffffff", // white
+    color: state.isSelected ? "#ffffff" : "#111827", // white : gray-900
+    "&:hover": {
+      backgroundColor: state.isSelected ? "#2563eb" : "#dbeafe", // blue-600 : blue-100
+    },
+    fontSize: "16px",
+  }),
+  menu: (provided: CSSObjectWithLabel) => ({
+    ...provided,
+    zIndex: 9999,
+    backgroundColor: "#ffffff", // white
+    border: "1px solid #e5e7eb", // gray-200
+  }),
+  menuPortal: (base: CSSObjectWithLabel) => ({ ...base, zIndex: 9999 }),
+};
+
 export function SalesmanShiftsPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const {
     shifts,
@@ -76,11 +110,30 @@ export function SalesmanShiftsPage() {
     fetchShifts,
     createShift,
     closeShift,
-    createAccounting,
-    updateAccounting,
-    getAccounting,
     fetchActiveShifts,
   } = useSalesmanNozzleShiftStore();
+
+  const {
+    shiftPayments,
+    loading: loadingPayments,
+    fetchPaymentsByShiftId,
+  } = useSalesmanBillPaymentStore();
+
+  // Date filtering - single date that will be converted to from/to for backend
+  const [selectedDate, setSelectedDate] = useState(() =>
+    format(new Date(), "yyyy-MM-dd")
+  );
+
+  // Convert selected date to Indian timezone and create from/to dates
+  const getIndianDateRange = useCallback((dateStr: string) => {
+    // For the backend, we send the same date for both fromDate and toDate
+    // The backend will handle the date range (start of day to end of day) in IST
+    // Since we're using a single date picker, both from and to will be the same date
+    const fromDate = dateStr;
+    const toDate = dateStr;
+
+    return { fromDate, toDate };
+  }, []);
 
   const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
   const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
@@ -96,14 +149,6 @@ export function SalesmanShiftsPage() {
     useState<SalesmanNozzleShiftResponse | null>(null);
   const [shiftBills, setShiftBills] = useState<SalesmanBillResponse[]>([]);
   const [loadingBills, setLoadingBills] = useState(false);
-
-  // Date filtering
-  const [fromDate, setFromDate] = useState(() => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    return format(yesterday, "yyyy-MM-dd");
-  });
-  const [toDate, setToDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
 
   // Form states
   const [startForm, setStartForm] = useState({
@@ -137,12 +182,11 @@ export function SalesmanShiftsPage() {
   const [selectedShiftForPayment, setSelectedShiftForPayment] =
     useState<SalesmanNozzleShiftResponse | null>(null);
 
-  // Accounting dialog state
-  const [isAccountingDialogOpen, setIsAccountingDialogOpen] = useState(false);
-  const [selectedShiftForAccounting, setSelectedShiftForAccounting] =
+  // View Payments dialog state
+  const [isViewPaymentsDialogOpen, setIsViewPaymentsDialogOpen] =
+    useState(false);
+  const [selectedShiftForViewPayments, setSelectedShiftForViewPayments] =
     useState<SalesmanNozzleShiftResponse | null>(null);
-  const [existingAccounting, setExistingAccounting] =
-    useState<SalesmanShiftAccounting | null>(null);
 
   // Load nozzles and salesmen for selection
   useEffect(() => {
@@ -185,11 +229,13 @@ export function SalesmanShiftsPage() {
   // Load shifts with date filter
   useEffect(() => {
     if (user?.role === "SALESMAN" && user?.userId) {
+      const { fromDate, toDate } = getIndianDateRange(selectedDate);
       fetchShifts({ fromDate, toDate, salesmanId: user.userId });
     } else if (user?.role === "ADMIN") {
+      const { fromDate, toDate } = getIndianDateRange(selectedDate);
       fetchShifts({ fromDate, toDate }); // Admin sees all shifts
     }
-  }, [fetchShifts, fromDate, toDate, user?.role, user?.userId]);
+  }, [fetchShifts, selectedDate, user?.role, user?.userId, getIndianDateRange]);
 
   const handleStartShift = async () => {
     if (!user?.userId || !startForm.nozzleId || !startForm.openingBalance)
@@ -221,9 +267,11 @@ export function SalesmanShiftsPage() {
       setCloseForm({ closingBalance: 0, nextSalesmanId: "" });
       // Refresh shifts
       if (user?.role === "SALESMAN" && user?.userId) {
+        const { fromDate, toDate } = getIndianDateRange(selectedDate);
         fetchShifts({ fromDate, toDate, salesmanId: user.userId });
         fetchActiveShifts(user.userId);
       } else if (user?.role === "ADMIN") {
+        const { fromDate, toDate } = getIndianDateRange(selectedDate);
         fetchShifts({ fromDate, toDate });
         fetchActiveShifts();
       }
@@ -296,9 +344,11 @@ export function SalesmanShiftsPage() {
       });
       // Refresh shifts to show updated bill count
       if (user?.role === "SALESMAN" && user?.userId) {
+        const { fromDate, toDate } = getIndianDateRange(selectedDate);
         fetchShifts({ fromDate, toDate, salesmanId: user.userId });
         fetchActiveShifts(user.userId);
       } else if (user?.role === "ADMIN") {
+        const { fromDate, toDate } = getIndianDateRange(selectedDate);
         fetchShifts({ fromDate, toDate });
         fetchActiveShifts();
       }
@@ -325,6 +375,18 @@ export function SalesmanShiftsPage() {
     }
   };
 
+  // View Payments function
+  const handleViewPayments = async (shift: SalesmanNozzleShiftResponse) => {
+    setSelectedShiftForViewPayments(shift);
+    setIsViewPaymentsDialogOpen(true);
+
+    try {
+      await fetchPaymentsByShiftId(shift.id!);
+    } catch (error) {
+      console.error("Failed to load payments for shift:", error);
+    }
+  };
+
   // Payment functions
   const handleRecordPayment = (shift: SalesmanNozzleShiftResponse) => {
     setSelectedShiftForPayment(shift);
@@ -334,73 +396,21 @@ export function SalesmanShiftsPage() {
   const handlePaymentSuccess = () => {
     setIsPaymentDialogOpen(false);
     setSelectedShiftForPayment(null);
-  };
-
-  // Accounting functions
-  const handleCreateAccounting = async (shift: SalesmanNozzleShiftResponse) => {
-    setSelectedShiftForAccounting(shift);
-
-    if (user?.role === "ADMIN" || user?.role === "MANAGER") {
-      // For admin/manager, try to fetch existing accounting for update, or create if not exists
-      try {
-        const accounting = await getAccounting(shift.id!);
-        setExistingAccounting(accounting);
-      } catch (error) {
-        console.error("Failed to fetch existing accounting:", error);
-        setExistingAccounting(null);
-      }
-    } else {
-      // For salesmen, if accounting is already done, fetch and show it in read-only mode
-      if (shift.isAccountingDone) {
-        try {
-          const accounting = await getAccounting(shift.id!);
-          setExistingAccounting(accounting);
-        } catch (error) {
-          console.error("Failed to fetch existing accounting:", error);
-          setExistingAccounting(null);
-        }
-      } else {
-        setExistingAccounting(null);
-      }
-    }
-
-    setIsAccountingDialogOpen(true);
-  };
-
-  const handleAccountingSubmit = async (
-    accountingData: CreateSalesmanShiftAccountingRequest
-  ) => {
-    if (!selectedShiftForAccounting) return;
-
-    try {
-      if (existingAccounting) {
-        await updateAccounting(selectedShiftForAccounting.id, accountingData);
-        toast.success("Accounting updated successfully");
-      } else {
-        await createAccounting(selectedShiftForAccounting.id, accountingData);
-        toast.success("Accounting created successfully");
-      }
-      setIsAccountingDialogOpen(false);
-      setSelectedShiftForAccounting(null);
-      // Refresh shifts
-      if (user?.role === "SALESMAN" && user?.userId) {
-        fetchShifts({ fromDate, toDate, salesmanId: user.userId });
-        fetchActiveShifts(user.userId);
-      } else if (user?.role === "ADMIN") {
-        fetchShifts({ fromDate, toDate });
-        fetchActiveShifts();
-      }
-    } catch {
-      toast.error(
-        `Failed to ${existingAccounting ? "update" : "create"} accounting`
-      );
+    // Refresh shifts
+    const { fromDate, toDate } = getIndianDateRange(selectedDate);
+    if (user?.role === "SALESMAN" && user?.userId) {
+      fetchShifts({ fromDate, toDate, salesmanId: user.userId });
+      fetchActiveShifts(user.userId);
+    } else if (user?.role === "ADMIN") {
+      fetchShifts({ fromDate, toDate });
+      fetchActiveShifts();
     }
   };
 
-  const handleAccountingCancel = () => {
-    setIsAccountingDialogOpen(false);
-    setSelectedShiftForAccounting(null);
-    setExistingAccounting(null);
+  // Accounting function - navigate to dedicated accounting page
+  const handleCreateAccounting = (shift: SalesmanNozzleShiftResponse) => {
+    // Navigate to the accounting table page for salesmen
+    navigate(`/salesman/shifts/${shift.id}/accounting`);
   };
 
   const formatDateTime = (dateTimeStr: string) => {
@@ -478,12 +488,13 @@ export function SalesmanShiftsPage() {
               open={isStartDialogOpen}
               onOpenChange={setIsStartDialogOpen}
             >
-              <DialogTrigger asChild>
-                <Button className="w-full sm:w-auto">
-                  <Play className="mr-2 h-4 w-4" />
-                  Start Shift
-                </Button>
-              </DialogTrigger>
+              <Button
+                className="w-full sm:w-auto"
+                onClick={() => setIsStartDialogOpen(true)}
+              >
+                <Play className="mr-2 h-4 w-4" />
+                Start Shift
+              </Button>
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                   <DialogTitle>Start New Shift</DialogTitle>
@@ -495,30 +506,48 @@ export function SalesmanShiftsPage() {
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
                     <Label htmlFor="nozzle">Nozzle</Label>
-                    <Select
-                      value={startForm.nozzleId}
-                      onValueChange={(value) =>
-                        setStartForm({ ...startForm, nozzleId: value })
+                    <ReactSelect
+                      value={
+                        startForm.nozzleId
+                          ? nozzles.find((n) => n.id === startForm.nozzleId)
+                            ? {
+                                value: startForm.nozzleId,
+                                label: `${
+                                  nozzles.find(
+                                    (n) => n.id === startForm.nozzleId
+                                  )!.nozzleName
+                                } - ${
+                                  nozzles.find(
+                                    (n) => n.id === startForm.nozzleId
+                                  )!.productName || "No Product"
+                                }`,
+                              }
+                            : null
+                          : null
                       }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a nozzle" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {loadingNozzles ? (
-                          <SelectItem value="" disabled>
-                            Loading nozzles...
-                          </SelectItem>
-                        ) : (
-                          nozzles.map((nozzle) => (
-                            <SelectItem key={nozzle.id} value={nozzle.id!}>
-                              {nozzle.nozzleName} -{" "}
-                              {nozzle.productName || "No Product"}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
+                      onChange={(option) =>
+                        setStartForm({
+                          ...startForm,
+                          nozzleId: option?.value || "",
+                        })
+                      }
+                      options={nozzles.map((n) => ({
+                        value: n.id!,
+                        label: `${n.nozzleName} - ${
+                          n.productName || "No Product"
+                        }`,
+                      }))}
+                      placeholder="Select a nozzle"
+                      styles={selectStyles}
+                      menuPortalTarget={document.body}
+                      isLoading={loadingNozzles}
+                      noOptionsMessage={() =>
+                        loadingNozzles
+                          ? "Loading nozzles..."
+                          : "No nozzles available"
+                      }
+                      isClearable
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="opening-balance">
@@ -577,153 +606,149 @@ export function SalesmanShiftsPage() {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center justify-between">
                     <span>{shift.nozzleName}</span>
-                    <div className="flex space-x-2">
+                    <Dialog
+                      open={isCloseDialogOpen && selectedShiftId === shift.id}
+                      onOpenChange={(open) => {
+                        setIsCloseDialogOpen(open);
+                        setSelectedShiftId(open ? shift.id! : null);
+                      }}
+                    >
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleCreateBill(shift)}
-                      >
-                        <Receipt className="mr-1 h-3 w-3" />
-                        Bill
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewBills(shift)}
-                      >
-                        <Eye className="mr-1 h-3 w-3" />
-                        Bills
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRecordPayment(shift)}
-                      >
-                        <CreditCard className="mr-1 h-3 w-3" />
-                        Payment
-                      </Button>
-                      <Dialog
-                        open={isCloseDialogOpen && selectedShiftId === shift.id}
-                        onOpenChange={(open) => {
-                          setIsCloseDialogOpen(open);
-                          setSelectedShiftId(open ? shift.id! : null);
+                        onClick={() => {
+                          setIsCloseDialogOpen(true);
+                          setSelectedShiftId(shift.id!);
                         }}
                       >
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Square className="mr-1 h-3 w-3" />
-                            End
+                        <Square className="mr-1 h-3 w-3" />
+                        End Shift
+                      </Button>
+                      <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>End Current Shift</DialogTitle>
+                          <DialogDescription>
+                            Close your active shift on nozzle {shift.nozzleName}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid gap-2">
+                            <Label htmlFor="closing-balance">
+                              Closing Fuel Balance (L)
+                            </Label>
+                            <Input
+                              id="closing-balance"
+                              type="number"
+                              step="0.001"
+                              placeholder="0.000"
+                              value={closeForm.closingBalance}
+                              onChange={(e) =>
+                                setCloseForm({
+                                  ...closeForm,
+                                  closingBalance:
+                                    parseFloat(e.target.value) || 0,
+                                })
+                              }
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="next-salesman">
+                              Next Salesman (Optional)
+                            </Label>
+                            <ReactSelect
+                              value={
+                                closeForm.nextSalesmanId
+                                  ? salesmen.find(
+                                      (s) => s.id === closeForm.nextSalesmanId
+                                    )
+                                    ? {
+                                        value: closeForm.nextSalesmanId,
+                                        label: salesmen.find(
+                                          (s) =>
+                                            s.id === closeForm.nextSalesmanId
+                                        )!.username,
+                                      }
+                                    : null
+                                  : null
+                              }
+                              onChange={(option) =>
+                                setCloseForm({
+                                  ...closeForm,
+                                  nextSalesmanId: option?.value || "",
+                                })
+                              }
+                              options={salesmen.map((s) => ({
+                                value: s.id!,
+                                label: s.username,
+                              }))}
+                              placeholder="Select next salesman (optional)"
+                              styles={selectStyles}
+                              menuPortalTarget={document.body}
+                              isLoading={loadingSalesmen}
+                              noOptionsMessage={() =>
+                                loadingSalesmen
+                                  ? "Loading salesmen..."
+                                  : "No salesmen available"
+                              }
+                              isClearable
+                            />
+                          </div>
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => setIsCloseDialogOpen(false)}
+                          >
+                            Cancel
                           </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px]">
-                          <DialogHeader>
-                            <DialogTitle>End Current Shift</DialogTitle>
-                            <DialogDescription>
-                              Close your active shift on nozzle{" "}
-                              {shift.nozzleName}
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                            <div className="grid gap-2">
-                              <Label htmlFor="closing-balance">
-                                Closing Fuel Balance (L)
-                              </Label>
-                              <Input
-                                id="closing-balance"
-                                type="number"
-                                step="0.001"
-                                placeholder="0.000"
-                                value={closeForm.closingBalance}
-                                onChange={(e) =>
-                                  setCloseForm({
-                                    ...closeForm,
-                                    closingBalance:
-                                      parseFloat(e.target.value) || 0,
-                                  })
-                                }
-                              />
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="next-salesman">
-                                Next Salesman (Optional)
-                              </Label>
-                              <Select
-                                value={closeForm.nextSalesmanId}
-                                onValueChange={(value) =>
-                                  setCloseForm({
-                                    ...closeForm,
-                                    nextSalesmanId: value,
-                                  })
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select next salesman (optional)" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {loadingSalesmen ? (
-                                    <SelectItem value="" disabled>
-                                      Loading salesmen...
-                                    </SelectItem>
-                                  ) : (
-                                    salesmen.map((salesman) => (
-                                      <SelectItem
-                                        key={salesman.id}
-                                        value={salesman.id!}
-                                      >
-                                        {salesman.username}
-                                      </SelectItem>
-                                    ))
-                                  )}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                          <div className="flex justify-end space-x-2">
-                            <Button
-                              variant="outline"
-                              onClick={() => setIsCloseDialogOpen(false)}
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              onClick={() => handleCloseShift(shift.id!)}
-                              disabled={loading}
-                            >
-                              {loading && (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              )}
-                              End Shift
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
+                          <Button
+                            onClick={() => handleCloseShift(shift.id!)}
+                            disabled={loading}
+                          >
+                            {loading && (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
+                            End Shift
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="font-medium text-muted-foreground">
-                        Product:
-                      </span>
-                      <p className="font-semibold">{shift.productName}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-muted-foreground">
-                        Started:
-                      </span>
-                      <p className="font-semibold">
-                        {formatDateTime(shift.startDateTime)}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-muted-foreground">
-                        Opening Fuel:
-                      </span>
-                      <p className="font-semibold">
-                        {formatFuelQuantity(shift.openingBalance)}
-                      </p>
-                    </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      className="h-20 flex-col"
+                      onClick={() => handleViewBills(shift)}
+                    >
+                      <Eye className="h-5 w-5 mb-1" />
+                      <span>View Bills</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-20 flex-col"
+                      onClick={() => handleViewPayments(shift)}
+                    >
+                      <CreditCard className="h-5 w-5 mb-1" />
+                      <span>View Payments</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-20 flex-col"
+                      onClick={() => handleCreateBill(shift)}
+                    >
+                      <Receipt className="h-5 w-5 mb-1" />
+                      <span>Create Bills</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-20 flex-col"
+                      onClick={() => handleRecordPayment(shift)}
+                    >
+                      <CreditCard className="h-5 w-5 mb-1" />
+                      <span>Create Payments</span>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -732,51 +757,34 @@ export function SalesmanShiftsPage() {
         </div>
       )}
 
-      {/* Date filters - mobile first */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center">
-            <Calendar className="mr-2 h-4 w-4" />
-            Filter Shifts
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col space-y-3 md:flex-row md:space-y-0 md:space-x-4">
-            <div className="flex-1">
-              <Label htmlFor="from-date" className="text-sm font-medium">
-                From Date
-              </Label>
-              <Input
-                id="from-date"
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            <div className="flex-1">
-              <Label htmlFor="to-date" className="text-sm font-medium">
-                To Date
-              </Label>
-              <Input
-                id="to-date"
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Shifts table - mobile responsive */}
       <Card>
         <CardHeader>
-          <CardTitle>Shift History</CardTitle>
-          <CardDescription>
-            Your completed shifts within the selected date range
-          </CardDescription>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <CardTitle>Shift History</CardTitle>
+              <CardDescription>
+                Your completed shifts for the selected date
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex flex-col">
+                <Label
+                  htmlFor="selected-date"
+                  className="text-sm font-medium mb-1"
+                >
+                  Select Date
+                </Label>
+                <Input
+                  id="selected-date"
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-[180px]"
+                />
+              </div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {error && (
@@ -1027,6 +1035,95 @@ export function SalesmanShiftsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* View Payments Dialog */}
+      <Dialog
+        open={isViewPaymentsDialogOpen}
+        onOpenChange={setIsViewPaymentsDialogOpen}
+      >
+        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Payments for Shift - {selectedShiftForViewPayments?.nozzleName}
+            </DialogTitle>
+            <DialogDescription>
+              All payments recorded during this shift
+              {selectedShiftForViewPayments && (
+                <span className="block mt-1">
+                  {formatDateTime(selectedShiftForViewPayments.startDateTime)}
+                  {selectedShiftForViewPayments.endDateTime &&
+                    ` - ${formatDateTime(
+                      selectedShiftForViewPayments.endDateTime
+                    )}`}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          {loadingPayments ? (
+            <div className="flex items-center justify-center h-32">
+              <Loader2 className="h-6 w-6 animate-spin" />
+              <span className="ml-2">Loading payments...</span>
+            </div>
+          ) : shiftPayments.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No payments found for this shift.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">
+                  {shiftPayments.length} Payment
+                  {shiftPayments.length !== 1 ? "s" : ""}
+                </h3>
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground">Total Amount</p>
+                  <p className="text-lg font-bold">
+                    {formatCurrency(
+                      shiftPayments.reduce(
+                        (sum, payment) => sum + payment.amount,
+                        0
+                      )
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {shiftPayments.map((payment) => (
+                  <Card key={payment.id} className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1 flex-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-semibold">
+                            {payment.referenceNumber}
+                          </span>
+                          <Badge variant="outline">
+                            {payment.paymentMethod}
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          <p>Customer: {payment.customerName}</p>
+                          <p>
+                            Date:{" "}
+                            {format(
+                              new Date(payment.paymentDate),
+                              "dd/MM/yyyy"
+                            )}
+                          </p>
+                          <p>Amount: {formatCurrency(payment.amount)}</p>
+                          {payment.notes && <p>Notes: {payment.notes}</p>}
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Create Bill Dialog */}
       <Dialog
         open={isCreateBillDialogOpen}
@@ -1048,51 +1145,72 @@ export function SalesmanShiftsPage() {
           <div className="space-y-4">
             <div className="grid gap-2">
               <Label htmlFor="customer">Customer *</Label>
-              <Select
-                value={billForm.customerId}
-                onValueChange={(value) =>
-                  setBillForm({ ...billForm, customerId: value })
+              <ReactSelect
+                value={
+                  billForm.customerId
+                    ? customers.find((c) => c.id === billForm.customerId)
+                      ? {
+                          value: billForm.customerId,
+                          label: customers.find(
+                            (c) => c.id === billForm.customerId
+                          )!.customerName,
+                        }
+                      : null
+                    : null
                 }
-                disabled={loadingCustomers}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select customer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers
-                    .filter((customer) => customer.id)
-                    .map((customer) => (
-                      <SelectItem key={customer.id!} value={customer.id!}>
-                        {customer.customerName}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+                onChange={(option) =>
+                  setBillForm({ ...billForm, customerId: option?.value || "" })
+                }
+                options={customers
+                  .filter((customer) => customer.id)
+                  .map((c) => ({
+                    value: c.id!,
+                    label: c.customerName,
+                  }))}
+                placeholder="Select customer"
+                styles={selectStyles}
+                menuPortalTarget={document.body}
+                isLoading={loadingCustomers}
+                isClearable
+              />
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="product">Product *</Label>
-              <Select
-                value={billForm.productId}
-                onValueChange={(value) =>
-                  setBillForm({ ...billForm, productId: value })
+              <ReactSelect
+                value={
+                  billForm.productId
+                    ? products.find((p) => p.id === billForm.productId)
+                      ? {
+                          value: billForm.productId,
+                          label: `${
+                            products.find((p) => p.id === billForm.productId)!
+                              .productName
+                          } - ${formatCurrency(
+                            products.find((p) => p.id === billForm.productId)!
+                              .salesRate
+                          )}/L`,
+                        }
+                      : null
+                    : null
                 }
-                disabled={loadingProducts}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select product" />
-                </SelectTrigger>
-                <SelectContent>
-                  {products
-                    .filter((product) => product.id)
-                    .map((product) => (
-                      <SelectItem key={product.id!} value={product.id!}>
-                        {product.productName} -{" "}
-                        {formatCurrency(product.salesRate)}/L
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+                onChange={(option) =>
+                  setBillForm({ ...billForm, productId: option?.value || "" })
+                }
+                options={products
+                  .filter((product) => product.id)
+                  .map((p) => ({
+                    value: p.id!,
+                    label: `${p.productName} - ${formatCurrency(
+                      p.salesRate
+                    )}/L`,
+                  }))}
+                placeholder="Select product"
+                styles={selectStyles}
+                menuPortalTarget={document.body}
+                isLoading={loadingProducts}
+                isClearable
+              />
             </div>
 
             <div className="grid gap-2">
@@ -1194,35 +1312,6 @@ export function SalesmanShiftsPage() {
               Create Bill
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Accounting Dialog */}
-      <Dialog
-        open={isAccountingDialogOpen}
-        onOpenChange={setIsAccountingDialogOpen}
-      >
-        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {existingAccounting ? "Update Accounting" : "Create Accounting"}
-            </DialogTitle>
-            <DialogDescription>
-              {existingAccounting
-                ? "Update accounting details for the closed shift"
-                : "Enter accounting details for the closed shift"}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedShiftForAccounting && (
-            <AccountingForm
-              shift={selectedShiftForAccounting}
-              onSubmit={handleAccountingSubmit}
-              onCancel={handleAccountingCancel}
-              loading={loading}
-              existingAccounting={existingAccounting}
-              isReadOnly={false}
-            />
-          )}
         </DialogContent>
       </Dialog>
     </div>

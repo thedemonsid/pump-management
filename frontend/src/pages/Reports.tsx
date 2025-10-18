@@ -5,101 +5,101 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState, useEffect } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// import { useState, useEffect } from "react";
+// import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import {
-  TrendingUp,
-  Fuel,
-  Receipt,
-  DollarSign,
+  // TrendingUp,
+  // Fuel,
+  // Receipt,
+  // DollarSign,
   Users,
   CreditCard,
   Droplet,
-  Clock,
-  ArrowUpRight,
-  ArrowDownRight,
+  // Clock,
+  // ArrowUpRight,
+  // ArrowDownRight,
   FileText,
   Building2,
   Calendar,
 } from "lucide-react";
-import reportService from "@/services/report-service";
+// import reportService from "@/services/report-service";
 
-interface Analytics {
-  totalCredit: number;
-  totalDebit: number;
-  netAmount: number;
-  billsGenerated: number;
-  moneyReceived: number;
-  moneyPaid: number;
-  fuelDispensed: number;
-  customersWithCredit: number;
-  suppliersWithDebit: number;
-  topCustomer: { name: string; amount: number } | null;
-  topSupplier: { name: string; amount: number } | null;
-}
+// interface Analytics {
+//   totalCredit: number;
+//   totalDebit: number;
+//   netAmount: number;
+//   billsGenerated: number;
+//   moneyReceived: number;
+//   moneyPaid: number;
+//   fuelDispensed: number;
+//   customersWithCredit: number;
+//   suppliersWithDebit: number;
+//   topCustomer: { name: string; amount: number } | null;
+//   topSupplier: { name: string; amount: number } | null;
+// }
 
 export default function Reports() {
-  const [loading, setLoading] = useState(true);
-  const [todayAnalytics, setTodayAnalytics] = useState<Analytics | null>(null);
-  const [monthAnalytics, setMonthAnalytics] = useState<Analytics | null>(null);
-  const [yearAnalytics, setYearAnalytics] = useState<Analytics | null>(null);
-  const [activeTab, setActiveTab] = useState("today");
+  // const [loading, setLoading] = useState(true);
+  // const [todayAnalytics, setTodayAnalytics] = useState<Analytics | null>(null);
+  // const [monthAnalytics, setMonthAnalytics] = useState<Analytics | null>(null);
+  // const [yearAnalytics, setYearAnalytics] = useState<Analytics | null>(null);
+  // const [activeTab, setActiveTab] = useState("today");
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, []);
+  // useEffect(() => {
+  //   fetchAnalytics();
+  // }, []);
 
-  const fetchAnalytics = async () => {
-    setLoading(true);
-    try {
-      const [today, month, year] = await Promise.all([
-        reportService.getTodayAnalytics(),
-        reportService.getMonthAnalytics(),
-        reportService.getYearAnalytics(),
-      ]);
+  // const fetchAnalytics = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const [today, month, year] = await Promise.all([
+  //       reportService.getTodayAnalytics(),
+  //       reportService.getMonthAnalytics(),
+  //       reportService.getYearAnalytics(),
+  //     ]);
 
-      setTodayAnalytics(today);
-      setMonthAnalytics(month);
-      setYearAnalytics(year);
-    } catch (error) {
-      console.error("Error fetching analytics:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     setTodayAnalytics(today);
+  //     setMonthAnalytics(month);
+  //     setYearAnalytics(year);
+  //   } catch (error) {
+  //     console.error("Error fetching analytics:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  // const formatCurrency = (amount: number) => {
+  //   return new Intl.NumberFormat("en-IN", {
+  //     style: "currency",
+  //     currency: "INR",
+  //     maximumFractionDigits: 0,
+  //   }).format(amount);
+  // };
 
-  const formatNumber = (num: number) => {
-    return num.toLocaleString();
-  };
+  // const formatNumber = (num: number) => {
+  //   return num.toLocaleString();
+  // };
 
-  const getCurrentAnalytics = () => {
-    switch (activeTab) {
-      case "today":
-        return todayAnalytics;
-      case "month":
-        return monthAnalytics;
-      case "year":
-        return yearAnalytics;
-      default:
-        return todayAnalytics;
-    }
-  };
+  // const getCurrentAnalytics = () => {
+  //   switch (activeTab) {
+  //     case "today":
+  //       return todayAnalytics;
+  //     case "month":
+  //       return monthAnalytics;
+  //     case "year":
+  //       return yearAnalytics;
+  //     default:
+  //       return todayAnalytics;
+  //   }
+  // };
 
-  const analytics = getCurrentAnalytics();
+  // const analytics = getCurrentAnalytics();
 
   return (
     <div className="flex-1 space-y-6">
-      <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">
             Reports & Analytics
@@ -108,9 +108,9 @@ export default function Reports() {
             Comprehensive business insights and financial reports
           </p>
         </div>
-      </div>
+      </div> */}
 
-      <Tabs
+      {/* <Tabs
         defaultValue="today"
         className="space-y-4"
         onValueChange={setActiveTab}
@@ -376,7 +376,7 @@ export default function Reports() {
             </Card>
           </div>
         </TabsContent>
-      </Tabs>
+      </Tabs> */}
 
       {/* Special Report Cards */}
       <div className="space-y-4">
