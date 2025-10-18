@@ -1,19 +1,19 @@
-import { useState, useEffect } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { usePurchaseStore } from '@/store/purchase-store';
-import { useSupplierStore } from '@/store/supplier-store';
-import { useProductStore } from '@/store/product-store';
+import { useState, useEffect } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { usePurchaseStore } from "@/store/purchase-store";
+import { useSupplierStore } from "@/store/supplier-store";
+import { useProductStore } from "@/store/product-store";
 import {
   CreatePurchaseSchema,
   type CreatePurchase,
   DEFAULT_PUMP_INFO,
   type RateType,
   type PaymentType,
-} from '@/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
+} from "@/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -22,28 +22,28 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+} from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
 
 interface CreatePurchaseFormProps {
   onSuccess: () => void;
 }
 
 const RATE_TYPES: { value: RateType; label: string }[] = [
-  { value: 'INCLUDING_GST', label: 'Including GST' },
-  { value: 'EXCLUDING_GST', label: 'Excluding GST' },
+  { value: "INCLUDING_GST", label: "Including GST" },
+  { value: "EXCLUDING_GST", label: "Excluding GST" },
 ];
 
 const PAYMENT_TYPES: { value: PaymentType; label: string }[] = [
-  { value: 'CASH', label: 'Cash' },
-  { value: 'CREDIT', label: 'Credit' },
+  { value: "CASH", label: "Cash" },
+  { value: "CREDIT", label: "Credit" },
 ];
 
 export function CreatePurchaseForm({ onSuccess }: CreatePurchaseFormProps) {
@@ -61,41 +61,41 @@ export function CreatePurchaseForm({ onSuccess }: CreatePurchaseFormProps) {
     resolver: zodResolver(CreatePurchaseSchema),
     defaultValues: {
       pumpMasterId: DEFAULT_PUMP_INFO.id,
-      purchaseDate: new Date().toISOString().split('T')[0],
-      rateType: 'INCLUDING_GST',
-      paymentType: 'CASH',
-      supplierId: '',
-      invoiceNumber: '',
+      purchaseDate: new Date().toISOString().split("T")[0],
+      rateType: "INCLUDING_GST",
+      paymentType: "CASH",
+      supplierId: "",
+      invoiceNumber: "",
       addToStock: true,
-      productId: '',
+      productId: "",
       quantity: 0,
       purchaseRate: 0,
       amount: 0,
-      goodsReceivedBy: '',
-      purchaseUnit: 'Liters',
+      goodsReceivedBy: "",
+      purchaseUnit: "Liters",
       taxPercentage: 18,
     },
   });
 
   const watchedQuantity = useWatch({
     control: form.control,
-    name: 'quantity',
+    name: "quantity",
   });
 
   const watchedPurchaseRate = useWatch({
     control: form.control,
-    name: 'purchaseRate',
+    name: "purchaseRate",
   });
 
   const watchedProductId = useWatch({
     control: form.control,
-    name: 'productId',
+    name: "productId",
   });
 
   useEffect(() => {
     const calculatedAmount =
       (watchedQuantity || 0) * (watchedPurchaseRate || 0);
-    form.setValue('amount', calculatedAmount);
+    form.setValue("amount", calculatedAmount);
   }, [watchedQuantity, watchedPurchaseRate, form]);
 
   useEffect(() => {
@@ -104,8 +104,8 @@ export function CreatePurchaseForm({ onSuccess }: CreatePurchaseFormProps) {
         (product) => product.id === watchedProductId
       );
       if (selectedProduct) {
-        form.setValue('purchaseUnit', selectedProduct.purchaseUnit);
-        form.setValue('purchaseRate', selectedProduct.purchaseRate);
+        form.setValue("purchaseUnit", selectedProduct.purchaseUnit);
+        form.setValue("purchaseRate", selectedProduct.purchaseRate);
       }
     }
   }, [watchedProductId, products, form]);
@@ -117,7 +117,7 @@ export function CreatePurchaseForm({ onSuccess }: CreatePurchaseFormProps) {
       onSuccess();
       form.reset();
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -285,11 +285,13 @@ export function CreatePurchaseForm({ onSuccess }: CreatePurchaseFormProps) {
                   <Input
                     type="number"
                     step="0.01"
+                    min="0"
                     placeholder="0.00"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(parseFloat(e.target.value) || 0)
-                    }
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseFloat(value) || 0);
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -307,11 +309,13 @@ export function CreatePurchaseForm({ onSuccess }: CreatePurchaseFormProps) {
                   <Input
                     type="number"
                     step="0.01"
+                    min="0"
                     placeholder="0.00"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(parseFloat(e.target.value) || 0)
-                    }
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseFloat(value) || 0);
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -329,11 +333,13 @@ export function CreatePurchaseForm({ onSuccess }: CreatePurchaseFormProps) {
                   <Input
                     type="number"
                     step="0.01"
+                    min="0"
                     placeholder="0.00"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(parseFloat(e.target.value) || 0)
-                    }
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseFloat(value) || 0);
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -353,11 +359,13 @@ export function CreatePurchaseForm({ onSuccess }: CreatePurchaseFormProps) {
                   <Input
                     type="number"
                     step="0.01"
+                    min="0"
                     placeholder="18.00"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(parseFloat(e.target.value) || 0)
-                    }
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseFloat(value) || 0);
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -414,7 +422,7 @@ export function CreatePurchaseForm({ onSuccess }: CreatePurchaseFormProps) {
                 Creating...
               </>
             ) : (
-              'Create Purchase'
+              "Create Purchase"
             )}
           </Button>
         </div>

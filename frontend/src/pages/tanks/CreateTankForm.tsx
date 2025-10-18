@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useTankStore } from '@/store/tank-store';
-import { useProductStore } from '@/store/product-store';
-import { CreateTankSchema, type CreateTank, DEFAULT_PUMP_INFO } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTankStore } from "@/store/tank-store";
+import { useProductStore } from "@/store/product-store";
+import { CreateTankSchema, type CreateTank, DEFAULT_PUMP_INFO } from "@/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -14,15 +14,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+} from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
 
 interface CreateTankFormProps {
   onSuccess: () => void;
@@ -44,13 +44,13 @@ export function CreateTankForm({ onSuccess }: CreateTankFormProps) {
     resolver: zodResolver(CreateTankSchema),
     defaultValues: {
       pumpMasterId: DEFAULT_PUMP_INFO.id,
-      tankName: '',
+      tankName: "",
       capacity: 0,
       openingLevel: 0,
-      openingLevelDate: new Date().toISOString().split('T')[0],
+      openingLevelDate: new Date().toISOString().split("T")[0],
       lowLevelAlert: 0,
-      tankLocation: '',
-      productId: '',
+      tankLocation: "",
+      productId: "",
     },
   });
 
@@ -61,7 +61,7 @@ export function CreateTankForm({ onSuccess }: CreateTankFormProps) {
       onSuccess();
       form.reset();
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -98,11 +98,13 @@ export function CreateTankForm({ onSuccess }: CreateTankFormProps) {
                   <Input
                     type="number"
                     step="0.01"
+                    min="0"
                     placeholder="0.00"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(parseFloat(e.target.value) || 0)
-                    }
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseFloat(value) || 0);
+                    }}
                   />
                 </FormControl>
                 <FormDescription>Maximum capacity of the tank</FormDescription>
@@ -123,11 +125,13 @@ export function CreateTankForm({ onSuccess }: CreateTankFormProps) {
                   <Input
                     type="number"
                     step="0.01"
+                    min="0"
                     placeholder="0.00"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(parseFloat(e.target.value) || 0)
-                    }
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseFloat(value) || 0);
+                    }}
                   />
                 </FormControl>
                 <FormDescription>
@@ -167,11 +171,13 @@ export function CreateTankForm({ onSuccess }: CreateTankFormProps) {
                   <Input
                     type="number"
                     step="0.01"
+                    min="0"
                     placeholder="0.00"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(parseFloat(e.target.value) || 0)
-                    }
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseFloat(value) || 0);
+                    }}
                   />
                 </FormControl>
                 <FormDescription>
@@ -239,7 +245,7 @@ export function CreateTankForm({ onSuccess }: CreateTankFormProps) {
                 Creating...
               </>
             ) : (
-              'Create Tank'
+              "Create Tank"
             )}
           </Button>
         </div>

@@ -215,11 +215,13 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
                   <Input
                     type="number"
                     step="0.01"
+                    min="0"
                     placeholder="0.00"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(parseFloat(e.target.value) || 0)
-                    }
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseFloat(value) || 0);
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -237,11 +239,13 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
                   <Input
                     type="number"
                     step="0.01"
+                    min="0"
                     placeholder="0.00"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(parseFloat(e.target.value) || 0)
-                    }
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseFloat(value) || 0);
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -377,11 +381,13 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
                 <FormControl>
                   <Input
                     type="number"
+                    min="0"
                     placeholder="100"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(parseInt(e.target.value) || 0)
-                    }
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseInt(value) || 0);
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
