@@ -41,9 +41,9 @@ export function ProductsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [currentBalances, setCurrentBalances] = useState<
-    Record<string, number>
-  >({});
+  // const [currentBalances, setCurrentBalances] = useState<
+  //   Record<string, number>
+  // >({});
 
   useEffect(() => {
     fetchProducts();
@@ -109,7 +109,7 @@ export function ProductsPage() {
       })
     );
 
-    setCurrentBalances(balances);
+    // setCurrentBalances(balances);
   }, [tanks]);
 
   // Calculate current balances for all tanks
@@ -133,14 +133,14 @@ export function ProductsPage() {
   };
 
   // Compute tank quantities per product
-  const getTankQuantityForProduct = (productId: string) => {
-    const quantity = tanks
-      .filter((tank) => tank.productId === productId)
-      .reduce((sum, tank) => sum + (currentBalances[tank.id!] || 0), 0);
+  // const getTankQuantityForProduct = (productId: string) => {
+  //   const quantity = tanks
+  //     .filter((tank) => tank.productId === productId)
+  //     .reduce((sum, tank) => sum + (currentBalances[tank.id!] || 0), 0);
 
-    console.log("Computed quantity for product", productId, "is", quantity);
-    return quantity;
-  };
+  //   console.log("Computed quantity for product", productId, "is", quantity);
+  //   return quantity;
+  // };
 
   if (loading && products.length === 0) {
     return (
@@ -225,7 +225,7 @@ export function ProductsPage() {
                   <TableHead>Sales Rate</TableHead>
                   <TableHead>Units</TableHead>
                   <TableHead>Low Stock</TableHead>
-                  <TableHead>Stock Quantity</TableHead>
+                  {/* <TableHead>Stock Quantity</TableHead> */}
                   <TableHead className="w-[100px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -262,12 +262,12 @@ export function ProductsPage() {
                         {product.lowStockCount}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    {/* <TableCell>
                       <Badge variant="secondary">
                         {getTankQuantityForProduct(product.id!)}{" "}
                         {product.salesUnit}
                       </Badge>
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button
