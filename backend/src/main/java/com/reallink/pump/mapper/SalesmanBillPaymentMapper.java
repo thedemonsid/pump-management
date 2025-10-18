@@ -1,8 +1,13 @@
 package com.reallink.pump.mapper;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
 
@@ -34,12 +39,16 @@ public interface SalesmanBillPaymentMapper {
      */
     @Mapping(target = "pumpMasterId", source = "pumpMaster.id")
     @Mapping(target = "salesmanNozzleShiftId", source = "salesmanNozzleShift.id")
+    @Mapping(target = "salesmanId", source = "salesmanNozzleShift.salesman.id")
     @Mapping(target = "salesmanName", source = "salesmanNozzleShift.salesman.username")
     @Mapping(target = "customerId", source = "customer.id")
     @Mapping(target = "customerName", source = "customer.customerName")
     @Mapping(target = "bankAccountId", source = "bankAccount.id")
-    @Mapping(target = "bankAccountName", source = "bankAccount.accountHolderName")
+    @Mapping(target = "bankAccountHolderName", source = "bankAccount.accountHolderName")
     @Mapping(target = "bankTransactionId", source = "bankTransaction.id")
+    @Mapping(target = "paymentDate", source = "paymentDate", qualifiedByName = "toIST")
+    @Mapping(target = "createdAt", source = "createdAt", qualifiedByName = "toIST")
+    @Mapping(target = "updatedAt", source = "updatedAt", qualifiedByName = "toIST")
     SalesmanBillPaymentResponse toResponse(SalesmanBillPayment entity);
 
     /**
@@ -52,4 +61,23 @@ public interface SalesmanBillPaymentMapper {
     @Mapping(target = "bankAccount", ignore = true)
     @Mapping(target = "bankTransaction", ignore = true)
     SalesmanBillPayment updateEntityFromRequest(UpdateSalesmanBillPaymentRequest request, @MappingTarget SalesmanBillPayment entity);
+
+    /**
+     * Convert UTC LocalDateTime to IST LocalDateTime
+     */
+    @Named("toIST")
+    default LocalDateTime toIST(LocalDateTime utcDateTime) {
+        if (utcDateTime == null) {
+            return null;
+        }
+
+        // Assume the LocalDateTime from DB is in UTC
+        ZonedDateTime utcZoned = utcDateTime.atZone(ZoneId.of("UTC"));
+
+        // Convert to IST
+        ZonedDateTime istZoned = utcZoned.withZoneSameInstant(ZoneId.of("Asia/Kolkata"));
+
+        // Return as LocalDateTime
+        return istZoned.toLocalDateTime();
+    }
 }

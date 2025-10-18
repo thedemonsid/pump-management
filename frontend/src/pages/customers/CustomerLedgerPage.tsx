@@ -136,15 +136,6 @@ export function CustomerLedgerPage() {
     });
   };
 
-  // Separate ledger entries by type
-  const regularBillEntries = ledgerData.filter(
-    (entry) => entry.action === "Bill"
-  );
-  const salesmanBillEntries = ledgerData.filter(
-    (entry) => entry.action === "Salesman Bill"
-  );
-  const paymentEntries = ledgerData.filter((entry) => entry.type === "payment");
-
   // Use summary values directly from store (calculations are done in store)
   const totalBillsTillDate = summary.totalBillsTillDate;
   const totalPaymentTillDate = summary.totalPaymentTillDate;
@@ -339,66 +330,22 @@ export function CustomerLedgerPage() {
                 Ledger Entries
               </CardTitle>
               <CardDescription>
-                Transaction history for the selected date range
+                Transaction history for the selected date range (
+                {formatDate(fromDate)} to {formatDate(toDate)})
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Regular Bills Section */}
-              {regularBillEntries.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3 text-blue-700">
-                    Regular Bills
-                  </h3>
-                  <DataTable
-                    columns={ledgerColumns}
-                    data={regularBillEntries}
-                    enableSorting={false}
-                    enableFiltering={false}
-                    enablePagination={false}
-                    enableColumnVisibility={false}
-                    pageSize={regularBillEntries.length}
-                  />
-                </div>
-              )}
-
-              {/* Salesman Bills Section */}
-              {salesmanBillEntries.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3 text-green-700">
-                    Salesman Bills
-                  </h3>
-                  <DataTable
-                    columns={ledgerColumns}
-                    data={salesmanBillEntries}
-                    enableSorting={false}
-                    enableFiltering={false}
-                    enablePagination={false}
-                    enableColumnVisibility={false}
-                    pageSize={salesmanBillEntries.length}
-                  />
-                </div>
-              )}
-
-              {/* Payments Section */}
-              {paymentEntries.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3 text-purple-700">
-                    Payments
-                  </h3>
-                  <DataTable
-                    columns={ledgerColumns}
-                    data={paymentEntries}
-                    enableSorting={false}
-                    enableFiltering={false}
-                    enablePagination={false}
-                    enableColumnVisibility={false}
-                    pageSize={paymentEntries.length}
-                  />
-                </div>
-              )}
-
-              {/* Show message if no entries */}
-              {ledgerData.length === 0 && (
+              {ledgerData.length > 0 ? (
+                <DataTable
+                  columns={ledgerColumns}
+                  data={ledgerData}
+                  enableSorting={true}
+                  enableFiltering={true}
+                  enablePagination={true}
+                  enableColumnVisibility={false}
+                  pageSize={10}
+                />
+              ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   No ledger entries found for the selected date range
                 </div>

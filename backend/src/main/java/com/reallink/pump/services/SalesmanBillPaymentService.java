@@ -43,13 +43,13 @@ public class SalesmanBillPaymentService {
     private final SalesmanBillPaymentMapper mapper;
 
     public List<SalesmanBillPaymentResponse> getAll() {
-        return repository.findAll().stream()
+        return repository.findAllWithRelations().stream()
                 .map(mapper::toResponse)
                 .toList();
     }
 
     public SalesmanBillPaymentResponse getById(@NotNull UUID id) {
-        SalesmanBillPayment payment = repository.findById(id).orElse(null);
+        SalesmanBillPayment payment = repository.findByIdWithRelations(id);
         if (payment == null) {
             throw new PumpBusinessException("SALESMAN_BILL_PAYMENT_NOT_FOUND", "Salesman bill payment with ID " + id + " not found");
         }

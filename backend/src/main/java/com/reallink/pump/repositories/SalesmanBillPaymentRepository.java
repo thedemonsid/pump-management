@@ -15,19 +15,70 @@ import com.reallink.pump.entities.SalesmanBillPayment;
 @Repository
 public interface SalesmanBillPaymentRepository extends JpaRepository<SalesmanBillPayment, UUID> {
 
-    List<SalesmanBillPayment> findByPumpMaster_Id(UUID pumpMasterId);
+    @Query("SELECT sbp FROM SalesmanBillPayment sbp "
+            + "LEFT JOIN FETCH sbp.customer "
+            + "LEFT JOIN FETCH sbp.bankAccount "
+            + "LEFT JOIN FETCH sbp.salesmanNozzleShift sns "
+            + "LEFT JOIN FETCH sns.salesman")
+    List<SalesmanBillPayment> findAllWithRelations();
 
-    List<SalesmanBillPayment> findBySalesmanNozzleShift_Id(UUID salesmanNozzleShiftId);
+    @Query("SELECT sbp FROM SalesmanBillPayment sbp "
+            + "LEFT JOIN FETCH sbp.customer "
+            + "LEFT JOIN FETCH sbp.bankAccount "
+            + "LEFT JOIN FETCH sbp.salesmanNozzleShift sns "
+            + "LEFT JOIN FETCH sns.salesman "
+            + "WHERE sbp.id = :id")
+    SalesmanBillPayment findByIdWithRelations(@Param("id") UUID id);
 
-    List<SalesmanBillPayment> findByCustomer_Id(UUID customerId);
+    @Query("SELECT sbp FROM SalesmanBillPayment sbp "
+            + "LEFT JOIN FETCH sbp.customer "
+            + "LEFT JOIN FETCH sbp.bankAccount "
+            + "LEFT JOIN FETCH sbp.salesmanNozzleShift sns "
+            + "LEFT JOIN FETCH sns.salesman "
+            + "WHERE sbp.pumpMaster.id = :pumpMasterId")
+    List<SalesmanBillPayment> findByPumpMaster_Id(@Param("pumpMasterId") UUID pumpMasterId);
 
-    List<SalesmanBillPayment> findByBankAccount_Id(UUID bankAccountId);
+    @Query("SELECT sbp FROM SalesmanBillPayment sbp "
+            + "LEFT JOIN FETCH sbp.customer "
+            + "LEFT JOIN FETCH sbp.bankAccount "
+            + "LEFT JOIN FETCH sbp.salesmanNozzleShift sns "
+            + "LEFT JOIN FETCH sns.salesman "
+            + "WHERE sbp.salesmanNozzleShift.id = :shiftId")
+    List<SalesmanBillPayment> findBySalesmanNozzleShift_Id(@Param("shiftId") UUID shiftId);
 
-    List<SalesmanBillPayment> findByPaymentDateBetween(LocalDateTime startDate, LocalDateTime endDate);
+    @Query("SELECT sbp FROM SalesmanBillPayment sbp "
+            + "LEFT JOIN FETCH sbp.customer "
+            + "LEFT JOIN FETCH sbp.bankAccount "
+            + "LEFT JOIN FETCH sbp.salesmanNozzleShift sns "
+            + "LEFT JOIN FETCH sns.salesman "
+            + "WHERE sbp.customer.id = :customerId")
+    List<SalesmanBillPayment> findByCustomer_Id(@Param("customerId") UUID customerId);
+
+    @Query("SELECT sbp FROM SalesmanBillPayment sbp "
+            + "LEFT JOIN FETCH sbp.customer "
+            + "LEFT JOIN FETCH sbp.bankAccount "
+            + "LEFT JOIN FETCH sbp.salesmanNozzleShift sns "
+            + "LEFT JOIN FETCH sns.salesman "
+            + "WHERE sbp.bankAccount.id = :bankAccountId")
+    List<SalesmanBillPayment> findByBankAccount_Id(@Param("bankAccountId") UUID bankAccountId);
+
+    @Query("SELECT sbp FROM SalesmanBillPayment sbp "
+            + "LEFT JOIN FETCH sbp.customer "
+            + "LEFT JOIN FETCH sbp.bankAccount "
+            + "LEFT JOIN FETCH sbp.salesmanNozzleShift sns "
+            + "LEFT JOIN FETCH sns.salesman "
+            + "WHERE sbp.paymentDate BETWEEN :startDate AND :endDate")
+    List<SalesmanBillPayment> findByPaymentDateBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
     @Query("SELECT COALESCE(SUM(sbp.amount), 0) FROM SalesmanBillPayment sbp WHERE sbp.salesmanNozzleShift.id = :shiftId")
     BigDecimal getTotalPaymentsForShift(@Param("shiftId") UUID shiftId);
 
-    @Query("SELECT sbp FROM SalesmanBillPayment sbp WHERE sbp.salesmanNozzleShift.id = :shiftId ORDER BY sbp.paymentDate DESC")
+    @Query("SELECT sbp FROM SalesmanBillPayment sbp "
+            + "LEFT JOIN FETCH sbp.customer "
+            + "LEFT JOIN FETCH sbp.bankAccount "
+            + "LEFT JOIN FETCH sbp.salesmanNozzleShift sns "
+            + "LEFT JOIN FETCH sns.salesman "
+            + "WHERE sbp.salesmanNozzleShift.id = :shiftId "
+            + "ORDER BY sbp.paymentDate DESC")
     List<SalesmanBillPayment> findBySalesmanNozzleShiftIdOrderByPaymentDateDesc(@Param("shiftId") UUID shiftId);
 }

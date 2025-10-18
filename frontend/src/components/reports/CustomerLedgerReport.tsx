@@ -6,9 +6,9 @@ import {
   StyleSheet,
   Font,
   PDFViewer,
-} from '@react-pdf/renderer';
-import type { Customer } from '@/types';
-import { normalizeNumberString } from '@/lib/utils/index';
+} from "@react-pdf/renderer";
+import type { Customer } from "@/types";
+import { normalizeNumberString } from "@/lib/utils/index";
 
 interface BillDetails {
   billNo: number;
@@ -35,7 +35,7 @@ interface LedgerEntry {
   debtAmount: number;
   entryBy: string;
   comments: string;
-  type: 'bill' | 'payment';
+  type: "bill" | "payment";
   billDetails?: BillDetails;
 }
 
@@ -44,67 +44,73 @@ interface LedgerSummary {
   totalPaidBefore: number;
   totalDebtBefore: number;
 }
+
+interface ProductSale {
+  productName: string;
+  quantity: number;
+  unit: string;
+}
 // Register font
 Font.register({
-  family: 'Wotfard',
-  src: '/fonts/wotfard-regular-webfont.ttf',
+  family: "Wotfard",
+  src: "/fonts/wotfard-regular-webfont.ttf",
 });
 
 // Create styles with better responsive design
 const styles = StyleSheet.create({
   page: {
-    flexDirection: 'column',
-    backgroundColor: '#ffffff',
+    flexDirection: "column",
+    backgroundColor: "#ffffff",
     padding: 10,
     fontSize: 8,
   },
   header: {
     marginBottom: 20,
-    textAlign: 'center',
-    borderBottom: '1pt solid #000',
+    textAlign: "center",
+    borderBottom: "1pt solid #000",
     paddingBottom: 10,
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
-    fontFamily: 'Wotfard',
+    fontWeight: "bold",
+    fontFamily: "Wotfard",
     marginBottom: 5,
-    color: '#333',
+    color: "#333",
   },
   subtitle: {
     fontSize: 10,
-    fontFamily: 'Wotfard',
-    color: '#666',
+    fontFamily: "Wotfard",
+    color: "#666",
     marginBottom: 3,
   },
   customerInfo: {
     fontSize: 14,
-    fontWeight: 'bold',
-    fontFamily: 'Wotfard',
+    fontWeight: "bold",
+    fontFamily: "Wotfard",
     marginBottom: 5,
-    color: '#000',
+    color: "#000",
   },
   periodInfo: {
     fontSize: 10,
-    fontFamily: 'Wotfard',
-    color: '#666',
+    fontFamily: "Wotfard",
+    color: "#666",
   },
   section: {
     marginBottom: 15,
   },
   sectionTitle: {
     fontSize: 12,
-    fontWeight: 'bold',
-    fontFamily: 'Wotfard',
+    fontWeight: "bold",
+    fontFamily: "Wotfard",
     marginBottom: 8,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
     padding: 5,
-    textAlign: 'center',
+    textAlign: "center",
     borderRadius: 2,
   },
   summaryGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 10,
     gap: 5,
   },
@@ -112,162 +118,231 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 3,
-    backgroundColor: '#fafafa',
-    alignItems: 'center',
+    backgroundColor: "#fafafa",
+    alignItems: "center",
   },
   summaryLabel: {
     fontSize: 8,
-    fontFamily: 'Wotfard',
-    color: '#666',
+    fontFamily: "Wotfard",
+    color: "#666",
     marginBottom: 3,
-    textAlign: 'center',
+    textAlign: "center",
   },
   summaryValue: {
     fontSize: 11,
-    fontWeight: 'bold',
-    fontFamily: 'Wotfard',
-    textAlign: 'center',
-    color: '#000',
+    fontWeight: "bold",
+    fontFamily: "Wotfard",
+    textAlign: "center",
+    color: "#000",
   },
   // Table styles with better alignment
   tableContainer: {
     borderWidth: 1,
-    borderColor: '#000',
+    borderColor: "#000",
     borderRadius: 3,
   },
   tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#e8e8e8',
+    flexDirection: "row",
+    backgroundColor: "#e8e8e8",
     borderBottomWidth: 2,
-    borderBottomColor: '#000',
+    borderBottomColor: "#000",
     minHeight: 25,
   },
   tableRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    borderBottomColor: "#ccc",
     minHeight: 20,
   },
   // Column definitions with exact widths that sum to 100%
   colDate: {
-    width: '8%',
+    width: "8%",
     borderRightWidth: 1,
-    borderRightColor: '#ccc',
+    borderRightColor: "#ccc",
     padding: 3,
-    justifyContent: 'center',
+    justifyContent: "center",
+  },
+  colType: {
+    width: "10%",
+    borderRightWidth: 1,
+    borderRightColor: "#ccc",
+    padding: 3,
+    justifyContent: "center",
   },
   colInvoice: {
-    width: '10%',
+    width: "10%",
     borderRightWidth: 1,
-    borderRightColor: '#ccc',
+    borderRightColor: "#ccc",
     padding: 3,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   colBillDetails: {
-    width: '16%',
+    width: "14%",
     borderRightWidth: 1,
-    borderRightColor: '#ccc',
+    borderRightColor: "#ccc",
     padding: 3,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   colBillAmount: {
-    width: '10%',
+    width: "10%",
     borderRightWidth: 1,
-    borderRightColor: '#ccc',
+    borderRightColor: "#ccc",
     padding: 3,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
+    justifyContent: "center",
+    alignItems: "flex-end",
   },
   colAmountPaid: {
-    width: '10%',
+    width: "10%",
     borderRightWidth: 1,
-    borderRightColor: '#ccc',
+    borderRightColor: "#ccc",
     padding: 3,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
+    justifyContent: "center",
+    alignItems: "flex-end",
   },
   colBalance: {
-    width: '10%',
+    width: "10%",
     borderRightWidth: 1,
-    borderRightColor: '#ccc',
+    borderRightColor: "#ccc",
     padding: 3,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
+    justifyContent: "center",
+    alignItems: "flex-end",
   },
   colEntryBy: {
-    width: '8%',
+    width: "8%",
     borderRightWidth: 1,
-    borderRightColor: '#ccc',
+    borderRightColor: "#ccc",
     padding: 3,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   colComments: {
-    width: '28%',
+    width: "20%",
     padding: 3,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   // Text styles
   headerText: {
     fontSize: 8,
-    fontWeight: 'bold',
-    fontFamily: 'Wotfard',
-    textAlign: 'center',
-    color: '#333',
+    fontWeight: "bold",
+    fontFamily: "Wotfard",
+    textAlign: "center",
+    color: "#333",
   },
   cellText: {
     fontSize: 7,
-    fontFamily: 'Wotfard',
-    color: '#000',
+    fontFamily: "Wotfard",
+    color: "#000",
   },
   cellTextCenter: {
     fontSize: 7,
-    fontFamily: 'Wotfard',
-    textAlign: 'center',
-    color: '#000',
+    fontFamily: "Wotfard",
+    textAlign: "center",
+    color: "#000",
   },
   cellTextRight: {
     fontSize: 7,
-    fontFamily: 'Wotfard',
-    textAlign: 'right',
-    color: '#000',
+    fontFamily: "Wotfard",
+    textAlign: "right",
+    color: "#000",
+  },
+  typeBadge: {
+    fontSize: 6,
+    fontFamily: "Wotfard",
+    textAlign: "center",
+    padding: 2,
+    borderRadius: 2,
+    fontWeight: "bold",
+  },
+  typeBill: {
+    backgroundColor: "#e3f2fd",
+    color: "#1976d2",
+  },
+  typeSalesmanBill: {
+    backgroundColor: "#e8f5e9",
+    color: "#388e3c",
+  },
+  typePayment: {
+    backgroundColor: "#f3e5f5",
+    color: "#7b1fa2",
   },
   // Summary section
   financialSummary: {
     marginTop: 20,
     padding: 10,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 3,
   },
   summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 5,
   },
   summaryRowLabel: {
     fontSize: 10,
-    fontFamily: 'Wotfard',
-    color: '#333',
+    fontFamily: "Wotfard",
+    color: "#333",
   },
   summaryRowValue: {
     fontSize: 10,
-    fontWeight: 'bold',
-    fontFamily: 'Wotfard',
-    color: '#000',
+    fontWeight: "bold",
+    fontFamily: "Wotfard",
+    color: "#000",
   },
   outstandingBalance: {
     fontSize: 12,
-    fontWeight: 'bold',
-    fontFamily: 'Wotfard',
-    color: '#d32f2f',
-    textAlign: 'center',
+    fontWeight: "bold",
+    fontFamily: "Wotfard",
+    color: "#d32f2f",
+    textAlign: "center",
     marginTop: 5,
     padding: 5,
-    backgroundColor: '#ffebee',
+    backgroundColor: "#ffebee",
     borderRadius: 3,
+  },
+  // Product sales styles
+  productSalesContainer: {
+    marginTop: 15,
+    marginBottom: 15,
+  },
+  productSalesGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  productSaleItem: {
+    width: "48%",
+    padding: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 3,
+    backgroundColor: "#f9f9f9",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  productNameContainer: {
+    flex: 1,
+  },
+  productName: {
+    fontSize: 9,
+    fontWeight: "bold",
+    fontFamily: "Wotfard",
+    color: "#000",
+  },
+  productUnit: {
+    fontSize: 7,
+    fontFamily: "Wotfard",
+    color: "#666",
+  },
+  productQuantity: {
+    fontSize: 10,
+    fontWeight: "bold",
+    fontFamily: "Wotfard",
+    color: "#2196f3",
+    textAlign: "right",
   },
 });
 
@@ -277,6 +352,7 @@ interface CustomerLedgerReportProps {
   summary: LedgerSummary;
   fromDate: string;
   toDate: string;
+  productSales: ProductSale[];
 }
 
 export function CustomerLedgerReport({
@@ -285,17 +361,18 @@ export function CustomerLedgerReport({
   summary,
   fromDate,
   toDate,
+  productSales,
 }: CustomerLedgerReportProps) {
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      year: '2-digit',
-      month: '2-digit',
-      day: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      year: "2-digit",
+      month: "2-digit",
+      day: "2-digit",
     });
   };
 
   const formatNumber = (num: number) => {
-    return normalizeNumberString(new Intl.NumberFormat('en-IN').format(num));
+    return normalizeNumberString(new Intl.NumberFormat("en-IN").format(num));
   };
 
   const totalBillsTillDate =
@@ -320,10 +397,10 @@ export function CustomerLedgerReport({
         <View style={styles.header}>
           <Text style={styles.title}>CUSTOMER LEDGER REPORT</Text>
           <Text style={styles.subtitle}>
-            Generated on {new Date().toLocaleDateString('en-IN')} at{' '}
-            {new Date().toLocaleTimeString('en-IN', {
-              hour: '2-digit',
-              minute: '2-digit',
+            Generated on {new Date().toLocaleDateString("en-IN")} at{" "}
+            {new Date().toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
               hour12: true,
             })}
           </Text>
@@ -381,7 +458,7 @@ export function CustomerLedgerReport({
               <Text style={styles.summaryValue}>
                 {customer.openingBalanceDate
                   ? formatDate(customer.openingBalanceDate)
-                  : 'N/A'}
+                  : "N/A"}
               </Text>
             </View>
           </View>
@@ -395,6 +472,9 @@ export function CustomerLedgerReport({
             <View style={styles.tableHeader}>
               <View style={styles.colDate}>
                 <Text style={styles.headerText}>Date</Text>
+              </View>
+              <View style={styles.colType}>
+                <Text style={styles.headerText}>Type</Text>
               </View>
               <View style={styles.colInvoice}>
                 <Text style={styles.headerText}>Invoice No</Text>
@@ -420,60 +500,115 @@ export function CustomerLedgerReport({
             </View>
 
             {/* Table Rows */}
-            {ledgerData.map((entry, index) => (
-              <View style={styles.tableRow} key={index}>
-                <View style={styles.colDate}>
-                  <Text style={styles.cellTextCenter}>
-                    {formatDate(entry.date)}
-                  </Text>
+            {ledgerData.map((entry, index) => {
+              // Determine type info
+              const getTypeInfo = () => {
+                if (entry.type === "payment") {
+                  return { label: "Payment", style: styles.typePayment };
+                } else if (entry.action === "Salesman Bill") {
+                  return {
+                    label: "Salesman Bill",
+                    style: styles.typeSalesmanBill,
+                  };
+                } else if (entry.action === "Bill") {
+                  return { label: "Bill", style: styles.typeBill };
+                }
+                return { label: "Other", style: styles.typeBill };
+              };
+
+              const typeInfo = getTypeInfo();
+
+              return (
+                <View style={styles.tableRow} key={index}>
+                  <View style={styles.colDate}>
+                    <Text style={styles.cellTextCenter}>
+                      {formatDate(entry.date)}
+                    </Text>
+                  </View>
+                  <View style={styles.colType}>
+                    <Text style={[styles.typeBadge, typeInfo.style]}>
+                      {typeInfo.label}
+                    </Text>
+                  </View>
+                  <View style={styles.colInvoice}>
+                    <Text style={styles.cellTextCenter}>
+                      {entry.invoiceNo || "-"}
+                    </Text>
+                  </View>
+                  <View style={styles.colBillDetails}>
+                    <Text style={styles.cellText}>
+                      {entry.billDetails
+                        ? `Bill #${entry.billDetails.billNo} (${entry.billDetails.billItems.length} items)`
+                        : entry.type === "payment"
+                        ? "Payment"
+                        : "N/A"}
+                    </Text>
+                  </View>
+                  <View style={styles.colBillAmount}>
+                    <Text style={styles.cellTextRight}>
+                      {entry.billAmount > 0
+                        ? formatNumber(entry.billAmount)
+                        : "-"}
+                    </Text>
+                  </View>
+                  <View style={styles.colAmountPaid}>
+                    <Text style={styles.cellTextRight}>
+                      {entry.amountPaid > 0
+                        ? formatNumber(entry.amountPaid)
+                        : "-"}
+                    </Text>
+                  </View>
+                  <View style={styles.colBalance}>
+                    <Text style={styles.cellTextRight}>
+                      {formatNumber(entry.balanceAmount)}
+                    </Text>
+                  </View>
+                  <View style={styles.colEntryBy}>
+                    <Text style={styles.cellTextCenter}>
+                      {entry.entryBy || "System"}
+                    </Text>
+                  </View>
+                  <View style={styles.colComments}>
+                    <Text style={styles.cellText}>
+                      {entry.comments ? entry.comments.substring(0, 25) : "-"}
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.colInvoice}>
-                  <Text style={styles.cellTextCenter}>
-                    {entry.invoiceNo || '-'}
-                  </Text>
-                </View>
-                <View style={styles.colBillDetails}>
-                  <Text style={styles.cellText}>
-                    {entry.billDetails
-                      ? `Bill #${entry.billDetails.billNo} (${entry.billDetails.billItems.length} items)`
-                      : entry.type === 'payment'
-                      ? 'Payment'
-                      : 'N/A'}
-                  </Text>
-                </View>
-                <View style={styles.colBillAmount}>
-                  <Text style={styles.cellTextRight}>
-                    {entry.billAmount > 0
-                      ? formatNumber(entry.billAmount)
-                      : '-'}
-                  </Text>
-                </View>
-                <View style={styles.colAmountPaid}>
-                  <Text style={styles.cellTextRight}>
-                    {entry.amountPaid > 0
-                      ? formatNumber(entry.amountPaid)
-                      : '-'}
-                  </Text>
-                </View>
-                <View style={styles.colBalance}>
-                  <Text style={styles.cellTextRight}>
-                    {formatNumber(entry.balanceAmount)}
-                  </Text>
-                </View>
-                <View style={styles.colEntryBy}>
-                  <Text style={styles.cellTextCenter}>
-                    {entry.entryBy || 'System'}
-                  </Text>
-                </View>
-                <View style={styles.colComments}>
-                  <Text style={styles.cellText}>
-                    {entry.comments ? entry.comments.substring(0, 25) : '-'}
-                  </Text>
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         </View>
+
+        {/* Product Sales Summary */}
+        {productSales.length > 0 && (
+          <View style={styles.productSalesContainer}>
+            <Text style={styles.sectionTitle}>Product Sales Summary</Text>
+            <Text
+              style={{
+                fontSize: 8,
+                fontFamily: "Wotfard",
+                color: "#666",
+                marginBottom: 8,
+                textAlign: "center",
+              }}
+            >
+              Products sold to customer in the selected date range
+            </Text>
+            <View style={styles.productSalesGrid}>
+              {productSales.map((sale, index) => (
+                <View style={styles.productSaleItem} key={index}>
+                  <View style={styles.productNameContainer}>
+                    <Text style={styles.productName}>{sale.productName}</Text>
+                    <Text style={styles.productUnit}>Unit: {sale.unit}</Text>
+                  </View>
+                  <Text style={styles.productQuantity}>
+                    {formatNumber(sale.quantity)} {sale.unit}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* Financial Summary */}
         <View style={styles.financialSummary}>
@@ -517,6 +652,7 @@ interface CustomerLedgerReportViewerProps {
   summary: LedgerSummary;
   fromDate: string;
   toDate: string;
+  productSales: ProductSale[];
 }
 
 export function CustomerLedgerReportViewer({
@@ -525,6 +661,7 @@ export function CustomerLedgerReportViewer({
   summary,
   fromDate,
   toDate,
+  productSales,
 }: CustomerLedgerReportViewerProps) {
   return (
     <div className="w-full h-screen bg-gray-100">
@@ -532,7 +669,7 @@ export function CustomerLedgerReportViewer({
         width="100%"
         height="100%"
         style={{
-          border: 'none',
+          border: "none",
         }}
         showToolbar={true}
       >
@@ -542,6 +679,7 @@ export function CustomerLedgerReportViewer({
           summary={summary}
           fromDate={fromDate}
           toDate={toDate}
+          productSales={productSales}
         />
       </PDFViewer>
     </div>

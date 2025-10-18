@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useCustomerStore } from "@/store/customer-store";
 import { useLedgerStore } from "@/store/ledger-store";
+import { useProductStore } from "@/store/product-store";
 import { CustomerLedgerReportViewer } from "@/components/reports/CustomerLedgerReport";
 import { Loader2 } from "lucide-react";
 
@@ -12,6 +13,7 @@ export function CustomerLedgerReportPage() {
   const { customers, fetchCustomers } = useCustomerStore();
   const { ledgerData, summary, loading, hasSearched, computeLedgerData } =
     useLedgerStore();
+  const { products, fetchProducts } = useProductStore();
 
   const fromDate = searchParams.get("fromDate") || "2020-04-01";
   const toDate =
@@ -26,6 +28,12 @@ export function CustomerLedgerReportPage() {
   }, [customers.length, fetchCustomers]);
 
   useEffect(() => {
+    if (products.length === 0) {
+      fetchProducts();
+    }
+  }, [products.length, fetchProducts]);
+
+  useEffect(() => {
     if (customer && !hasSearched) {
       computeLedgerData({
         customerId: id!,
@@ -35,6 +43,32 @@ export function CustomerLedgerReportPage() {
       });
     }
   }, [customer, hasSearched, fromDate, toDate, computeLedgerData, id]);
+
+  // Compute product sales from ledger data
+  const productSales = useMemo(() => {
+    const salesMap = new Map<
+      string,
+      { productName: string; quantity: number; unit: string }
+    >();
+
+    ledgerData.forEach((entry) => {
+      if (entry.type === "bill" && entry.billDetails?.billItems) {
+        entry.billDetails.billItems.forEach((item) => {
+          const product = products.find((p) => p.id === item.productId);
+          const key = item.productId;
+          const existing = salesMap.get(key) || {
+            productName: item.productName || product?.productName || "Unknown",
+            quantity: 0,
+            unit: product?.salesUnit || "",
+          };
+          existing.quantity += item.quantity;
+          salesMap.set(key, existing);
+        });
+      }
+    });
+
+    return Array.from(salesMap.values()).filter((s) => s.quantity > 0);
+  }, [ledgerData, products]);
 
   // Transform ledger data to match report component expectations
   const transformedLedgerData = ledgerData.map((entry) => ({
@@ -86,6 +120,7 @@ export function CustomerLedgerReportPage() {
       summary={summary}
       fromDate={fromDate}
       toDate={toDate}
+      productSales={productSales}
     />
   );
 }

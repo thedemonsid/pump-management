@@ -102,6 +102,11 @@ const managementItems = [
     url: "/salesman-bills",
     icon: Receipt,
   },
+  {
+    title: "Salesman Payments",
+    url: "/salesman-bill-payments",
+    icon: CreditCard,
+  },
   // {
   //   title: "Shifts",
   //   url: "/shifts",

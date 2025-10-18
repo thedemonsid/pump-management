@@ -12,6 +12,35 @@ import type { LedgerEntry } from "@/types/ledger";
 
 export const ledgerColumns: ColumnDef<LedgerEntry>[] = [
   {
+    accessorKey: "type",
+    header: "Type",
+    cell: ({ row }) => {
+      const entry = row.original;
+      const getTypeInfo = () => {
+        if (entry.type === "payment") {
+          return { label: "Payment", color: "text-purple-700 bg-purple-50" };
+        } else if (entry.action === "Salesman Bill") {
+          return {
+            label: "Salesman Bill",
+            color: "text-green-700 bg-green-50",
+          };
+        } else if (entry.action === "Bill") {
+          return { label: "Bill", color: "text-blue-700 bg-blue-50" };
+        }
+        return { label: "Other", color: "text-gray-700 bg-gray-50" };
+      };
+
+      const typeInfo = getTypeInfo();
+      return (
+        <div
+          className={`font-medium text-xs px-2 py-1 rounded-md inline-block ${typeInfo.color}`}
+        >
+          {typeInfo.label}
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "date",
     header: "Date",
     cell: ({ row }) => {
@@ -196,8 +225,14 @@ export const ledgerColumns: ColumnDef<LedgerEntry>[] = [
       const entry = row.original;
 
       if (entry.type === "bill" && entry.billDetails) {
+        // Check if it's a salesman bill or regular bill
+        const isSalesmanBill = entry.action === "Salesman Bill";
+        const billUrl = isSalesmanBill
+          ? `/salesman-bills/${entry.billDetails.id}`
+          : `/bills/${entry.billDetails.id}`;
+
         return (
-          <Link to={`/bills/${entry.billDetails!.id}`}>
+          <Link to={billUrl}>
             <Eye className="h-4 w-4 text-blue-600 hover:text-blue-800 cursor-pointer" />
           </Link>
         );

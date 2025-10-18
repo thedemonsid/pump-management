@@ -32,6 +32,8 @@ import { SalesmanShiftsPage } from "@/pages/salesman-shifts/SalesmanShiftsPage";
 import { AccountingTablePage } from "@/pages/salesman-shifts/AccountingTablePage";
 import { AdminSalesmanShiftsPage } from "@/pages/AdminSalesmanShiftsPage";
 import { SalesmanBillsPage } from "@/pages/salesman-bills/SalesmanBillsPage";
+import { SalesmanBillDetailPage } from "@/pages/salesman-bills/SalesmanBillDetailPage";
+import { SalesmanBillPaymentsPage } from "@/pages/salesman-bill-payments/SalesmanBillPaymentsPage";
 import { ShiftsPage } from "@/pages/shifts/ShiftsPage";
 import { SuppliersPage } from "@/pages/suppliers/SuppliersPage";
 import { SupplierDetailPage } from "@/pages/suppliers/SupplierDetailPage";
@@ -252,6 +254,16 @@ const allRoutes = [
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
+    path: "/salesman-bills/:id",
+    element: <SalesmanBillDetailPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/salesman-bill-payments",
+    element: <SalesmanBillPaymentsPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
     path: "*",
     element: <DashboardPage />,
     requiredRoles: ["ADMIN", "MANAGER"],
@@ -279,6 +291,7 @@ const headerMap: Record<string, string> = {
   bills: "Bills",
   "bill-details": "Bill Details",
   "salesman-bills": "Salesman Bills",
+  "salesman-bill-payments": "Salesman Payments",
   settings: "Settings",
   report: "Report",
 };

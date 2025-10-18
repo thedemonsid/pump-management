@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { useBillsData } from "@/hooks/useBillsData";
 import { useBillForm } from "@/hooks/useBillForm";
 import { useFormData } from "@/hooks/useFormData";
@@ -11,19 +12,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Loader2, Receipt } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { DateRangeFilter } from "@/components/bills/DateRangeFilter";
 import {
   CompactBillForm,
   type BillFormImages,
 } from "@/components/bills/CompactBillForm";
-import { BillForm } from "@/components/bills/BillForm";
 import { BillsTable } from "@/components/bills/BillsTable";
 import { SalesmanBillService } from "@/services/salesman-bill-service";
 import {
@@ -36,6 +29,7 @@ import { toast } from "sonner";
 
 export function SalesmanBillsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Date range state
   const [dateRange, setDateRange] = useState({
@@ -43,11 +37,6 @@ export function SalesmanBillsPage() {
     endDate: getTodayFormatted(),
   });
 
-  // Dialog states (only for edit now)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedBill, setSelectedBill] = useState<SalesmanBillResponse | null>(
-    null
-  );
   const [operationLoading, setOperationLoading] = useState(false);
 
   // Image state for creation
@@ -66,8 +55,7 @@ export function SalesmanBillsPage() {
     dateRange.endDate
   );
 
-  const { billForm, updateField, resetForm, loadBillData, setNextBillNo } =
-    useBillForm();
+  const { billForm, updateField, resetForm, setNextBillNo } = useBillForm();
 
   const {
     customers,
@@ -76,7 +64,7 @@ export function SalesmanBillsPage() {
     loadingFormData,
     loadFormData,
     getNextBillNo,
-  } = useFormData(true, isEditDialogOpen); // Always load form data for compact form
+  } = useFormData(true, false); // Always load form data for compact form
 
   // Load bills on mount and when date range changes
   useEffect(() => {
@@ -167,45 +155,8 @@ export function SalesmanBillsPage() {
     }));
   };
 
-  const handleEditBill = async () => {
-    if (!selectedBill) return;
-
-    try {
-      setOperationLoading(true);
-      const billData = {
-        billNo: billForm.billNo ? parseInt(billForm.billNo) : undefined,
-        customerId: billForm.customerId || undefined,
-        productId: billForm.productId || undefined,
-        salesmanNozzleShiftId: billForm.salesmanNozzleShiftId || undefined,
-        quantity: billForm.quantity ? parseFloat(billForm.quantity) : undefined,
-        rate: billForm.rate ? parseFloat(billForm.rate) : undefined,
-        vehicleNo: billForm.vehicleNo || undefined,
-        driverName: billForm.driverName || undefined,
-      };
-
-      await SalesmanBillService.update(selectedBill.id, billData);
-
-      // Success toast
-      toast.success("Bill updated successfully", {
-        description: `Bill #${billForm.billNo} has been updated`,
-      });
-
-      setIsEditDialogOpen(false);
-      setSelectedBill(null);
-      resetForm();
-      loadBills();
-    } catch (error) {
-      console.error("Failed to update bill:", error);
-      // Error toast
-      toast.error("Failed to update bill", {
-        description:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while updating the bill",
-      });
-    } finally {
-      setOperationLoading(false);
-    }
+  const handleEditBill = (bill: SalesmanBillResponse) => {
+    navigate(`/salesman-bills/${bill.id}`);
   };
 
   const handleDeleteBill = async (billId: string) => {
@@ -230,18 +181,6 @@ export function SalesmanBillsPage() {
             : "An error occurred while deleting the bill",
       });
     }
-  };
-
-  const openEditDialog = (bill: SalesmanBillResponse) => {
-    setSelectedBill(bill);
-    loadBillData(bill);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleCloseEditDialog = () => {
-    setIsEditDialogOpen(false);
-    setSelectedBill(null);
-    resetForm();
   };
 
   if (user?.role !== "ADMIN" && user?.role !== "MANAGER") {
@@ -333,33 +272,12 @@ export function SalesmanBillsPage() {
           ) : (
             <BillsTable
               bills={bills}
-              onEdit={openEditDialog}
+              onEdit={handleEditBill}
               onDelete={handleDeleteBill}
             />
           )}
         </CardContent>
       </Card>
-
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Salesman Bill</DialogTitle>
-            <DialogDescription>Update bill information</DialogDescription>
-          </DialogHeader>
-          <BillForm
-            formData={billForm}
-            customers={customers}
-            products={products}
-            loadingFormData={loadingFormData}
-            loading={operationLoading}
-            isEditMode={true}
-            onSubmit={handleEditBill}
-            onCancel={handleCloseEditDialog}
-            onChange={updateField}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

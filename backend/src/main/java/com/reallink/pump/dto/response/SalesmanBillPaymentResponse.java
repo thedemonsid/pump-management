@@ -22,6 +22,9 @@ public class SalesmanBillPaymentResponse {
     @Schema(description = "Salesman Nozzle Shift ID", example = "123e4567-e29b-41d4-a716-446655440000")
     private UUID salesmanNozzleShiftId;
 
+    @Schema(description = "Salesman ID", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID salesmanId;
+
     @Schema(description = "Salesman Name", example = "Rajesh Kumar")
     private String salesmanName;
 
@@ -34,8 +37,8 @@ public class SalesmanBillPaymentResponse {
     @Schema(description = "Bank Account ID", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID bankAccountId;
 
-    @Schema(description = "Bank Account Name", example = "Main Cash Account")
-    private String bankAccountName;
+    @Schema(description = "Bank Account Holder Name", example = "Main Cash Account")
+    private String bankAccountHolderName;
 
     @Schema(description = "Payment amount", example = "5000.00")
     private BigDecimal amount;
