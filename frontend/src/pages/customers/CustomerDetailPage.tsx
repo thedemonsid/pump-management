@@ -288,35 +288,12 @@ export function CustomerDetailPage() {
 
       {/* Bills and Payments Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="flex items-center justify-between">
-          <TabsList className="grid w-fit grid-cols-4">
-            <TabsTrigger value="bills" className="flex items-center gap-2">
-              <Receipt className="h-4 w-4" />
-              Bills ({bills.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="salesman-bills"
-              className="flex items-center gap-2"
-            >
-              <Receipt className="h-4 w-4" />
-              Salesman Bills ({salesmanBills.length})
-            </TabsTrigger>
-            <TabsTrigger value="payments" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              Payments ({payments.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="salesman-payments"
-              className="flex items-center gap-2"
-            >
-              <CreditCard className="h-4 w-4" />
-              Salesman Payments ({salesmanBillPayments.length})
-            </TabsTrigger>
-          </TabsList>
-
-          <div className="flex items-center gap-2">
+        <div className="space-y-4">
+          {/* Action Buttons Row */}
+          <div className="flex flex-wrap items-center gap-2 justify-end">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => navigate(`/customers/${id}/ledger`)}
             >
               <BookOpen className="h-4 w-4 mr-2" />
@@ -327,7 +304,7 @@ export function CustomerDetailPage() {
               onOpenChange={setIsCreatePaymentDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button>
+                <Button size="sm">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Payment
                 </Button>
@@ -387,7 +364,7 @@ export function CustomerDetailPage() {
               onOpenChange={setIsCreateSalesmanBillPaymentDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" size="sm">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Salesman Payment
                 </Button>
@@ -455,6 +432,40 @@ export function CustomerDetailPage() {
               </DialogContent>
             </Dialog>
           </div>
+
+          {/* Tabs List */}
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
+            <TabsTrigger value="bills" className="flex items-center gap-2">
+              <Receipt className="h-4 w-4" />
+              <span className="hidden sm:inline">Bills</span>
+              <span className="sm:hidden">Bills</span>
+              <span>({bills.length})</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="salesman-bills"
+              className="flex items-center gap-2"
+            >
+              <Receipt className="h-4 w-4" />
+              <span className="hidden sm:inline">Salesman Bills</span>
+              <span className="sm:hidden">S. Bills</span>
+              <span>({salesmanBills.length})</span>
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              <span className="hidden sm:inline">Payments</span>
+              <span className="sm:hidden">Payments</span>
+              <span>({payments.length})</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="salesman-payments"
+              className="flex items-center gap-2"
+            >
+              <CreditCard className="h-4 w-4" />
+              <span className="hidden sm:inline">Salesman Payments</span>
+              <span className="sm:hidden">S. Payments</span>
+              <span>({salesmanBillPayments.length})</span>
+            </TabsTrigger>
+          </TabsList>
         </div>
 
         <TabsContent value="bills" className="space-y-4">

@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useSupplierStore } from '@/store/supplier-store';
-import { useSupplierPaymentStore } from '@/store/supplier-payment-store';
-import { usePurchaseStore } from '@/store/purchase-store';
-import { useFuelPurchaseStore } from '@/store/fuel-purchase-store';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useSupplierStore } from "@/store/supplier-store";
+import { useSupplierPaymentStore } from "@/store/supplier-payment-store";
+import { usePurchaseStore } from "@/store/purchase-store";
+import { useFuelPurchaseStore } from "@/store/fuel-purchase-store";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -15,7 +15,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -23,9 +23,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { CreateSupplierPaymentForm } from './CreateSupplierPaymentForm';
-import { UpdateSupplierPaymentForm } from './UpdateSupplierPaymentForm';
+} from "@/components/ui/dialog";
+import { CreateSupplierPaymentForm } from "./CreateSupplierPaymentForm";
+import { UpdateSupplierPaymentForm } from "./UpdateSupplierPaymentForm";
 import {
   Loader2,
   ArrowLeft,
@@ -40,8 +40,8 @@ import {
   Receipt,
   CreditCard,
   BookOpen,
-} from 'lucide-react';
-import type { SupplierPaymentResponse } from '@/types';
+} from "lucide-react";
+import type { SupplierPaymentResponse } from "@/types";
 
 export function SupplierDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -69,7 +69,7 @@ export function SupplierDetailPage() {
     fetchFuelPurchasesByPumpMasterId,
   } = useFuelPurchaseStore();
 
-  const [activeTab, setActiveTab] = useState('payments');
+  const [activeTab, setActiveTab] = useState("payments");
   const [isCreatePaymentDialogOpen, setIsCreatePaymentDialogOpen] =
     useState(false);
   const [isEditPaymentDialogOpen, setIsEditPaymentDialogOpen] = useState(false);
@@ -108,8 +108,8 @@ export function SupplierDetailPage() {
       await removePayment(deletingPaymentId);
       setDeletingPaymentId(null);
     } catch (error) {
-      console.error('Failed to delete payment:', error);
-      alert('Failed to delete payment. Please try again.');
+      console.error("Failed to delete payment:", error);
+      alert("Failed to delete payment. Please try again.");
     }
   };
 
@@ -131,7 +131,7 @@ export function SupplierDetailPage() {
         <p className="text-muted-foreground">
           The supplier you're looking for doesn't exist.
         </p>
-        <Button onClick={() => navigate('/suppliers')}>
+        <Button onClick={() => navigate("/suppliers")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Suppliers
         </Button>
@@ -221,18 +221,18 @@ export function SupplierDetailPage() {
                 <span
                   className={`font-mono font-semibold ${
                     supplier.openingBalance && supplier.openingBalance > 0
-                      ? 'text-red-600'
-                      : 'text-green-600'
+                      ? "text-red-600"
+                      : "text-green-600"
                   }`}
                 >
-                  ₹{supplier.openingBalance?.toLocaleString() || '0'}
+                  ₹{supplier.openingBalance?.toLocaleString() || "0"}
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {supplier.openingBalance && supplier.openingBalance > 0
-                    ? '(Amount to pay)'
+                    ? "(Amount to pay)"
                     : supplier.openingBalance && supplier.openingBalance < 0
-                    ? '(Credit balance)'
-                    : ''}
+                    ? "(Credit balance)"
+                    : ""}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -243,7 +243,7 @@ export function SupplierDetailPage() {
                 <span>
                   {supplier.openingBalanceDate
                     ? new Date(supplier.openingBalanceDate).toLocaleDateString()
-                    : 'N/A'}
+                    : "N/A"}
                 </span>
               </div>
             </div>
@@ -290,15 +290,15 @@ export function SupplierDetailPage() {
               <div className="text-center">
                 <div
                   className={`text-2xl font-bold ${
-                    outstandingBalance >= 0 ? 'text-red-600' : 'text-green-600'
+                    outstandingBalance >= 0 ? "text-red-600" : "text-green-600"
                   }`}
                 >
                   ₹{Math.abs(outstandingBalance).toLocaleString()}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {outstandingBalance >= 0
-                    ? 'Amount Due to Supplier'
-                    : 'Supplier Credit Balance'}
+                    ? "Amount Due to Supplier"
+                    : "Supplier Credit Balance"}
                 </div>
               </div>
             </div>
@@ -312,28 +312,12 @@ export function SupplierDetailPage() {
 
       {/* Payments Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="flex items-center justify-between">
-          <TabsList className="grid w-fit grid-cols-3">
-            <TabsTrigger value="payments" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              Payments ({payments.length})
-            </TabsTrigger>
-            <TabsTrigger value="purchases" className="flex items-center gap-2">
-              <Receipt className="h-4 w-4" />
-              Purchases ({supplierPurchases.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="fuel-purchases"
-              className="flex items-center gap-2"
-            >
-              <Receipt className="h-4 w-4" />
-              Fuel Purchases ({supplierFuelPurchases.length})
-            </TabsTrigger>
-          </TabsList>
-
-          <div className="flex items-center gap-2">
+        <div className="space-y-4">
+          {/* Action Buttons Row */}
+          <div className="flex flex-wrap items-center gap-2 justify-end">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => navigate(`/suppliers/${id}/ledger`)}
             >
               <BookOpen className="h-4 w-4 mr-2" />
@@ -344,7 +328,7 @@ export function SupplierDetailPage() {
               onOpenChange={setIsCreatePaymentDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button>
+                <Button size="sm">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Payment
                 </Button>
@@ -434,6 +418,31 @@ export function SupplierDetailPage() {
               </DialogContent>
             </Dialog>
           </div>
+
+          {/* Tabs List */}
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="payments" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              <span className="hidden sm:inline">Payments</span>
+              <span className="sm:hidden">Payments</span>
+              <span>({payments.length})</span>
+            </TabsTrigger>
+            <TabsTrigger value="purchases" className="flex items-center gap-2">
+              <Receipt className="h-4 w-4" />
+              <span className="hidden sm:inline">Purchases</span>
+              <span className="sm:hidden">Purchases</span>
+              <span>({supplierPurchases.length})</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="fuel-purchases"
+              className="flex items-center gap-2"
+            >
+              <Receipt className="h-4 w-4" />
+              <span className="hidden sm:inline">Fuel Purchases</span>
+              <span className="sm:hidden">Fuel</span>
+              <span>({supplierFuelPurchases.length})</span>
+            </TabsTrigger>
+          </TabsList>
         </div>
 
         <TabsContent value="payments" className="space-y-4">
@@ -475,7 +484,7 @@ export function SupplierDetailPage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">
-                            {payment.paymentMethod.replace('_', ' ')}
+                            {payment.paymentMethod.replace("_", " ")}
                           </Badge>
                         </TableCell>
                         <TableCell>

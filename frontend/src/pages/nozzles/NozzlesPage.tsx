@@ -1,15 +1,14 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useNozzleStore } from '@/store/nozzle-store';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import { useNozzleStore } from "@/store/nozzle-store";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+} from "@/components/ui/card";
+import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -17,8 +16,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -26,13 +25,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { CreateNozzleForm } from './CreateNozzleForm';
-import { UpdateNozzleForm } from './UpdateNozzleForm';
-import type { Nozzle } from '@/types';
+} from "@/components/ui/dialog";
+import { CreateNozzleForm } from "./CreateNozzleForm";
+import { UpdateNozzleForm } from "./UpdateNozzleForm";
+import type { Nozzle } from "@/types";
 
 export function NozzlesPage() {
-  const navigate = useNavigate();
   const { nozzles, loading, error, fetchNozzles, removeNozzle } =
     useNozzleStore();
 
@@ -45,12 +43,12 @@ export function NozzlesPage() {
   }, [fetchNozzles]);
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this nozzle?')) {
+    if (confirm("Are you sure you want to delete this nozzle?")) {
       setDeletingId(id);
       try {
         await removeNozzle(id);
       } catch (error) {
-        console.error('Failed to delete nozzle:', error);
+        console.error("Failed to delete nozzle:", error);
       } finally {
         setDeletingId(null);
       }
@@ -154,7 +152,7 @@ export function NozzlesPage() {
                               {nozzle.tank.tankName}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                              {nozzle.tank.product?.productName || 'No Product'}
+                              {nozzle.tank.product?.productName || "No Product"}
                             </span>
                           </div>
                         ) : (
@@ -173,14 +171,6 @@ export function NozzlesPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate(`/nozzles/${nozzle.id}`)}
-                            title="Manage Shifts"
-                          >
-                            Manage Shifts
-                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
