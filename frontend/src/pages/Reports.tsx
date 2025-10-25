@@ -412,6 +412,7 @@ export default function Reports() {
             icon={<Calendar className="h-8 w-8" />}
             color="bg-purple-500"
             path="/reports/collection"
+            comingSoon
           />
           <ReportCard
             title="Bank Account Report"
@@ -433,6 +434,7 @@ export default function Reports() {
             icon={<FileText className="h-8 w-8" />}
             color="bg-red-500"
             path="/reports/sales"
+            comingSoon
           />
         </div>
       </div>
@@ -446,6 +448,7 @@ interface ReportCardProps {
   icon: React.ReactNode;
   color: string;
   path: string;
+  comingSoon?: boolean;
 }
 
 function ReportCard({
@@ -454,19 +457,31 @@ function ReportCard({
   icon,
   color,
   path,
+  comingSoon = false,
 }: ReportCardProps) {
   const navigate = useNavigate();
 
   return (
     <Card
-      className="cursor-pointer transition-all hover:shadow-lg hover:scale-105 border-2 hover:border-primary"
-      onClick={() => navigate(path)}
+      className={`transition-all border-2 ${
+        comingSoon
+          ? "opacity-60 cursor-not-allowed"
+          : "cursor-pointer hover:shadow-lg hover:scale-105 hover:border-primary"
+      }`}
+      onClick={() => !comingSoon && navigate(path)}
     >
       <CardHeader>
         <div className="flex items-center gap-4">
           <div className={`${color} text-white p-3 rounded-lg`}>{icon}</div>
           <div className="flex-1">
-            <CardTitle className="text-lg">{title}</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              {title}
+              {comingSoon && (
+                <span className="text-xs font-normal bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 px-2 py-1 rounded">
+                  Coming Soon
+                </span>
+              )}
+            </CardTitle>
           </div>
         </div>
       </CardHeader>

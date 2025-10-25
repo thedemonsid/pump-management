@@ -28,6 +28,8 @@ import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useBankAccountStore } from "@/store/bank-account-store";
 import { useBankAccountLedgerStore } from "@/store/bank-account-ledger-store";
+import { pdf } from "@react-pdf/renderer";
+import { BankAccountPDF } from "@/components/pdf-reports";
 
 export default function BankAccountReportPage() {
   const navigate = useNavigate();
@@ -73,9 +75,32 @@ export default function BankAccountReportPage() {
     });
   };
 
-  const handleDownload = () => {
-    // TODO: Implement download functionality
-    console.log("Downloading report...");
+  const handleDownload = async () => {
+    if (!selectedBankAccount) return;
+
+    try {
+      const blob = await pdf(
+        <BankAccountPDF
+          accountName={selectedBankAccount.accountHolderName}
+          accountNumber={selectedBankAccount.accountNumber}
+          data={ledgerData}
+          summary={summary}
+          fromDate={fromDate}
+          toDate={toDate}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `bank-account-report-${
+        selectedBankAccount.accountNumber
+      }-${format(new Date(), "yyyy-MM-dd")}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    }
   };
 
   const formatCurrency = (amount: number) => {

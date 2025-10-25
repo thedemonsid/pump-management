@@ -24,6 +24,8 @@ import { useCustomerStore } from "@/store/customer-store";
 import { useLedgerStore } from "@/store/ledger-store";
 import { BillService } from "@/services/bill-service";
 import { CustomerBillPaymentService } from "@/services/customer-bill-payment-service";
+import { pdf } from "@react-pdf/renderer";
+import { CustomerCreditPDF } from "@/components/pdf-reports";
 
 interface CustomerCredit {
   customerName: string;
@@ -110,8 +112,28 @@ export default function CustomerCreditReportPage() {
     }
   };
 
-  const handleDownload = () => {
-    console.log("Downloading customer credit report...");
+  const handleDownload = async () => {
+    try {
+      const blob = await pdf(
+        <CustomerCreditPDF
+          data={customerCredits}
+          fromDate={fromDate}
+          toDate={toDate}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `customer-credit-report-${format(
+        new Date(),
+        "yyyy-MM-dd"
+      )}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    }
   };
 
   const handleSendWhatsApp = (customer: CustomerCredit) => {

@@ -28,6 +28,8 @@ import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useTankStore } from "@/store/tank-store";
 import { useTankLedgerStore } from "@/store/tank-ledger-store";
+import { pdf } from "@react-pdf/renderer";
+import { TankLevelPDF } from "@/components/pdf-reports";
 
 export default function TankLevelReportPage() {
   const navigate = useNavigate();
@@ -71,9 +73,33 @@ export default function TankLevelReportPage() {
     });
   };
 
-  const handleDownload = () => {
-    // TODO: Implement download functionality
-    console.log("Downloading tank level report...");
+  const handleDownload = async () => {
+    if (!selectedTankData) return;
+
+    try {
+      const blob = await pdf(
+        <TankLevelPDF
+          tankName={selectedTankData.tankName}
+          tankCapacity={selectedTankData.capacity || 0}
+          data={ledgerData}
+          summary={summary}
+          fromDate={fromDate}
+          toDate={toDate}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `tank-level-report-${selectedTankData.tankName}-${format(
+        new Date(),
+        "yyyy-MM-dd"
+      )}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    }
   };
 
   const formatVolume = (volume: number) => {

@@ -24,6 +24,8 @@ import { useSupplierLedgerStore } from "@/store/supplier-ledger-store";
 import { PurchaseService } from "@/services/purchase-service";
 import { FuelPurchaseService } from "@/services/fuel-purchase-service";
 import { SupplierPaymentService } from "@/services/supplier-payment-service";
+import { pdf } from "@react-pdf/renderer";
+import { SupplierDebtPDF } from "@/components/pdf-reports";
 
 interface SupplierDebt {
   supplierName: string;
@@ -114,8 +116,36 @@ export default function SupplierDebtReportPage() {
     }
   };
 
-  const handleDownload = () => {
-    console.log("Downloading supplier debt report...");
+  const handleDownload = async () => {
+    try {
+      // Need to add mobile field to match PDF interface
+      const supplierDebtsWithMobile = supplierDebts.map((debt) => ({
+        ...debt,
+        mobile:
+          suppliers.find((s) => s.supplierName === debt.supplierName)
+            ?.contactNumber || "N/A",
+      }));
+
+      const blob = await pdf(
+        <SupplierDebtPDF
+          data={supplierDebtsWithMobile}
+          fromDate={fromDate}
+          toDate={toDate}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `supplier-debt-report-${format(
+        new Date(),
+        "yyyy-MM-dd"
+      )}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    }
   };
 
   const formatCurrency = (amount: number) => {

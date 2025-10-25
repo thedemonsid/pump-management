@@ -1,15 +1,15 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useTankStore } from '@/store/tank-store';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { useTankStore, formatOpeningLevelDate } from "@/store/tank-store";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Plus, Loader2 } from 'lucide-react';
+} from "@/components/ui/card";
+import { Plus, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,13 +17,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { CreateTankForm } from './CreateTankForm';
-import { UpdateTankForm } from './UpdateTankForm';
-import { TankTransactionService } from '@/services/tank-transaction-service';
-import { DataTable } from '@/components/ui/data-table';
-import { columns } from './columns';
-import type { Tank } from '@/types';
+} from "@/components/ui/dialog";
+import { CreateTankForm } from "./CreateTankForm";
+import { UpdateTankForm } from "./UpdateTankForm";
+import { TankTransactionService } from "@/services/tank-transaction-service";
+import { DataTable } from "@/components/ui/data-table";
+import { columns } from "./columns";
+import type { Tank } from "@/types";
 
 export function TanksPage() {
   const navigate = useNavigate();
@@ -44,11 +44,7 @@ export function TanksPage() {
   }, [fetchTanks]);
 
   const calculateCurrentBalances = useCallback(async () => {
-    const today = new Date();
-    const twoDaysBefore = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
-    const twoDaysAfter = new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000);
-    const fromDate = twoDaysBefore.toISOString().split('T')[0];
-    const toDate = twoDaysAfter.toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
 
     const balances: Record<string, number> = {};
     const loadingStates: Record<string, boolean> = {};
@@ -65,26 +61,31 @@ export function TanksPage() {
         if (!tank.id) return;
 
         try {
-          // Get opening level for 2 days before today
+          // Use tank's opening level date or a fallback date
+          const fromDate = tank.openingLevelDate
+            ? formatOpeningLevelDate(tank.openingLevelDate) || today
+            : today;
+
+          // Get opening level for the from date
           const levelBefore = await TankTransactionService.getOpeningLevel(
             tank.id,
             fromDate
           );
 
-          // Get transactions for the date range
+          // Get transactions from opening level date to today
           const transactions =
             await TankTransactionService.getTransactionsWithDateRange(
               tank.id,
               fromDate,
-              toDate
+              today
             );
 
           // Calculate running level
           let runningLevel = levelBefore;
           transactions.forEach((transaction) => {
-            if (transaction.transactionType === 'ADDITION') {
+            if (transaction.transactionType === "ADDITION") {
               runningLevel += transaction.volume;
-            } else if (transaction.transactionType === 'REMOVAL') {
+            } else if (transaction.transactionType === "REMOVAL") {
               runningLevel -= transaction.volume;
             }
           });
@@ -115,12 +116,12 @@ export function TanksPage() {
   }, [tanks, calculateCurrentBalances]);
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this tank?')) {
+    if (confirm("Are you sure you want to delete this tank?")) {
       setDeletingId(id);
       try {
         await removeTank(id);
       } catch (error) {
-        console.error('Failed to delete tank:', error);
+        console.error("Failed to delete tank:", error);
       } finally {
         setDeletingId(null);
       }
