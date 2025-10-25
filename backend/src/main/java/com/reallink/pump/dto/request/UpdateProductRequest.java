@@ -16,6 +16,10 @@ import lombok.Data;
 @Schema(description = "Request DTO for updating an existing product")
 public class UpdateProductRequest {
 
+    @Min(value = 0, message = "GST percentage cannot be negative")
+    @Schema(description = "GST percentage", example = "18")
+    private Integer gstPercentage;
+
     @Schema(description = "Product type", example = "FUEL")
     private ProductType productType;
 

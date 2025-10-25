@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSalesmanNozzleShiftStore } from "@/store/salesman-nozzle-shift-store";
-import { useSalesmanBillPaymentStore } from "@/store/salesman-bill-payment-store";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,15 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Loader2,
-  Fuel,
-  Eye,
-  Receipt,
-  Square,
-  Play,
-  CreditCard,
-} from "lucide-react";
+import { Loader2, Fuel, Square, Play, CreditCard, Receipt } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -40,22 +31,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import ReactSelect, { type CSSObjectWithLabel } from "react-select";
 import { format } from "date-fns";
-import { SalesmanBillService } from "@/services/salesman-bill-service";
 import { NozzleService } from "@/services/nozzle-service";
 import { SalesmanService } from "@/services/salesman-service";
-import { CustomerService } from "@/services/customer-service";
-import { ProductService } from "@/services/product-service";
-import { CreateShiftPaymentForm } from "@/pages/salesman-shifts/CreateShiftPaymentForm";
 import { toast } from "sonner";
-import type {
-  SalesmanNozzleShiftResponse,
-  SalesmanBillResponse,
-  Nozzle,
-  Salesman,
-  Customer,
-  Product,
-  CreateSalesmanBillRequest,
-} from "@/types";
+import type { Nozzle, Salesman } from "@/types";
 
 // ReactSelect styling to match create-bill
 const selectStyles = {
@@ -113,12 +92,6 @@ export function SalesmanShiftsPage() {
     fetchActiveShifts,
   } = useSalesmanNozzleShiftStore();
 
-  const {
-    shiftPayments,
-    loading: loadingPayments,
-    fetchPaymentsByShiftId,
-  } = useSalesmanBillPaymentStore();
-
   // Date filtering - single date that will be converted to from/to for backend
   const [selectedDate, setSelectedDate] = useState(() =>
     format(new Date(), "yyyy-MM-dd")
@@ -126,12 +99,8 @@ export function SalesmanShiftsPage() {
 
   // Convert selected date to Indian timezone and create from/to dates
   const getIndianDateRange = useCallback((dateStr: string) => {
-    // For the backend, we send the same date for both fromDate and toDate
-    // The backend will handle the date range (start of day to end of day) in IST
-    // Since we're using a single date picker, both from and to will be the same date
     const fromDate = dateStr;
     const toDate = dateStr;
-
     return { fromDate, toDate };
   }, []);
 
@@ -143,13 +112,6 @@ export function SalesmanShiftsPage() {
   const [salesmen, setSalesmen] = useState<Salesman[]>([]);
   const [loadingSalesmen, setLoadingSalesmen] = useState(false);
 
-  // Bills dialog state
-  const [isBillsDialogOpen, setIsBillsDialogOpen] = useState(false);
-  const [selectedShiftForBills, setSelectedShiftForBills] =
-    useState<SalesmanNozzleShiftResponse | null>(null);
-  const [shiftBills, setShiftBills] = useState<SalesmanBillResponse[]>([]);
-  const [loadingBills, setLoadingBills] = useState(false);
-
   // Form states
   const [startForm, setStartForm] = useState({
     nozzleId: "",
@@ -160,33 +122,6 @@ export function SalesmanShiftsPage() {
     closingBalance: 0,
     nextSalesmanId: "",
   });
-
-  // Bill creation state
-  const [isCreateBillDialogOpen, setIsCreateBillDialogOpen] = useState(false);
-  const [selectedShiftForBill, setSelectedShiftForBill] =
-    useState<SalesmanNozzleShiftResponse | null>(null);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loadingCustomers, setLoadingCustomers] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loadingProducts, setLoadingProducts] = useState(false);
-  const [billForm, setBillForm] = useState({
-    customerId: "",
-    productId: "",
-    quantity: "",
-    vehicleNo: "",
-    driverName: "",
-  });
-
-  // Payment dialog state
-  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
-  const [selectedShiftForPayment, setSelectedShiftForPayment] =
-    useState<SalesmanNozzleShiftResponse | null>(null);
-
-  // View Payments dialog state
-  const [isViewPaymentsDialogOpen, setIsViewPaymentsDialogOpen] =
-    useState(false);
-  const [selectedShiftForViewPayments, setSelectedShiftForViewPayments] =
-    useState<SalesmanNozzleShiftResponse | null>(null);
 
   // Load nozzles and salesmen for selection
   useEffect(() => {
@@ -280,136 +215,8 @@ export function SalesmanShiftsPage() {
     }
   };
 
-  // Bill creation functions
-  const handleCreateBill = async (shift: SalesmanNozzleShiftResponse) => {
-    setSelectedShiftForBill(shift);
-    setIsCreateBillDialogOpen(true);
-    setLoadingCustomers(true);
-    setLoadingProducts(true);
-    try {
-      const [customersData, productsData] = await Promise.all([
-        CustomerService.getAll(),
-        ProductService.getAll(),
-      ]);
-      setCustomers(customersData);
-      setProducts(
-        productsData.filter((product) => product.productType === "FUEL")
-      );
-    } catch {
-      toast.error("Failed to load customers and products");
-    } finally {
-      setLoadingCustomers(false);
-      setLoadingProducts(false);
-    }
-  };
-
-  const handleSubmitBill = async () => {
-    if (!selectedShiftForBill || !user?.pumpMasterId) return;
-
-    try {
-      // Get next bill number
-      const nextBillNo = await SalesmanBillService.getNextBillNo();
-
-      // Get selected product for rate
-      const selectedProduct = products.find((p) => p.id === billForm.productId);
-      if (!selectedProduct) {
-        toast.error("Selected product not found");
-        return;
-      }
-
-      const billData: CreateSalesmanBillRequest = {
-        pumpMasterId: user.pumpMasterId,
-        billNo: nextBillNo,
-        billDate: new Date().toISOString().split("T")[0], // Today's date
-        customerId: billForm.customerId,
-        productId: billForm.productId,
-        salesmanNozzleShiftId: selectedShiftForBill.id,
-        rateType: "EXCLUDING_GST", // Default to excluding GST
-        quantity: parseFloat(billForm.quantity),
-        rate: selectedProduct.salesRate, // Use product's sales rate
-        vehicleNo: billForm.vehicleNo,
-        driverName: billForm.driverName,
-      };
-
-      await SalesmanBillService.create(billData);
-      toast.success("Bill created successfully");
-      setIsCreateBillDialogOpen(false);
-      setSelectedShiftForBill(null);
-      setBillForm({
-        customerId: "",
-        productId: "",
-        quantity: "",
-        vehicleNo: "",
-        driverName: "",
-      });
-      // Refresh shifts to show updated bill count
-      if (user?.role === "SALESMAN" && user?.userId) {
-        const { fromDate, toDate } = getIndianDateRange(selectedDate);
-        fetchShifts({ fromDate, toDate, salesmanId: user.userId });
-        fetchActiveShifts(user.userId);
-      } else if (user?.role === "ADMIN") {
-        const { fromDate, toDate } = getIndianDateRange(selectedDate);
-        fetchShifts({ fromDate, toDate });
-        fetchActiveShifts();
-      }
-    } catch {
-      toast.error("Failed to create bill");
-    }
-  };
-
-  // Load nozzles and salesmen for selection
-
-  const handleViewBills = async (shift: SalesmanNozzleShiftResponse) => {
-    setSelectedShiftForBills(shift);
-    setLoadingBills(true);
-    setIsBillsDialogOpen(true);
-
-    try {
-      const bills = await SalesmanBillService.getByShift(shift.id!);
-      setShiftBills(bills);
-    } catch (error) {
-      console.error("Failed to load bills for shift:", error);
-      setShiftBills([]);
-    } finally {
-      setLoadingBills(false);
-    }
-  };
-
-  // View Payments function
-  const handleViewPayments = async (shift: SalesmanNozzleShiftResponse) => {
-    setSelectedShiftForViewPayments(shift);
-    setIsViewPaymentsDialogOpen(true);
-
-    try {
-      await fetchPaymentsByShiftId(shift.id!);
-    } catch (error) {
-      console.error("Failed to load payments for shift:", error);
-    }
-  };
-
-  // Payment functions
-  const handleRecordPayment = (shift: SalesmanNozzleShiftResponse) => {
-    setSelectedShiftForPayment(shift);
-    setIsPaymentDialogOpen(true);
-  };
-
-  const handlePaymentSuccess = () => {
-    setIsPaymentDialogOpen(false);
-    setSelectedShiftForPayment(null);
-    // Refresh shifts
-    const { fromDate, toDate } = getIndianDateRange(selectedDate);
-    if (user?.role === "SALESMAN" && user?.userId) {
-      fetchShifts({ fromDate, toDate, salesmanId: user.userId });
-      fetchActiveShifts(user.userId);
-    } else if (user?.role === "ADMIN") {
-      fetchShifts({ fromDate, toDate });
-      fetchActiveShifts();
-    }
-  };
-
   // Accounting function - navigate to dedicated accounting page
-  const handleCreateAccounting = (shift: SalesmanNozzleShiftResponse) => {
-    // Navigate to the accounting table page for salesmen
+  const handleCreateAccounting = (shift: { id: string }) => {
     navigate(`/salesman/shifts/${shift.id}/accounting`);
   };
 
@@ -444,7 +251,6 @@ export function SalesmanShiftsPage() {
     }
     if (shift.closingBalance && shift.openingBalance) {
       const dispensed = shift.closingBalance - shift.openingBalance;
-      // Use productPrice if available, otherwise default to ₹100 per liter
       const pricePerLiter = shift.productPrice || 100;
       return dispensed * pricePerLiter;
     }
@@ -720,34 +526,18 @@ export function SalesmanShiftsPage() {
                     <Button
                       variant="outline"
                       className="h-20 flex-col"
-                      onClick={() => handleViewBills(shift)}
-                    >
-                      <Eye className="h-5 w-5 mb-1" />
-                      <span>View Bills</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="h-20 flex-col"
-                      onClick={() => handleViewPayments(shift)}
-                    >
-                      <CreditCard className="h-5 w-5 mb-1" />
-                      <span>View Payments</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="h-20 flex-col"
-                      onClick={() => handleCreateBill(shift)}
+                      onClick={() => navigate("/salesman/bills")}
                     >
                       <Receipt className="h-5 w-5 mb-1" />
-                      <span>Create Bills</span>
+                      <span>My Bills</span>
                     </Button>
                     <Button
                       variant="outline"
                       className="h-20 flex-col"
-                      onClick={() => handleRecordPayment(shift)}
+                      onClick={() => navigate("/salesman/payments")}
                     >
                       <CreditCard className="h-5 w-5 mb-1" />
-                      <span>Create Payments</span>
+                      <span>My Payments</span>
                     </Button>
                   </div>
                 </CardContent>
@@ -761,28 +551,18 @@ export function SalesmanShiftsPage() {
       <Card>
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <CardTitle>Shift History</CardTitle>
-              <CardDescription>
-                Your completed shifts for the selected date
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex flex-col">
-                <Label
-                  htmlFor="selected-date"
-                  className="text-sm font-medium mb-1"
-                >
-                  Select Date
-                </Label>
-                <Input
-                  id="selected-date"
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-[180px]"
-                />
+            <div className="flex justify-between items-center w-full">
+              <div>
+                <CardTitle>Shift History</CardTitle>
+                <CardDescription>Manage The Shift History</CardDescription>
               </div>
+              <Input
+                id="selected-date"
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-[180px]"
+              />
             </div>
           </div>
         </CardHeader>
@@ -823,7 +603,6 @@ export function SalesmanShiftsPage() {
                     <TableHead className="min-w-[100px]">
                       Total Amount
                     </TableHead>
-                    <TableHead className="min-w-[80px]">Bills</TableHead>
                     <TableHead className="min-w-[80px]">Status</TableHead>
                     <TableHead className="min-w-[120px]">Actions</TableHead>
                   </TableRow>
@@ -869,16 +648,6 @@ export function SalesmanShiftsPage() {
                           : shift.closingBalance
                           ? formatCurrency(calculateTotalAmount(shift))
                           : "-"}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewBills(shift)}
-                        >
-                          <Eye className="mr-1 h-3 w-3" />
-                          Bills
-                        </Button>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col space-y-1">
@@ -933,387 +702,6 @@ export function SalesmanShiftsPage() {
           )}
         </CardContent>
       </Card>
-
-      {/* Bills Dialog */}
-      <Dialog open={isBillsDialogOpen} onOpenChange={setIsBillsDialogOpen}>
-        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              Bills for Shift - {selectedShiftForBills?.nozzleName}
-            </DialogTitle>
-            <DialogDescription>
-              Credit bills created during this shift
-              {selectedShiftForBills && (
-                <span className="block mt-1">
-                  {formatDateTime(selectedShiftForBills.startDateTime)}
-                  {selectedShiftForBills.endDateTime &&
-                    ` - ${formatDateTime(selectedShiftForBills.endDateTime)}`}
-                </span>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-
-          {loadingBills ? (
-            <div className="flex items-center justify-center h-32">
-              <Loader2 className="h-6 w-6 animate-spin" />
-              <span className="ml-2">Loading bills...</span>
-            </div>
-          ) : shiftBills.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Fuel className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No bills found for this shift.</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">
-                  {shiftBills.length} Bill{shiftBills.length !== 1 ? "s" : ""}
-                </h3>
-                <div className="text-right">
-                  <p className="text-sm text-muted-foreground">Total Amount</p>
-                  <p className="text-lg font-bold">
-                    {formatCurrency(
-                      shiftBills.reduce((sum, bill) => sum + bill.amount, 0)
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                {shiftBills.map((bill) => (
-                  <Card key={bill.id} className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1 flex-1">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-semibold">
-                            Bill #{bill.billNo}
-                          </span>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          <p>
-                            Customer: {bill.customerName}
-                            {bill.vehicleNo && ` | Vehicle: ${bill.vehicleNo}`}
-                          </p>
-                          <p>Product: {bill.productName}</p>
-                          <p>
-                            Quantity: {bill.quantity} L | Rate:{" "}
-                            {formatCurrency(bill.rate)}/L
-                          </p>
-                          <p>Total: {formatCurrency(bill.amount)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Payment Dialog */}
-      <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Record Payment</DialogTitle>
-            <DialogDescription>
-              Record a payment for shift starting at{" "}
-              {selectedShiftForPayment &&
-                format(
-                  new Date(selectedShiftForPayment.startDateTime),
-                  "dd/MM/yyyy HH:mm"
-                )}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedShiftForPayment && (
-            <CreateShiftPaymentForm
-              salesmanNozzleShiftId={selectedShiftForPayment.id}
-              pumpMasterId={user?.pumpMasterId || ""}
-              onSuccess={handlePaymentSuccess}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* View Payments Dialog */}
-      <Dialog
-        open={isViewPaymentsDialogOpen}
-        onOpenChange={setIsViewPaymentsDialogOpen}
-      >
-        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              Payments for Shift - {selectedShiftForViewPayments?.nozzleName}
-            </DialogTitle>
-            <DialogDescription>
-              All payments recorded during this shift
-              {selectedShiftForViewPayments && (
-                <span className="block mt-1">
-                  {formatDateTime(selectedShiftForViewPayments.startDateTime)}
-                  {selectedShiftForViewPayments.endDateTime &&
-                    ` - ${formatDateTime(
-                      selectedShiftForViewPayments.endDateTime
-                    )}`}
-                </span>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-
-          {loadingPayments ? (
-            <div className="flex items-center justify-center h-32">
-              <Loader2 className="h-6 w-6 animate-spin" />
-              <span className="ml-2">Loading payments...</span>
-            </div>
-          ) : shiftPayments.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No payments found for this shift.</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">
-                  {shiftPayments.length} Payment
-                  {shiftPayments.length !== 1 ? "s" : ""}
-                </h3>
-                <div className="text-right">
-                  <p className="text-sm text-muted-foreground">Total Amount</p>
-                  <p className="text-lg font-bold">
-                    {formatCurrency(
-                      shiftPayments.reduce(
-                        (sum, payment) => sum + payment.amount,
-                        0
-                      )
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                {shiftPayments.map((payment) => (
-                  <Card key={payment.id} className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1 flex-1">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-semibold">
-                            {payment.referenceNumber}
-                          </span>
-                          <Badge variant="outline">
-                            {payment.paymentMethod}
-                          </Badge>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          <p>Customer: {payment.customerName}</p>
-                          <p>
-                            Date:{" "}
-                            {format(
-                              new Date(payment.paymentDate),
-                              "dd/MM/yyyy"
-                            )}
-                          </p>
-                          <p>Amount: {formatCurrency(payment.amount)}</p>
-                          {payment.notes && <p>Notes: {payment.notes}</p>}
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Bill Dialog */}
-      <Dialog
-        open={isCreateBillDialogOpen}
-        onOpenChange={setIsCreateBillDialogOpen}
-      >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create Bill</DialogTitle>
-            <DialogDescription>
-              Create a new bill for shift starting at{" "}
-              {selectedShiftForBill &&
-                format(
-                  new Date(selectedShiftForBill.startDateTime),
-                  "dd/MM/yyyy HH:mm"
-                )}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="customer">Customer *</Label>
-              <ReactSelect
-                value={
-                  billForm.customerId
-                    ? customers.find((c) => c.id === billForm.customerId)
-                      ? {
-                          value: billForm.customerId,
-                          label: customers.find(
-                            (c) => c.id === billForm.customerId
-                          )!.customerName,
-                        }
-                      : null
-                    : null
-                }
-                onChange={(option) =>
-                  setBillForm({ ...billForm, customerId: option?.value || "" })
-                }
-                options={customers
-                  .filter((customer) => customer.id)
-                  .map((c) => ({
-                    value: c.id!,
-                    label: c.customerName,
-                  }))}
-                placeholder="Select customer"
-                styles={selectStyles}
-                menuPortalTarget={document.body}
-                isLoading={loadingCustomers}
-                isClearable
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="product">Product *</Label>
-              <ReactSelect
-                value={
-                  billForm.productId
-                    ? products.find((p) => p.id === billForm.productId)
-                      ? {
-                          value: billForm.productId,
-                          label: `${
-                            products.find((p) => p.id === billForm.productId)!
-                              .productName
-                          } - ${formatCurrency(
-                            products.find((p) => p.id === billForm.productId)!
-                              .salesRate
-                          )}/L`,
-                        }
-                      : null
-                    : null
-                }
-                onChange={(option) =>
-                  setBillForm({ ...billForm, productId: option?.value || "" })
-                }
-                options={products
-                  .filter((product) => product.id)
-                  .map((p) => ({
-                    value: p.id!,
-                    label: `${p.productName} - ${formatCurrency(
-                      p.salesRate
-                    )}/L`,
-                  }))}
-                placeholder="Select product"
-                styles={selectStyles}
-                menuPortalTarget={document.body}
-                isLoading={loadingProducts}
-                isClearable
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="quantity">Quantity (Liters) *</Label>
-              <Input
-                id="quantity"
-                type="number"
-                step="0.001"
-                placeholder="0.000"
-                value={billForm.quantity}
-                onChange={(e) =>
-                  setBillForm({ ...billForm, quantity: e.target.value })
-                }
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="vehicle">Vehicle Number</Label>
-              <Input
-                id="vehicle"
-                placeholder="Enter vehicle number"
-                value={billForm.vehicleNo}
-                onChange={(e) =>
-                  setBillForm({ ...billForm, vehicleNo: e.target.value })
-                }
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="driver">Driver Name</Label>
-              <Input
-                id="driver"
-                placeholder="Enter driver name"
-                value={billForm.driverName}
-                onChange={(e) =>
-                  setBillForm({ ...billForm, driverName: e.target.value })
-                }
-              />
-            </div>
-
-            {/* Display calculated amount */}
-            {billForm.productId && billForm.quantity && (
-              <div className="p-3 bg-muted rounded-lg">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Total Amount:</span>
-                  <span className="font-bold">
-                    {(() => {
-                      const product = products.find(
-                        (p) => p.id === billForm.productId
-                      );
-                      const quantity = parseFloat(billForm.quantity) || 0;
-                      const rate = product?.salesRate || 0;
-                      return formatCurrency(quantity * rate);
-                    })()}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-sm text-muted-foreground mt-1">
-                  <span>Rate:</span>
-                  <span>
-                    {(() => {
-                      const product = products.find(
-                        (p) => p.id === billForm.productId
-                      );
-                      return product
-                        ? formatCurrency(product.salesRate) + "/L"
-                        : "-";
-                    })()}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex justify-end space-x-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsCreateBillDialogOpen(false);
-                setSelectedShiftForBill(null);
-                setBillForm({
-                  customerId: "",
-                  productId: "",
-                  quantity: "",
-                  vehicleNo: "",
-                  driverName: "",
-                });
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmitBill}
-              disabled={
-                !billForm.customerId ||
-                !billForm.productId ||
-                !billForm.quantity
-              }
-            >
-              Create Bill
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

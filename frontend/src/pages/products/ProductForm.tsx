@@ -57,6 +57,7 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
     resolver: zodResolver(ProductFormSchema),
     defaultValues: product
       ? {
+          gstPercentage: product.gstPercentage,
           productType: product.productType || ProductType.GENERAL,
           productName: product.productName,
           alias: product.alias,
@@ -69,6 +70,7 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
           stockConversionRatio: product.stockConversionRatio,
         }
       : {
+          gstPercentage: 0,
           productType: ProductType.GENERAL,
           productName: "",
           alias: "",
@@ -189,8 +191,8 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
           />
         </div>
 
-        {/* Row 2: HSN Code, Purchase Rate, Sales Rate */}
-        <div className="grid grid-cols-3 gap-4">
+        {/* Row 2: HSN Code, GST %, Purchase Rate, Sales Rate */}
+        <div className="grid grid-cols-4 gap-4">
           <FormField
             control={form.control}
             name="hsnCode"
@@ -199,6 +201,30 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
                 <FormLabel>HSN Code</FormLabel>
                 <FormControl>
                   <Input placeholder="e.g., 27101910" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="gstPercentage"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>GST %</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    placeholder="0"
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseInt(value) || 0);
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -4,13 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { type CSSObjectWithLabel } from "react-select";
 import CreatableSelect from "react-select/creatable";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -84,8 +78,6 @@ const amountOptions = [
   { value: 100, label: "₹100" },
   { value: 200, label: "₹200" },
   { value: 500, label: "₹500" },
-  { value: 1000, label: "₹1,000" },
-  { value: 2000, label: "₹2,000" },
   { value: 5000, label: "₹5,000" },
   { value: 10000, label: "₹10,000" },
   { value: 20000, label: "₹20,000" },
@@ -106,8 +98,6 @@ export function AccountingTablePage() {
   // Cash dialog state
   const [isCashDialogOpen, setIsCashDialogOpen] = useState(false);
   const [cashForm, setCashForm] = useState({
-    notes2000: 0,
-    notes1000: 0,
     notes500: 0,
     notes200: 0,
     notes100: 0,
@@ -161,9 +151,7 @@ export function AccountingTablePage() {
           setCardReceived(accountingData.cardReceived);
           setExpenses(accountingData.expenses);
           setCashInHand(
-            accountingData.notes2000 * 2000 +
-              accountingData.notes1000 * 1000 +
-              accountingData.notes500 * 500 +
+            accountingData.notes500 * 500 +
               accountingData.notes200 * 200 +
               accountingData.notes100 * 100 +
               accountingData.notes50 * 50 +
@@ -174,8 +162,6 @@ export function AccountingTablePage() {
               accountingData.coins1 * 1
           );
           setCashForm({
-            notes2000: accountingData.notes2000,
-            notes1000: accountingData.notes1000,
             notes500: accountingData.notes500,
             notes200: accountingData.notes200,
             notes100: accountingData.notes100,
@@ -202,8 +188,6 @@ export function AccountingTablePage() {
 
   const calculateCashFromDenominations = () => {
     return (
-      cashForm.notes2000 * 2000 +
-      cashForm.notes1000 * 1000 +
       cashForm.notes500 * 500 +
       cashForm.notes200 * 200 +
       cashForm.notes100 * 100 +
@@ -236,8 +220,8 @@ export function AccountingTablePage() {
         cardReceived: cardReceived,
         expenses,
         expenseReason: "",
-        notes2000: cashForm.notes2000,
-        notes1000: cashForm.notes1000,
+        notes2000: 0, // Always send as 0 for backend compatibility
+        notes1000: 0, // Always send as 0 for backend compatibility
         notes500: cashForm.notes500,
         notes200: cashForm.notes200,
         notes100: cashForm.notes100,
@@ -328,39 +312,37 @@ export function AccountingTablePage() {
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-auto">
       {/* Header */}
-      <div className="flex items-center gap-2 p-2 border-b bg-background">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-5 w-5" />
+      <div className="flex items-center gap-3 px-3 py-2 border-b bg-background sticky top-0 z-10 shadow-sm">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="h-8 w-8 p-0 hover:bg-primary/10 rounded-full"
+        >
+          <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-lg font-bold truncate">
-            {accounting ? "Edit Accounting" : "Create Accounting"}
-          </h1>
-          <p className="text-xs text-muted-foreground truncate">
-            {shift.salesmanUsername} • {shift.nozzleName}
-          </p>
-        </div>
+        <h1 className="text-base font-semibold">Shift Accounting</h1>
       </div>
 
       {/* Shift Summary */}
-      <div className="p-2 border-b bg-muted/30">
+      <div className="px-3 py-2 border-b bg-muted/30">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
           <div>
-            <p className="text-muted-foreground">Nozzle</p>
+            <p className="text-muted-foreground text-[10px]">Nozzle</p>
             <p className="font-medium">{shift.nozzleName}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Product</p>
+            <p className="text-muted-foreground text-[10px]">Product</p>
             <p className="font-medium">{shift.productName}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Dispensed</p>
+            <p className="text-muted-foreground text-[10px]">Dispensed</p>
             <p className="font-medium">{shift.dispensedAmount.toFixed(2)} L</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Expected</p>
+            <p className="text-muted-foreground text-[10px]">Expected</p>
             <p className="font-medium text-primary">
               {formatCurrency(expectedCash)}
             </p>
@@ -373,33 +355,39 @@ export function AccountingTablePage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[50%]">Description</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="w-[50%] py-2 text-xs">
+                Description
+              </TableHead>
+              <TableHead className="text-right py-2 text-xs">Amount</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {/* MS Sale (Total Sale/Expected) */}
             <TableRow className="bg-blue-50">
-              <TableCell className="font-bold py-2">MS Sale</TableCell>
-              <TableCell className="text-right font-bold py-2">
+              <TableCell className="font-bold py-1.5 text-sm">
+                MS Sale
+              </TableCell>
+              <TableCell className="text-right font-bold py-1.5 text-sm">
                 {formatCurrency(expectedCash)}
               </TableCell>
             </TableRow>
 
             {/* Receipt (Credit Payment Received) - Auto-calculated */}
             <TableRow>
-              <TableCell className="font-medium py-2 text-muted-foreground">
+              <TableCell className="font-medium py-1.5 text-xs text-muted-foreground">
                 Receipt (Credit Payment)
               </TableCell>
-              <TableCell className="text-right font-medium py-2 text-green-600">
+              <TableCell className="text-right font-medium py-1.5 text-xs text-green-600">
                 {formatCurrency(creditPaymentReceived)}
               </TableCell>
             </TableRow>
 
             {/* Total Amount (MS Sale + Receipt) */}
             <TableRow className="bg-purple-50">
-              <TableCell className="font-bold py-2">Total Amt.</TableCell>
-              <TableCell className="text-right font-bold py-2">
+              <TableCell className="font-bold py-1.5 text-sm">
+                Total Amt.
+              </TableCell>
+              <TableCell className="text-right font-bold py-1.5 text-sm">
                 {formatCurrency(totalAmount)}
               </TableCell>
             </TableRow>
@@ -412,9 +400,11 @@ export function AccountingTablePage() {
 
             {/* PhonePe */}
             <TableRow>
-              <TableCell className="font-medium py-2">PhonePe</TableCell>
-              <TableCell className="text-right py-2">
-                <div className="max-w-[200px] ml-auto">
+              <TableCell className="font-medium py-1.5 text-sm">
+                PhonePe
+              </TableCell>
+              <TableCell className="text-right py-1.5">
+                <div className="max-w-[180px] ml-auto">
                   <CreatableSelect
                     value={
                       phonePeReceived
@@ -454,9 +444,9 @@ export function AccountingTablePage() {
 
             {/* Card */}
             <TableRow>
-              <TableCell className="font-medium py-2">Card</TableCell>
-              <TableCell className="text-right py-2">
-                <div className="max-w-[200px] ml-auto">
+              <TableCell className="font-medium py-1.5 text-sm">Card</TableCell>
+              <TableCell className="text-right py-1.5">
+                <div className="max-w-[180px] ml-auto">
                   <CreatableSelect
                     value={
                       cardReceived
@@ -492,17 +482,17 @@ export function AccountingTablePage() {
               </TableCell>
             </TableRow>
 
-            {/* H.P (Cash from denominations) */}
+            {/*(Cash from denominations) */}
             <TableRow>
-              <TableCell className="font-medium py-2">
-                <div className="flex items-center gap-2">
-                  <Wallet className="h-4 w-4 text-muted-foreground" />
-                  H.P. (Cash)
+              <TableCell className="font-medium py-1.5 text-sm">
+                <div className="flex items-center gap-1.5">
+                  <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                  Cash
                 </div>
               </TableCell>
-              <TableCell className="text-right py-2">
+              <TableCell className="text-right py-1.5">
                 <div className="flex items-center gap-2 justify-end">
-                  <span className="font-medium text-primary min-w-[80px] text-right text-sm">
+                  <span className="font-medium text-primary min-w-[70px] text-right text-xs">
                     {formatCurrency(cashInHand)}
                   </span>
                   <Button
@@ -510,7 +500,7 @@ export function AccountingTablePage() {
                     size="sm"
                     variant="outline"
                     onClick={() => setIsCashDialogOpen(true)}
-                    className="h-9"
+                    className="h-7 text-xs px-2"
                   >
                     <Plus className="h-3 w-3 mr-1" />
                     {cashInHand > 0 ? "Edit" : "Add"}
@@ -521,21 +511,21 @@ export function AccountingTablePage() {
 
             {/* Credit (Bills given to customers) - Auto-calculated */}
             <TableRow>
-              <TableCell className="font-medium py-2 text-muted-foreground">
+              <TableCell className="font-medium py-1.5 text-xs text-muted-foreground">
                 Credit
               </TableCell>
-              <TableCell className="text-right font-medium py-2 text-orange-600">
+              <TableCell className="text-right font-medium py-1.5 text-xs text-orange-600">
                 {formatCurrency(creditGiven)}
               </TableCell>
             </TableRow>
 
             {/* Expenses */}
             <TableRow>
-              <TableCell className="font-medium text-destructive py-2">
+              <TableCell className="font-medium text-destructive py-1.5 text-sm">
                 Expence
               </TableCell>
-              <TableCell className="text-right py-2">
-                <div className="max-w-[200px] ml-auto">
+              <TableCell className="text-right py-1.5">
+                <div className="max-w-[180px] ml-auto">
                   <CreatableSelect
                     value={
                       expenses
@@ -596,16 +586,20 @@ export function AccountingTablePage() {
 
             {/* Total Receipts (Sum of all payments received) */}
             <TableRow className="bg-yellow-50">
-              <TableCell className="font-bold py-3">Total Receipts</TableCell>
-              <TableCell className="text-right font-bold text-lg py-3">
+              <TableCell className="font-bold py-2 text-sm">
+                Total Receipts
+              </TableCell>
+              <TableCell className="text-right font-bold text-base py-2">
                 {formatCurrency(totalReceipts)}
               </TableCell>
             </TableRow>
 
             {/* Net Receipt */}
             <TableRow className="bg-green-50">
-              <TableCell className="font-bold py-3">Net Receipt</TableCell>
-              <TableCell className="text-right font-bold text-lg py-3">
+              <TableCell className="font-bold py-2 text-sm">
+                Net Receipt
+              </TableCell>
+              <TableCell className="text-right font-bold text-base py-2">
                 {formatCurrency(netReceipt)}
               </TableCell>
             </TableRow>
@@ -620,20 +614,20 @@ export function AccountingTablePage() {
             <TableRow
               className={balanceAmount >= 0 ? "bg-green-100" : "bg-red-100"}
             >
-              <TableCell className="font-bold text-base py-3">
+              <TableCell className="font-bold text-sm py-2">
                 <div className="flex items-center gap-2">
                   {balanceAmount >= 0 ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
                   ) : (
-                    <AlertCircle className="h-5 w-5 text-red-600" />
+                    <AlertCircle className="h-4 w-4 text-red-600" />
                   )}
                   Balance Amt.
                 </div>
               </TableCell>
-              <TableCell className="text-right py-3">
+              <TableCell className="text-right py-2">
                 <div className="flex flex-col items-end">
                   <span
-                    className={`font-bold text-xl ${
+                    className={`font-bold text-lg ${
                       balanceAmount >= 0 ? "text-green-600" : "text-red-600"
                     }`}
                   >
@@ -641,7 +635,7 @@ export function AccountingTablePage() {
                   </span>
                   <Badge
                     variant={balanceAmount >= 0 ? "default" : "destructive"}
-                    className="text-xs mt-1"
+                    className="text-[10px] mt-0.5 px-1.5 py-0"
                   >
                     {balanceAmount >= 0 ? "Excess" : "Shortage"}
                   </Badge>
@@ -653,28 +647,28 @@ export function AccountingTablePage() {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-2 p-2 border-t bg-background">
+      <div className="flex flex-col sm:flex-row gap-2 px-3 py-2 border-t bg-background">
         <Button
           variant="outline"
           onClick={() => navigate(-1)}
-          className="flex-1"
+          className="flex-1 h-9 text-sm"
           disabled={submitting}
         >
           Cancel
         </Button>
         <Button
           onClick={handleSubmitAccounting}
-          className="flex-1"
+          className="flex-1 h-9 text-sm"
           disabled={submitting || totalReceipts === 0}
         >
           {submitting ? (
             <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white mr-2"></div>
               Submitting...
             </>
           ) : (
             <>
-              <CheckCircle2 className="h-4 w-4 mr-2" />
+              <CheckCircle2 className="h-3.5 w-3.5 mr-2" />
               {accounting ? "Update Accounting" : "Create Accounting"}
             </>
           )}
@@ -683,41 +677,28 @@ export function AccountingTablePage() {
 
       {/* Cash Denominations Dialog */}
       <Dialog open={isCashDialogOpen} onOpenChange={setIsCashDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Cash Denominations</DialogTitle>
-            <DialogDescription>
-              Enter the count for each denomination
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="space-y-3 py-2">
+            <h2 className="text-base font-semibold">Cash Denominations</h2>
 
-          <div className="space-y-4 py-4">
             {/* Table with borders like the image */}
             <div className="border-2 border-black rounded-lg overflow-hidden">
               <table className="w-full">
                 <thead>
                   <tr className="border-b-2 border-black">
-                    <th className="border-r-2 border-black p-3 text-left font-semibold">
+                    <th className="border-r-2 border-black p-1.5 text-left font-semibold text-xs">
                       Denomination
                     </th>
-                    <th className="border-r-2 border-black p-3 text-center font-semibold">
+                    <th className="border-r-2 border-black p-1.5 text-center font-semibold text-xs">
                       count
                     </th>
-                    <th className="p-3 text-center font-semibold">amount</th>
+                    <th className="p-1.5 text-center font-semibold text-xs">
+                      amount
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {[
-                    {
-                      label: "₹2000",
-                      value: 2000,
-                      field: "notes2000" as const,
-                    },
-                    {
-                      label: "₹1000",
-                      value: 1000,
-                      field: "notes1000" as const,
-                    },
                     { label: "₹500", value: 500, field: "notes500" as const },
                     { label: "₹200", value: 200, field: "notes200" as const },
                     { label: "₹100", value: 100, field: "notes100" as const },
@@ -732,10 +713,10 @@ export function AccountingTablePage() {
                     const amount = count * value;
                     return (
                       <tr key={field} className="border-b border-gray-300">
-                        <td className="border-r-2 border-black p-3 font-medium">
+                        <td className="border-r-2 border-black p-1.5 font-medium w-1/3 text-sm">
                           {label}
                         </td>
-                        <td className="border-r-2 border-black p-3 text-center">
+                        <td className="border-r-2 border-black p-1.5 w-1/3 text-center">
                           <Input
                             type="number"
                             min="0"
@@ -748,11 +729,11 @@ export function AccountingTablePage() {
                                   value === "" ? 0 : parseInt(value) || 0,
                               }));
                             }}
-                            className="h-10 w-full text-center border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md"
+                            className="h-8 w-full text-center text-sm border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md"
                             placeholder="0"
                           />
                         </td>
-                        <td className="p-3 text-center">
+                        <td className="p-1.5 text-center text-xs">
                           {count > 0 ? (
                             <span className="font-medium">
                               {formatCurrency(amount)}
@@ -769,26 +750,26 @@ export function AccountingTablePage() {
             </div>
 
             {/* Total section like the image */}
-            <div className="border-2 border-blue-500 rounded-lg p-4 bg-blue-50">
+            <div className="border-2 border-blue-500 rounded-lg p-3 bg-blue-50">
               <div className="flex items-center justify-between">
-                <span className="text-xl font-semibold">Total =</span>
-                <span className="text-2xl font-bold text-primary">
+                <span className="text-base font-semibold">Total =</span>
+                <span className="text-xl font-bold text-primary">
                   {formatCurrency(calculateCashFromDenominations())}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="flex gap-3 pt-4 border-t">
+          <div className="flex gap-2 pt-3 border-t">
             <Button
               variant="outline"
               onClick={() => setIsCashDialogOpen(false)}
-              className="flex-1"
+              className="flex-1 h-9 text-sm"
             >
               Cancel
             </Button>
-            <Button onClick={handleAddCash} className="flex-1">
-              <CheckCircle2 className="h-4 w-4 mr-2" />
+            <Button onClick={handleAddCash} className="flex-1 h-9 text-sm">
+              <CheckCircle2 className="h-3.5 w-3.5 mr-2" />
               Add Cash
             </Button>
           </div>

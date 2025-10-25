@@ -5,14 +5,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import ReactSelect, {
   type SelectInstance,
   type CSSObjectWithLabel,
-} from 'react-select';
-import type { Product } from '@/types/product';
+} from "react-select";
+import type { Product } from "@/types/product";
 
 interface BillItem {
   product: string;
@@ -65,16 +65,16 @@ export const BillItemsTable = ({
   const selectStyles = {
     control: (provided: CSSObjectWithLabel) => ({
       ...provided,
-      minHeight: '36px',
-      borderColor: '#e5e7eb',
-      backgroundColor: '#ffffff',
-      '&:hover': { borderColor: '#9ca3af' },
-      boxShadow: 'none',
-      '&:focus-within': {
-        borderColor: '#3b82f6',
-        boxShadow: '0 0 0 1px #3b82f6',
+      minHeight: "36px",
+      borderColor: "#e5e7eb",
+      backgroundColor: "#ffffff",
+      "&:hover": { borderColor: "#9ca3af" },
+      boxShadow: "none",
+      "&:focus-within": {
+        borderColor: "#3b82f6",
+        boxShadow: "0 0 0 1px #3b82f6",
       },
-      fontSize: '16px',
+      fontSize: "16px",
     }),
     option: (
       provided: CSSObjectWithLabel,
@@ -82,31 +82,33 @@ export const BillItemsTable = ({
     ) => ({
       ...provided,
       backgroundColor: state.isSelected
-        ? '#3b82f6'
+        ? "#3b82f6"
         : state.isFocused
-        ? '#dbeafe'
-        : '#ffffff',
-      color: state.isSelected ? '#ffffff' : '#111827',
-      fontSize: '16px',
-      '&:hover': {
-        backgroundColor: state.isSelected ? '#2563eb' : '#dbeafe',
+        ? "#dbeafe"
+        : "#ffffff",
+      color: state.isSelected ? "#ffffff" : "#111827",
+      fontSize: "16px",
+      "&:hover": {
+        backgroundColor: state.isSelected ? "#2563eb" : "#dbeafe",
       },
     }),
     menu: (provided: CSSObjectWithLabel) => ({
       ...provided,
       zIndex: 9999,
-      backgroundColor: '#ffffff',
-      border: '1px solid #e5e7eb',
+      backgroundColor: "#ffffff",
+      border: "1px solid #e5e7eb",
     }),
     menuPortal: (base: CSSObjectWithLabel) => ({ ...base, zIndex: 9999 }),
   };
   const total =
     quantity && price
       ? (parseFloat(quantity) * parseFloat(price)).toFixed(2)
-      : '0.00';
+      : "0.00";
 
   const subtotal = billItems.reduce(
-    (sum, item) => sum + (parseFloat(item.total) * (1 - parseFloat(item.discount || '0') / 100)),
+    (sum, item) =>
+      sum +
+      parseFloat(item.total) * (1 - parseFloat(item.discount || "0") / 100),
     0
   );
   const finalTotal = subtotal;
@@ -120,7 +122,7 @@ export const BillItemsTable = ({
         total,
         discount: itemDiscount,
         gst: itemGst,
-        productId: selectedProduct.id || '',
+        productId: selectedProduct.id || "",
       };
 
       if (onAddItem) {
@@ -130,8 +132,8 @@ export const BillItemsTable = ({
       }
 
       setSelectedProduct(null);
-      setQuantity('');
-      setPrice('');
+      setQuantity("");
+      setPrice("");
       setTimeout(() => {
         // Focus the underlying input of ReactSelect
         productSelectRef.current?.inputRef?.focus();
@@ -139,7 +141,7 @@ export const BillItemsTable = ({
     }
   };
   const handleKeyPress = (e: React.KeyboardEvent, action: () => void) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       action();
     }
   };
@@ -181,12 +183,18 @@ export const BillItemsTable = ({
                   setSelectedProduct(option?.value || null);
                   if (option?.value) {
                     setPrice(option.value.salesRate.toString());
+                    // Automatically set GST percentage from product
+                    setItemGst(option.value.gstPercentage?.toString() || "0");
                   }
                 }}
-                options={Array.isArray(products) ? products.map((product) => ({
-                  value: product,
-                  label: product.productName,
-                })) : []}
+                options={
+                  Array.isArray(products)
+                    ? products.map((product) => ({
+                        value: product,
+                        label: product.productName,
+                      }))
+                    : []
+                }
                 placeholder="Select Product"
                 className="text-base"
                 styles={selectStyles}
@@ -234,7 +242,11 @@ export const BillItemsTable = ({
               ₹{total}
             </TableCell>
             <TableCell className="text-center text-xs font-medium">
-              ₹{(parseFloat(total) * (1 - parseFloat(itemDiscount || '0') / 100)).toFixed(2)}
+              ₹
+              {(
+                parseFloat(total) *
+                (1 - parseFloat(itemDiscount || "0") / 100)
+              ).toFixed(2)}
             </TableCell>
             <TableCell>
               <Button
@@ -269,7 +281,11 @@ export const BillItemsTable = ({
                 ₹{item.total}
               </TableCell>
               <TableCell className="text-center text-xs font-medium">
-                ₹{(parseFloat(item.total) * (1 - parseFloat(item.discount || '0') / 100)).toFixed(2)}
+                ₹
+                {(
+                  parseFloat(item.total) *
+                  (1 - parseFloat(item.discount || "0") / 100)
+                ).toFixed(2)}
               </TableCell>
               <TableCell>
                 <Button

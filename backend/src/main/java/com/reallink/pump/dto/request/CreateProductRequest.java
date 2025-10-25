@@ -22,6 +22,11 @@ public class CreateProductRequest {
     @Schema(description = "Pump Master ID this product belongs to", example = "123e4567-e89b-12d3-a456-426614174000", required = true)
     private UUID pumpMasterId;
 
+    @NotNull(message = "GST percentage is required")
+    @Min(value = 0, message = "GST percentage cannot be negative")
+    @Schema(description = "GST percentage", example = "18", required = true)
+    private Integer gstPercentage;
+
     @NotNull(message = "Product type is required")
     @Schema(description = "Product type", example = "FUEL", required = true)
     private ProductType productType;

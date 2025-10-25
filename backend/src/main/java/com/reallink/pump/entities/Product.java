@@ -48,6 +48,11 @@ public class Product extends BaseEntity {
     @JoinColumn(name = "pump_master_id", nullable = false, foreignKey = @ForeignKey(name = "fk_product_pump_master"))
     private PumpInfoMaster pumpMaster;
 
+    @NotNull(message = "GST percentage is required")
+    @Min(value = 0, message = "GST percentage cannot be negative")
+    @Column(name = "gst_percentage", nullable = false, columnDefinition = "INT DEFAULT 0")
+    private Integer gstPercentage = 0;
+
     @NotNull(message = "Product type is required")
     @Enumerated(EnumType.STRING)
     @Column(name = "product_type", nullable = false, length = 20, columnDefinition = "VARCHAR(20) DEFAULT 'GENERAL'")
@@ -117,5 +122,6 @@ public class Product extends BaseEntity {
         this.stockConversionRatio = stockConversionRatio;
         this.pumpMaster = pumpMaster;
         this.productType = productType != null ? productType : ProductType.GENERAL;
+        this.gstPercentage = 0;
     }
 }

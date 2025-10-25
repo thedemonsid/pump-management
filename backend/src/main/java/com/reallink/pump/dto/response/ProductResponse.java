@@ -19,6 +19,9 @@ public class ProductResponse {
     @Schema(description = "Pump Master ID", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID pumpMasterId;
 
+    @Schema(description = "GST percentage", example = "18")
+    private Integer gstPercentage;
+
     @Schema(description = "Product type", example = "FUEL")
     private ProductType productType;
 

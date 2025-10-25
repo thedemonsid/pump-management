@@ -221,6 +221,7 @@ export function ProductsPage() {
                   <TableHead>Alias</TableHead>
                   <TableHead>Product Type</TableHead>
                   <TableHead>HSN Code</TableHead>
+                  <TableHead>GST %</TableHead>
                   <TableHead>Purchase Rate</TableHead>
                   <TableHead>Sales Rate</TableHead>
                   <TableHead>Units</TableHead>
@@ -243,6 +244,9 @@ export function ProductsPage() {
                     </TableCell>
                     <TableCell className="font-mono text-sm">
                       {product.hsnCode}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{product.gstPercentage}%</Badge>
                     </TableCell>
                     <TableCell>
                       {formatCurrency(product.purchaseRate)}

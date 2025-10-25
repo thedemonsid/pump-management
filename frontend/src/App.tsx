@@ -31,9 +31,11 @@ import { SalesmenPage } from "@/pages/salesmen/SalesmenPage";
 import { SalesmanShiftsPage } from "@/pages/salesman-shifts/SalesmanShiftsPage";
 import { AccountingTablePage } from "@/pages/salesman-shifts/AccountingTablePage";
 import { AdminSalesmanShiftsPage } from "@/pages/AdminSalesmanShiftsPage";
-import { SalesmanBillsPage } from "@/pages/salesman-bills/SalesmanBillsPage";
+import { SalesmanBillsPage as AdminSalesmanBillsPage } from "@/pages/salesman-bills/SalesmanBillsPage";
 import { SalesmanBillDetailPage } from "@/pages/salesman-bills/SalesmanBillDetailPage";
 import { SalesmanBillPaymentsPage } from "@/pages/salesman-bill-payments/SalesmanBillPaymentsPage";
+import { SalesmanBillsPage } from "@/pages/salesman/SalesmanBillsPage";
+import { SalesmanPaymentsPage } from "@/pages/salesman/SalesmanPaymentsPage";
 import { ShiftsPage } from "@/pages/shifts/ShiftsPage";
 import { SuppliersPage } from "@/pages/suppliers/SuppliersPage";
 import { SupplierDetailPage } from "@/pages/suppliers/SupplierDetailPage";
@@ -239,6 +241,16 @@ const allRoutes = [
     requiredRoles: ["SALESMAN"],
   },
   {
+    path: "/salesman/bills",
+    element: <SalesmanBillsPage />,
+    requiredRoles: ["SALESMAN"],
+  },
+  {
+    path: "/salesman/payments",
+    element: <SalesmanPaymentsPage />,
+    requiredRoles: ["SALESMAN"],
+  },
+  {
     path: "/salesman/shifts/:shiftId/accounting",
     element: <AccountingTablePage />,
     requiredRoles: ["SALESMAN"],
@@ -255,7 +267,7 @@ const allRoutes = [
   },
   {
     path: "/salesman-bills",
-    element: <SalesmanBillsPage />,
+    element: <AdminSalesmanBillsPage />,
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
@@ -299,6 +311,8 @@ const headerMap: Record<string, string> = {
   "salesman-bill-payments": "Salesman Payments",
   settings: "Settings",
   report: "Report",
+  salesman: "Salesman",
+  payments: "Payments",
 };
 
 export function MainHeader() {
@@ -444,7 +458,9 @@ function AuthenticatedLayout({
         <AppSidebar role={role} pumpName={pumpName} />
         <SidebarInset className="flex flex-col flex-1 overflow-hidden">
           <MainHeader />
-          <main className="flex-1 w-full p-8 overflow-y-auto">{children}</main>
+          <main className="flex-1 w-full md:p-8 overflow-y-auto">
+            {children}
+          </main>
         </SidebarInset>
       </div>
       <Toaster></Toaster>

@@ -66,6 +66,7 @@ export const CreateSalesmanShiftAccountingRequestSchema = z.object({
   cardReceived: z.number().min(0).default(0),
   expenses: z.number().min(0).default(0),
   expenseReason: z.string().optional(),
+  // Deprecated denominations, always send as 0 for backend compatibility
   notes2000: z.number().min(0).default(0),
   notes1000: z.number().min(0).default(0),
   notes500: z.number().min(0).default(0),
@@ -74,7 +75,7 @@ export const CreateSalesmanShiftAccountingRequestSchema = z.object({
   notes50: z.number().min(0).default(0),
   notes20: z.number().min(0).default(0),
   notes10: z.number().min(0).default(0),
-  coins5: z.number().min(0).default(0), // Separate coin fields to match backend
+  coins5: z.number().min(0).default(0),
   coins2: z.number().min(0).default(0),
   coins1: z.number().min(0).default(0),
 });

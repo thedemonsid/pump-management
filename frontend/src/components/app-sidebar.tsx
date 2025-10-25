@@ -125,6 +125,16 @@ const salesmanItems = [
     url: "/salesman-shifts",
     icon: Clock,
   },
+  {
+    title: "My Bills",
+    url: "/salesman/bills",
+    icon: Receipt,
+  },
+  {
+    title: "My Payments",
+    url: "/salesman/payments",
+    icon: CreditCard,
+  },
 ];
 // const systemItems = [
 //   {

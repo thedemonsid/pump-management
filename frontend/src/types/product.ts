@@ -1,9 +1,9 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 // Product type enum
 export const ProductType = {
-  FUEL: 'FUEL',
-  GENERAL: 'GENERAL',
+  FUEL: "FUEL",
+  GENERAL: "GENERAL",
 } as const;
 
 export type ProductType = (typeof ProductType)[keyof typeof ProductType];
@@ -12,23 +12,24 @@ export type ProductType = (typeof ProductType)[keyof typeof ProductType];
 export const ProductSchema = z.object({
   id: z.string().optional(),
   pumpMasterId: z.string().optional(),
+  gstPercentage: z.number().int().min(0, "GST percentage must be non-negative"),
   productType: z
     .enum([ProductType.FUEL, ProductType.GENERAL])
     .default(ProductType.GENERAL),
-  productName: z.string().min(1, 'Product name is required'),
-  alias: z.string().min(1, 'Alias is required'),
+  productName: z.string().min(1, "Product name is required"),
+  alias: z.string().min(1, "Alias is required"),
   lowStockCount: z
     .number()
     .int()
-    .min(0, 'Low stock count must be non-negative'),
-  purchaseRate: z.number().positive('Purchase rate must be positive'),
-  salesRate: z.number().positive('Sales rate must be positive'),
-  hsnCode: z.string().min(1, 'HSN code is required'),
-  salesUnit: z.string().min(1, 'Sales unit is required'),
-  purchaseUnit: z.string().min(1, 'Purchase unit is required'),
+    .min(0, "Low stock count must be non-negative"),
+  purchaseRate: z.number().positive("Purchase rate must be positive"),
+  salesRate: z.number().positive("Sales rate must be positive"),
+  hsnCode: z.string().min(1, "HSN code is required"),
+  salesUnit: z.string().min(1, "Sales unit is required"),
+  purchaseUnit: z.string().min(1, "Purchase unit is required"),
   stockConversionRatio: z
     .number()
-    .positive('Stock conversion ratio must be positive'),
+    .positive("Stock conversion ratio must be positive"),
   stockQuantity: z.number().optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
