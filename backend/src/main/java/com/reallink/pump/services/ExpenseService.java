@@ -2,6 +2,7 @@ package com.reallink.pump.services;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,18 +12,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import com.reallink.pump.dto.request.CreateBankTransactionRequest;
 import com.reallink.pump.dto.request.CreateExpenseRequest;
 import com.reallink.pump.dto.request.UpdateExpenseRequest;
+import com.reallink.pump.dto.response.BankTransactionResponse;
 import com.reallink.pump.dto.response.ExpenseResponse;
 import com.reallink.pump.entities.BankAccount;
+import com.reallink.pump.entities.BankTransaction;
 import com.reallink.pump.entities.Expense;
 import com.reallink.pump.entities.Expense.ExpenseType;
 import com.reallink.pump.entities.ExpenseHead;
+import com.reallink.pump.entities.PaymentMethod;
 import com.reallink.pump.entities.PumpInfoMaster;
 import com.reallink.pump.entities.SalesmanNozzleShift;
 import com.reallink.pump.exception.PumpBusinessException;
 import com.reallink.pump.mapper.ExpenseMapper;
 import com.reallink.pump.repositories.BankAccountRepository;
+import com.reallink.pump.repositories.BankTransactionRepository;
 import com.reallink.pump.repositories.ExpenseHeadRepository;
 import com.reallink.pump.repositories.ExpenseRepository;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
@@ -43,7 +49,9 @@ public class ExpenseService {
     private final ExpenseHeadRepository expenseHeadRepository;
     private final SalesmanNozzleShiftRepository salesmanNozzleShiftRepository;
     private final BankAccountRepository bankAccountRepository;
+    private final BankTransactionRepository bankTransactionRepository;
     private final ExpenseMapper mapper;
+    private final BankTransactionService bankTransactionService;
 
     public List<ExpenseResponse> getAll() {
         return repository.findAll().stream()
@@ -199,6 +207,14 @@ public class ExpenseService {
         }
 
         Expense savedExpense = repository.save(expense);
+
+        // Create debit transaction in bank account when expense type is BANK_ACCOUNT
+        if (savedExpense.getExpenseType() == ExpenseType.BANK_ACCOUNT && savedExpense.getBankAccount() != null) {
+            BankTransaction bankTransaction = createBankDebitTransaction(savedExpense);
+            savedExpense.setBankTransaction(bankTransaction);
+            savedExpense = repository.save(savedExpense);
+        }
+
         return mapper.toResponse(savedExpense);
     }
 
@@ -208,6 +224,12 @@ public class ExpenseService {
         if (existingExpense == null) {
             throw new PumpBusinessException("EXPENSE_NOT_FOUND", "Expense with ID " + id + " not found");
         }
+
+        // Track old values for bank transaction handling
+        ExpenseType oldExpenseType = existingExpense.getExpenseType();
+        BankAccount oldBankAccount = existingExpense.getBankAccount();
+        BigDecimal oldAmount = existingExpense.getAmount();
+        BankTransaction oldBankTransaction = existingExpense.getBankTransaction();
 
         // Validate expense type specific associations if type is being changed
         if (request.getExpenseType() != null) {
@@ -268,6 +290,9 @@ public class ExpenseService {
             existingExpense.setReferenceNumber(request.getReferenceNumber());
         }
 
+        // Handle bank transaction updates
+        handleBankTransactionUpdate(existingExpense, oldExpenseType, oldBankAccount, oldAmount, oldBankTransaction);
+
         Expense updatedExpense = repository.save(existingExpense);
         return mapper.toResponse(updatedExpense);
     }
@@ -278,6 +303,15 @@ public class ExpenseService {
         if (expense == null) {
             throw new PumpBusinessException("EXPENSE_NOT_FOUND", "Expense with ID " + id + " not found");
         }
+
+        // Delete associated bank transaction if exists
+        BankTransaction bankTransaction = expense.getBankTransaction();
+        if (bankTransaction != null) {
+            expense.setBankTransaction(null);
+            repository.save(expense); // Save to clear the relationship first
+            bankTransactionRepository.delete(bankTransaction);
+        }
+
         repository.delete(expense);
     }
 
@@ -290,6 +324,114 @@ public class ExpenseService {
         if (expenseType == ExpenseType.BANK_ACCOUNT && bankAccountId == null) {
             throw new PumpBusinessException("INVALID_EXPENSE_ASSOCIATION",
                     "Bank account ID is required for BANK_ACCOUNT expense type");
+        }
+    }
+
+    /**
+     * Creates a debit transaction in the bank account for the expense
+     *
+     * @return The created BankTransaction entity
+     */
+    private BankTransaction createBankDebitTransaction(Expense expense) {
+        CreateBankTransactionRequest transactionRequest = new CreateBankTransactionRequest();
+
+        // Set bank account ID - required by DTO validation
+        transactionRequest.setBankAccountId(expense.getBankAccount().getId());
+
+        // Set transaction type to DEBIT - required by DTO validation
+        transactionRequest.setTransactionType(com.reallink.pump.entities.BankTransaction.TransactionType.DEBIT);
+
+        // Set amount
+        transactionRequest.setAmount(expense.getAmount());
+
+        // Set payment method
+        transactionRequest.setPaymentMethod(PaymentMethod.CASH);
+
+        // Build description from expense details
+        StringBuilder description = new StringBuilder();
+        description.append("Expense: ").append(expense.getExpenseHead().getHeadName());
+        if (expense.getRemarks() != null && !expense.getRemarks().isEmpty()) {
+            description.append(" - ").append(expense.getRemarks());
+        }
+        if (expense.getReferenceNumber() != null && !expense.getReferenceNumber().isEmpty()) {
+            description.append(" (Ref: ").append(expense.getReferenceNumber()).append(")");
+        }
+        transactionRequest.setDescription(description.toString());
+
+        // Set transaction date to expense date
+        transactionRequest.setTransactionDate(
+                LocalDateTime.of(expense.getExpenseDate(), LocalDateTime.now().toLocalTime())
+        );
+
+        // Create debit transaction and get the response
+        BankTransactionResponse response = bankTransactionService.createDebitTransaction(
+                expense.getBankAccount().getId(),
+                transactionRequest
+        );
+
+        // Fetch and return the actual BankTransaction entity
+        return bankTransactionRepository.findById(response.getId())
+                .orElse(null);
+    }
+
+    /**
+     * Handles bank transaction updates when an expense is modified
+     */
+    private void handleBankTransactionUpdate(Expense expense, ExpenseType oldExpenseType,
+            BankAccount oldBankAccount, BigDecimal oldAmount, BankTransaction oldBankTransaction) {
+
+        ExpenseType newExpenseType = expense.getExpenseType();
+        BankAccount newBankAccount = expense.getBankAccount();
+        BigDecimal newAmount = expense.getAmount();
+
+        // Case 1: Changed from BANK_ACCOUNT to NOZZLE_SHIFT - delete old transaction
+        if (oldExpenseType == ExpenseType.BANK_ACCOUNT && newExpenseType == ExpenseType.NOZZLE_SHIFT) {
+            if (oldBankTransaction != null) {
+                expense.setBankTransaction(null);
+                bankTransactionRepository.delete(oldBankTransaction);
+            }
+            return;
+        }
+
+        // Case 2: Changed from NOZZLE_SHIFT to BANK_ACCOUNT - create new transaction
+        if (oldExpenseType == ExpenseType.NOZZLE_SHIFT && newExpenseType == ExpenseType.BANK_ACCOUNT) {
+            if (newBankAccount != null) {
+                BankTransaction newTransaction = createBankDebitTransaction(expense);
+                expense.setBankTransaction(newTransaction);
+            }
+            return;
+        }
+
+        // Case 3: Still BANK_ACCOUNT - update the existing transaction
+        if (newExpenseType == ExpenseType.BANK_ACCOUNT && newBankAccount != null) {
+            if (oldBankTransaction != null) {
+                // Update the existing transaction
+                oldBankTransaction.setAmount(newAmount);
+                oldBankTransaction.setBankAccount(newBankAccount);
+
+                // Update description
+                StringBuilder description = new StringBuilder();
+                description.append("Expense: ").append(expense.getExpenseHead().getHeadName());
+                if (expense.getRemarks() != null && !expense.getRemarks().isEmpty()) {
+                    description.append(" - ").append(expense.getRemarks());
+                }
+                if (expense.getReferenceNumber() != null && !expense.getReferenceNumber().isEmpty()) {
+                    description.append(" (Ref: ").append(expense.getReferenceNumber()).append(")");
+                }
+                oldBankTransaction.setDescription(description.toString());
+
+                // Update transaction date
+                oldBankTransaction.setTransactionDate(
+                        LocalDateTime.of(expense.getExpenseDate(), oldBankTransaction.getTransactionDate().toLocalTime())
+                );
+
+                // Save the updated transaction
+                bankTransactionRepository.save(oldBankTransaction);
+            } else {
+                // No existing transaction, create new one
+                BankTransaction newTransaction = createBankDebitTransaction(expense);
+                expense.setBankTransaction(newTransaction);
+            }
         }
     }
 }

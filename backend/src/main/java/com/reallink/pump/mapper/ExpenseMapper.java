@@ -25,12 +25,14 @@ import com.reallink.pump.entities.Expense;
 public interface ExpenseMapper {
 
     /**
-     * Maps CreateExpenseRequest to Expense entity
+     * Maps CreateExpenseRequest to Expense entity Note: pumpMaster,
+     * expenseHead, salesmanNozzleShift, and bankAccount should be set manually
+     * in the service after fetching from repositories
      */
-    @Mapping(target = "pumpMaster.id", source = "pumpMasterId")
-    @Mapping(target = "expenseHead.id", source = "expenseHeadId")
-    @Mapping(target = "salesmanNozzleShift.id", source = "salesmanNozzleShiftId")
-    @Mapping(target = "bankAccount.id", source = "bankAccountId")
+    @Mapping(target = "pumpMaster", ignore = true)
+    @Mapping(target = "expenseHead", ignore = true)
+    @Mapping(target = "salesmanNozzleShift", ignore = true)
+    @Mapping(target = "bankAccount", ignore = true)
     Expense toEntity(CreateExpenseRequest request);
 
     /**

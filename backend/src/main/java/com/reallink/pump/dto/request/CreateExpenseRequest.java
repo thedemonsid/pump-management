@@ -17,7 +17,6 @@ import lombok.Data;
 @Schema(description = "Request DTO for creating a new expense")
 public class CreateExpenseRequest {
 
-    @NotNull(message = "Pump Master ID is required")
     @Schema(description = "Pump Master ID this expense belongs to", example = "123e4567-e89b-12d3-a456-426614174000", required = true)
     private UUID pumpMasterId;
 

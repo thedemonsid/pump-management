@@ -65,6 +65,9 @@ public class BankTransaction extends BaseEntity {
     @OneToOne(mappedBy = "bankTransaction", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private SupplierPayment supplierPayment;
 
+    @OneToOne(mappedBy = "bankTransaction", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Expense expense;
+
     public enum TransactionType {
         CREDIT, DEBIT
     }

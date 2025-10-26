@@ -3,6 +3,7 @@ package com.reallink.pump.entities;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -84,6 +85,11 @@ public class Expense extends BaseEntity {
     @Size(max = 100, message = "Reference number cannot exceed 100 characters")
     @Column(name = "reference_number", length = 100)
     private String referenceNumber;
+
+    // Link to the bank transaction created for this expense (if expense type is BANK_ACCOUNT)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bank_transaction_id", foreignKey = @ForeignKey(name = "fk_expense_bank_transaction"))
+    private BankTransaction bankTransaction;
 
     public Expense(PumpInfoMaster pumpMaster, ExpenseHead expenseHead, ExpenseType expenseType,
             LocalDate expenseDate, BigDecimal amount, String remarks) {

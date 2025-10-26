@@ -18,5 +18,6 @@ export { SalesmanBillPaymentService } from "./salesman-bill-payment-service";
 export { CustomerBillPaymentService } from "./customer-bill-payment-service";
 export { SupplierPaymentService } from "./supplier-payment-service";
 export { ExpenseHeadService } from "./expense-head-service";
+export { ExpenseService } from "./expense-service";
 
 export { default as api } from "./api";
