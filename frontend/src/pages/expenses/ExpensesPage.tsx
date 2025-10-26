@@ -167,15 +167,13 @@ export function ExpensesPage() {
           <p className="text-muted-foreground">
             {isAdmin
               ? "Manage all expenses for your pump station"
-              : "View your shift expenses"}
+              : "View and add your shift expenses"}
           </p>
         </div>
-        {isAdmin && (
-          <Button onClick={handleCreate}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Expense
-          </Button>
-        )}
+        <Button onClick={handleCreate}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Expense
+        </Button>
       </div>
 
       {/* Date Range Filter */}

@@ -24,13 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import ReactSelect, { type CSSObjectWithLabel } from "react-select";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type {
@@ -59,6 +53,48 @@ interface FormValues {
   referenceNumber?: string;
 }
 
+// React Select styles matching SalesmanBillsPage
+const selectStyles = {
+  control: (provided: CSSObjectWithLabel) => ({
+    ...provided,
+    minHeight: "36px",
+    borderColor: "#e5e7eb",
+    backgroundColor: "#ffffff",
+    "&:hover": {
+      borderColor: "#9ca3af",
+    },
+    boxShadow: "none",
+    "&:focus-within": {
+      borderColor: "#3b82f6",
+      boxShadow: "0 0 0 1px #3b82f6",
+    },
+    fontSize: "16px",
+  }),
+  option: (
+    provided: CSSObjectWithLabel,
+    state: { isSelected: boolean; isFocused: boolean }
+  ) => ({
+    ...provided,
+    backgroundColor: state.isSelected
+      ? "#3b82f6"
+      : state.isFocused
+      ? "#dbeafe"
+      : "#ffffff",
+    color: state.isSelected ? "#ffffff" : "#111827",
+    "&:hover": {
+      backgroundColor: state.isSelected ? "#2563eb" : "#dbeafe",
+    },
+    fontSize: "16px",
+  }),
+  menu: (provided: CSSObjectWithLabel) => ({
+    ...provided,
+    zIndex: 9999,
+    backgroundColor: "#ffffff",
+    border: "1px solid #e5e7eb",
+  }),
+  menuPortal: (base: CSSObjectWithLabel) => ({ ...base, zIndex: 9999 }),
+};
+
 export function ExpenseSheet({
   expense,
   open,
@@ -78,6 +114,7 @@ export function ExpenseSheet({
 
   // Determine initial default values
   const getInitialExpenseType = () => {
+    if (isSalesman) return ExpenseTypeEnum.NOZZLE_SHIFT; // Salesmen can only create shift expenses
     if (salesmanNozzleShiftId) return ExpenseTypeEnum.NOZZLE_SHIFT;
     return ExpenseTypeEnum.BANK_ACCOUNT;
   };
@@ -99,8 +136,12 @@ export function ExpenseSheet({
 
   useEffect(() => {
     fetchActiveExpenseHeads();
-    fetchBankAccounts();
     if (isSalesman) {
+      // Salesmen only need active shifts
+      fetchActiveShifts();
+    } else {
+      // Admins/Managers need bank accounts
+      fetchBankAccounts();
       fetchActiveShifts();
     }
   }, [
@@ -127,14 +168,16 @@ export function ExpenseSheet({
       let defaultExpenseType = ExpenseTypeEnum.BANK_ACCOUNT;
       let defaultShiftId = "";
 
-      if (salesmanNozzleShiftId) {
+      if (isSalesman) {
+        // Salesmen can ONLY create shift expenses
+        defaultExpenseType = ExpenseTypeEnum.NOZZLE_SHIFT;
+        if (activeShifts.length > 0) {
+          defaultShiftId = activeShifts[0].id || "";
+        }
+      } else if (salesmanNozzleShiftId) {
         // If opened from shift context, default to NOZZLE_SHIFT
         defaultExpenseType = ExpenseTypeEnum.NOZZLE_SHIFT;
         defaultShiftId = salesmanNozzleShiftId;
-      } else if (isSalesman && activeShifts.length > 0) {
-        // If salesman has active shifts, default to their first active shift
-        defaultExpenseType = ExpenseTypeEnum.NOZZLE_SHIFT;
-        defaultShiftId = activeShifts[0].id || "";
       }
 
       form.reset({
@@ -221,7 +264,7 @@ export function ExpenseSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-[540px] overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
           <SheetTitle>
             {mode === "create" ? "Add Expense" : "Edit Expense"}
@@ -233,267 +276,304 @@ export function ExpenseSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-6 mt-6"
-          >
-            <FormField
-              control={form.control}
-              name="expenseHeadId"
-              rules={{ required: "Expense head is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Expense Head *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select expense head" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {expenseHeads.map((head) => (
-                        <SelectItem key={head.id} value={head.id}>
-                          {head.headName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {!salesmanNozzleShiftId && (
+        <div className="space-y-4 p-1">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="expenseType"
-                rules={{ required: "Expense type is required" }}
+                name="expenseHeadId"
+                rules={{ required: "Expense head is required" }}
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Expense Type *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select expense type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {(isAdmin ||
-                          (isSalesman && activeShifts.length > 0)) && (
-                          <SelectItem value={ExpenseTypeEnum.NOZZLE_SHIFT}>
-                            Nozzle Shift
-                          </SelectItem>
-                        )}
-                        <SelectItem value={ExpenseTypeEnum.BANK_ACCOUNT}>
-                          Bank Account
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {isSalesman && activeShifts.length === 0 && (
-                      <FormDescription>
-                        You need an active shift to create shift expenses
-                      </FormDescription>
-                    )}
+                  <div className="flex flex-col gap-1">
+                    <FormLabel>Expense Head *</FormLabel>
+                    <ReactSelect
+                      options={expenseHeads.map((head) => ({
+                        value: head.id,
+                        label: head.headName,
+                      }))}
+                      value={
+                        field.value
+                          ? {
+                              value: field.value,
+                              label:
+                                expenseHeads.find((h) => h.id === field.value)
+                                  ?.headName || "",
+                            }
+                          : null
+                      }
+                      onChange={(option) => field.onChange(option?.value || "")}
+                      placeholder="Select expense head..."
+                      styles={selectStyles}
+                    />
                     <FormMessage />
-                  </FormItem>
+                  </div>
                 )}
               />
-            )}
+              {/* Only show expense type selection for Admin/Manager, not for Salesman */}
+              {!salesmanNozzleShiftId && !isSalesman && (
+                <FormField
+                  control={form.control}
+                  name="expenseType"
+                  rules={{ required: "Expense type is required" }}
+                  render={({ field }) => {
+                    const expenseTypeOptions = [];
+                    if (isAdmin) {
+                      expenseTypeOptions.push({
+                        value: ExpenseTypeEnum.NOZZLE_SHIFT,
+                        label: "Nozzle Shift",
+                      });
+                    }
+                    expenseTypeOptions.push({
+                      value: ExpenseTypeEnum.BANK_ACCOUNT,
+                      label: "Bank Account",
+                    });
 
-            {watchExpenseType === ExpenseTypeEnum.NOZZLE_SHIFT &&
-              !salesmanNozzleShiftId && (
+                    return (
+                      <div className="flex flex-col gap-1">
+                        <FormLabel>Expense Type *</FormLabel>
+                        <ReactSelect
+                          options={expenseTypeOptions}
+                          value={
+                            field.value
+                              ? expenseTypeOptions.find(
+                                  (opt) => opt.value === field.value
+                                )
+                              : null
+                          }
+                          onChange={(option) =>
+                            field.onChange(option?.value || "")
+                          }
+                          placeholder="Select expense type..."
+                          styles={selectStyles}
+                        />
+                        <FormMessage />
+                      </div>
+                    );
+                  }}
+                />
+              )}
+              {/* Shift selection - shown for salesmen OR when expense type is NOZZLE_SHIFT */}
+              {((isSalesman && !salesmanNozzleShiftId) ||
+                (watchExpenseType === ExpenseTypeEnum.NOZZLE_SHIFT &&
+                  !salesmanNozzleShiftId)) && (
                 <FormField
                   control={form.control}
                   name="salesmanNozzleShiftId"
                   rules={{
                     required:
+                      isSalesman ||
                       watchExpenseType === ExpenseTypeEnum.NOZZLE_SHIFT
                         ? "Shift is required for shift expenses"
                         : false,
                   }}
                   render={({ field }) => (
-                    <FormItem>
+                    <div className="flex flex-col gap-1">
                       <FormLabel>Select Shift *</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select shift" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {activeShifts.map((shift) => (
-                            <SelectItem key={shift.id} value={shift.id!}>
-                              {shift.salesmanUsername} - {shift.nozzleName} (
-                              {new Date(
-                                shift.startDateTime
-                              ).toLocaleDateString()}
-                              )
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Select the shift this expense belongs to
-                      </FormDescription>
+                      <ReactSelect
+                        options={activeShifts.map((shift) => ({
+                          value: shift.id!,
+                          label: `${shift.salesmanUsername} - ${
+                            shift.nozzleName
+                          } (${new Date(
+                            shift.startDateTime
+                          ).toLocaleDateString()})`,
+                        }))}
+                        value={
+                          field.value
+                            ? {
+                                value: field.value,
+                                label: (() => {
+                                  const shift = activeShifts.find(
+                                    (s) => s.id === field.value
+                                  );
+                                  return shift
+                                    ? `${shift.salesmanUsername} - ${
+                                        shift.nozzleName
+                                      } (${new Date(
+                                        shift.startDateTime
+                                      ).toLocaleDateString()})`
+                                    : "";
+                                })(),
+                              }
+                            : null
+                        }
+                        onChange={(option) =>
+                          field.onChange(option?.value || "")
+                        }
+                        placeholder="Select shift..."
+                        styles={selectStyles}
+                      />
+                      {isSalesman && activeShifts.length === 0 && (
+                        <FormDescription>
+                          You need an active shift to create expenses
+                        </FormDescription>
+                      )}
+                      {!isSalesman && (
+                        <FormDescription>
+                          Select the shift this expense belongs to
+                        </FormDescription>
+                      )}
                       <FormMessage />
-                    </FormItem>
+                    </div>
                   )}
                 />
-              )}
-
-            {watchExpenseType === ExpenseTypeEnum.BANK_ACCOUNT &&
-              !salesmanNozzleShiftId && (
-                <FormField
-                  control={form.control}
-                  name="bankAccountId"
-                  rules={{
-                    required:
-                      watchExpenseType === ExpenseTypeEnum.BANK_ACCOUNT
-                        ? "Bank account is required"
-                        : false,
-                  }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bank Account *</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select bank account" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {bankAccounts.map((account) => (
-                            <SelectItem key={account.id} value={account.id!}>
-                              {account.accountHolderName} -{" "}
-                              {account.accountNumber}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-            <FormField
-              control={form.control}
-              name="expenseDate"
-              rules={{ required: "Expense date is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Expense Date *</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="amount"
-              rules={{
-                required: "Amount is required",
-                min: { value: 0.01, message: "Amount must be greater than 0" },
-                pattern: {
-                  value: /^\d+(\.\d{1,2})?$/,
-                  message: "Invalid amount format (max 2 decimal places)",
-                },
-              }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Amount *</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="referenceNumber"
-              rules={{
-                maxLength: {
-                  value: 100,
-                  message: "Reference number must not exceed 100 characters",
-                },
-              }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Reference Number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Invoice/Receipt number" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Optional invoice, receipt, or reference number
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="remarks"
-              rules={{
-                maxLength: {
-                  value: 500,
-                  message: "Remarks must not exceed 500 characters",
-                },
-              }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Remarks</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Additional notes or remarks"
-                      className="resize-none"
-                      rows={3}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex justify-end gap-3 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  onOpenChange(false);
-                  form.reset();
-                }}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}{" "}
+              {watchExpenseType === ExpenseTypeEnum.BANK_ACCOUNT &&
+                !salesmanNozzleShiftId && (
+                  <FormField
+                    control={form.control}
+                    name="bankAccountId"
+                    rules={{
+                      required:
+                        watchExpenseType === ExpenseTypeEnum.BANK_ACCOUNT
+                          ? "Bank account is required"
+                          : false,
+                    }}
+                    render={({ field }) => (
+                      <div className="flex flex-col gap-1">
+                        <FormLabel>Bank Account *</FormLabel>
+                        <ReactSelect
+                          options={bankAccounts.map((account) => ({
+                            value: account.id!,
+                            label: `${account.accountHolderName} - ${account.accountNumber}`,
+                          }))}
+                          value={
+                            field.value
+                              ? {
+                                  value: field.value,
+                                  label: (() => {
+                                    const account = bankAccounts.find(
+                                      (a) => a.id === field.value
+                                    );
+                                    return account
+                                      ? `${account.accountHolderName} - ${account.accountNumber}`
+                                      : "";
+                                  })(),
+                                }
+                              : null
+                          }
+                          onChange={(option) =>
+                            field.onChange(option?.value || "")
+                          }
+                          placeholder="Select bank account..."
+                          styles={selectStyles}
+                        />
+                        <FormMessage />
+                      </div>
+                    )}
+                  />
                 )}
-                {mode === "create" ? "Create" : "Update"}
-              </Button>
-            </div>
-          </form>
-        </Form>
+              <FormField
+                control={form.control}
+                name="expenseDate"
+                rules={{ required: "Expense date is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Expense Date *</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="amount"
+                rules={{
+                  required: "Amount is required",
+                  min: {
+                    value: 0.01,
+                    message: "Amount must be greater than 0",
+                  },
+                  pattern: {
+                    value: /^\d+(\.\d{1,2})?$/,
+                    message: "Invalid amount format (max 2 decimal places)",
+                  },
+                }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount *</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="referenceNumber"
+                rules={{
+                  maxLength: {
+                    value: 100,
+                    message: "Reference number must not exceed 100 characters",
+                  },
+                }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Reference Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Invoice/Receipt number" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Optional invoice, receipt, or reference number
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="remarks"
+                rules={{
+                  maxLength: {
+                    value: 500,
+                    message: "Remarks must not exceed 500 characters",
+                  },
+                }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Remarks</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Additional notes or remarks"
+                        className="resize-none"
+                        rows={3}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end space-x-2 mt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    onOpenChange(false);
+                    form.reset();
+                  }}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {mode === "create" ? "Create" : "Update"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
       </SheetContent>
     </Sheet>
   );
