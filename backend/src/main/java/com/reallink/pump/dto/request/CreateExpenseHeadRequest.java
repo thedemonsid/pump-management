@@ -4,7 +4,6 @@ import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -12,7 +11,6 @@ import lombok.Data;
 @Schema(description = "Request DTO for creating a new expense head")
 public class CreateExpenseHeadRequest {
 
-    @NotNull(message = "Pump Master ID is required")
     @Schema(description = "Pump Master ID this expense head belongs to", example = "123e4567-e89b-12d3-a456-426614174000", required = true)
     private UUID pumpMasterId;
 

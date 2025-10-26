@@ -28,6 +28,7 @@ import {
   CreditCard,
   Receipt,
   BarChart3,
+  FolderTree,
 } from "lucide-react";
 
 const mainItems = [
@@ -78,6 +79,11 @@ const partnersItems = [
     title: "Fuel Purchases",
     url: "/fuel-purchases",
     icon: Fuel,
+  },
+  {
+    title: "Expense Heads",
+    url: "/expense-heads",
+    icon: FolderTree,
   },
   {
     title: "Bank Accounts",

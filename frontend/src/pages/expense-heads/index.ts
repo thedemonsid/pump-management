@@ -1,0 +1,1 @@
+export { ExpenseHeadsPage } from "./ExpenseHeadsPage";

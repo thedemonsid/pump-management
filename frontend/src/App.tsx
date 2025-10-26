@@ -64,6 +64,7 @@ import BankAccountReportPage from "./pages/reports/BankAccountReportPage";
 import TankLevelReportPage from "./pages/reports/TankLevelReportPage";
 import SupplierDebtReportPage from "./pages/reports/SupplierDebtReportPage";
 import CustomerCreditReportPage from "./pages/reports/CustomerCreditReportPage";
+import { ExpenseHeadsPage } from "./pages/expense-heads/ExpenseHeadsPage";
 import { AuthProvider } from "@/hooks/AuthContext";
 import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute, PublicRoute } from "@/components/ProtectedRoute";
@@ -206,6 +207,11 @@ const allRoutes = [
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
+    path: "/expense-heads",
+    element: <ExpenseHeadsPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
     path: "/bank-accounts",
     element: <BankAccountsPage />,
     requiredRoles: ["ADMIN", "MANAGER"],
@@ -298,6 +304,7 @@ const headerMap: Record<string, string> = {
   customers: "Customers",
   purchases: "Purchases",
   "fuel-purchases": "Fuel Purchases",
+  "expense-heads": "Expense Heads",
   salesmen: "Salesmen",
   "salesman-shifts": "Salesman Shifts",
   "admin/salesman-shifts": "All Salesman Shifts",
