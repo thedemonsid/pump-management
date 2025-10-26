@@ -1,13 +1,13 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import type {
   SalesmanNozzleShift,
   CreateSalesmanNozzleShift,
   CloseSalesmanNozzleShift,
   CreateSalesmanShiftAccountingRequest,
-} from '@/types';
-import { SalesmanNozzleShiftService } from '@/services/salesman-nozzle-shift-service';
-import { toast } from 'sonner';
+} from "@/types";
+import { SalesmanNozzleShiftService } from "@/services/salesman-nozzle-shift-service";
+import { toast } from "sonner";
 
 interface SalesmanNozzleShiftState {
   shifts: SalesmanNozzleShift[];
@@ -46,7 +46,9 @@ interface SalesmanNozzleShiftState {
     shiftId: string,
     accountingData: CreateSalesmanShiftAccountingRequest
   ) => Promise<void>;
-  getAccounting: (shiftId: string) => Promise<import('@/types').SalesmanShiftAccounting>;
+  getAccounting: (
+    shiftId: string
+  ) => Promise<import("@/types").SalesmanShiftAccounting>;
   updateShiftApi: (
     id: string,
     shift: Partial<CreateSalesmanNozzleShift>,
@@ -94,7 +96,7 @@ export const useSalesmanNozzleShiftStore = create<SalesmanNozzleShiftState>()(
           set({ shifts });
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to fetch shifts';
+            error instanceof Error ? error.message : "Failed to fetch shifts";
           set({ error: errorMessage });
           toast.error(errorMessage);
         } finally {
@@ -112,10 +114,10 @@ export const useSalesmanNozzleShiftStore = create<SalesmanNozzleShiftState>()(
           set((state) => ({
             activeShifts: [...state.activeShifts, newShift],
           }));
-          toast.success('Shift started successfully');
+          toast.success("Shift started successfully");
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to start shift';
+            error instanceof Error ? error.message : "Failed to start shift";
           set({ error: errorMessage });
           toast.error(errorMessage);
           throw error;
@@ -134,10 +136,10 @@ export const useSalesmanNozzleShiftStore = create<SalesmanNozzleShiftState>()(
           set((state) => ({
             activeShifts: state.activeShifts.filter((shift) => shift.id !== id),
           }));
-          toast.success('Shift closed successfully');
+          toast.success("Shift closed successfully");
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to close shift';
+            error instanceof Error ? error.message : "Failed to close shift";
           set({ error: errorMessage });
           toast.error(errorMessage);
           throw error;
@@ -148,7 +150,7 @@ export const useSalesmanNozzleShiftStore = create<SalesmanNozzleShiftState>()(
 
       updateShiftApi: async (id, shiftData, admin = false) => {
         if (!admin) {
-          throw new Error('Update not allowed for non-admin users');
+          throw new Error("Update not allowed for non-admin users");
         }
         try {
           set({ loading: true, error: null });
@@ -157,10 +159,10 @@ export const useSalesmanNozzleShiftStore = create<SalesmanNozzleShiftState>()(
             shiftData
           );
           get().updateShift(id, updatedShift);
-          toast.success('Shift updated successfully');
+          toast.success("Shift updated successfully");
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to update shift';
+            error instanceof Error ? error.message : "Failed to update shift";
           set({ error: errorMessage });
           toast.error(errorMessage);
           throw error;
@@ -177,12 +179,17 @@ export const useSalesmanNozzleShiftStore = create<SalesmanNozzleShiftState>()(
             accountingData
           );
           // Update the shift to mark it as accounted
-          get().updateShift(shiftId, { status: 'CLOSED', isAccountingDone: true });
-          toast.success('Accounting created successfully');
+          get().updateShift(shiftId, {
+            status: "CLOSED",
+            isAccountingDone: true,
+          });
+          toast.success("Accounting created successfully");
           return accounting;
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to create accounting';
+            error instanceof Error
+              ? error.message
+              : "Failed to create accounting";
           set({ error: errorMessage });
           toast.error(errorMessage);
           throw error;
@@ -194,15 +201,18 @@ export const useSalesmanNozzleShiftStore = create<SalesmanNozzleShiftState>()(
       updateAccounting: async (shiftId, accountingData) => {
         try {
           set({ loading: true, error: null });
-          const updatedAccounting = await SalesmanNozzleShiftService.updateAccounting(
-            shiftId,
-            accountingData
-          );
-          toast.success('Accounting updated successfully');
+          const updatedAccounting =
+            await SalesmanNozzleShiftService.updateAccounting(
+              shiftId,
+              accountingData
+            );
+          toast.success("Accounting updated successfully");
           return updatedAccounting;
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to update accounting';
+            error instanceof Error
+              ? error.message
+              : "Failed to update accounting";
           set({ error: errorMessage });
           toast.error(errorMessage);
           throw error;
@@ -214,11 +224,13 @@ export const useSalesmanNozzleShiftStore = create<SalesmanNozzleShiftState>()(
       getAccounting: async (shiftId) => {
         try {
           set({ loading: true, error: null });
-          const accounting = await SalesmanNozzleShiftService.getAccounting(shiftId);
+          const accounting = await SalesmanNozzleShiftService.getAccounting(
+            shiftId
+          );
           return accounting;
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to get accounting';
+            error instanceof Error ? error.message : "Failed to get accounting";
           set({ error: errorMessage });
           toast.error(errorMessage);
           throw error;
@@ -227,25 +239,21 @@ export const useSalesmanNozzleShiftStore = create<SalesmanNozzleShiftState>()(
         }
       },
 
-      fetchActiveShifts: async (salesmanId) => {
-        if (!salesmanId) {
-          set({ activeShifts: [] });
-          return;
-        }
+      fetchActiveShifts: async (salesmanId?) => {
         try {
           const activeShifts = await SalesmanNozzleShiftService.getActiveShifts(
             salesmanId
           );
           set({ activeShifts });
         } catch (error) {
-          console.error('Error fetching active shifts:', error);
+          console.error("Error fetching active shifts:", error);
           // Silently fail for active shifts fetch
           set({ activeShifts: [] });
         }
       },
     }),
     {
-      name: 'salesman-nozzle-shift-store',
+      name: "salesman-nozzle-shift-store",
     }
   )
 );

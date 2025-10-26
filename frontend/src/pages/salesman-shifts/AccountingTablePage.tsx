@@ -23,6 +23,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { SalesmanNozzleShiftService } from "@/services/salesman-nozzle-shift-service";
+import { ExpenseService } from "@/services/expense-service";
 import { toast } from "sonner";
 import type {
   SalesmanNozzleShiftResponse,
@@ -135,6 +136,22 @@ export function AccountingTablePage() {
       setCreditPaymentReceived(shiftData.customerReceipt || 0);
       setCreditGiven(shiftData.credit || 0);
 
+      // Fetch expenses for this shift from backend
+      try {
+        const shiftExpenses = await ExpenseService.getBySalesmanNozzleShiftId(
+          shiftId!
+        );
+        // Calculate total expenses for this shift
+        const totalExpenses = shiftExpenses.reduce(
+          (sum, expense) => sum + expense.amount,
+          0
+        );
+        setExpenses(totalExpenses);
+      } catch (error) {
+        console.error("Failed to load shift expenses:", error);
+        setExpenses(0);
+      }
+
       // Try to load existing accounting if shift is closed and accounting exists
       if (shiftData.isAccountingDone) {
         try {
@@ -149,7 +166,7 @@ export function AccountingTablePage() {
 
           setPhonePeReceived(accountingData.upiReceived);
           setCardReceived(accountingData.cardReceived);
-          setExpenses(accountingData.expenses);
+          // Don't override expenses from backend - they're already set above
           setCashInHand(
             accountingData.notes500 * 500 +
               accountingData.notes200 * 200 +

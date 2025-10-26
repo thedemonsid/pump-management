@@ -1,14 +1,14 @@
-import api from './api';
+import api from "./api";
 import type {
   SalesmanNozzleShift,
   CreateSalesmanNozzleShift,
   CloseSalesmanNozzleShift,
   CreateSalesmanShiftAccountingRequest,
   SalesmanShiftAccounting,
-} from '@/types';
+} from "@/types";
 
 export class SalesmanNozzleShiftService {
-  private static readonly BASE_PATH = '/api/v1/salesman-nozzle-shifts';
+  private static readonly BASE_PATH = "/api/v1/salesman-nozzle-shifts";
 
   // Get all shifts for the current salesman (with optional date filtering)
   static async getAll(params?: {
@@ -19,27 +19,27 @@ export class SalesmanNozzleShiftService {
     const queryParams = new URLSearchParams();
     if (params?.fromDate) {
       // Convert date-only string to LocalDateTime format (start of day)
-      queryParams.append('fromDate', `${params.fromDate}T00:00:00`);
+      queryParams.append("fromDate", `${params.fromDate}T00:00:00`);
     }
     if (params?.toDate) {
       // Convert date-only string to LocalDateTime format (end of day)
-      queryParams.append('toDate', `${params.toDate}T23:59:59`);
+      queryParams.append("toDate", `${params.toDate}T23:59:59`);
     }
     if (params?.salesmanId) {
-      queryParams.append('salesmanId', params.salesmanId);
+      queryParams.append("salesmanId", params.salesmanId);
     }
 
     const url = queryParams.toString()
       ? `${this.BASE_PATH}?${queryParams.toString()}`
       : this.BASE_PATH;
 
-    console.log('Making API call to:', url);
+    console.log("Making API call to:", url);
     try {
       const response = await api.get<SalesmanNozzleShift[]>(url);
-      console.log('API response:', response.data);
+      console.log("API response:", response.data);
       return response.data;
     } catch (error) {
-      console.error('API call failed:', error);
+      console.error("API call failed:", error);
       throw error;
     }
   }
@@ -72,13 +72,14 @@ export class SalesmanNozzleShiftService {
     return response.data;
   }
 
-  // Get active/open shifts for the current salesman
+  // Get active/open shifts for the current salesman or all active shifts for admins
   static async getActiveShifts(
-    salesmanId: string
+    salesmanId?: string
   ): Promise<SalesmanNozzleShift[]> {
-    const response = await api.get(
-      `/api/v1/salesman-nozzle-shifts/open?salesmanId=${salesmanId}`
-    );
+    const url = salesmanId
+      ? `/api/v1/salesman-nozzle-shifts/open?salesmanId=${salesmanId}`
+      : `/api/v1/salesman-nozzle-shifts/open`;
+    const response = await api.get(url);
     return response.data;
   }
 
@@ -108,7 +109,9 @@ export class SalesmanNozzleShiftService {
   }
 
   // Get accounting details for a shift
-  static async getAccounting(shiftId: string): Promise<SalesmanShiftAccounting> {
+  static async getAccounting(
+    shiftId: string
+  ): Promise<SalesmanShiftAccounting> {
     const response = await api.get<SalesmanShiftAccounting>(
       `${this.BASE_PATH}/${shiftId}/accounting`
     );

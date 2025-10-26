@@ -136,19 +136,23 @@ export function ExpenseSheet({
 
   useEffect(() => {
     fetchActiveExpenseHeads();
-    if (isSalesman) {
-      // Salesmen only need active shifts
-      fetchActiveShifts();
-    } else {
-      // Admins/Managers need bank accounts
-      fetchBankAccounts();
-      fetchActiveShifts();
+    fetchBankAccounts();
+
+    // Fetch active shifts
+    // For salesmen, filter by their userId
+    // For admins/managers, fetch all active shifts
+    if (isSalesman && user?.userId) {
+      fetchActiveShifts(user.userId);
+    } else if (isAdmin) {
+      fetchActiveShifts(); // Fetch all active shifts for admin
     }
   }, [
     fetchActiveExpenseHeads,
     fetchBankAccounts,
     fetchActiveShifts,
     isSalesman,
+    isAdmin,
+    user?.userId,
   ]);
 
   useEffect(() => {
