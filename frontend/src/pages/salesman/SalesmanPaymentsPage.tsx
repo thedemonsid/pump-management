@@ -27,6 +27,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { format } from "date-fns";
 import { CreateShiftPaymentForm } from "@/pages/salesman-shifts/CreateShiftPaymentForm";
 import type { SalesmanNozzleShiftResponse } from "@/types";
@@ -194,16 +201,15 @@ export function SalesmanPaymentsPage() {
         </div>
       )}
 
-      {/* Record Payment Dialog */}
-      <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Record Payment</DialogTitle>
-            <DialogDescription>
-              Record a payment for shift at{" "}
+      {/* Record Payment Sheet */}
+      <Sheet open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Record Payment</SheetTitle>
+            <SheetDescription>
               {selectedShiftForPayment?.nozzleName}
-            </DialogDescription>
-          </DialogHeader>
+            </SheetDescription>
+          </SheetHeader>
           {selectedShiftForPayment && (
             <CreateShiftPaymentForm
               salesmanNozzleShiftId={selectedShiftForPayment.id}
@@ -211,8 +217,8 @@ export function SalesmanPaymentsPage() {
               onSuccess={handlePaymentSuccess}
             />
           )}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* View Payments Dialog */}
       <Dialog

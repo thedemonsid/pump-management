@@ -362,6 +362,7 @@ export function SalesmanShiftsPage() {
                     <Input
                       id="opening-balance"
                       type="number"
+                      min="0"
                       step="0.001"
                       placeholder="0.000"
                       value={startForm.openingBalance}
@@ -445,16 +446,22 @@ export function SalesmanShiftsPage() {
                             <Input
                               id="closing-balance"
                               type="number"
+                              min="0"
                               step="0.001"
                               placeholder="0.000"
-                              value={closeForm.closingBalance}
-                              onChange={(e) =>
+                              value={
+                                closeForm.closingBalance === 0
+                                  ? ""
+                                  : closeForm.closingBalance
+                              }
+                              onChange={(e) => {
+                                const value = e.target.value;
                                 setCloseForm({
                                   ...closeForm,
                                   closingBalance:
-                                    parseFloat(e.target.value) || 0,
-                                })
-                              }
+                                    value === "" ? 0 : parseFloat(value) || 0,
+                                });
+                              }}
                             />
                           </div>
                           <div className="grid gap-2">

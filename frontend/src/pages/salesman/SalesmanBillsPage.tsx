@@ -26,6 +26,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import ReactSelect, { type CSSObjectWithLabel } from "react-select";
@@ -301,22 +308,21 @@ export function SalesmanBillsPage() {
         </div>
       )}
 
-      {/* Create Bill Dialog */}
-      <Dialog
+      {/* Create Bill Sheet */}
+      <Sheet
         open={isCreateBillDialogOpen}
         onOpenChange={setIsCreateBillDialogOpen}
       >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create New Bill</DialogTitle>
-            <DialogDescription>
-              Create a credit bill for shift at{" "}
+        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Create New Bill</SheetTitle>
+            <SheetDescription>
               {selectedShiftForBill?.nozzleName}
-            </DialogDescription>
-          </DialogHeader>
+            </SheetDescription>
+          </SheetHeader>
 
-          <div className="space-y-4">
-            <div>
+          <div className="space-y-4 p-1">
+            <div className="flex flex-col gap-1">
               <Label htmlFor="customer">Customer *</Label>
               <ReactSelect
                 id="customer"
@@ -340,11 +346,10 @@ export function SalesmanBillsPage() {
                 isLoading={loadingCustomers}
                 placeholder="Select customer..."
                 styles={selectStyles}
-                menuPortalTarget={document.body}
               />
             </div>
 
-            <div>
+            <div className="flex flex-col gap-1">
               <Label htmlFor="product">Product *</Label>
               <ReactSelect
                 id="product"
@@ -368,11 +373,10 @@ export function SalesmanBillsPage() {
                 isLoading={loadingProducts}
                 placeholder="Select product..."
                 styles={selectStyles}
-                menuPortalTarget={document.body}
               />
             </div>
 
-            <div>
+            <div className="flex flex-col gap-1">
               <Label htmlFor="quantity">Quantity (Liters) *</Label>
               <Input
                 id="quantity"
@@ -386,7 +390,7 @@ export function SalesmanBillsPage() {
               />
             </div>
 
-            <div>
+            <div className="flex flex-col gap-1">
               <Label htmlFor="vehicleNo">Vehicle Number</Label>
               <Input
                 id="vehicleNo"
@@ -398,7 +402,7 @@ export function SalesmanBillsPage() {
               />
             </div>
 
-            <div>
+            <div className="flex flex-col gap-1">
               <Label htmlFor="driverName">Driver Name</Label>
               <Input
                 id="driverName"
@@ -411,7 +415,7 @@ export function SalesmanBillsPage() {
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end space-x-2 mt-6">
             <Button
               variant="outline"
               onClick={() => {
@@ -439,8 +443,8 @@ export function SalesmanBillsPage() {
               Create Bill
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* View Bills Dialog */}
       <Dialog open={isBillsDialogOpen} onOpenChange={setIsBillsDialogOpen}>

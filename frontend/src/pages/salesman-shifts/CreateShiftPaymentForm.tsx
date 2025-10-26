@@ -1,21 +1,15 @@
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useSalesmanBillPaymentStore } from '@/store/salesman-bill-payment-store';
-import { useBankAccountStore } from '@/store/bank-account-store';
-import { useCustomerStore } from '@/store/customer-store';
-import { PaymentMethod } from '@/types/customer-bill-payment';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useSalesmanBillPaymentStore } from "@/store/salesman-bill-payment-store";
+import { useBankAccountStore } from "@/store/bank-account-store";
+import { useCustomerStore } from "@/store/customer-store";
+import { PaymentMethod } from "@/types/customer-bill-payment";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import ReactSelect, { type CSSObjectWithLabel } from "react-select";
 import {
   Form,
   FormControl,
@@ -23,26 +17,67 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Loader2, CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
+} from "@/components/ui/form";
+import { Loader2, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+
+const selectStyles = {
+  control: (provided: CSSObjectWithLabel) => ({
+    ...provided,
+    minHeight: "36px",
+    borderColor: "#e5e7eb",
+    backgroundColor: "#ffffff",
+    "&:hover": {
+      borderColor: "#9ca3af",
+    },
+    boxShadow: "none",
+    "&:focus-within": {
+      borderColor: "#3b82f6",
+      boxShadow: "0 0 0 1px #3b82f6",
+    },
+    fontSize: "16px",
+  }),
+  option: (
+    provided: CSSObjectWithLabel,
+    state: { isSelected: boolean; isFocused: boolean }
+  ) => ({
+    ...provided,
+    backgroundColor: state.isSelected
+      ? "#3b82f6"
+      : state.isFocused
+      ? "#dbeafe"
+      : "#ffffff",
+    color: state.isSelected ? "#ffffff" : "#111827",
+    "&:hover": {
+      backgroundColor: state.isSelected ? "#2563eb" : "#dbeafe",
+    },
+    fontSize: "16px",
+  }),
+  menu: (provided: CSSObjectWithLabel) => ({
+    ...provided,
+    zIndex: 9999,
+    backgroundColor: "#ffffff",
+    border: "1px solid #e5e7eb",
+  }),
+  menuPortal: (base: CSSObjectWithLabel) => ({ ...base, zIndex: 9999 }),
+};
 
 const CreateShiftPaymentSchema = z.object({
-  pumpMasterId: z.string().min(1, 'Pump Master ID is required'),
-  salesmanNozzleShiftId: z.string().min(1, 'Shift is required'),
-  customerId: z.string().min(1, 'Customer is required'),
-  bankAccountId: z.string().min(1, 'Bank Account is required'),
-  amount: z.number().min(0.01, 'Amount must be greater than 0'),
+  pumpMasterId: z.string().min(1, "Pump Master ID is required"),
+  salesmanNozzleShiftId: z.string().min(1, "Shift is required"),
+  customerId: z.string().min(1, "Customer is required"),
+  bankAccountId: z.string().min(1, "Bank Account is required"),
+  amount: z.number().min(0.01, "Amount must be greater than 0"),
   paymentDate: z.date(),
-  paymentMethod: z.string().min(1, 'Payment method is required'),
-  referenceNumber: z.string().min(1, 'Reference number is required'),
+  paymentMethod: z.string().min(1, "Payment method is required"),
+  referenceNumber: z.string().min(1, "Reference number is required"),
   notes: z.string().optional(),
 });
 
@@ -68,13 +103,13 @@ export function CreateShiftPaymentForm({
     defaultValues: {
       pumpMasterId,
       salesmanNozzleShiftId,
-      customerId: '',
-      bankAccountId: '',
+      customerId: "",
+      bankAccountId: "",
       amount: 0,
       paymentDate: new Date(),
-      paymentMethod: '',
-      referenceNumber: '',
-      notes: '',
+      paymentMethod: "",
+      referenceNumber: "NA",
+      notes: "",
     },
   });
 
@@ -99,70 +134,82 @@ export function CreateShiftPaymentForm({
       form.reset();
       onSuccess?.();
     } catch (error) {
-      console.error('Failed to create payment:', error);
+      console.error("Failed to create payment:", error);
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="customerId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Customer</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select customer" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {customers.map((customer) => (
-                      <SelectItem
-                        key={customer.id || customer.customerName}
-                        value={customer.id || ''}
-                      >
-                        {customer.customerName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-1">
+        <FormField
+          control={form.control}
+          name="customerId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Customer</FormLabel>
+              <FormControl>
+                <ReactSelect
+                  options={customers.map((customer) => ({
+                    value: customer.id || "",
+                    label: customer.customerName,
+                  }))}
+                  value={
+                    field.value
+                      ? {
+                          value: field.value,
+                          label:
+                            customers.find((c) => c.id === field.value)
+                              ?.customerName || "",
+                        }
+                      : null
+                  }
+                  onChange={(option) => field.onChange(option?.value || "")}
+                  placeholder="Select customer..."
+                  styles={selectStyles}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="bankAccountId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Bank Account</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select bank account" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {bankAccounts.map((account) => (
-                      <SelectItem
-                        key={account.id || account.accountNumber}
-                        value={account.id || ''}
-                      >
-                        {account.accountHolderName} ({account.accountNumber})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="bankAccountId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Bank Account</FormLabel>
+              <FormControl>
+                <ReactSelect
+                  options={bankAccounts.map((account) => ({
+                    value: account.id || "",
+                    label: `${account.accountHolderName} (${account.accountNumber})`,
+                  }))}
+                  value={
+                    field.value
+                      ? {
+                          value: field.value,
+                          label: bankAccounts.find((a) => a.id === field.value)
+                            ? `${
+                                bankAccounts.find((a) => a.id === field.value)
+                                  ?.accountHolderName
+                              } (${
+                                bankAccounts.find((a) => a.id === field.value)
+                                  ?.accountNumber
+                              })`
+                            : "",
+                        }
+                      : null
+                  }
+                  onChange={(option) => field.onChange(option?.value || "")}
+                  placeholder="Select bank account..."
+                  styles={selectStyles}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="grid grid-cols-2 gap-4">
           <FormField
@@ -174,12 +221,14 @@ export function CreateShiftPaymentForm({
                 <FormControl>
                   <Input
                     type="number"
+                    min="0"
                     step="0.01"
                     placeholder="0.00"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(parseFloat(e.target.value) || 0)
-                    }
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseFloat(value) || 0);
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -199,12 +248,12 @@ export function CreateShiftPaymentForm({
                       <Button
                         variant="outline"
                         className={cn(
-                          'w-full pl-3 text-left font-normal',
-                          !field.value && 'text-muted-foreground'
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
                         )}
                       >
                         {field.value ? (
-                          format(field.value, 'PPP')
+                          format(field.value, "PPP")
                         ) : (
                           <span>Pick a date</span>
                         )}
@@ -218,7 +267,7 @@ export function CreateShiftPaymentForm({
                       selected={field.value}
                       onSelect={field.onChange}
                       disabled={(date) =>
-                        date > new Date() || date < new Date('1900-01-01')
+                        date > new Date() || date < new Date("1900-01-01")
                       }
                       initialFocus
                     />
@@ -230,47 +279,53 @@ export function CreateShiftPaymentForm({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="paymentMethod"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Payment Method</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select payment method" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value={PaymentMethod.CASH}>Cash</SelectItem>
-                    <SelectItem value={PaymentMethod.CHEQUE}>Cheque</SelectItem>
-                    <SelectItem value={PaymentMethod.UPI}>UPI</SelectItem>
-                    <SelectItem value={PaymentMethod.RTGS}>RTGS</SelectItem>
-                    <SelectItem value={PaymentMethod.NEFT}>NEFT</SelectItem>
-                    <SelectItem value={PaymentMethod.IMPS}>IMPS</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={form.control}
+          name="paymentMethod"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Payment Method</FormLabel>
+              <FormControl>
+                <ReactSelect
+                  options={[
+                    { value: PaymentMethod.CASH, label: "Cash" },
+                    { value: PaymentMethod.CHEQUE, label: "Cheque" },
+                    { value: PaymentMethod.UPI, label: "UPI" },
+                    { value: PaymentMethod.RTGS, label: "RTGS" },
+                    { value: PaymentMethod.NEFT, label: "NEFT" },
+                    { value: PaymentMethod.IMPS, label: "IMPS" },
+                  ]}
+                  value={
+                    field.value
+                      ? {
+                          value: field.value,
+                          label: field.value,
+                        }
+                      : null
+                  }
+                  onChange={(option) => field.onChange(option?.value || "")}
+                  placeholder="Select payment method..."
+                  styles={selectStyles}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="referenceNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Reference Number</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter reference number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="referenceNumber"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Reference Number</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter reference number" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
