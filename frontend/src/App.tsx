@@ -66,6 +66,7 @@ import SupplierDebtReportPage from "./pages/reports/SupplierDebtReportPage";
 import CustomerCreditReportPage from "./pages/reports/CustomerCreditReportPage";
 import { ExpenseHeadsPage } from "./pages/expense-heads/ExpenseHeadsPage";
 import { ExpensesPage } from "./pages/expenses/ExpensesPage";
+import ChangePasswordPage from "./pages/settings/ChangePasswordPage";
 import { AuthProvider } from "@/hooks/AuthContext";
 import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute, PublicRoute } from "@/components/ProtectedRoute";
@@ -293,6 +294,11 @@ const allRoutes = [
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
+    path: "/settings/change-password",
+    element: <ChangePasswordPage />,
+    requiredRoles: ["ADMIN"],
+  },
+  {
     path: "*",
     element: <DashboardPage />,
     requiredRoles: ["ADMIN", "MANAGER"],
@@ -447,7 +453,7 @@ export function MainHeader() {
               logout();
               navigate("/login");
             }}
-            className="hidden sm:flex text-red-400 hover:text-red-500 focus:text-red-500"
+            className="text-red-400 hover:text-red-500 focus:text-red-500"
           >
             Logout
           </Button>

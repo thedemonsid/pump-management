@@ -215,6 +215,28 @@ public class UserService {
         return response;
     }
 
+    @Transactional
+    public Boolean changePasswordAdminOnly(@NotNull UUID adminUserId, @NotNull String oldPassword, @NotNull String newPassword) {
+        // Verify that the user making the request is an ADMIN
+        User adminUser = repository.findById(adminUserId).orElse(null);
+        if (adminUser == null) {
+            throw new PumpBusinessException("USER_NOT_FOUND", "User with ID " + adminUserId + " not found");
+        }
+        if (adminUser.getRole() == null || !adminUser.getRole().getRoleName().equals("ADMIN")) {
+            throw new PumpBusinessException("UNAUTHORIZED", "Only ADMIN users can change their password");
+        }
+
+        // Verify old password
+        if (!passwordEncoder.matches(oldPassword, adminUser.getPassword())) {
+            throw new PumpBusinessException("INVALID_OLD_PASSWORD", "Current password is incorrect");
+        }
+
+        // Update the admin's password
+        adminUser.setPassword(passwordEncoder.encode(newPassword));
+        repository.save(adminUser);
+        return true;
+    }
+
     public UserResponse createSuperAdmin(CreateUserRequest request, String secretKey) {
         // Check for duplicate username
         if (repository.existsByUsernameAndPumpMaster_Id(request.getUsername(), request.getPumpMasterId())) {

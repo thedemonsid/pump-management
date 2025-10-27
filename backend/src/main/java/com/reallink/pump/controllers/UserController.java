@@ -1,6 +1,7 @@
 package com.reallink.pump.controllers;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -11,14 +12,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.reallink.pump.config.JwtUtil;
 import com.reallink.pump.dto.request.CreateUserRequest;
 import com.reallink.pump.dto.request.LoginRequest;
 import com.reallink.pump.dto.request.UpdateUserRequest;
 import com.reallink.pump.dto.response.LoginResponse;
+import com.reallink.pump.dto.response.TokenUserInfoResponse;
 import com.reallink.pump.dto.response.UserResponse;
 import com.reallink.pump.services.UserService;
 
@@ -34,6 +38,7 @@ import lombok.RequiredArgsConstructor;
 public class UserController {
 
     private final UserService service;
+    private final JwtUtil jwtUtil;
 
     @GetMapping
     @Operation(summary = "Get all users", description = "Retrieve all users (no pagination)")
@@ -91,10 +96,51 @@ public class UserController {
         return ResponseEntity.ok(service.login(request));
     }
 
+    @PostMapping("/change-password")
+    @Operation(summary = "Change password for authenticated ADMIN user only")
+    public ResponseEntity<Map<String, String>> changePassword(
+            @RequestHeader("Authorization") String authorizationHeader,
+            @RequestParam String oldPassword,
+            @RequestParam String newPassword) {
+
+        // Extract token from Authorization header (Bearer <token>)
+        String token = authorizationHeader.replace("Bearer ", "");
+
+        // Extract userId from token (this is the authenticated user)
+        UUID userId = jwtUtil.extractUserId(token);
+
+        // This will verify the user is ADMIN, verify old password, and change their password
+        service.changePasswordAdminOnly(userId, oldPassword, newPassword);
+        return ResponseEntity.ok(Map.of("message", "Password changed successfully. Please login again with your new password."));
+    }
+
     @PostMapping("/register/super/{secretKey}")
     @Operation(summary = "Create Super Admin")
     public ResponseEntity<UserResponse> createSuperAdmin(@PathVariable String secretKey,
             @Valid @RequestBody CreateUserRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createSuperAdmin(request, secretKey));
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Get current user info from JWT token", description = "Extract and return user information from the JWT token")
+    public ResponseEntity<TokenUserInfoResponse> getCurrentUserInfo(
+            @RequestHeader("Authorization") String authorizationHeader) {
+
+        // Extract token from Authorization header (Bearer <token>)
+        String token = authorizationHeader.replace("Bearer ", "");
+
+        // Extract user information from token
+        TokenUserInfoResponse userInfo = TokenUserInfoResponse.builder()
+                .userId(jwtUtil.extractUserId(token))
+                .username(jwtUtil.extractUsername(token))
+                .pumpMasterId(jwtUtil.extractPumpMasterId(token))
+                .role(jwtUtil.extractRole(token))
+                .mobileNumber(jwtUtil.extractMobileNumber(token))
+                .pumpName(jwtUtil.extractPumpName(token))
+                .pumpId(jwtUtil.extractPumpId(token))
+                .pumpCode(jwtUtil.extractPumpCode(token))
+                .build();
+
+        return ResponseEntity.ok(userInfo);
     }
 }

@@ -11,6 +11,7 @@ import {
   SidebarFooter,
   SidebarMenuBadge,
   SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { NavLink, useLocation } from "react-router-dom";
@@ -30,6 +31,7 @@ import {
   BarChart3,
   FolderTree,
   Wallet,
+  KeyRound,
 } from "lucide-react";
 
 const mainItems = [
@@ -153,6 +155,14 @@ const salesmanItems = [
     icon: Wallet,
   },
 ];
+
+const settingsItems = [
+  {
+    title: "Change Password",
+    url: "/settings/change-password",
+    icon: KeyRound,
+  },
+];
 // const systemItems = [
 //   {
 //     title: 'Settings',
@@ -169,6 +179,7 @@ interface SidebarMenuItemProps {
 
 function NavItem({ title, url, icon: Icon }: SidebarMenuItemProps) {
   const location = useLocation();
+  const { setOpenMobile, isMobile } = useSidebar();
   const isActive =
     location.pathname === url ||
     (location.pathname.startsWith(url) &&
@@ -176,11 +187,19 @@ function NavItem({ title, url, icon: Icon }: SidebarMenuItemProps) {
         location.pathname.length === url.length)) ||
     (title === "Dashboard" && location.pathname === "/dashboard");
 
+  const handleClick = () => {
+    // Close sidebar on mobile when a link is clicked
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild>
         <NavLink
           to={url}
+          onClick={handleClick}
           data-active={isActive ? "true" : undefined}
           className={[
             "relative flex items-center gap-2 rounded-md transition-colors duration-150",
@@ -281,14 +300,16 @@ export function AppSidebar({ role, pumpName }: AppSidebarProps) {
             </SidebarGroupContent>
           </SidebarGroup>
         )}
-        {/* <SidebarGroup>
-          <SidebarGroupLabel className="uppercase tracking-wide text-[10px] font-semibold text-sidebar-foreground/60">
-            System
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>{renderMenuItems(systemItems)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup> */}
+        {role === "ADMIN" && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="uppercase tracking-wide text-[10px] font-semibold text-sidebar-foreground/60">
+              Settings
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>{renderMenuItems(settingsItems)}</SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       <SidebarSeparator className="opacity-60 group-data-[state=collapsed]:hidden" />
       <SidebarFooter className="px-4 py-3 group-data-[state=collapsed]:px-1 group-data-[state=collapsed]:py-2">

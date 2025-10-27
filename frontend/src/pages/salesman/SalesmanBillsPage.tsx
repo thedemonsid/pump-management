@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImageUpload } from "@/components/ui/image-upload";
 import ReactSelect, { type CSSObjectWithLabel } from "react-select";
 import { format } from "date-fns";
 import { SalesmanBillService } from "@/services/salesman-bill-service";
@@ -113,6 +114,16 @@ export function SalesmanBillsPage() {
     vehicleNo: "",
     driverName: "",
   });
+  const [billImages, setBillImages] = useState<{
+    meterImage: File | null;
+    vehicleImage: File | null;
+    extraImage: File | null;
+  }>({
+    meterImage: null,
+    vehicleImage: null,
+    extraImage: null,
+  });
+  const [imageUploadKey, setImageUploadKey] = useState(0);
 
   useEffect(() => {
     if (user?.userId) {
@@ -167,7 +178,14 @@ export function SalesmanBillsPage() {
         driverName: billForm.driverName,
       };
 
-      await SalesmanBillService.create(billData);
+      // Prepare images object (only include non-null images)
+      const images = {
+        meterImage: billImages.meterImage || undefined,
+        vehicleImage: billImages.vehicleImage || undefined,
+        extraImage: billImages.extraImage || undefined,
+      };
+
+      await SalesmanBillService.create(billData, images);
       toast.success("Bill created successfully");
       setIsCreateBillDialogOpen(false);
       setSelectedShiftForBill(null);
@@ -178,6 +196,12 @@ export function SalesmanBillsPage() {
         vehicleNo: "",
         driverName: "",
       });
+      setBillImages({
+        meterImage: null,
+        vehicleImage: null,
+        extraImage: null,
+      });
+      setImageUploadKey((prev) => prev + 1);
       if (user?.userId) {
         fetchActiveShifts(user.userId);
       }
@@ -413,6 +437,42 @@ export function SalesmanBillsPage() {
                 placeholder="Enter driver name"
               />
             </div>
+
+            {/* Image Uploads */}
+            <div className="space-y-3 pt-4 border-t">
+              <Label className="text-sm font-medium">
+                Attachments (Optional)
+              </Label>
+              <div className="space-y-3">
+                <ImageUpload
+                  key={`meter-${imageUploadKey}`}
+                  id="meter-image"
+                  label="Meter Reading"
+                  onChange={(file) =>
+                    setBillImages({ ...billImages, meterImage: file })
+                  }
+                  disabled={loadingCustomers || loadingProducts}
+                />
+                <ImageUpload
+                  key={`vehicle-${imageUploadKey}`}
+                  id="vehicle-image"
+                  label="Vehicle Image"
+                  onChange={(file) =>
+                    setBillImages({ ...billImages, vehicleImage: file })
+                  }
+                  disabled={loadingCustomers || loadingProducts}
+                />
+                <ImageUpload
+                  key={`extra-${imageUploadKey}`}
+                  id="extra-image"
+                  label="Additional Image"
+                  onChange={(file) =>
+                    setBillImages({ ...billImages, extraImage: file })
+                  }
+                  disabled={loadingCustomers || loadingProducts}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="flex justify-end space-x-2 mt-6">
@@ -427,6 +487,12 @@ export function SalesmanBillsPage() {
                   vehicleNo: "",
                   driverName: "",
                 });
+                setBillImages({
+                  meterImage: null,
+                  vehicleImage: null,
+                  extraImage: null,
+                });
+                setImageUploadKey((prev) => prev + 1);
               }}
             >
               Cancel
