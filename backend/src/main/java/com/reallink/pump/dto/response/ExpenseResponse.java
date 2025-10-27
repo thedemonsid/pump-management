@@ -50,6 +50,9 @@ public class ExpenseResponse {
     @Schema(description = "Reference number (invoice, receipt, etc.)", example = "INV-2024-001")
     private String referenceNumber;
 
+    @Schema(description = "File storage ID for attached image/receipt", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID fileStorageId;
+
     @Schema(description = "Creation timestamp", example = "2023-10-01T12:00:00")
     private LocalDateTime createdAt;
 

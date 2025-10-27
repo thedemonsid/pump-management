@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import com.reallink.pump.entities.Expense.ExpenseType;
+import com.reallink.pump.entities.PaymentMethod;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMin;
@@ -34,6 +35,9 @@ public class CreateExpenseRequest {
     @Schema(description = "Bank account ID (required if expenseType is BANK_ACCOUNT)", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID bankAccountId;
 
+    @Schema(description = "Payment method for bank transactions (CASH, UPI, RTGS, NEFT, IMPS, CHEQUE)", example = "CASH")
+    private PaymentMethod paymentMethod;
+
     @NotNull(message = "Expense date is required")
     @Schema(description = "Date of the expense", example = "2024-01-15", required = true)
     private LocalDate expenseDate;
@@ -51,4 +55,7 @@ public class CreateExpenseRequest {
     @Size(max = 100, message = "Reference number cannot exceed 100 characters")
     @Schema(description = "Reference number (invoice, receipt, etc.)", example = "INV-2024-001")
     private String referenceNumber;
+
+    @Schema(description = "File storage ID for attached image/receipt", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID fileStorageId;
 }

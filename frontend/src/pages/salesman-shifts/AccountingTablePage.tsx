@@ -4,7 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { type CSSObjectWithLabel } from "react-select";
 import CreatableSelect from "react-select/creatable";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import {
   Table,
   TableBody,
@@ -284,14 +289,19 @@ export function AccountingTablePage() {
   // Calculations
   const expectedCash = shift ? shift.totalAmount || 0 : 0;
 
-  // Total receipts (what we received including credit payments)
+  // Total receipts (what we collected including expenses that were spent from cash)
+  // We add expenses because the cash was collected first, then expenses were spent from it
   const totalReceipts =
-    phonePeReceived + cardReceived + cashInHand + creditPaymentReceived;
+    phonePeReceived +
+    cardReceived +
+    cashInHand +
+    creditPaymentReceived +
+    expenses;
 
   // Total amount (expected sale + credit payments received)
   const totalAmount = expectedCash + creditPaymentReceived;
 
-  // Net receipt after expenses
+  // Net receipt after expenses (this is what remains in hand)
   const netReceipt = totalReceipts - expenses;
 
   // Balance (difference between what we should have and what we got)
@@ -499,7 +509,34 @@ export function AccountingTablePage() {
               </TableCell>
             </TableRow>
 
-            {/*(Cash from denominations) */}
+            {/* Credit (Bills given to customers) - Auto-calculated */}
+            <TableRow>
+              <TableCell className="font-medium py-1.5 text-xs text-muted-foreground">
+                Credit
+              </TableCell>
+              <TableCell className="text-right font-medium py-1.5 text-xs text-orange-600">
+                {formatCurrency(creditGiven)}
+              </TableCell>
+            </TableRow>
+
+            {/* Expenses */}
+            <TableRow>
+              <TableCell className="font-medium text-destructive py-1.5 text-sm">
+                Expence
+              </TableCell>
+              <TableCell className="text-right py-1.5">
+                <div className="flex items-center justify-end gap-2">
+                  <span className="text-xs text-muted-foreground italic">
+                    Auto
+                  </span>
+                  <span className="font-semibold text-base text-destructive">
+                    {formatCurrency(expenses)}
+                  </span>
+                </div>
+              </TableCell>
+            </TableRow>
+
+            {/* Cash (from denominations) */}
             <TableRow>
               <TableCell className="font-medium py-1.5 text-sm">
                 <div className="flex items-center gap-1.5">
@@ -522,75 +559,6 @@ export function AccountingTablePage() {
                     <Plus className="h-3 w-3 mr-1" />
                     {cashInHand > 0 ? "Edit" : "Add"}
                   </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-
-            {/* Credit (Bills given to customers) - Auto-calculated */}
-            <TableRow>
-              <TableCell className="font-medium py-1.5 text-xs text-muted-foreground">
-                Credit
-              </TableCell>
-              <TableCell className="text-right font-medium py-1.5 text-xs text-orange-600">
-                {formatCurrency(creditGiven)}
-              </TableCell>
-            </TableRow>
-
-            {/* Expenses */}
-            <TableRow>
-              <TableCell className="font-medium text-destructive py-1.5 text-sm">
-                Expence
-              </TableCell>
-              <TableCell className="text-right py-1.5">
-                <div className="max-w-[180px] ml-auto">
-                  <CreatableSelect
-                    value={
-                      expenses
-                        ? {
-                            value: expenses,
-                            label: `₹${expenses.toLocaleString("en-IN")}`,
-                          }
-                        : null
-                    }
-                    onChange={(option) => {
-                      if (option) {
-                        setExpenses(option.value);
-                      } else {
-                        setExpenses(0);
-                      }
-                    }}
-                    onCreateOption={(inputValue) => {
-                      const numValue = parseFloat(
-                        inputValue.replace(/[^0-9.]/g, "")
-                      );
-                      if (!isNaN(numValue)) {
-                        setExpenses(numValue);
-                      }
-                    }}
-                    options={amountOptions}
-                    styles={{
-                      ...selectStyles,
-                      control: (provided: CSSObjectWithLabel) => ({
-                        ...provided,
-                        minHeight: "36px",
-                        borderColor: "#f87171",
-                        backgroundColor: "#ffffff",
-                        "&:hover": {
-                          borderColor: "#ef4444",
-                        },
-                        boxShadow: "none",
-                        "&:focus-within": {
-                          borderColor: "#ef4444",
-                          boxShadow: "0 0 0 1px #ef4444",
-                        },
-                        fontSize: "14px",
-                      }),
-                    }}
-                    menuPortalTarget={document.body}
-                    placeholder="₹0"
-                    isClearable
-                    formatCreateLabel={(inputValue) => `Use ₹${inputValue}`}
-                  />
                 </div>
               </TableCell>
             </TableRow>
@@ -692,25 +660,32 @@ export function AccountingTablePage() {
         </Button>
       </div>
 
-      {/* Cash Denominations Dialog */}
-      <Dialog open={isCashDialogOpen} onOpenChange={setIsCashDialogOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <div className="space-y-3 py-2">
-            <h2 className="text-base font-semibold">Cash Denominations</h2>
+      {/* Cash Denominations Sheet */}
+      <Sheet open={isCashDialogOpen} onOpenChange={setIsCashDialogOpen}>
+        <SheetContent
+          className="w-full sm:max-w-lg overflow-y-auto"
+          side="right"
+        >
+          <SheetHeader>
+            <SheetTitle className="text-lg font-semibold">
+              Cash Denominations
+            </SheetTitle>
+          </SheetHeader>
 
-            {/* Table with borders like the image */}
+          <div className="space-y-4 mt-4">
+            {/* Table with borders */}
             <div className="border-2 border-black rounded-lg overflow-hidden">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b-2 border-black">
-                    <th className="border-r-2 border-black p-1.5 text-left font-semibold text-xs">
+                  <tr className="border-b-2 border-black bg-slate-100">
+                    <th className="border-r-2 border-black p-2 text-left font-semibold text-sm">
                       Denomination
                     </th>
-                    <th className="border-r-2 border-black p-1.5 text-center font-semibold text-xs">
-                      count
+                    <th className="border-r-2 border-black p-2 text-center font-semibold text-sm">
+                      Count
                     </th>
-                    <th className="p-1.5 text-center font-semibold text-xs">
-                      amount
+                    <th className="p-2 text-center font-semibold text-sm">
+                      Amount
                     </th>
                   </tr>
                 </thead>
@@ -730,10 +705,10 @@ export function AccountingTablePage() {
                     const amount = count * value;
                     return (
                       <tr key={field} className="border-b border-gray-300">
-                        <td className="border-r-2 border-black p-1.5 font-medium w-1/3 text-sm">
+                        <td className="border-r-2 border-black p-2 font-medium text-base">
                           {label}
                         </td>
-                        <td className="border-r-2 border-black p-1.5 w-1/3 text-center">
+                        <td className="border-r-2 border-black p-2">
                           <Input
                             type="number"
                             min="0"
@@ -746,11 +721,11 @@ export function AccountingTablePage() {
                                   value === "" ? 0 : parseInt(value) || 0,
                               }));
                             }}
-                            className="h-8 w-full text-center text-sm border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md"
+                            className="h-10 w-full text-center text-base border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md"
                             placeholder="0"
                           />
                         </td>
-                        <td className="p-1.5 text-center text-xs">
+                        <td className="p-2 text-center text-sm">
                           {count > 0 ? (
                             <span className="font-medium">
                               {formatCurrency(amount)}
@@ -766,32 +741,33 @@ export function AccountingTablePage() {
               </table>
             </div>
 
-            {/* Total section like the image */}
-            <div className="border-2 border-blue-500 rounded-lg p-3 bg-blue-50">
+            {/* Total section */}
+            <div className="border-2 border-blue-500 rounded-lg p-4 bg-blue-50">
               <div className="flex items-center justify-between">
-                <span className="text-base font-semibold">Total =</span>
-                <span className="text-xl font-bold text-primary">
+                <span className="text-lg font-semibold">Total =</span>
+                <span className="text-2xl font-bold text-primary">
                   {formatCurrency(calculateCashFromDenominations())}
                 </span>
               </div>
             </div>
-          </div>
 
-          <div className="flex gap-2 pt-3 border-t">
-            <Button
-              variant="outline"
-              onClick={() => setIsCashDialogOpen(false)}
-              className="flex-1 h-9 text-sm"
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleAddCash} className="flex-1 h-9 text-sm">
-              <CheckCircle2 className="h-3.5 w-3.5 mr-2" />
-              Add Cash
-            </Button>
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsCashDialogOpen(false)}
+                className="flex-1 h-11 text-base"
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleAddCash} className="flex-1 h-11 text-base">
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Add Cash
+              </Button>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

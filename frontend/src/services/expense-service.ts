@@ -172,6 +172,25 @@ export class ExpenseService {
     return response.data;
   }
 
+  // Upload expense image and get fileStorageId
+  static async uploadImage(image: File): Promise<string> {
+    const formData = new FormData();
+    formData.append("file", image);
+    formData.append("category", "EXPENSE");
+    formData.append("description", "Expense receipt/image");
+
+    const response = await api.post<{ id: string }>(
+      "/api/v1/file-storage/upload",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data.id;
+  }
+
   // Update existing expense
   static async update(
     id: string,

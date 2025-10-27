@@ -26,13 +26,14 @@ public interface ExpenseMapper {
 
     /**
      * Maps CreateExpenseRequest to Expense entity Note: pumpMaster,
-     * expenseHead, salesmanNozzleShift, and bankAccount should be set manually
-     * in the service after fetching from repositories
+     * expenseHead, salesmanNozzleShift, bankAccount, and fileStorage should be
+     * set manually in the service after fetching from repositories
      */
     @Mapping(target = "pumpMaster", ignore = true)
     @Mapping(target = "expenseHead", ignore = true)
     @Mapping(target = "salesmanNozzleShift", ignore = true)
     @Mapping(target = "bankAccount", ignore = true)
+    @Mapping(target = "fileStorage", ignore = true)
     Expense toEntity(CreateExpenseRequest request);
 
     /**
@@ -44,6 +45,7 @@ public interface ExpenseMapper {
     @Mapping(target = "salesmanNozzleShiftId", source = "salesmanNozzleShift.id")
     @Mapping(target = "bankAccountId", source = "bankAccount.id")
     @Mapping(target = "bankAccountNumber", source = "bankAccount.accountNumber")
+    @Mapping(target = "fileStorageId", source = "fileStorage.id")
     @Mapping(target = "createdAt", source = "createdAt", qualifiedByName = "toIST")
     @Mapping(target = "updatedAt", source = "updatedAt", qualifiedByName = "toIST")
     ExpenseResponse toResponse(Expense entity);
@@ -59,6 +61,7 @@ public interface ExpenseMapper {
     @Mapping(target = "expenseHead.id", source = "expenseHeadId")
     @Mapping(target = "salesmanNozzleShift.id", source = "salesmanNozzleShiftId")
     @Mapping(target = "bankAccount.id", source = "bankAccountId")
+    @Mapping(target = "fileStorage.id", source = "fileStorageId")
     void updateEntityFromRequest(UpdateExpenseRequest request, @MappingTarget Expense entity);
 
     /**

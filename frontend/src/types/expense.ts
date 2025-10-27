@@ -18,6 +18,7 @@ export interface Expense {
   amount: number;
   remarks?: string;
   referenceNumber?: string;
+  fileStorageId?: string;
   createdAt: string;
   updatedAt: string;
   entryBy?: string;
@@ -36,6 +37,7 @@ export interface ExpenseResponse {
   amount: number;
   remarks?: string;
   referenceNumber?: string;
+  fileStorageId?: string;
   createdAt: string;
   updatedAt: string;
   entryBy?: string;
@@ -47,10 +49,12 @@ export interface CreateExpenseRequest {
   expenseType: ExpenseType;
   salesmanNozzleShiftId?: string;
   bankAccountId?: string;
+  paymentMethod?: string;
   expenseDate: string;
   amount: number;
   remarks?: string;
   referenceNumber?: string;
+  fileStorageId?: string;
 }
 
 export interface UpdateExpenseRequest {
@@ -58,8 +62,10 @@ export interface UpdateExpenseRequest {
   expenseType?: ExpenseType;
   salesmanNozzleShiftId?: string;
   bankAccountId?: string;
+  paymentMethod?: string;
   expenseDate?: string;
   amount?: number;
   remarks?: string;
   referenceNumber?: string;
+  fileStorageId?: string;
 }

@@ -297,6 +297,7 @@ export function CompactBillForm({
                   step="0.01"
                   placeholder="0.00"
                   value={formData.rate}
+                  readOnly
                   onChange={(e) => onChange("rate", e.target.value)}
                   className="w-full"
                 />

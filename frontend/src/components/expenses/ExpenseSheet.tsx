@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageUpload } from "@/components/ui/image-upload";
 import ReactSelect, { type CSSObjectWithLabel } from "react-select";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -33,6 +34,8 @@ import type {
   ExpenseType,
 } from "@/types";
 import { ExpenseTypeEnum } from "@/types";
+import { PaymentMethod } from "@/types/customer-bill-payment";
+import { ExpenseService } from "@/services/expense-service";
 
 interface ExpenseSheetProps {
   expense: ExpenseResponse | null;
@@ -47,6 +50,7 @@ interface FormValues {
   expenseType: ExpenseType;
   salesmanNozzleShiftId?: string;
   bankAccountId?: string;
+  paymentMethod?: string;
   expenseDate: string;
   amount: string;
   remarks?: string;
@@ -108,6 +112,8 @@ export function ExpenseSheet({
   const { bankAccounts, fetchBankAccounts } = useBankAccountStore();
   const { activeShifts, fetchActiveShifts } = useSalesmanNozzleShiftStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [expenseImage, setExpenseImage] = useState<File | null>(null);
+  const [imageUploadKey, setImageUploadKey] = useState(0);
 
   const isAdmin = user?.role === "ADMIN" || user?.role === "MANAGER";
   const isSalesman = user?.role === "SALESMAN";
@@ -125,10 +131,11 @@ export function ExpenseSheet({
       expenseType: getInitialExpenseType(),
       salesmanNozzleShiftId: salesmanNozzleShiftId || "",
       bankAccountId: "",
+      paymentMethod: PaymentMethod.CASH,
       expenseDate: new Date().toISOString().split("T")[0],
       amount: "",
-      remarks: "",
-      referenceNumber: "",
+      remarks: "NA",
+      referenceNumber: "NA",
     },
   });
 
@@ -162,10 +169,11 @@ export function ExpenseSheet({
         expenseType: expense.expenseType,
         salesmanNozzleShiftId: expense.salesmanNozzleShiftId || "",
         bankAccountId: expense.bankAccountId || "",
+        paymentMethod: PaymentMethod.CASH,
         expenseDate: expense.expenseDate,
         amount: expense.amount.toString(),
-        remarks: expense.remarks || "",
-        referenceNumber: expense.referenceNumber || "",
+        remarks: expense.remarks || "NA",
+        referenceNumber: expense.referenceNumber || "NA",
       });
     } else if (mode === "create") {
       // Determine default expense type
@@ -189,10 +197,11 @@ export function ExpenseSheet({
         expenseType: defaultExpenseType,
         salesmanNozzleShiftId: defaultShiftId,
         bankAccountId: "",
+        paymentMethod: PaymentMethod.CASH,
         expenseDate: new Date().toISOString().split("T")[0],
         amount: "",
-        remarks: "",
-        referenceNumber: "",
+        remarks: "NA",
+        referenceNumber: "NA",
       });
     }
   }, [expense, mode, form, salesmanNozzleShiftId, isSalesman, activeShifts]);
@@ -237,9 +246,25 @@ export function ExpenseSheet({
           requestData.salesmanNozzleShiftId = data.salesmanNozzleShiftId;
         }
       } else {
-        // Only include bankAccountId if it has a valid value
+        // Only include bankAccountId and paymentMethod if it has a valid value
         if (data.bankAccountId) {
           requestData.bankAccountId = data.bankAccountId;
+        }
+        if (data.paymentMethod) {
+          requestData.paymentMethod = data.paymentMethod;
+        }
+      }
+
+      // Upload image if provided and get fileStorageId
+      if (expenseImage) {
+        try {
+          const fileStorageId = await ExpenseService.uploadImage(expenseImage);
+          requestData.fileStorageId = fileStorageId;
+        } catch (error) {
+          toast.error("Failed to upload image");
+          console.error("Error uploading image:", error);
+          setIsSubmitting(false);
+          return;
         }
       }
 
@@ -248,6 +273,9 @@ export function ExpenseSheet({
       if (mode === "create") {
         await addExpense(requestData);
         toast.success("Expense created successfully");
+        // Reset image state
+        setExpenseImage(null);
+        setImageUploadKey((prev) => prev + 1);
       } else if (mode === "edit" && expense) {
         await updateExpense(expense.id, requestData);
         toast.success("Expense updated successfully");
@@ -285,6 +313,20 @@ export function ExpenseSheet({
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
+                name="expenseDate"
+                rules={{ required: "Expense date is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Expense Date *</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} disabled={isSalesman} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="expenseHeadId"
                 rules={{ required: "Expense head is required" }}
                 render={({ field }) => (
@@ -311,6 +353,35 @@ export function ExpenseSheet({
                     />
                     <FormMessage />
                   </div>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="amount"
+                rules={{
+                  required: "Amount is required",
+                  min: {
+                    value: 0.01,
+                    message: "Amount must be greater than 0",
+                  },
+                  pattern: {
+                    value: /^\d+(\.\d{1,2})?$/,
+                    message: "Invalid amount format (max 2 decimal places)",
+                  },
+                }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount *</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
               />
               {/* Only show expense type selection for Admin/Manager, not for Salesman */}
@@ -467,49 +538,46 @@ export function ExpenseSheet({
                     )}
                   />
                 )}
-              <FormField
-                control={form.control}
-                name="expenseDate"
-                rules={{ required: "Expense date is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Expense Date *</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+              {watchExpenseType === ExpenseTypeEnum.BANK_ACCOUNT &&
+                !salesmanNozzleShiftId && (
+                  <FormField
+                    control={form.control}
+                    name="paymentMethod"
+                    rules={{
+                      required:
+                        watchExpenseType === ExpenseTypeEnum.BANK_ACCOUNT
+                          ? "Payment method is required"
+                          : false,
+                    }}
+                    render={({ field }) => (
+                      <div className="flex flex-col gap-1">
+                        <FormLabel>Payment Method *</FormLabel>
+                        <ReactSelect
+                          options={Object.values(PaymentMethod).map(
+                            (method) => ({
+                              value: method,
+                              label: method,
+                            })
+                          )}
+                          value={
+                            field.value
+                              ? {
+                                  value: field.value,
+                                  label: field.value,
+                                }
+                              : null
+                          }
+                          onChange={(option) =>
+                            field.onChange(option?.value || "")
+                          }
+                          placeholder="Select payment method..."
+                          styles={selectStyles}
+                        />
+                        <FormMessage />
+                      </div>
+                    )}
+                  />
                 )}
-              />
-              <FormField
-                control={form.control}
-                name="amount"
-                rules={{
-                  required: "Amount is required",
-                  min: {
-                    value: 0.01,
-                    message: "Amount must be greater than 0",
-                  },
-                  pattern: {
-                    value: /^\d+(\.\d{1,2})?$/,
-                    message: "Invalid amount format (max 2 decimal places)",
-                  },
-                }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Amount *</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <FormField
                 control={form.control}
                 name="referenceNumber"
@@ -556,6 +624,28 @@ export function ExpenseSheet({
                   </FormItem>
                 )}
               />
+              {/* Image Upload */}
+              <div className="space-y-2">
+                <ImageUpload
+                  key={`expense-image-${imageUploadKey}`}
+                  id="expense-image"
+                  label="Receipt/Invoice Image (Optional)"
+                  onChange={(file) => setExpenseImage(file)}
+                  disabled={isSubmitting}
+                />
+                {mode === "edit" && expense?.fileStorageId && !expenseImage && (
+                  <div className="mt-2">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Current image:
+                    </p>
+                    <img
+                      src={`/api/v1/files/${expense.fileStorageId}`}
+                      alt="Expense receipt"
+                      className="w-full max-w-md h-40 object-cover rounded-lg border-2 border-border"
+                    />
+                  </div>
+                )}
+              </div>
               <div className="flex justify-end space-x-2 mt-6">
                 <Button
                   type="button"

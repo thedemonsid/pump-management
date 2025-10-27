@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Calculator, IndianRupee } from "lucide-react";
+import { ExpenseService } from "@/services";
 import type {
   SalesmanNozzleShiftResponse,
   CreateSalesmanShiftAccountingRequest,
@@ -35,6 +36,7 @@ export function AccountingForm({
   existingAccounting,
   isReadOnly = false,
 }: AccountingFormProps) {
+  const [loadingExpenses, setLoadingExpenses] = useState(false);
   const [formData, setFormData] =
     useState<CreateSalesmanShiftAccountingRequest>(
       existingAccounting
@@ -73,6 +75,61 @@ export function AccountingForm({
             coins1: 0,
           }
     );
+
+  // Automatically fetch expenses for this shift
+  useEffect(() => {
+    const fetchShiftExpenses = async () => {
+      if (!shift.id || existingAccounting) {
+        // Don't fetch if we already have existing accounting data
+        return;
+      }
+
+      try {
+        setLoadingExpenses(true);
+        const shiftExpenses = await ExpenseService.getBySalesmanNozzleShiftId(
+          shift.id
+        );
+
+        // Calculate total expenses for this shift
+        const totalExpenses = shiftExpenses.reduce(
+          (sum, expense) => sum + expense.amount,
+          0
+        );
+
+        // Build expense reason from individual expense notes
+        let expenseReason = "";
+        if (shiftExpenses.length > 0) {
+          const expenseNotes = shiftExpenses
+            .map((expense, index) => {
+              const amount = new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency: "INR",
+              }).format(expense.amount);
+              const note = expense.remarks || "No notes";
+              return `${index + 1}. ${
+                expense.expenseHeadName || "Expense"
+              }: ${amount} - ${note}`;
+            })
+            .join("\n");
+          expenseReason = `Total from ${shiftExpenses.length} expense(s):\n${expenseNotes}`;
+        }
+
+        // Auto-populate the expenses field
+        setFormData((prev) => ({
+          ...prev,
+          expenses: totalExpenses,
+          expenseReason: expenseReason,
+        }));
+      } catch (error) {
+        console.error("Failed to load shift expenses:", error);
+        // Keep expenses at 0 if fetch fails
+      } finally {
+        setLoadingExpenses(false);
+      }
+    };
+
+    fetchShiftExpenses();
+  }, [shift.id, existingAccounting]);
 
   // Calculate cash in hand from denominations
   const calculateCashInHand = () => {
@@ -227,9 +284,10 @@ export function AccountingForm({
         {/* Expenses */}
         <Card>
           <CardHeader>
-            <CardTitle>Expenses</CardTitle>
+            <CardTitle>Expenses (Deducted from Collection)</CardTitle>
             <CardDescription>
-              Enter any expenses incurred during the shift
+              Money spent from the collected cash during this shift -
+              automatically calculated from expense records
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -247,24 +305,40 @@ export function AccountingForm({
                     onChange={(e) =>
                       handleInputChange("expenses", e.target.value)
                     }
-                    className="pl-10"
+                    className="pl-10 bg-muted"
                     placeholder="0.00"
-                    disabled={isReadOnly}
+                    disabled={true}
+                    title="Auto-calculated from expense records"
                   />
                 </div>
+                {loadingExpenses && (
+                  <p className="text-xs text-muted-foreground">
+                    Loading expenses...
+                  </p>
+                )}
+                {!loadingExpenses && formData.expenses > 0 && (
+                  <p className="text-xs text-green-600">
+                    ✓ Auto-calculated from expense records
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="expenseReason">Reason</Label>
+                <Label htmlFor="expenseReason">Expense Details</Label>
                 <Textarea
                   id="expenseReason"
                   value={formData.expenseReason}
                   onChange={(e) =>
                     handleInputChange("expenseReason", e.target.value)
                   }
-                  placeholder="Enter expense reason..."
-                  rows={2}
-                  disabled={isReadOnly}
+                  placeholder="No expenses recorded for this shift"
+                  rows={6}
+                  disabled={true}
+                  className="bg-muted font-mono text-xs"
+                  title="Auto-populated from expense records with notes"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Shows individual expense notes from the shift
+                </p>
               </div>
             </div>
           </CardContent>

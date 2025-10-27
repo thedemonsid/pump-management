@@ -22,6 +22,7 @@ import com.reallink.pump.entities.BankTransaction;
 import com.reallink.pump.entities.Expense;
 import com.reallink.pump.entities.Expense.ExpenseType;
 import com.reallink.pump.entities.ExpenseHead;
+import com.reallink.pump.entities.FileStorage;
 import com.reallink.pump.entities.PaymentMethod;
 import com.reallink.pump.entities.PumpInfoMaster;
 import com.reallink.pump.entities.SalesmanNozzleShift;
@@ -31,6 +32,7 @@ import com.reallink.pump.repositories.BankAccountRepository;
 import com.reallink.pump.repositories.BankTransactionRepository;
 import com.reallink.pump.repositories.ExpenseHeadRepository;
 import com.reallink.pump.repositories.ExpenseRepository;
+import com.reallink.pump.repositories.FileStorageRepository;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
 import com.reallink.pump.repositories.SalesmanNozzleShiftRepository;
 
@@ -50,6 +52,7 @@ public class ExpenseService {
     private final SalesmanNozzleShiftRepository salesmanNozzleShiftRepository;
     private final BankAccountRepository bankAccountRepository;
     private final BankTransactionRepository bankTransactionRepository;
+    private final FileStorageRepository fileStorageRepository;
     private final ExpenseMapper mapper;
     private final BankTransactionService bankTransactionService;
 
@@ -206,11 +209,21 @@ public class ExpenseService {
             expense.setBankAccount(bankAccount);
         }
 
+        // Set file storage if provided
+        if (request.getFileStorageId() != null) {
+            FileStorage fileStorage = fileStorageRepository.findById(request.getFileStorageId()).orElse(null);
+            if (fileStorage == null) {
+                throw new PumpBusinessException("INVALID_FILE_STORAGE",
+                        "File storage with ID " + request.getFileStorageId() + " does not exist");
+            }
+            expense.setFileStorage(fileStorage);
+        }
+
         Expense savedExpense = repository.save(expense);
 
         // Create debit transaction in bank account when expense type is BANK_ACCOUNT
         if (savedExpense.getExpenseType() == ExpenseType.BANK_ACCOUNT && savedExpense.getBankAccount() != null) {
-            BankTransaction bankTransaction = createBankDebitTransaction(savedExpense);
+            BankTransaction bankTransaction = createBankDebitTransaction(savedExpense, request.getPaymentMethod());
             savedExpense.setBankTransaction(bankTransaction);
             savedExpense = repository.save(savedExpense);
         }
@@ -290,8 +303,18 @@ public class ExpenseService {
             existingExpense.setReferenceNumber(request.getReferenceNumber());
         }
 
+        // Update file storage if provided
+        if (request.getFileStorageId() != null) {
+            FileStorage fileStorage = fileStorageRepository.findById(request.getFileStorageId()).orElse(null);
+            if (fileStorage == null) {
+                throw new PumpBusinessException("INVALID_FILE_STORAGE",
+                        "File storage with ID " + request.getFileStorageId() + " does not exist");
+            }
+            existingExpense.setFileStorage(fileStorage);
+        }
+
         // Handle bank transaction updates
-        handleBankTransactionUpdate(existingExpense, oldExpenseType, oldBankAccount, oldAmount, oldBankTransaction);
+        handleBankTransactionUpdate(existingExpense, oldExpenseType, oldBankAccount, oldAmount, oldBankTransaction, request.getPaymentMethod());
 
         Expense updatedExpense = repository.save(existingExpense);
         return mapper.toResponse(updatedExpense);
@@ -330,9 +353,12 @@ public class ExpenseService {
     /**
      * Creates a debit transaction in the bank account for the expense
      *
+     * @param expense The expense entity
+     * @param paymentMethod The payment method from the request (optional,
+     * defaults to CASH)
      * @return The created BankTransaction entity
      */
-    private BankTransaction createBankDebitTransaction(Expense expense) {
+    private BankTransaction createBankDebitTransaction(Expense expense, PaymentMethod paymentMethod) {
         CreateBankTransactionRequest transactionRequest = new CreateBankTransactionRequest();
 
         // Set bank account ID - required by DTO validation
@@ -344,8 +370,8 @@ public class ExpenseService {
         // Set amount
         transactionRequest.setAmount(expense.getAmount());
 
-        // Set payment method
-        transactionRequest.setPaymentMethod(PaymentMethod.CASH);
+        // Set payment method from request or default to CASH
+        transactionRequest.setPaymentMethod(paymentMethod != null ? paymentMethod : PaymentMethod.CASH);
 
         // Build description from expense details
         StringBuilder description = new StringBuilder();
@@ -378,7 +404,7 @@ public class ExpenseService {
      * Handles bank transaction updates when an expense is modified
      */
     private void handleBankTransactionUpdate(Expense expense, ExpenseType oldExpenseType,
-            BankAccount oldBankAccount, BigDecimal oldAmount, BankTransaction oldBankTransaction) {
+            BankAccount oldBankAccount, BigDecimal oldAmount, BankTransaction oldBankTransaction, PaymentMethod paymentMethod) {
 
         ExpenseType newExpenseType = expense.getExpenseType();
         BankAccount newBankAccount = expense.getBankAccount();
@@ -396,7 +422,7 @@ public class ExpenseService {
         // Case 2: Changed from NOZZLE_SHIFT to BANK_ACCOUNT - create new transaction
         if (oldExpenseType == ExpenseType.NOZZLE_SHIFT && newExpenseType == ExpenseType.BANK_ACCOUNT) {
             if (newBankAccount != null) {
-                BankTransaction newTransaction = createBankDebitTransaction(expense);
+                BankTransaction newTransaction = createBankDebitTransaction(expense, paymentMethod);
                 expense.setBankTransaction(newTransaction);
             }
             return;
@@ -408,6 +434,11 @@ public class ExpenseService {
                 // Update the existing transaction
                 oldBankTransaction.setAmount(newAmount);
                 oldBankTransaction.setBankAccount(newBankAccount);
+
+                // Update payment method if provided
+                if (paymentMethod != null) {
+                    oldBankTransaction.setPaymentMethod(paymentMethod);
+                }
 
                 // Update description
                 StringBuilder description = new StringBuilder();
@@ -429,7 +460,7 @@ public class ExpenseService {
                 bankTransactionRepository.save(oldBankTransaction);
             } else {
                 // No existing transaction, create new one
-                BankTransaction newTransaction = createBankDebitTransaction(expense);
+                BankTransaction newTransaction = createBankDebitTransaction(expense, paymentMethod);
                 expense.setBankTransaction(newTransaction);
             }
         }
