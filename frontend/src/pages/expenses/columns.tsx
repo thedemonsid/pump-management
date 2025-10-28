@@ -42,8 +42,8 @@ export const createColumns = (
     cell: ({ row }) => {
       const type = row.getValue("expenseType") as string;
       return (
-        <Badge variant={type === "NOZZLE_SHIFT" ? "default" : "secondary"}>
-          {type === "NOZZLE_SHIFT" ? "Shift" : "Bank"}
+        <Badge variant={type === "SALESMAN_SHIFT" ? "default" : "secondary"}>
+          {type === "SALESMAN_SHIFT" ? "Shift" : "Bank"}
         </Badge>
       );
     },

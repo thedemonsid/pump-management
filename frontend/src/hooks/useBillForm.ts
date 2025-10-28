@@ -32,7 +32,7 @@ export function useBillForm() {
       billDate: bill.billDate,
       customerId: bill.customerId,
       productId: bill.productId,
-      salesmanNozzleShiftId: bill.salesmanNozzleShiftId,
+      salesmanNozzleShiftId: bill.salesmanShiftId,
       quantity: bill.quantity.toString(),
       rate: bill.rate.toString(),
       vehicleNo: bill.vehicleNo || "",

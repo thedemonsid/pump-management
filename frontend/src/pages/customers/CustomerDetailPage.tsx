@@ -733,7 +733,7 @@ export function CustomerDetailPage() {
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <span className="text-sm">
-                              Shift {payment.salesmanNozzleShiftId.slice(-8)}
+                              Shift {payment.salesmanShiftId.slice(-8)}
                             </span>
                           </div>
                         </TableCell>

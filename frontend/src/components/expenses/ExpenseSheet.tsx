@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useExpenseStore } from "@/store/expense-store";
 import { useExpenseHeadStore } from "@/store/expense-head-store";
 import { useBankAccountStore } from "@/store/bank-account-store";
-import { useSalesmanNozzleShiftStore } from "@/store/salesman-nozzle-shift-store";
+import { useSalesmanShiftStore } from "@/store/salesman-shift-store";
 import {
   Sheet,
   SheetContent,
@@ -110,7 +110,7 @@ export function ExpenseSheet({
   const { addExpense, updateExpense } = useExpenseStore();
   const { expenseHeads, fetchActiveExpenseHeads } = useExpenseHeadStore();
   const { bankAccounts, fetchBankAccounts } = useBankAccountStore();
-  const { activeShifts, fetchActiveShifts } = useSalesmanNozzleShiftStore();
+  const { activeShifts, fetchActiveShifts } = useSalesmanShiftStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expenseImage, setExpenseImage] = useState<File | null>(null);
   const [imageUploadKey, setImageUploadKey] = useState(0);
@@ -210,6 +210,20 @@ export function ExpenseSheet({
     setIsSubmitting(true);
     try {
       console.log("Form data being submitted:", data);
+
+      // Force salesmen to use SALESMAN_SHIFT expense type
+      if (isSalesman && data.expenseType !== ExpenseTypeEnum.SALESMAN_SHIFT) {
+        data.expenseType = ExpenseTypeEnum.SALESMAN_SHIFT;
+      }
+
+      // Force SALESMAN_SHIFT type when opened from shift context
+      if (
+        salesmanShiftId &&
+        data.expenseType !== ExpenseTypeEnum.SALESMAN_SHIFT
+      ) {
+        data.expenseType = ExpenseTypeEnum.SALESMAN_SHIFT;
+        data.salesmanShiftId = salesmanShiftId;
+      }
 
       // Validate shift selection for SALESMAN_SHIFT type
       if (
@@ -385,7 +399,7 @@ export function ExpenseSheet({
                 )}
               />
               {/* Only show expense type selection for Admin/Manager, not for Salesman */}
-              {!salesmanShiftId && !isSalesman && (
+              {!isSalesman && (
                 <FormField
                   control={form.control}
                   name="expenseType"
@@ -420,8 +434,14 @@ export function ExpenseSheet({
                           }
                           placeholder="Select expense type..."
                           styles={selectStyles}
+                          isDisabled={mode === "edit" || !!salesmanShiftId}
                         />
                         <FormMessage />
+                        {mode === "edit" && (
+                          <FormDescription className="text-xs text-muted-foreground">
+                            Expense type cannot be changed during update
+                          </FormDescription>
+                        )}
                       </div>
                     );
                   }}
@@ -447,11 +467,13 @@ export function ExpenseSheet({
                       <ReactSelect
                         options={activeShifts.map((shift) => ({
                           value: shift.id!,
-                          label: `${shift.salesmanUsername} - ${
-                            shift.nozzleName
-                          } (${new Date(
-                            shift.startDateTime
-                          ).toLocaleDateString()})`,
+                          label: `${
+                            shift.salesmanFullName || shift.salesmanUsername
+                          } - ${new Date(
+                            shift.startDatetime
+                          ).toLocaleDateString()} ${new Date(
+                            shift.startDatetime
+                          ).toLocaleTimeString()}`,
                         }))}
                         value={
                           field.value
@@ -462,11 +484,14 @@ export function ExpenseSheet({
                                     (s) => s.id === field.value
                                   );
                                   return shift
-                                    ? `${shift.salesmanUsername} - ${
-                                        shift.nozzleName
-                                      } (${new Date(
-                                        shift.startDateTime
-                                      ).toLocaleDateString()})`
+                                    ? `${
+                                        shift.salesmanFullName ||
+                                        shift.salesmanUsername
+                                      } - ${new Date(
+                                        shift.startDatetime
+                                      ).toLocaleDateString()} ${new Date(
+                                        shift.startDatetime
+                                      ).toLocaleTimeString()}`
                                     : "";
                                 })(),
                               }

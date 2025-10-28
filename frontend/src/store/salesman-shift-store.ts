@@ -4,6 +4,7 @@ import type {
   ShiftResponse,
   ShiftDetailsResponse,
   StartShiftRequest,
+  CloseShiftRequest,
   NozzleAssignmentResponse,
   AddNozzleRequest,
   CloseNozzleRequest,
@@ -39,7 +40,10 @@ interface SalesmanShiftState {
   fetchShiftById: (id: string) => Promise<ShiftDetailsResponse>;
   fetchActiveShifts: (salesmanId?: string) => Promise<void>;
   startShift: (request: StartShiftRequest) => Promise<ShiftResponse>;
-  closeShift: (id: string) => Promise<ShiftResponse>;
+  closeShift: (
+    id: string,
+    payload?: CloseShiftRequest
+  ) => Promise<ShiftResponse>;
 
   // Nozzle assignment methods
   fetchNozzleAssignments: (shiftId: string) => Promise<void>;
@@ -163,10 +167,13 @@ export const useSalesmanShiftStore = create<SalesmanShiftState>()(
       },
 
       // Close a shift
-      closeShift: async (id: string) => {
+      closeShift: async (id: string, payload?: CloseShiftRequest) => {
         set({ loading: true, error: null });
         try {
-          const closedShift = await SalesmanShiftService.closeShift(id);
+          const closedShift = await SalesmanShiftService.closeShift(
+            id,
+            payload
+          );
           set((state) => ({
             shifts: state.shifts.map((shift) =>
               shift.id === id ? closedShift : shift

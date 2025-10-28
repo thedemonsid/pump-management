@@ -177,7 +177,7 @@ export class ExpenseService {
     formData.append("description", "Expense receipt/image");
 
     const response = await api.post<{ id: string }>(
-      "/api/v1/file-storage/upload",
+      "/api/v1/files/upload",
       formData,
       {
         headers: {

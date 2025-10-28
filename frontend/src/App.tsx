@@ -26,7 +26,6 @@ import {
 import { ProductsPage } from "@/pages/products/ProductsPage";
 import { TanksPage } from "@/pages/tanks/TanksPage";
 import { NozzlesPage } from "@/pages/nozzles/NozzlesPage";
-import { NozzleDetailPage } from "@/pages/nozzles/NozzleDetailPage";
 import { SalesmenPage } from "@/pages/salesmen/SalesmenPage";
 import { SuppliersPage } from "@/pages/suppliers/SuppliersPage";
 import { SupplierDetailPage } from "@/pages/suppliers/SupplierDetailPage";
@@ -134,11 +133,6 @@ const allRoutes = [
   {
     path: "/nozzles",
     element: <NozzlesPage />,
-    requiredRoles: ["ADMIN", "MANAGER"],
-  },
-  {
-    path: "/nozzles/:id",
-    element: <NozzleDetailPage />,
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {

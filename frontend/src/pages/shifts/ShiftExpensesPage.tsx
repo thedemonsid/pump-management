@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import { useShiftStore } from "@/store/shifts/shift-store";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,7 +37,6 @@ import type { ExpenseResponse } from "@/types";
 export function ShiftExpensesPage() {
   const { shiftId } = useParams<{ shiftId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { currentShift, fetchShiftById } = useShiftStore();
 
   const [expenses, setExpenses] = useState<ExpenseResponse[]>([]);
@@ -48,9 +46,6 @@ export function ShiftExpensesPage() {
   const [editingExpense, setEditingExpense] = useState<ExpenseResponse | null>(
     null
   );
-
-  // Check if user is admin or manager
-  const isAdminOrManager = user?.role === "ADMIN" || user?.role === "MANAGER";
 
   useEffect(() => {
     const loadData = async () => {
@@ -174,12 +169,10 @@ export function ShiftExpensesPage() {
           >
             {currentShift.status}
           </Badge>
-          {isAdminOrManager && (
-            <Button onClick={handleCreateExpense} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Expense
-            </Button>
-          )}
+          <Button onClick={handleCreateExpense} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Expense
+          </Button>
         </div>
       </div>
 
@@ -242,16 +235,14 @@ export function ShiftExpensesPage() {
               <p className="text-muted-foreground">
                 No expenses recorded for this shift
               </p>
-              {isAdminOrManager && (
-                <Button
-                  onClick={handleCreateExpense}
-                  className="mt-4"
-                  variant="outline"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add First Expense
-                </Button>
-              )}
+              <Button
+                onClick={handleCreateExpense}
+                className="mt-4"
+                variant="outline"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add First Expense
+              </Button>
             </div>
           ) : (
             <div className="rounded-md border">
@@ -263,9 +254,7 @@ export function ShiftExpensesPage() {
                     <TableHead>Reference</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
                     <TableHead>Remarks</TableHead>
-                    {isAdminOrManager && (
-                      <TableHead className="text-center">Actions</TableHead>
-                    )}
+                    <TableHead className="text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -292,28 +281,26 @@ export function ShiftExpensesPage() {
                       <TableCell className="text-muted-foreground max-w-xs truncate">
                         {expense.remarks || "-"}
                       </TableCell>
-                      {isAdminOrManager && (
-                        <TableCell className="text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditExpense(expense)}
-                              className="text-blue-600 hover:text-blue-700"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteExpense(expense.id)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      )}
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditExpense(expense)}
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteExpense(expense.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
