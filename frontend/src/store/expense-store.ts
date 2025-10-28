@@ -17,7 +17,7 @@ interface ExpenseState {
     startDate: string,
     endDate: string
   ) => Promise<void>;
-  fetchExpensesBySalesmanNozzleShiftId: (shiftId: string) => Promise<void>;
+  fetchExpensesBySalesmanShiftId: (shiftId: string) => Promise<void>;
   fetchExpensesByBankAccountId: (bankAccountId: string) => Promise<void>;
   addExpense: (request: CreateExpenseRequest) => Promise<ExpenseResponse>;
   updateExpense: (
@@ -28,7 +28,7 @@ interface ExpenseState {
   searchExpenses: (params: {
     expenseHeadId?: string;
     expenseType?: ExpenseType;
-    salesmanNozzleShiftId?: string;
+    salesmanShiftId?: string;
     bankAccountId?: string;
     startDate?: string;
     endDate?: string;
@@ -97,10 +97,10 @@ export const useExpenseStore = create<ExpenseState>((set) => ({
     }
   },
 
-  fetchExpensesBySalesmanNozzleShiftId: async (shiftId: string) => {
+  fetchExpensesBySalesmanShiftId: async (shiftId: string) => {
     set({ loading: true, error: null });
     try {
-      const response = await ExpenseService.getBySalesmanNozzleShiftId(shiftId);
+      const response = await ExpenseService.getBySalesmanShiftId(shiftId);
       const expenses = Array.isArray(response) ? response : [];
       set({ expenses, loading: false });
     } catch (error) {

@@ -10,10 +10,10 @@ import org.springframework.validation.annotation.Validated;
 import com.reallink.pump.dto.request.CreateShiftRequest;
 import com.reallink.pump.dto.request.UpdateShiftRequest;
 import com.reallink.pump.dto.response.ShiftResponse;
-import com.reallink.pump.entities.Shift;
-import com.reallink.pump.mapper.ShiftMapper;
+import com.reallink.pump.entities.ShiftMaster;
+import com.reallink.pump.mapper.ShiftMasterMapper;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
-import com.reallink.pump.repositories.ShiftRepository;
+import com.reallink.pump.repositories.ShiftMasterRepository;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -23,10 +23,10 @@ import lombok.RequiredArgsConstructor;
 @Validated
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ShiftService {
+public class ShiftMasterService {
 
-    private final ShiftRepository repository;
-    private final ShiftMapper mapper;
+    private final ShiftMasterRepository repository;
+    private final ShiftMasterMapper mapper;
     private final PumpInfoMasterRepository pumpInfoMasterRepository;
 
     public java.util.List<ShiftResponse> getAll() {
@@ -43,21 +43,21 @@ public class ShiftService {
 
     @Transactional
     public ShiftResponse create(@Valid CreateShiftRequest request) {
-        Shift shift = mapper.toEntity(request);
+        ShiftMaster shift = mapper.toEntity(request);
         shift.setPumpMaster(pumpInfoMasterRepository.findById(request.getPumpMasterId()).orElseThrow(() -> new RuntimeException("Pump Master not found")));
         shift.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
-        Shift savedShift = repository.save(shift);
+        ShiftMaster savedShift = repository.save(shift);
         return mapper.toResponse(savedShift);
     }
 
     @Transactional
     public ShiftResponse update(@NotNull UUID id, @Valid UpdateShiftRequest request) {
-        Shift existingShift = repository.findById(id).orElse(null);
+        ShiftMaster existingShift = repository.findById(id).orElse(null);
         if (existingShift == null) {
             return null;
         }
         mapper.updateEntity(request, existingShift);
-        Shift updatedShift = repository.save(existingShift);
+        ShiftMaster updatedShift = repository.save(existingShift);
         return mapper.toResponse(updatedShift);
     }
 

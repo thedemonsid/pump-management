@@ -28,7 +28,7 @@ public interface SalesmanBillPaymentMapper {
      */
     // Do not map relations by id here; service will set managed entities to avoid detached instances
     @Mapping(target = "pumpMaster", ignore = true)
-    @Mapping(target = "salesmanNozzleShift", ignore = true)
+    @Mapping(target = "salesmanShift", ignore = true)
     @Mapping(target = "customer", ignore = true)
     @Mapping(target = "bankAccount", ignore = true)
     @Mapping(target = "bankTransaction", ignore = true)
@@ -38,9 +38,9 @@ public interface SalesmanBillPaymentMapper {
      * Maps SalesmanBillPayment entity to SalesmanBillPaymentResponse
      */
     @Mapping(target = "pumpMasterId", source = "pumpMaster.id")
-    @Mapping(target = "salesmanNozzleShiftId", source = "salesmanNozzleShift.id")
-    @Mapping(target = "salesmanId", source = "salesmanNozzleShift.salesman.id")
-    @Mapping(target = "salesmanName", source = "salesmanNozzleShift.salesman.username")
+    @Mapping(target = "salesmanShiftId", source = "salesmanShift.id")
+    @Mapping(target = "salesmanId", source = "salesmanShift.salesman.id")
+    @Mapping(target = "salesmanName", source = "salesmanShift.salesman.username")
     @Mapping(target = "customerId", source = "customer.id")
     @Mapping(target = "customerName", source = "customer.customerName")
     @Mapping(target = "bankAccountId", source = "bankAccount.id")
@@ -56,7 +56,7 @@ public interface SalesmanBillPaymentMapper {
      */
     // Do not map relations here; service handles setting managed entities
     @Mapping(target = "pumpMaster", ignore = true)
-    @Mapping(target = "salesmanNozzleShift", ignore = true)
+    @Mapping(target = "salesmanShift", ignore = true)
     @Mapping(target = "customer", ignore = true)
     @Mapping(target = "bankAccount", ignore = true)
     @Mapping(target = "bankTransaction", ignore = true)

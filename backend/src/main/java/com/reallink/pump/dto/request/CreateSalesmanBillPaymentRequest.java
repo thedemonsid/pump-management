@@ -21,9 +21,9 @@ public class CreateSalesmanBillPaymentRequest {
     @Schema(description = "Pump Master ID this payment belongs to", example = "123e4567-e89b-12d3-a456-426614174000", required = true)
     private UUID pumpMasterId;
 
-    @NotNull(message = "Salesman Nozzle Shift ID is required")
-    @Schema(description = "Salesman Nozzle Shift ID during which payment was collected", example = "123e4567-e29b-41d4-a716-446655440000", required = true)
-    private UUID salesmanNozzleShiftId;
+    @NotNull(message = "Salesman Shift ID is required")
+    @Schema(description = "Salesman Shift ID during which payment was collected", example = "123e4567-e29b-41d4-a716-446655440000", required = true)
+    private UUID salesmanShiftId;
 
     @NotNull(message = "Customer ID is required")
     @Schema(description = "Customer ID making the payment", example = "123e4567-e89b-12d3-a456-426614174000", required = true)

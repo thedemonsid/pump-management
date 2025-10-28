@@ -27,7 +27,7 @@ import lombok.Setter;
     @Index(name = "idx_expense_date", columnList = "expense_date"),
     @Index(name = "idx_expense_head", columnList = "expense_head_id"),
     @Index(name = "idx_expense_type", columnList = "expense_type"),
-    @Index(name = "idx_expense_nozzle_shift", columnList = "salesman_nozzle_shift_id"),
+    @Index(name = "idx_expense_salesman_shift", columnList = "salesman_shift_id"),
     @Index(name = "idx_expense_bank_account", columnList = "bank_account_id"),
     @Index(name = "idx_pump_master_expense", columnList = "pump_master_id")
 })
@@ -38,8 +38,8 @@ import lombok.Setter;
 public class Expense extends BaseEntity {
 
     public enum ExpenseType {
-        NOZZLE_SHIFT, // Expense associated with a nozzle shift
-        BANK_ACCOUNT   // Expense associated with a bank account
+        SALESMAN_SHIFT, // Expense associated with a salesman shift
+        BANK_ACCOUNT    // Expense associated with a bank account
     }
 
     @NotNull(message = "Pump master is required")
@@ -57,10 +57,10 @@ public class Expense extends BaseEntity {
     @Column(name = "expense_type", nullable = false, length = 20)
     private ExpenseType expenseType;
 
-    // Optional: Associated with nozzle shift (when expenseType = NOZZLE_SHIFT)
+    // Optional: Associated with salesman shift (when expenseType = SALESMAN_SHIFT)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "salesman_nozzle_shift_id", foreignKey = @ForeignKey(name = "fk_expense_nozzle_shift"))
-    private SalesmanNozzleShift salesmanNozzleShift;
+    @JoinColumn(name = "salesman_shift_id", foreignKey = @ForeignKey(name = "fk_expense_salesman_shift"))
+    private SalesmanShift salesmanShift;
 
     // Optional: Associated with bank account (when expenseType = BANK_ACCOUNT)
     @ManyToOne(fetch = FetchType.LAZY)
@@ -106,19 +106,19 @@ public class Expense extends BaseEntity {
     }
 
     // Business methods
-    public boolean isNozzleShiftExpense() {
-        return ExpenseType.NOZZLE_SHIFT.equals(expenseType);
+    public boolean isSalesmanShiftExpense() {
+        return ExpenseType.SALESMAN_SHIFT.equals(expenseType);
     }
 
     public boolean isBankAccountExpense() {
         return ExpenseType.BANK_ACCOUNT.equals(expenseType);
     }
 
-    public void associateWithNozzleShift(SalesmanNozzleShift shift) {
-        if (!ExpenseType.NOZZLE_SHIFT.equals(this.expenseType)) {
-            throw new IllegalStateException("Cannot associate nozzle shift with non-NOZZLE_SHIFT expense type");
+    public void associateWithSalesmanShift(SalesmanShift shift) {
+        if (!ExpenseType.SALESMAN_SHIFT.equals(this.expenseType)) {
+            throw new IllegalStateException("Cannot associate salesman shift with non-SALESMAN_SHIFT expense type");
         }
-        this.salesmanNozzleShift = shift;
+        this.salesmanShift = shift;
         this.bankAccount = null;
     }
 
@@ -127,6 +127,6 @@ public class Expense extends BaseEntity {
             throw new IllegalStateException("Cannot associate bank account with non-BANK_ACCOUNT expense type");
         }
         this.bankAccount = account;
-        this.salesmanNozzleShift = null;
+        this.salesmanShift = null;
     }
 }

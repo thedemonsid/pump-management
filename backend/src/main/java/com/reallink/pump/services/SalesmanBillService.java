@@ -20,14 +20,14 @@ import com.reallink.pump.entities.Product;
 import com.reallink.pump.entities.ProductType;
 import com.reallink.pump.entities.PumpInfoMaster;
 import com.reallink.pump.entities.SalesmanBill;
-import com.reallink.pump.entities.SalesmanNozzleShift;
+import com.reallink.pump.entities.SalesmanShift;
 import com.reallink.pump.exception.PumpBusinessException;
 import com.reallink.pump.mapper.SalesmanBillMapper;
 import com.reallink.pump.repositories.CustomerRepository;
 import com.reallink.pump.repositories.ProductRepository;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
 import com.reallink.pump.repositories.SalesmanBillRepository;
-import com.reallink.pump.repositories.SalesmanNozzleShiftRepository;
+import com.reallink.pump.repositories.SalesmanShiftRepository;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -43,7 +43,7 @@ public class SalesmanBillService {
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
     private final PumpInfoMasterRepository pumpInfoMasterRepository;
-    private final SalesmanNozzleShiftRepository salesmanNozzleShiftRepository;
+    private final SalesmanShiftRepository salesmanShiftRepository;
     private final SalesmanBillMapper mapper;
     private final FileStorageService fileStorageService;
 
@@ -88,15 +88,15 @@ public class SalesmanBillService {
                     "Salesman bills can only contain FUEL products. Product " + product.getProductName() + " is of type " + product.getProductType());
         }
 
-        // Validate salesman nozzle shift exists and is open
-        SalesmanNozzleShift salesmanNozzleShift = salesmanNozzleShiftRepository.findById(request.getSalesmanNozzleShiftId()).orElse(null);
-        if (salesmanNozzleShift == null) {
-            throw new PumpBusinessException("INVALID_SALESMAN_NOZZLE_SHIFT",
-                    "Salesman nozzle shift with ID " + request.getSalesmanNozzleShiftId() + " does not exist");
+        // Validate salesman shift exists and is open
+        SalesmanShift salesmanShift = salesmanShiftRepository.findById(request.getSalesmanShiftId()).orElse(null);
+        if (salesmanShift == null) {
+            throw new PumpBusinessException("INVALID_SALESMAN_SHIFT",
+                    "Salesman shift with ID " + request.getSalesmanShiftId() + " does not exist");
         }
-        if (!salesmanNozzleShift.getStatus().equals(SalesmanNozzleShift.ShiftStatus.OPEN)) {
+        if (!salesmanShift.getStatus().equals(SalesmanShift.ShiftStatus.OPEN)) {
             throw new PumpBusinessException("SHIFT_NOT_OPEN",
-                    "Cannot create salesman bill for closed shift. Shift status: " + salesmanNozzleShift.getStatus());
+                    "Cannot create salesman bill for closed shift. Shift status: " + salesmanShift.getStatus());
         }
 
         // Check for duplicate bill number
@@ -110,7 +110,7 @@ public class SalesmanBillService {
         bill.setPumpMaster(pumpMaster);
         bill.setCustomer(customer);
         bill.setProduct(product);
-        bill.setSalesmanNozzleShift(salesmanNozzleShift);
+        bill.setSalesmanShift(salesmanShift);
         bill.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
 
         // Calculate amounts
@@ -157,15 +157,15 @@ public class SalesmanBillService {
                     "Salesman bills can only contain FUEL products. Product " + product.getProductName() + " is of type " + product.getProductType());
         }
 
-        // Validate salesman nozzle shift exists and is open
-        SalesmanNozzleShift salesmanNozzleShift = salesmanNozzleShiftRepository.findById(request.getSalesmanNozzleShiftId()).orElse(null);
-        if (salesmanNozzleShift == null) {
-            throw new PumpBusinessException("INVALID_SALESMAN_NOZZLE_SHIFT",
-                    "Salesman nozzle shift with ID " + request.getSalesmanNozzleShiftId() + " does not exist");
+        // Validate salesman shift exists and is open
+        SalesmanShift salesmanShift = salesmanShiftRepository.findById(request.getSalesmanShiftId()).orElse(null);
+        if (salesmanShift == null) {
+            throw new PumpBusinessException("INVALID_SALESMAN_SHIFT",
+                    "Salesman shift with ID " + request.getSalesmanShiftId() + " does not exist");
         }
-        if (!salesmanNozzleShift.getStatus().equals(SalesmanNozzleShift.ShiftStatus.OPEN)) {
+        if (!salesmanShift.getStatus().equals(SalesmanShift.ShiftStatus.OPEN)) {
             throw new PumpBusinessException("SHIFT_NOT_OPEN",
-                    "Cannot create salesman bill for closed shift. Shift status: " + salesmanNozzleShift.getStatus());
+                    "Cannot create salesman bill for closed shift. Shift status: " + salesmanShift.getStatus());
         }
 
         // Check for duplicate bill number
@@ -199,7 +199,7 @@ public class SalesmanBillService {
         bill.setPumpMaster(pumpMaster);
         bill.setCustomer(customer);
         bill.setProduct(product);
-        bill.setSalesmanNozzleShift(salesmanNozzleShift);
+        bill.setSalesmanShift(salesmanShift);
         bill.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
 
         // Set images
@@ -257,18 +257,18 @@ public class SalesmanBillService {
             existingBill.setProduct(product);
         }
 
-        // Validate salesman nozzle shift exists and is open if being updated
-        if (request.getSalesmanNozzleShiftId() != null) {
-            SalesmanNozzleShift salesmanNozzleShift = salesmanNozzleShiftRepository.findById(request.getSalesmanNozzleShiftId()).orElse(null);
-            if (salesmanNozzleShift == null) {
-                throw new PumpBusinessException("INVALID_SALESMAN_NOZZLE_SHIFT",
-                        "Salesman nozzle shift with ID " + request.getSalesmanNozzleShiftId() + " does not exist");
+        // Validate salesman shift exists and is open if being updated
+        if (request.getSalesmanShiftId() != null) {
+            SalesmanShift salesmanShift = salesmanShiftRepository.findById(request.getSalesmanShiftId()).orElse(null);
+            if (salesmanShift == null) {
+                throw new PumpBusinessException("INVALID_SALESMAN_SHIFT",
+                        "Salesman shift with ID " + request.getSalesmanShiftId() + " does not exist");
             }
-            if (!salesmanNozzleShift.getStatus().equals(SalesmanNozzleShift.ShiftStatus.OPEN)) {
+            if (!salesmanShift.getStatus().equals(SalesmanShift.ShiftStatus.OPEN)) {
                 throw new PumpBusinessException("SHIFT_NOT_OPEN",
-                        "Cannot update salesman bill to closed shift. Shift status: " + salesmanNozzleShift.getStatus());
+                        "Cannot update salesman bill to closed shift. Shift status: " + salesmanShift.getStatus());
             }
-            existingBill.setSalesmanNozzleShift(salesmanNozzleShift);
+            existingBill.setSalesmanShift(salesmanShift);
         }
 
         // Update bill fields using mapper
@@ -318,8 +318,8 @@ public class SalesmanBillService {
                 .toList();
     }
 
-    public List<SalesmanBillResponse> getBySalesmanNozzleShiftId(@NotNull UUID salesmanNozzleShiftId) {
-        return repository.findBySalesmanNozzleShift_Id(salesmanNozzleShiftId).stream()
+    public List<SalesmanBillResponse> getBySalesmanShiftId(@NotNull UUID salesmanShiftId) {
+        return repository.findBySalesmanShiftIdOrderByBillDateDesc(salesmanShiftId).stream()
                 .map(mapper::toResponse)
                 .toList();
     }

@@ -9,7 +9,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -78,11 +77,11 @@ public class SalesmanBillController {
         return ResponseEntity.ok(service.getByCustomerId(customerId));
     }
 
-    // Get Salesman Bills by Salesman Nozzle Shift ID
-    @GetMapping("/shift/{salesmanNozzleShiftId}")
-    @Operation(summary = "Get salesman bills by salesman nozzle shift ID")
-    public ResponseEntity<List<SalesmanBillResponse>> getSalesmanBillsBySalesmanNozzleShiftId(@PathVariable UUID salesmanNozzleShiftId) {
-        return ResponseEntity.ok(service.getBySalesmanNozzleShiftId(salesmanNozzleShiftId));
+    // Get Salesman Bills by Salesman Shift ID
+    @GetMapping("/shift/{salesmanShiftId}")
+    @Operation(summary = "Get salesman bills by salesman shift ID")
+    public ResponseEntity<List<SalesmanBillResponse>> getResponseEntity(@PathVariable UUID salesmanShiftId) {
+        return ResponseEntity.ok(service.getBySalesmanShiftId(salesmanShiftId));
     }
 
     @GetMapping("/next-bill-no")

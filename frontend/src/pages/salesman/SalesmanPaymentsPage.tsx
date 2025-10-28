@@ -212,7 +212,7 @@ export function SalesmanPaymentsPage() {
           </SheetHeader>
           {selectedShiftForPayment && (
             <CreateShiftPaymentForm
-              salesmanNozzleShiftId={selectedShiftForPayment.id}
+              salesmanShiftId={selectedShiftForPayment.id}
               pumpMasterId={user?.pumpMasterId || ""}
               onSuccess={handlePaymentSuccess}
             />

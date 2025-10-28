@@ -1,12 +1,12 @@
-import api from './api';
+import api from "./api";
 import type {
   CreateSalesmanBillPaymentRequest,
   UpdateSalesmanBillPaymentRequest,
   SalesmanBillPaymentResponse,
-} from '@/types';
+} from "@/types";
 
 export class SalesmanBillPaymentService {
-  private static readonly BASE_PATH = '/api/v1/salesman-bill-payments';
+  private static readonly BASE_PATH = "/api/v1/salesman-bill-payments";
 
   // Get all salesman bill payments
   static async getAll(): Promise<SalesmanBillPaymentResponse[]> {
@@ -36,10 +36,10 @@ export class SalesmanBillPaymentService {
 
   // Get payments by shift ID
   static async getByShiftId(
-    salesmanNozzleShiftId: string
+    salesmanShiftId: string
   ): Promise<SalesmanBillPaymentResponse[]> {
     const response = await api.get<SalesmanBillPaymentResponse[]>(
-      `${this.BASE_PATH}/shift/${salesmanNozzleShiftId}`
+      `${this.BASE_PATH}/shift/${salesmanShiftId}`
     );
     return response.data;
   }
@@ -65,11 +65,9 @@ export class SalesmanBillPaymentService {
   }
 
   // Get total payments for a shift
-  static async getTotalByShiftId(
-    salesmanNozzleShiftId: string
-  ): Promise<number> {
+  static async getTotalByShiftId(salesmanShiftId: string): Promise<number> {
     const response = await api.get<number>(
-      `${this.BASE_PATH}/shift/${salesmanNozzleShiftId}/total`
+      `${this.BASE_PATH}/shift/${salesmanShiftId}/total`
     );
     return response.data;
   }

@@ -20,11 +20,11 @@ public class UpdateExpenseRequest {
     @Schema(description = "Expense head ID", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID expenseHeadId;
 
-    @Schema(description = "Type of expense (NOZZLE_SHIFT or BANK_ACCOUNT)", example = "BANK_ACCOUNT")
+    @Schema(description = "Type of expense (SALESMAN_SHIFT or BANK_ACCOUNT)", example = "BANK_ACCOUNT")
     private ExpenseType expenseType;
 
-    @Schema(description = "Salesman nozzle shift ID (required if expenseType is NOZZLE_SHIFT)", example = "123e4567-e89b-12d3-a456-426614174000")
-    private UUID salesmanNozzleShiftId;
+    @Schema(description = "Salesman shift ID (required if expenseType is SALESMAN_SHIFT)", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID salesmanShiftId;
 
     @Schema(description = "Bank account ID (required if expenseType is BANK_ACCOUNT)", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID bankAccountId;

@@ -170,7 +170,7 @@ export function SalesmanBillsPage() {
         billDate: new Date().toISOString().split("T")[0],
         customerId: billForm.customerId,
         productId: billForm.productId,
-        salesmanNozzleShiftId: selectedShiftForBill.id,
+        salesmanShiftId: selectedShiftForBill.id,
         rateType: "EXCLUDING_GST",
         quantity: parseFloat(billForm.quantity),
         rate: selectedProduct.salesRate,

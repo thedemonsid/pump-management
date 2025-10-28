@@ -1,5 +1,6 @@
 /**
- * Salesman Bill types - for credit sales made by salesmen during nozzle shifts
+ * Salesman Bill types - for credit sales made by salesmen during shifts
+ * Updated to align with new architecture where bills are linked to SalesmanShift
  */
 
 export interface SalesmanBillResponse {
@@ -19,8 +20,12 @@ export interface SalesmanBillResponse {
   productId: string;
   /** Product name */
   productName?: string;
-  /** Salesman Nozzle Shift ID - links bill to specific shift */
-  salesmanNozzleShiftId: string;
+  /** Salesman Shift ID - links bill to the salesman's shift */
+  salesmanShiftId: string;
+  /** Nozzle ID - optional, tracks which nozzle dispensed (for reporting) */
+  nozzleId?: string;
+  /** Nozzle name - optional, for display purposes */
+  nozzleName?: string;
   /** Rate type */
   rateType: "EXCLUDING_GST" | "INCLUDING_GST";
   /** Quantity in liters */
@@ -56,8 +61,10 @@ export interface CreateSalesmanBillRequest {
   customerId: string;
   /** Product ID */
   productId: string;
-  /** Salesman Nozzle Shift ID - required for linking to shift */
-  salesmanNozzleShiftId: string;
+  /** Salesman Shift ID - required for linking to shift */
+  salesmanShiftId: string;
+  /** Nozzle ID - optional, for tracking which nozzle dispensed */
+  nozzleId?: string;
   /** Rate type */
   rateType: "EXCLUDING_GST" | "INCLUDING_GST";
   /** Quantity in liters */
@@ -77,8 +84,10 @@ export interface UpdateSalesmanBillRequest {
   customerId?: string;
   /** Product ID */
   productId?: string;
-  /** Salesman Nozzle Shift ID - optional for updates */
-  salesmanNozzleShiftId?: string;
+  /** Salesman Shift ID - optional for updates */
+  salesmanShiftId?: string;
+  /** Nozzle ID - optional for updates */
+  nozzleId?: string;
   /** Quantity in liters */
   quantity?: number;
   /** Rate per liter */

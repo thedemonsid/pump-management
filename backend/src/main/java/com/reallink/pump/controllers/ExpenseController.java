@@ -98,11 +98,11 @@ public class ExpenseController {
         return ResponseEntity.ok(service.getByPumpMasterIdAndExpenseType(pumpMasterId, expenseType));
     }
 
-    @GetMapping("/nozzle-shift/{salesmanNozzleShiftId}")
-    @Operation(summary = "Get expenses by salesman nozzle shift ID")
-    public ResponseEntity<List<ExpenseResponse>> getExpensesBySalesmanNozzleShiftId(
-            @PathVariable UUID salesmanNozzleShiftId) {
-        return ResponseEntity.ok(service.getBySalesmanNozzleShiftId(salesmanNozzleShiftId));
+    @GetMapping("/shift/{salesmanShiftId}")
+    @Operation(summary = "Get expenses by salesman shift ID")
+    public ResponseEntity<List<ExpenseResponse>> getExpensesBySalesmanShiftId(
+            @PathVariable UUID salesmanShiftId) {
+        return ResponseEntity.ok(service.getBySalesmanShiftId(salesmanShiftId));
     }
 
     @GetMapping("/bank-account/{bankAccountId}")
@@ -126,7 +126,7 @@ public class ExpenseController {
     public ResponseEntity<List<ExpenseResponse>> searchExpenses(
             @RequestParam(required = false) UUID expenseHeadId,
             @RequestParam(required = false) ExpenseType expenseType,
-            @RequestParam(required = false) UUID salesmanNozzleShiftId,
+            @RequestParam(required = false) UUID salesmanShiftId,
             @RequestParam(required = false) UUID bankAccountId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
@@ -135,7 +135,7 @@ public class ExpenseController {
         UUID pumpMasterId = extractPumpMasterId(request);
         List<ExpenseResponse> list = service.searchExpenses(
                 pumpMasterId, expenseHeadId, expenseType,
-                salesmanNozzleShiftId, bankAccountId,
+                salesmanShiftId, bankAccountId,
                 startDate, endDate, referenceNumber);
         return ResponseEntity.ok(list);
     }
@@ -173,10 +173,10 @@ public class ExpenseController {
         return ResponseEntity.ok(service.sumAmountByPumpMasterIdAndDateRange(pumpMasterId, startDate, endDate));
     }
 
-    @GetMapping("/sum/nozzle-shift/{salesmanNozzleShiftId}")
-    @Operation(summary = "Get sum of expense amounts by salesman nozzle shift")
-    public ResponseEntity<BigDecimal> sumExpensesBySalesmanNozzleShift(@PathVariable UUID salesmanNozzleShiftId) {
-        return ResponseEntity.ok(service.sumAmountBySalesmanNozzleShiftId(salesmanNozzleShiftId));
+    @GetMapping("/sum/shift/{salesmanShiftId}")
+    @Operation(summary = "Get sum of expense amounts by salesman shift")
+    public ResponseEntity<BigDecimal> sumExpensesBySalesmanShift(@PathVariable UUID salesmanShiftId) {
+        return ResponseEntity.ok(service.sumAmountBySalesmanShiftId(salesmanShiftId));
     }
 
     @GetMapping("/sum/bank-account/{bankAccountId}")

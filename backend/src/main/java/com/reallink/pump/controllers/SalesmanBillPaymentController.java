@@ -54,10 +54,10 @@ public class SalesmanBillPaymentController {
         return ResponseEntity.ok(service.getAll());
     }
 
-    @GetMapping("/shift/{salesmanNozzleShiftId}")
-    @Operation(summary = "Get payments collected during a specific salesman nozzle shift")
-    public ResponseEntity<List<SalesmanBillPaymentResponse>> getPaymentsBySalesmanNozzleShiftId(@PathVariable UUID salesmanNozzleShiftId) {
-        return ResponseEntity.ok(service.getBySalesmanNozzleShiftId(salesmanNozzleShiftId));
+    @GetMapping("/shift/{salesmanShiftId}")
+    @Operation(summary = "Get payments collected during a specific salesman shift")
+    public ResponseEntity<List<SalesmanBillPaymentResponse>> getPaymentsBySalesmanShiftId(@PathVariable UUID salesmanShiftId) {
+        return ResponseEntity.ok(service.getBySalesmanShiftId(salesmanShiftId));
     }
 
     @GetMapping("/customer/{customerId}")
@@ -87,9 +87,9 @@ public class SalesmanBillPaymentController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/shift/{salesmanNozzleShiftId}/total")
-    @Operation(summary = "Get total payments collected during a salesman nozzle shift")
-    public ResponseEntity<BigDecimal> getTotalPaymentsForShift(@PathVariable UUID salesmanNozzleShiftId) {
-        return ResponseEntity.ok(service.getTotalPaymentsForShift(salesmanNozzleShiftId));
+    @GetMapping("/shift/{salesmanShiftId}/total")
+    @Operation(summary = "Get total payments collected during a salesman shift")
+    public ResponseEntity<BigDecimal> getTotalPaymentsForShift(@PathVariable UUID salesmanShiftId) {
+        return ResponseEntity.ok(service.getTotalPaymentsForShift(salesmanShiftId));
     }
 }

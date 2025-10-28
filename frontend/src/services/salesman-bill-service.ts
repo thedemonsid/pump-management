@@ -22,12 +22,12 @@ export class SalesmanBillService {
     return response.data;
   }
 
-  // Get bills by salesman nozzle shift ID
+  // Get bills by salesman shift ID
   static async getByShift(
-    salesmanNozzleShiftId: string
+    salesmanShiftId: string
   ): Promise<SalesmanBillResponse[]> {
     const response = await api.get<SalesmanBillResponse[]>(
-      `${this.BASE_PATH}/shift/${salesmanNozzleShiftId}`
+      `${this.BASE_PATH}/shift/${salesmanShiftId}`
     );
     return response.data;
   }

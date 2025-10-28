@@ -18,6 +18,6 @@ public interface SalesmanShiftAccountingMapper {
     /**
      * Maps SalesmanShiftAccounting entity to SalesmanShiftAccountingResponse
      */
-    @Mapping(target = "shiftId", source = "salesmanNozzleShift.id")
+    @Mapping(target = "shiftId", source = "salesmanShift.id")
     SalesmanShiftAccountingResponse toResponse(SalesmanShiftAccounting entity);
 }

@@ -15,7 +15,7 @@ import com.reallink.pump.repositories.BillRepository;
 import com.reallink.pump.repositories.CustomerBillPaymentRepository;
 import com.reallink.pump.repositories.CustomerRepository;
 import com.reallink.pump.repositories.FuelPurchaseRepository;
-import com.reallink.pump.repositories.SalesmanNozzleShiftRepository;
+import com.reallink.pump.repositories.NozzleAssignmentRepository;
 import com.reallink.pump.repositories.SupplierPaymentRepository;
 import com.reallink.pump.repositories.SupplierRepository;
 
@@ -35,7 +35,7 @@ public class ReportService {
     private FuelPurchaseRepository fuelPurchaseRepository;
 
     @Autowired
-    private SalesmanNozzleShiftRepository salesmanNozzleShiftRepository;
+    private NozzleAssignmentRepository nozzleAssignmentRepository;
 
     @Autowired
     private CustomerRepository customerRepository;
@@ -106,7 +106,7 @@ public class ReportService {
     }
 
     private BigDecimal calculateFuelDispensed(UUID pumpMasterId, LocalDateTime startDate, LocalDateTime endDate) {
-        BigDecimal result = salesmanNozzleShiftRepository.findTotalFuelDispensedInPeriod(pumpMasterId, startDate, endDate);
+        BigDecimal result = nozzleAssignmentRepository.findTotalFuelDispensedInPeriod(pumpMasterId, startDate, endDate);
         return result != null ? result : BigDecimal.ZERO;
     }
 

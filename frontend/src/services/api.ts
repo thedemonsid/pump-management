@@ -107,3 +107,5 @@ export { FuelPurchaseService } from "./fuel-purchase-service";
 export { BankAccountService } from "./bank-account-service";
 export { BillService } from "./bill-service";
 export { SupplierPaymentService } from "./supplier-payment-service";
+export { SalesmanShiftService } from "./salesman-shift-service";
+export { NozzleAssignmentService } from "./nozzle-assignment-service";

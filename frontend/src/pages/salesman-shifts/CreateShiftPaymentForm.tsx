@@ -71,7 +71,7 @@ const selectStyles = {
 
 const CreateShiftPaymentSchema = z.object({
   pumpMasterId: z.string().min(1, "Pump Master ID is required"),
-  salesmanNozzleShiftId: z.string().min(1, "Shift is required"),
+  salesmanShiftId: z.string().min(1, "Shift is required"),
   customerId: z.string().min(1, "Customer is required"),
   bankAccountId: z.string().min(1, "Bank Account is required"),
   amount: z.number().min(0.01, "Amount must be greater than 0"),
@@ -84,13 +84,13 @@ const CreateShiftPaymentSchema = z.object({
 type CreateShiftPaymentFormData = z.infer<typeof CreateShiftPaymentSchema>;
 
 interface CreateShiftPaymentFormProps {
-  salesmanNozzleShiftId: string;
+  salesmanShiftId: string;
   pumpMasterId: string;
   onSuccess?: () => void;
 }
 
 export function CreateShiftPaymentForm({
-  salesmanNozzleShiftId,
+  salesmanShiftId,
   pumpMasterId,
   onSuccess,
 }: CreateShiftPaymentFormProps) {
@@ -102,7 +102,7 @@ export function CreateShiftPaymentForm({
     resolver: zodResolver(CreateShiftPaymentSchema),
     defaultValues: {
       pumpMasterId,
-      salesmanNozzleShiftId,
+      salesmanShiftId,
       customerId: "",
       bankAccountId: "",
       amount: 0,
@@ -122,7 +122,7 @@ export function CreateShiftPaymentForm({
     try {
       await createPayment({
         pumpMasterId: data.pumpMasterId,
-        salesmanNozzleShiftId: data.salesmanNozzleShiftId,
+        salesmanShiftId: data.salesmanShiftId,
         customerId: data.customerId,
         bankAccountId: data.bankAccountId,
         amount: data.amount,

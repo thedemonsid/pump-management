@@ -315,7 +315,7 @@ export function AdminSalesmanShiftsPage() {
         billDate: new Date().toISOString().split("T")[0],
         customerId: billForm.customerId,
         productId: billForm.productId,
-        salesmanNozzleShiftId: selectedShiftForBill.id,
+        salesmanShiftId: selectedShiftForBill.id,
         rateType: "EXCLUDING_GST",
         quantity: parseFloat(billForm.quantity),
         rate: selectedProduct.salesRate,
@@ -1163,7 +1163,7 @@ export function AdminSalesmanShiftsPage() {
           </DialogHeader>
           {selectedShiftForPayment && user?.pumpMasterId && (
             <CreateShiftPaymentForm
-              salesmanNozzleShiftId={selectedShiftForPayment.id}
+              salesmanShiftId={selectedShiftForPayment.id}
               pumpMasterId={user.pumpMasterId}
               onSuccess={handlePaymentSuccess}
             />

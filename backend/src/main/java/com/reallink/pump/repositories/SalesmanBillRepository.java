@@ -26,8 +26,19 @@ public interface SalesmanBillRepository extends JpaRepository<SalesmanBill, UUID
 
     List<SalesmanBill> findByCustomer_Id(UUID customerId);
 
-    List<SalesmanBill> findBySalesmanNozzleShift_Id(UUID salesmanNozzleShiftId);
+    /**
+     * Find all bills for a specific salesman shift.
+     */
+    List<SalesmanBill> findBySalesmanShiftIdOrderByBillDateDesc(UUID salesmanShiftId);
 
-    @Query("SELECT COALESCE(SUM(b.netAmount), 0) FROM SalesmanBill b WHERE b.salesmanNozzleShift.id = :shiftId")
+    /**
+     * Calculate total credit given during a shift.
+     */
+    @Query("SELECT COALESCE(SUM(b.netAmount), 0) FROM SalesmanBill b WHERE b.salesmanShift.id = :shiftId")
     BigDecimal getTotalCreditForShift(@Param("shiftId") UUID shiftId);
+
+    /**
+     * Find bills by nozzle (for reporting).
+     */
+    List<SalesmanBill> findByNozzleIdOrderByBillDateDesc(UUID nozzleId);
 }

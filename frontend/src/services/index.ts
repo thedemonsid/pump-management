@@ -5,6 +5,8 @@ export { NozzleService } from "./nozzle-service";
 export { NozzleShiftService } from "./nozzle-shift-service";
 export { SalesmanService } from "./salesman-service";
 export { SalesmanNozzleShiftService } from "./salesman-nozzle-shift-service";
+export { SalesmanShiftService } from "./salesman-shift-service";
+export { NozzleAssignmentService } from "./nozzle-assignment-service";
 export { ShiftService } from "./shift-service";
 export { PumpService } from "./pump-service";
 export { SupplierService } from "./supplier-service";

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.reallink.pump.dto.request.CreateShiftRequest;
 import com.reallink.pump.dto.request.UpdateShiftRequest;
 import com.reallink.pump.dto.response.ShiftResponse;
-import com.reallink.pump.services.ShiftService;
+import com.reallink.pump.services.ShiftMasterService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,9 +29,9 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/shifts")
 @RequiredArgsConstructor
 @Tag(name = "Shift Management", description = "APIs for managing shift information")
-public class ShiftController {
+public class ShiftMasterController {
 
-    private final ShiftService service;
+    private final ShiftMasterService service;
 
     private UUID extractPumpMasterId(HttpServletRequest request) {
         Object pumpMasterIdObj = request.getAttribute("pumpMasterId");

@@ -29,8 +29,8 @@ public class ExpenseResponse {
     @Schema(description = "Type of expense", example = "BANK_ACCOUNT")
     private ExpenseType expenseType;
 
-    @Schema(description = "Salesman nozzle shift ID", example = "123e4567-e89b-12d3-a456-426614174000")
-    private UUID salesmanNozzleShiftId;
+    @Schema(description = "Salesman shift ID", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID salesmanShiftId;
 
     @Schema(description = "Bank account ID", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID bankAccountId;

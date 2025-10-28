@@ -86,7 +86,7 @@ export function AccountingForm({
 
       try {
         setLoadingExpenses(true);
-        const shiftExpenses = await ExpenseService.getBySalesmanNozzleShiftId(
+        const shiftExpenses = await ExpenseService.getBySalesmanShiftId(
           shift.id
         );
 

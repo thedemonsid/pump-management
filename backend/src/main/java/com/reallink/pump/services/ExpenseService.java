@@ -25,7 +25,7 @@ import com.reallink.pump.entities.ExpenseHead;
 import com.reallink.pump.entities.FileStorage;
 import com.reallink.pump.entities.PaymentMethod;
 import com.reallink.pump.entities.PumpInfoMaster;
-import com.reallink.pump.entities.SalesmanNozzleShift;
+import com.reallink.pump.entities.SalesmanShift;
 import com.reallink.pump.exception.PumpBusinessException;
 import com.reallink.pump.mapper.ExpenseMapper;
 import com.reallink.pump.repositories.BankAccountRepository;
@@ -34,7 +34,7 @@ import com.reallink.pump.repositories.ExpenseHeadRepository;
 import com.reallink.pump.repositories.ExpenseRepository;
 import com.reallink.pump.repositories.FileStorageRepository;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
-import com.reallink.pump.repositories.SalesmanNozzleShiftRepository;
+import com.reallink.pump.repositories.SalesmanShiftRepository;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -49,7 +49,7 @@ public class ExpenseService {
     private final ExpenseRepository repository;
     private final PumpInfoMasterRepository pumpInfoMasterRepository;
     private final ExpenseHeadRepository expenseHeadRepository;
-    private final SalesmanNozzleShiftRepository salesmanNozzleShiftRepository;
+    private final SalesmanShiftRepository salesmanShiftRepository;
     private final BankAccountRepository bankAccountRepository;
     private final BankTransactionRepository bankTransactionRepository;
     private final FileStorageRepository fileStorageRepository;
@@ -99,8 +99,8 @@ public class ExpenseService {
                 .toList();
     }
 
-    public List<ExpenseResponse> getBySalesmanNozzleShiftId(@NotNull UUID salesmanNozzleShiftId) {
-        return repository.findBySalesmanNozzleShift_Id(salesmanNozzleShiftId).stream()
+    public List<ExpenseResponse> getBySalesmanShiftId(@NotNull UUID salesmanShiftId) {
+        return repository.findBySalesmanShift_Id(salesmanShiftId).stream()
                 .map(mapper::toResponse)
                 .toList();
     }
@@ -126,11 +126,11 @@ public class ExpenseService {
 
     public List<ExpenseResponse> searchExpenses(
             UUID pumpMasterId, UUID expenseHeadId, ExpenseType expenseType,
-            UUID salesmanNozzleShiftId, UUID bankAccountId,
+            UUID salesmanShiftId, UUID bankAccountId,
             LocalDate startDate, LocalDate endDate, String referenceNumber) {
         return repository.findBySearchCriteria(
                 pumpMasterId, expenseHeadId, expenseType,
-                salesmanNozzleShiftId, bankAccountId,
+                salesmanShiftId, bankAccountId,
                 startDate, endDate, referenceNumber)
                 .stream()
                 .map(mapper::toResponse)
@@ -156,8 +156,8 @@ public class ExpenseService {
         return sum != null ? sum : BigDecimal.ZERO;
     }
 
-    public BigDecimal sumAmountBySalesmanNozzleShiftId(@NotNull UUID salesmanNozzleShiftId) {
-        BigDecimal sum = repository.sumAmountBySalesmanNozzleShiftId(salesmanNozzleShiftId);
+    public BigDecimal sumAmountBySalesmanShiftId(@NotNull UUID salesmanShiftId) {
+        BigDecimal sum = repository.sumAmountBySalesmanShiftId(salesmanShiftId);
         return sum != null ? sum : BigDecimal.ZERO;
     }
 
@@ -184,7 +184,7 @@ public class ExpenseService {
         }
 
         // Validate expense type specific associations
-        validateExpenseTypeAssociations(request.getExpenseType(), request.getSalesmanNozzleShiftId(),
+        validateExpenseTypeAssociations(request.getExpenseType(), request.getSalesmanShiftId(),
                 request.getBankAccountId());
 
         Expense expense = mapper.toEntity(request);
@@ -192,14 +192,14 @@ public class ExpenseService {
         expense.setExpenseHead(expenseHead);
 
         // Set associations based on expense type
-        if (request.getExpenseType() == ExpenseType.NOZZLE_SHIFT && request.getSalesmanNozzleShiftId() != null) {
-            SalesmanNozzleShift shift = salesmanNozzleShiftRepository.findById(request.getSalesmanNozzleShiftId())
+        if (request.getExpenseType() == ExpenseType.SALESMAN_SHIFT && request.getSalesmanShiftId() != null) {
+            SalesmanShift shift = salesmanShiftRepository.findById(request.getSalesmanShiftId())
                     .orElse(null);
             if (shift == null) {
-                throw new PumpBusinessException("INVALID_NOZZLE_SHIFT",
-                        "Salesman nozzle shift with ID " + request.getSalesmanNozzleShiftId() + " does not exist");
+                throw new PumpBusinessException("INVALID_SALESMAN_SHIFT",
+                        "Salesman shift with ID " + request.getSalesmanShiftId() + " does not exist");
             }
-            expense.setSalesmanNozzleShift(shift);
+            expense.setSalesmanShift(shift);
         } else if (request.getExpenseType() == ExpenseType.BANK_ACCOUNT && request.getBankAccountId() != null) {
             BankAccount bankAccount = bankAccountRepository.findById(request.getBankAccountId()).orElse(null);
             if (bankAccount == null) {
@@ -246,7 +246,7 @@ public class ExpenseService {
 
         // Validate expense type specific associations if type is being changed
         if (request.getExpenseType() != null) {
-            validateExpenseTypeAssociations(request.getExpenseType(), request.getSalesmanNozzleShiftId(),
+            validateExpenseTypeAssociations(request.getExpenseType(), request.getSalesmanShiftId(),
                     request.getBankAccountId());
         }
 
@@ -264,16 +264,16 @@ public class ExpenseService {
         if (request.getExpenseType() != null) {
             existingExpense.setExpenseType(request.getExpenseType());
 
-            if (request.getExpenseType() == ExpenseType.NOZZLE_SHIFT) {
-                if (request.getSalesmanNozzleShiftId() != null) {
-                    SalesmanNozzleShift shift = salesmanNozzleShiftRepository
-                            .findById(request.getSalesmanNozzleShiftId()).orElse(null);
+            if (request.getExpenseType() == ExpenseType.SALESMAN_SHIFT) {
+                if (request.getSalesmanShiftId() != null) {
+                    SalesmanShift shift = salesmanShiftRepository
+                            .findById(request.getSalesmanShiftId()).orElse(null);
                     if (shift == null) {
-                        throw new PumpBusinessException("INVALID_NOZZLE_SHIFT",
-                                "Salesman nozzle shift with ID " + request.getSalesmanNozzleShiftId()
+                        throw new PumpBusinessException("INVALID_SALESMAN_SHIFT",
+                                "Salesman shift with ID " + request.getSalesmanShiftId()
                                 + " does not exist");
                     }
-                    existingExpense.setSalesmanNozzleShift(shift);
+                    existingExpense.setSalesmanShift(shift);
                 }
                 existingExpense.setBankAccount(null);
             } else if (request.getExpenseType() == ExpenseType.BANK_ACCOUNT) {
@@ -285,7 +285,7 @@ public class ExpenseService {
                     }
                     existingExpense.setBankAccount(bankAccount);
                 }
-                existingExpense.setSalesmanNozzleShift(null);
+                existingExpense.setSalesmanShift(null);
             }
         }
 
@@ -338,11 +338,11 @@ public class ExpenseService {
         repository.delete(expense);
     }
 
-    private void validateExpenseTypeAssociations(ExpenseType expenseType, UUID salesmanNozzleShiftId,
+    private void validateExpenseTypeAssociations(ExpenseType expenseType, UUID salesmanShiftId,
             UUID bankAccountId) {
-        if (expenseType == ExpenseType.NOZZLE_SHIFT && salesmanNozzleShiftId == null) {
+        if (expenseType == ExpenseType.SALESMAN_SHIFT && salesmanShiftId == null) {
             throw new PumpBusinessException("INVALID_EXPENSE_ASSOCIATION",
-                    "Salesman nozzle shift ID is required for NOZZLE_SHIFT expense type");
+                    "Salesman shift ID is required for SALESMAN_SHIFT expense type");
         }
         if (expenseType == ExpenseType.BANK_ACCOUNT && bankAccountId == null) {
             throw new PumpBusinessException("INVALID_EXPENSE_ASSOCIATION",
@@ -410,8 +410,8 @@ public class ExpenseService {
         BankAccount newBankAccount = expense.getBankAccount();
         BigDecimal newAmount = expense.getAmount();
 
-        // Case 1: Changed from BANK_ACCOUNT to NOZZLE_SHIFT - delete old transaction
-        if (oldExpenseType == ExpenseType.BANK_ACCOUNT && newExpenseType == ExpenseType.NOZZLE_SHIFT) {
+        // Case 1: Changed from BANK_ACCOUNT to SALESMAN_SHIFT - delete old transaction
+        if (oldExpenseType == ExpenseType.BANK_ACCOUNT && newExpenseType == ExpenseType.SALESMAN_SHIFT) {
             if (oldBankTransaction != null) {
                 expense.setBankTransaction(null);
                 bankTransactionRepository.delete(oldBankTransaction);
@@ -419,8 +419,8 @@ public class ExpenseService {
             return;
         }
 
-        // Case 2: Changed from NOZZLE_SHIFT to BANK_ACCOUNT - create new transaction
-        if (oldExpenseType == ExpenseType.NOZZLE_SHIFT && newExpenseType == ExpenseType.BANK_ACCOUNT) {
+        // Case 2: Changed from SALESMAN_SHIFT to BANK_ACCOUNT - create new transaction
+        if (oldExpenseType == ExpenseType.SALESMAN_SHIFT && newExpenseType == ExpenseType.BANK_ACCOUNT) {
             if (newBankAccount != null) {
                 BankTransaction newTransaction = createBankDebitTransaction(expense, paymentMethod);
                 expense.setBankTransaction(newTransaction);

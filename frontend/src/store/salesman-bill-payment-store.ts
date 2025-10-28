@@ -1,12 +1,12 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import type {
   SalesmanBillPaymentResponse,
   CreateSalesmanBillPaymentRequest,
   UpdateSalesmanBillPaymentRequest,
-} from '@/types';
-import { SalesmanBillPaymentService } from '@/services';
-import { toast } from 'sonner';
+} from "@/types";
+import { SalesmanBillPaymentService } from "@/services";
+import { toast } from "sonner";
 
 interface SalesmanBillPaymentState {
   payments: SalesmanBillPaymentResponse[];
@@ -31,12 +31,12 @@ interface SalesmanBillPaymentState {
   // API methods
   fetchPayments: () => Promise<void>;
   fetchPaymentById: (id: string) => Promise<SalesmanBillPaymentResponse>;
-  fetchPaymentsByShiftId: (salesmanNozzleShiftId: string) => Promise<void>;
+  fetchPaymentsByShiftId: (salesmanShiftId: string) => Promise<void>;
   fetchPaymentsByCustomerId: (
     customerId: string,
     pumpMasterId?: string
   ) => Promise<void>;
-  getTotalByShiftId: (salesmanNozzleShiftId: string) => Promise<number>;
+  getTotalByShiftId: (salesmanShiftId: string) => Promise<number>;
   createPayment: (
     payment: CreateSalesmanBillPaymentRequest
   ) => Promise<SalesmanBillPaymentResponse>;
@@ -70,8 +70,7 @@ export const useSalesmanBillPaymentStore = create<SalesmanBillPaymentState>()(
         set((state) => ({
           payments: [...state.payments, payment],
           shiftPayments:
-            payment.salesmanNozzleShiftId ===
-            state.shiftPayments[0]?.salesmanNozzleShiftId
+            payment.salesmanShiftId === state.shiftPayments[0]?.salesmanShiftId
               ? [...state.shiftPayments, payment]
               : state.shiftPayments,
           customerPayments:
@@ -111,7 +110,7 @@ export const useSalesmanBillPaymentStore = create<SalesmanBillPaymentState>()(
           set({ payments, loading: false });
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to fetch payments';
+            error instanceof Error ? error.message : "Failed to fetch payments";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -126,25 +125,25 @@ export const useSalesmanBillPaymentStore = create<SalesmanBillPaymentState>()(
           return payment;
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to fetch payment';
+            error instanceof Error ? error.message : "Failed to fetch payment";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
         }
       },
 
-      fetchPaymentsByShiftId: async (salesmanNozzleShiftId: string) => {
+      fetchPaymentsByShiftId: async (salesmanShiftId: string) => {
         set({ loading: true, error: null });
         try {
           const shiftPayments = await SalesmanBillPaymentService.getByShiftId(
-            salesmanNozzleShiftId
+            salesmanShiftId
           );
           set({ shiftPayments, loading: false });
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to fetch shift payments';
+              : "Failed to fetch shift payments";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -167,24 +166,24 @@ export const useSalesmanBillPaymentStore = create<SalesmanBillPaymentState>()(
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to fetch customer payments';
+              : "Failed to fetch customer payments";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
         }
       },
 
-      getTotalByShiftId: async (salesmanNozzleShiftId: string) => {
+      getTotalByShiftId: async (salesmanShiftId: string) => {
         try {
           const total = await SalesmanBillPaymentService.getTotalByShiftId(
-            salesmanNozzleShiftId
+            salesmanShiftId
           );
           return total;
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to get shift payment total';
+              : "Failed to get shift payment total";
           toast.error(errorMessage);
           throw error;
         }
@@ -196,11 +195,11 @@ export const useSalesmanBillPaymentStore = create<SalesmanBillPaymentState>()(
           const newPayment = await SalesmanBillPaymentService.create(payment);
           get().addPayment(newPayment);
           set({ loading: false });
-          toast.success('Payment created successfully');
+          toast.success("Payment created successfully");
           return newPayment;
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to create payment';
+            error instanceof Error ? error.message : "Failed to create payment";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -219,11 +218,11 @@ export const useSalesmanBillPaymentStore = create<SalesmanBillPaymentState>()(
           );
           get().updatePaymentInStore(id, updatedPayment);
           set({ loading: false });
-          toast.success('Payment updated successfully');
+          toast.success("Payment updated successfully");
           return updatedPayment;
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to update payment';
+            error instanceof Error ? error.message : "Failed to update payment";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -236,10 +235,10 @@ export const useSalesmanBillPaymentStore = create<SalesmanBillPaymentState>()(
           await SalesmanBillPaymentService.delete(id);
           get().deletePayment(id);
           set({ loading: false });
-          toast.success('Payment deleted successfully');
+          toast.success("Payment deleted successfully");
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to delete payment';
+            error instanceof Error ? error.message : "Failed to delete payment";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -247,7 +246,7 @@ export const useSalesmanBillPaymentStore = create<SalesmanBillPaymentState>()(
       },
     }),
     {
-      name: 'salesman-bill-payment-store',
+      name: "salesman-bill-payment-store",
     }
   )
 );

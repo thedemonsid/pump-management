@@ -19,8 +19,8 @@ public class SalesmanBillPaymentResponse {
     @Schema(description = "Pump Master ID", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID pumpMasterId;
 
-    @Schema(description = "Salesman Nozzle Shift ID", example = "123e4567-e29b-41d4-a716-446655440000")
-    private UUID salesmanNozzleShiftId;
+    @Schema(description = "Salesman Shift ID", example = "123e4567-e29b-41d4-a716-446655440000")
+    private UUID salesmanShiftId;
 
     @Schema(description = "Salesman ID", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID salesmanId;

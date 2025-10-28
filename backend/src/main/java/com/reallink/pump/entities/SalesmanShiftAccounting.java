@@ -27,12 +27,13 @@ import lombok.Setter;
 public class SalesmanShiftAccounting extends BaseEntity {
 
     /**
-     * The shift for which this accounting record is maintained.
+     * The salesman shift for which this accounting record is maintained.
+     * Accounting is done at the shift level, aggregating all nozzle activities.
      */
-    @NotNull(message = "Salesman nozzle shift is required")
+    @NotNull(message = "Salesman shift is required")
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "salesman_nozzle_shift_id", nullable = false, foreignKey = @ForeignKey(name = "fk_shift_accounting"))
-    private SalesmanNozzleShift salesmanNozzleShift;
+    @JoinColumn(name = "salesman_shift_id", nullable = false, unique = true, foreignKey = @ForeignKey(name = "fk_shift_accounting"))
+    private SalesmanShift salesmanShift;
 
     /**
      * Total fuel sales amount for this shift.

@@ -23,7 +23,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
 
     List<Expense> findByPumpMaster_IdAndExpenseType(UUID pumpMasterId, ExpenseType expenseType);
 
-    List<Expense> findBySalesmanNozzleShift_Id(UUID salesmanNozzleShiftId);
+    List<Expense> findBySalesmanShift_Id(UUID salesmanShiftId);
 
     List<Expense> findByBankAccount_Id(UUID bankAccountId);
 
@@ -38,7 +38,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
             + "(:pumpMasterId IS NULL OR e.pumpMaster.id = :pumpMasterId) AND "
             + "(:expenseHeadId IS NULL OR e.expenseHead.id = :expenseHeadId) AND "
             + "(:expenseType IS NULL OR e.expenseType = :expenseType) AND "
-            + "(:salesmanNozzleShiftId IS NULL OR e.salesmanNozzleShift.id = :salesmanNozzleShiftId) AND "
+            + "(:salesmanShiftId IS NULL OR e.salesmanShift.id = :salesmanShiftId) AND "
             + "(:bankAccountId IS NULL OR e.bankAccount.id = :bankAccountId) AND "
             + "(:startDate IS NULL OR e.expenseDate >= :startDate) AND "
             + "(:endDate IS NULL OR e.expenseDate <= :endDate) AND "
@@ -47,7 +47,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
             @Param("pumpMasterId") UUID pumpMasterId,
             @Param("expenseHeadId") UUID expenseHeadId,
             @Param("expenseType") ExpenseType expenseType,
-            @Param("salesmanNozzleShiftId") UUID salesmanNozzleShiftId,
+            @Param("salesmanShiftId") UUID salesmanShiftId,
             @Param("bankAccountId") UUID bankAccountId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
@@ -68,8 +68,8 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
 
-    @Query("SELECT SUM(e.amount) FROM Expense e WHERE e.salesmanNozzleShift.id = :salesmanNozzleShiftId")
-    java.math.BigDecimal sumAmountBySalesmanNozzleShiftId(@Param("salesmanNozzleShiftId") UUID salesmanNozzleShiftId);
+    @Query("SELECT SUM(e.amount) FROM Expense e WHERE e.salesmanShift.id = :salesmanShiftId")
+    java.math.BigDecimal sumAmountBySalesmanShiftId(@Param("salesmanShiftId") UUID salesmanShiftId);
 
     @Query("SELECT SUM(e.amount) FROM Expense e WHERE e.bankAccount.id = :bankAccountId AND e.expenseDate BETWEEN :startDate AND :endDate")
     java.math.BigDecimal sumAmountByBankAccountIdAndDateRange(

@@ -49,12 +49,12 @@ export class ExpenseService {
     return response.data;
   }
 
-  // Get expenses by salesman nozzle shift ID
-  static async getBySalesmanNozzleShiftId(
-    salesmanNozzleShiftId: string
+  // Get expenses by salesman shift ID
+  static async getBySalesmanShiftId(
+    salesmanShiftId: string
   ): Promise<ExpenseResponse[]> {
     const response = await api.get<ExpenseResponse[]>(
-      `${this.BASE_PATH}/nozzle-shift/${salesmanNozzleShiftId}`
+      `${this.BASE_PATH}/shift/${salesmanShiftId}`
     );
     return response.data;
   }
@@ -84,7 +84,7 @@ export class ExpenseService {
   static async search(params: {
     expenseHeadId?: string;
     expenseType?: ExpenseType;
-    salesmanNozzleShiftId?: string;
+    salesmanShiftId?: string;
     bankAccountId?: string;
     startDate?: string;
     endDate?: string;
@@ -95,11 +95,8 @@ export class ExpenseService {
       searchParams.append("expenseHeadId", params.expenseHeadId);
     if (params.expenseType)
       searchParams.append("expenseType", params.expenseType);
-    if (params.salesmanNozzleShiftId)
-      searchParams.append(
-        "salesmanNozzleShiftId",
-        params.salesmanNozzleShiftId
-      );
+    if (params.salesmanShiftId)
+      searchParams.append("salesmanShiftId", params.salesmanShiftId);
     if (params.bankAccountId)
       searchParams.append("bankAccountId", params.bankAccountId);
     if (params.startDate) searchParams.append("startDate", params.startDate);

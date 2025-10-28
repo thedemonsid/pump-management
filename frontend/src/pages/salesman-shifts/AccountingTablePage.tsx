@@ -143,7 +143,7 @@ export function AccountingTablePage() {
 
       // Fetch expenses for this shift from backend
       try {
-        const shiftExpenses = await ExpenseService.getBySalesmanNozzleShiftId(
+        const shiftExpenses = await ExpenseService.getBySalesmanShiftId(
           shiftId!
         );
         // Calculate total expenses for this shift

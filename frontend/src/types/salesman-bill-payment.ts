@@ -1,15 +1,16 @@
-import type { PaymentMethod } from './customer-bill-payment';
+import type { PaymentMethod } from "./customer-bill-payment";
 
 /**
  * Response DTO for Salesman Bill Payment information
+ * Updated to align with new architecture where payments are linked to SalesmanShift
  */
 export interface SalesmanBillPaymentResponse {
   /** Unique identifier */
   id: string;
   /** Pump Master ID */
   pumpMasterId: string;
-  /** Salesman Nozzle Shift ID */
-  salesmanNozzleShiftId: string;
+  /** Salesman Shift ID - links payment to the salesman's shift */
+  salesmanShiftId: string;
   /** Salesman ID */
   salesmanId: string;
   /** Salesman name */
@@ -44,8 +45,8 @@ export interface SalesmanBillPaymentResponse {
 export interface CreateSalesmanBillPaymentRequest {
   /** Pump Master ID */
   pumpMasterId: string;
-  /** Salesman Nozzle Shift ID */
-  salesmanNozzleShiftId: string;
+  /** Salesman Shift ID - links payment to the salesman's shift */
+  salesmanShiftId: string;
   /** Customer ID */
   customerId: string;
   /** Bank Account ID */

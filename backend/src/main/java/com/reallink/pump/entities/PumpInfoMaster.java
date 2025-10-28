@@ -66,7 +66,7 @@ public class PumpInfoMaster extends BaseEntity {
     private Set<Supplier> suppliers = new HashSet<>();
 
     @OneToMany(mappedBy = "pumpMaster", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Shift> shifts = new HashSet<>();
+    private Set<ShiftMaster> shifts = new HashSet<>();
 
     @OneToMany(mappedBy = "pumpMaster", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<FuelPurchase> fuelPurchases = new HashSet<>();

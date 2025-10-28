@@ -1,7 +1,7 @@
-export type ExpenseType = "NOZZLE_SHIFT" | "BANK_ACCOUNT";
+export type ExpenseType = "SHIFT" | "BANK_ACCOUNT";
 
 export const ExpenseTypeEnum = {
-  NOZZLE_SHIFT: "NOZZLE_SHIFT" as ExpenseType,
+  SHIFT: "SHIFT" as ExpenseType,
   BANK_ACCOUNT: "BANK_ACCOUNT" as ExpenseType,
 };
 
@@ -11,7 +11,7 @@ export interface Expense {
   expenseHeadId: string;
   expenseHeadName?: string;
   expenseType: ExpenseType;
-  salesmanNozzleShiftId?: string;
+  salesmanShiftId?: string;
   bankAccountId?: string;
   bankAccountName?: string;
   expenseDate: string;
@@ -30,7 +30,7 @@ export interface ExpenseResponse {
   expenseHeadId: string;
   expenseHeadName?: string;
   expenseType: ExpenseType;
-  salesmanNozzleShiftId?: string;
+  salesmanShiftId?: string;
   bankAccountId?: string;
   bankAccountName?: string;
   expenseDate: string;
@@ -47,7 +47,7 @@ export interface CreateExpenseRequest {
   pumpMasterId?: string;
   expenseHeadId: string;
   expenseType: ExpenseType;
-  salesmanNozzleShiftId?: string;
+  salesmanShiftId?: string;
   bankAccountId?: string;
   paymentMethod?: string;
   expenseDate: string;
@@ -60,7 +60,7 @@ export interface CreateExpenseRequest {
 export interface UpdateExpenseRequest {
   expenseHeadId?: string;
   expenseType?: ExpenseType;
-  salesmanNozzleShiftId?: string;
+  salesmanShiftId?: string;
   bankAccountId?: string;
   paymentMethod?: string;
   expenseDate?: string;

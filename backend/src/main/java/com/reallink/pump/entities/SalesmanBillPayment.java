@@ -39,10 +39,10 @@ public class SalesmanBillPayment extends BaseEntity {
     @JoinColumn(name = "pump_master_id", nullable = false, foreignKey = @ForeignKey(name = "fk_salesman_bill_payment_pump_master"))
     private PumpInfoMaster pumpMaster;
 
-    @NotNull(message = "Salesman nozzle shift is required")
+    @NotNull(message = "Salesman shift is required")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "salesman_nozzle_shift_id", nullable = false, foreignKey = @ForeignKey(name = "fk_salesman_bill_payment_nozzle_shift"))
-    private SalesmanNozzleShift salesmanNozzleShift;
+    @JoinColumn(name = "salesman_shift_id", nullable = false, foreignKey = @ForeignKey(name = "fk_salesman_bill_payment_shift"))
+    private SalesmanShift salesmanShift;
 
     @NotNull(message = "Customer is required")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

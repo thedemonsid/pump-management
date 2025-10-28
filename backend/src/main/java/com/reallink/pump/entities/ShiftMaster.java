@@ -18,6 +18,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Represents a shift template/master configuration (e.g., Morning Shift,
+ * Evening Shift). This is different from SalesmanShift which represents an
+ * actual work shift instance.
+ */
 @Entity
 @Table(name = "pump_shift_master", uniqueConstraints = {
     @jakarta.persistence.UniqueConstraint(name = "uk_shift_name_pump", columnNames = {"name", "pump_master_id"})
@@ -30,7 +35,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Shift extends BaseEntity {
+public class ShiftMaster extends BaseEntity {
 
     @NotNull(message = "Pump master is required")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -58,7 +63,7 @@ public class Shift extends BaseEntity {
     @Column(name = "active", nullable = false, columnDefinition = "BOOLEAN DEFAULT true")
     private Boolean active = true;
 
-    public Shift(String name, LocalTime startTime, LocalTime endTime) {
+    public ShiftMaster(String name, LocalTime startTime, LocalTime endTime) {
         this.name = name;
         this.startTime = startTime;
         this.endTime = endTime;

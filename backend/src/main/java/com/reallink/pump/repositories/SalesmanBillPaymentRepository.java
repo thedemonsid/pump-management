@@ -18,67 +18,67 @@ public interface SalesmanBillPaymentRepository extends JpaRepository<SalesmanBil
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
             + "LEFT JOIN FETCH sbp.customer "
             + "LEFT JOIN FETCH sbp.bankAccount "
-            + "LEFT JOIN FETCH sbp.salesmanNozzleShift sns "
-            + "LEFT JOIN FETCH sns.salesman")
+            + "LEFT JOIN FETCH sbp.salesmanShift ss "
+            + "LEFT JOIN FETCH ss.salesman")
     List<SalesmanBillPayment> findAllWithRelations();
 
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
             + "LEFT JOIN FETCH sbp.customer "
             + "LEFT JOIN FETCH sbp.bankAccount "
-            + "LEFT JOIN FETCH sbp.salesmanNozzleShift sns "
-            + "LEFT JOIN FETCH sns.salesman "
+            + "LEFT JOIN FETCH sbp.salesmanShift ss "
+            + "LEFT JOIN FETCH ss.salesman "
             + "WHERE sbp.id = :id")
     SalesmanBillPayment findByIdWithRelations(@Param("id") UUID id);
 
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
             + "LEFT JOIN FETCH sbp.customer "
             + "LEFT JOIN FETCH sbp.bankAccount "
-            + "LEFT JOIN FETCH sbp.salesmanNozzleShift sns "
-            + "LEFT JOIN FETCH sns.salesman "
+            + "LEFT JOIN FETCH sbp.salesmanShift ss "
+            + "LEFT JOIN FETCH ss.salesman "
             + "WHERE sbp.pumpMaster.id = :pumpMasterId")
     List<SalesmanBillPayment> findByPumpMaster_Id(@Param("pumpMasterId") UUID pumpMasterId);
 
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
             + "LEFT JOIN FETCH sbp.customer "
             + "LEFT JOIN FETCH sbp.bankAccount "
-            + "LEFT JOIN FETCH sbp.salesmanNozzleShift sns "
-            + "LEFT JOIN FETCH sns.salesman "
-            + "WHERE sbp.salesmanNozzleShift.id = :shiftId")
-    List<SalesmanBillPayment> findBySalesmanNozzleShift_Id(@Param("shiftId") UUID shiftId);
+            + "LEFT JOIN FETCH sbp.salesmanShift ss "
+            + "LEFT JOIN FETCH ss.salesman "
+            + "WHERE sbp.salesmanShift.id = :shiftId")
+    List<SalesmanBillPayment> findBySalesmanShiftId(@Param("shiftId") UUID shiftId);
 
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
             + "LEFT JOIN FETCH sbp.customer "
             + "LEFT JOIN FETCH sbp.bankAccount "
-            + "LEFT JOIN FETCH sbp.salesmanNozzleShift sns "
-            + "LEFT JOIN FETCH sns.salesman "
+            + "LEFT JOIN FETCH sbp.salesmanShift ss "
+            + "LEFT JOIN FETCH ss.salesman "
             + "WHERE sbp.customer.id = :customerId")
     List<SalesmanBillPayment> findByCustomer_Id(@Param("customerId") UUID customerId);
 
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
             + "LEFT JOIN FETCH sbp.customer "
             + "LEFT JOIN FETCH sbp.bankAccount "
-            + "LEFT JOIN FETCH sbp.salesmanNozzleShift sns "
-            + "LEFT JOIN FETCH sns.salesman "
+            + "LEFT JOIN FETCH sbp.salesmanShift ss "
+            + "LEFT JOIN FETCH ss.salesman "
             + "WHERE sbp.bankAccount.id = :bankAccountId")
     List<SalesmanBillPayment> findByBankAccount_Id(@Param("bankAccountId") UUID bankAccountId);
 
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
             + "LEFT JOIN FETCH sbp.customer "
             + "LEFT JOIN FETCH sbp.bankAccount "
-            + "LEFT JOIN FETCH sbp.salesmanNozzleShift sns "
-            + "LEFT JOIN FETCH sns.salesman "
+            + "LEFT JOIN FETCH sbp.salesmanShift ss "
+            + "LEFT JOIN FETCH ss.salesman "
             + "WHERE sbp.paymentDate BETWEEN :startDate AND :endDate")
     List<SalesmanBillPayment> findByPaymentDateBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
-    @Query("SELECT COALESCE(SUM(sbp.amount), 0) FROM SalesmanBillPayment sbp WHERE sbp.salesmanNozzleShift.id = :shiftId")
+    @Query("SELECT COALESCE(SUM(sbp.amount), 0) FROM SalesmanBillPayment sbp WHERE sbp.salesmanShift.id = :shiftId")
     BigDecimal getTotalPaymentsForShift(@Param("shiftId") UUID shiftId);
 
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
             + "LEFT JOIN FETCH sbp.customer "
             + "LEFT JOIN FETCH sbp.bankAccount "
-            + "LEFT JOIN FETCH sbp.salesmanNozzleShift sns "
-            + "LEFT JOIN FETCH sns.salesman "
-            + "WHERE sbp.salesmanNozzleShift.id = :shiftId "
+            + "LEFT JOIN FETCH sbp.salesmanShift ss "
+            + "LEFT JOIN FETCH ss.salesman "
+            + "WHERE sbp.salesmanShift.id = :shiftId "
             + "ORDER BY sbp.paymentDate DESC")
-    List<SalesmanBillPayment> findBySalesmanNozzleShiftIdOrderByPaymentDateDesc(@Param("shiftId") UUID shiftId);
+    List<SalesmanBillPayment> findBySalesmanShiftIdOrderByPaymentDateDesc(@Param("shiftId") UUID shiftId);
 }
