@@ -40,18 +40,34 @@ public class JwtUtil {
         claims.put("pumpName", pumpName);
         claims.put("pumpId", pumpId);
         claims.put("pumpCode", pumpCode);
+        claims.put("tokenType", "access");
 
-        return createToken(claims, username + "@" + pumpMasterId.toString());
+        return createToken(claims, username + "@" + pumpMasterId.toString(), jwtConfig.getExpiration());
     }
 
-    private String createToken(Map<String, Object> claims, String subject) {
+    public String generateRefreshToken(UUID userId, String username, UUID pumpMasterId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId.toString());
+        claims.put("username", username);
+        claims.put("pumpMasterId", pumpMasterId.toString());
+        claims.put("tokenType", "refresh");
+
+        return createToken(claims, username + "@" + pumpMasterId.toString(), jwtConfig.getRefreshExpiration());
+    }
+
+    private String createToken(Map<String, Object> claims, String subject, long expiration) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtConfig.getExpiration()))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public boolean isRefreshToken(String token) {
+        String tokenType = extractClaim(token, claims -> claims.get("tokenType", String.class));
+        return "refresh".equals(tokenType);
     }
 
     public boolean isTokenValid(String token, String username) {

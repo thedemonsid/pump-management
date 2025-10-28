@@ -12,6 +12,9 @@ public class LoginResponse {
     @Schema(description = "JWT access token", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     private String token;
 
+    @Schema(description = "JWT refresh token", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+    private String refreshToken;
+
     @Schema(description = "Token type", example = "Bearer")
     private String tokenType = "Bearer";
 

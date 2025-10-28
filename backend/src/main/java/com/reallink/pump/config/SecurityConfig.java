@@ -56,6 +56,7 @@ public class SecurityConfig {
                 ).permitAll()
                 // Allow public access to specific /api endpoints
                 .requestMatchers("/api/v1/users/login").permitAll()
+                .requestMatchers("/api/v1/users/refresh").permitAll()
                 .requestMatchers("/api/v1/users/register/super/**").permitAll()
                 .requestMatchers("/api/v1/pumps/**").permitAll()
                 .requestMatchers("/api/v1/users/**").permitAll()

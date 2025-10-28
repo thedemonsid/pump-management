@@ -70,6 +70,7 @@ interface LoginRequest {
 
 interface LoginResponse {
   token: string;
+  refreshToken: string;
   tokenType: string;
   userId: string;
   username: string;
@@ -160,17 +161,21 @@ export function LoginPage() {
       const decodedToken = jwtDecode<DecodedToken>(loginData.token);
 
       // Use auth context to login
-      login(loginData.token, {
-        userId: loginData.userId,
-        username: loginData.username,
-        pumpMasterId: loginData.pumpMasterId,
-        role: loginData.role,
-        mobileNumber: loginData.mobileNumber,
-        enabled: loginData.enabled,
-        pumpName: decodedToken.pumpName,
-        pumpId: decodedToken.pumpId,
-        pumpCode: decodedToken.pumpCode,
-      });
+      login(
+        loginData.token,
+        {
+          userId: loginData.userId,
+          username: loginData.username,
+          pumpMasterId: loginData.pumpMasterId,
+          role: loginData.role,
+          mobileNumber: loginData.mobileNumber,
+          enabled: loginData.enabled,
+          pumpName: decodedToken.pumpName,
+          pumpId: decodedToken.pumpId,
+          pumpCode: decodedToken.pumpCode,
+        },
+        loginData.refreshToken
+      );
 
       // Redirect to intended page or dashboard
       const from = location.state?.from?.pathname || "/dashboard";

@@ -41,10 +41,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(requestTokenHeader) && requestTokenHeader.startsWith("Bearer ")) {
             jwtToken = requestTokenHeader.substring(7);
             try {
-                username = jwtUtil.extractUsername(jwtToken);
-                UUID pumpMasterId = jwtUtil.extractPumpMasterIdFromSubject(jwtToken);
-                request.setAttribute("pumpMasterId", pumpMasterId);
-                PumpSecurityContextHolder.setPumpMasterId(pumpMasterId);
+                // Check if this is a refresh token - refresh tokens should not be used for authentication
+                if (jwtUtil.isRefreshToken(jwtToken)) {
+                    request.setAttribute("authError", "REFRESH_TOKEN_NOT_ALLOWED");
+                    logger.error("Refresh token cannot be used for authentication");
+                } else {
+                    username = jwtUtil.extractUsername(jwtToken);
+                    UUID pumpMasterId = jwtUtil.extractPumpMasterIdFromSubject(jwtToken);
+                    request.setAttribute("pumpMasterId", pumpMasterId);
+                    PumpSecurityContextHolder.setPumpMasterId(pumpMasterId);
+                }
             } catch (ExpiredJwtException e) {
                 request.setAttribute("authError", "EXPIRED_TOKEN");
                 logger.error("JWT Token has expired");

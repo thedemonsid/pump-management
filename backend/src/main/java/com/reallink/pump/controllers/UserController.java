@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.reallink.pump.config.JwtUtil;
 import com.reallink.pump.dto.request.CreateUserRequest;
 import com.reallink.pump.dto.request.LoginRequest;
+import com.reallink.pump.dto.request.RefreshTokenRequest;
 import com.reallink.pump.dto.request.UpdateUserRequest;
 import com.reallink.pump.dto.response.LoginResponse;
 import com.reallink.pump.dto.response.TokenUserInfoResponse;
@@ -94,6 +95,12 @@ public class UserController {
     @Operation(summary = "User login", description = "Authenticate user and return JWT token with user information")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(service.login(request));
+    }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "Refresh access token", description = "Generate new access token and refresh token using a valid refresh token")
+    public ResponseEntity<LoginResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(service.refreshToken(request.getRefreshToken()));
     }
 
     @PostMapping("/change-password")

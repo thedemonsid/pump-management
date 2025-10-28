@@ -52,6 +52,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.error("Token validation failed:", error);
         // Token is invalid or expired, clear auth data
         localStorage.removeItem("authToken");
+        localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
         setToken(null);
         setUser(null);
@@ -63,17 +64,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     validateToken();
   }, []);
 
-  const login = (newToken: string, newUser: User) => {
+  const login = (newToken: string, newUser: User, newRefreshToken?: string) => {
     setToken(newToken);
     setUser(newUser);
     localStorage.setItem("authToken", newToken);
     localStorage.setItem("user", JSON.stringify(newUser));
+    if (newRefreshToken) {
+      localStorage.setItem("refreshToken", newRefreshToken);
+    }
   };
 
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
     localStorage.removeItem("authToken");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
     navigate("/login");
   }, [navigate]);

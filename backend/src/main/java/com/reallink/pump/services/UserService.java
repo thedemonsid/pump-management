@@ -202,9 +202,16 @@ public class UserService {
                 user.getPumpMaster().getPumpId(),
                 user.getPumpMaster().getPumpCode());
 
+        // Generate refresh token
+        String refreshToken = jwtUtil.generateRefreshToken(
+                user.getId(),
+                user.getUsername(),
+                user.getPumpMaster().getId());
+
         // Create response
         LoginResponse response = new LoginResponse();
         response.setToken(token);
+        response.setRefreshToken(refreshToken);
         response.setUserId(user.getId());
         response.setUsername(user.getUsername());
         response.setPumpMasterId(user.getPumpMaster().getId());
@@ -272,5 +279,72 @@ public class UserService {
                     "Secret key is invalid");
         }
 
+    }
+
+    public LoginResponse refreshToken(@NotNull String refreshToken) {
+        try {
+            // Verify this is a refresh token
+            if (!jwtUtil.isRefreshToken(refreshToken)) {
+                throw new PumpBusinessException("INVALID_TOKEN", "Token is not a refresh token");
+            }
+
+            // Extract user information from refresh token
+            String username = jwtUtil.extractUsername(refreshToken);
+            UUID userId = jwtUtil.extractUserId(refreshToken);
+
+            // Validate token expiration
+            if (jwtUtil.isTokenValid(refreshToken, username)) {
+                // Fetch fresh user data from database
+                User user = repository.findById(userId).orElse(null);
+                if (user == null) {
+                    throw new PumpBusinessException("USER_NOT_FOUND", "User not found");
+                }
+
+                // Check if user is still enabled
+                if (!user.getEnabled()) {
+                    throw new PumpBusinessException("USER_DISABLED", "User account is disabled");
+                }
+
+                // Generate new access token with fresh data
+                String newAccessToken = jwtUtil.generateToken(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getPumpMaster().getId(),
+                        user.getRole().getRoleName(),
+                        user.getMobileNumber(),
+                        user.getPumpMaster().getPumpName(),
+                        user.getPumpMaster().getPumpId(),
+                        user.getPumpMaster().getPumpCode());
+
+                // Generate new refresh token
+                String newRefreshToken = jwtUtil.generateRefreshToken(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getPumpMaster().getId());
+
+                // Create response
+                LoginResponse response = new LoginResponse();
+                response.setToken(newAccessToken);
+                response.setRefreshToken(newRefreshToken);
+                response.setUserId(user.getId());
+                response.setUsername(user.getUsername());
+                response.setPumpMasterId(user.getPumpMaster().getId());
+                response.setRole(user.getRole().getRoleName());
+                response.setMobileNumber(user.getMobileNumber());
+                response.setEnabled(user.getEnabled());
+
+                return response;
+            } else {
+                throw new PumpBusinessException("EXPIRED_TOKEN", "Refresh token has expired");
+            }
+        } catch (PumpBusinessException e) {
+            throw e;
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            throw new PumpBusinessException("EXPIRED_TOKEN", "Refresh token has expired");
+        } catch (io.jsonwebtoken.JwtException e) {
+            throw new PumpBusinessException("INVALID_TOKEN", "Invalid refresh token");
+        } catch (Exception e) {
+            throw new PumpBusinessException("INVALID_TOKEN", "Invalid refresh token: " + e.getMessage());
+        }
     }
 }

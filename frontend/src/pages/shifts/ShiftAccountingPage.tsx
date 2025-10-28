@@ -354,12 +354,6 @@ export function ShiftAccountingPage() {
                 </p>
               </div>
             )}
-            <div>
-              <p className="text-muted-foreground">Opening Cash</p>
-              <p className="font-medium">
-                ₹{currentShift.openingCash.toFixed(2)}
-              </p>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -595,8 +589,14 @@ export function ShiftAccountingPage() {
                     </tr>
                   </thead>
                   <tbody>
+                    <tr className="border-t bg-blue-50 dark:bg-blue-950">
+                      <td className="p-3 font-semibold">Opening Cash</td>
+                      <td className="p-3 text-right font-mono font-semibold">
+                        {accounting.openingCash.toFixed(2)}
+                      </td>
+                    </tr>
                     <tr className="border-t">
-                      <td className="p-3">Total Sales Expected</td>
+                      <td className="p-3">Add: Total Sales Expected</td>
                       <td className="p-3 text-right font-mono">
                         {accounting.systemReceivedAmount.toFixed(2)}
                       </td>
@@ -619,10 +619,13 @@ export function ShiftAccountingPage() {
                         -{accounting.expenses.toFixed(2)}
                       </td>
                     </tr>
-                    <tr className="border-t bg-blue-50 dark:bg-blue-950">
-                      <td className="p-3 font-semibold">Net Cash Expected</td>
+                    <tr className="border-t bg-amber-50 dark:bg-amber-950">
+                      <td className="p-3 font-semibold">
+                        Expected Cash in Hand
+                      </td>
                       <td className="p-3 text-right font-mono font-semibold">
                         {(
+                          accounting.openingCash +
                           accounting.systemReceivedAmount -
                           accounting.upiReceived -
                           accounting.cardReceived -
@@ -1038,8 +1041,14 @@ export function ShiftAccountingPage() {
                       </tr>
                     </thead>
                     <tbody>
+                      <tr className="border-t bg-blue-50 dark:bg-blue-950">
+                        <td className="p-3 font-semibold">Opening Cash</td>
+                        <td className="p-3 text-right font-mono font-semibold">
+                          {(currentShift?.openingCash || 0).toFixed(2)}
+                        </td>
+                      </tr>
                       <tr className="border-t">
-                        <td className="p-3">Total Sales Expected</td>
+                        <td className="p-3">Add: Total Sales Expected</td>
                         <td className="p-3 text-right font-mono">
                           {calculateSystemReceivedAmount().toFixed(2)}
                         </td>
@@ -1062,8 +1071,10 @@ export function ShiftAccountingPage() {
                           -{calculateExpenses().toFixed(2)}
                         </td>
                       </tr>
-                      <tr className="border-t bg-blue-50 dark:bg-blue-950">
-                        <td className="p-3 font-semibold">Net Cash Expected</td>
+                      <tr className="border-t bg-amber-50 dark:bg-amber-950">
+                        <td className="p-3 font-semibold">
+                          Expected Cash in Hand
+                        </td>
                         <td className="p-3 text-right font-mono font-semibold">
                           {expectedCash.toFixed(2)}
                         </td>
