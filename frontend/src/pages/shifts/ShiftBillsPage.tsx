@@ -68,6 +68,9 @@ export function ShiftBillsPage() {
   const [isCreatingBill, setIsCreatingBill] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
+  // Check if user is admin or manager
+  const isAdminOrManager = user?.role === "ADMIN" || user?.role === "MANAGER";
+
   // Form state
   const [selectedCustomer, setSelectedCustomer] = useState<Option | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Option | null>(null);
@@ -255,7 +258,7 @@ export function ShiftBillsPage() {
             </p>
           </div>
         </div>
-        {isShiftOpen && (
+        {(isShiftOpen || isAdminOrManager) && (
           <Button onClick={() => setIsSheetOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Create Bill
@@ -338,7 +341,7 @@ export function ShiftBillsPage() {
                     <TableHead className="text-right">Rate</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
                     <TableHead>Vehicle</TableHead>
-                    {isShiftOpen && (
+                    {(isShiftOpen || isAdminOrManager) && (
                       <TableHead className="text-center">Actions</TableHead>
                     )}
                   </TableRow>
@@ -364,7 +367,7 @@ export function ShiftBillsPage() {
                         ₹{bill.amount.toFixed(2)}
                       </TableCell>
                       <TableCell>{bill.vehicleNo || "-"}</TableCell>
-                      {isShiftOpen && (
+                      {(isShiftOpen || isAdminOrManager) && (
                         <TableCell className="text-center">
                           <Button
                             variant="ghost"

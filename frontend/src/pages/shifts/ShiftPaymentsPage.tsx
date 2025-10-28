@@ -68,6 +68,9 @@ export function ShiftPaymentsPage() {
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
+  // Check if user is admin or manager
+  const isAdminOrManager = user?.role === "ADMIN" || user?.role === "MANAGER";
+
   // Form state
   const [selectedCustomer, setSelectedCustomer] = useState<Option | null>(null);
   const [selectedBankAccount, setSelectedBankAccount] = useState<Option | null>(
@@ -264,7 +267,7 @@ export function ShiftPaymentsPage() {
             </p>
           </div>
         </div>
-        {isShiftOpen && (
+        {(isShiftOpen || isAdminOrManager) && (
           <Button onClick={() => setIsSheetOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Receive Payment
@@ -344,7 +347,7 @@ export function ShiftPaymentsPage() {
                     <TableHead>Payment Method</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
                     <TableHead>Notes</TableHead>
-                    {isShiftOpen && (
+                    {(isShiftOpen || isAdminOrManager) && (
                       <TableHead className="text-center">Actions</TableHead>
                     )}
                   </TableRow>
@@ -367,7 +370,7 @@ export function ShiftPaymentsPage() {
                       <TableCell className="text-muted-foreground">
                         {payment.notes || "-"}
                       </TableCell>
-                      {isShiftOpen && (
+                      {(isShiftOpen || isAdminOrManager) && (
                         <TableCell className="text-center">
                           <Button
                             variant="ghost"
