@@ -76,6 +76,11 @@ const allRoutes = [
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
+    path: "/",
+    element: <SalesmanActiveShiftPage />,
+    requiredRoles: ["SALESMAN"],
+  },
+  {
     path: "/dashboard",
     element: <DashboardPage />,
     requiredRoles: ["ADMIN", "MANAGER"],

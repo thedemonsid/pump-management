@@ -162,7 +162,11 @@ export function ShiftListPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div
+            className={`grid grid-cols-1 md:grid-cols-2 ${
+              isAdmin ? "lg:grid-cols-4" : "lg:grid-cols-3"
+            } gap-4`}
+          >
             {/* Start Date */}
             <div className="space-y-2">
               <Label htmlFor="startDate">Start Date</Label>
@@ -204,21 +208,23 @@ export function ShiftListPage() {
               </select>
             </div>
 
-            {/* Search */}
-            <div className="space-y-2">
-              <Label htmlFor="search">Search</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  type="text"
-                  placeholder="Salesman name..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 text-base"
-                />
+            {/* Search - Only for Admin/Manager */}
+            {isAdmin && (
+              <div className="space-y-2">
+                <Label htmlFor="search">Search</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="search"
+                    type="text"
+                    placeholder="Salesman name..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 text-base"
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Action Buttons */}
@@ -276,7 +282,6 @@ export function ShiftListPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Shift ID</TableHead>
                     {isAdmin && <TableHead>Salesman</TableHead>}
                     <TableHead>Start Time</TableHead>
                     <TableHead>End Time</TableHead>
@@ -289,9 +294,6 @@ export function ShiftListPage() {
                 <TableBody>
                   {filteredShifts.map((shift) => (
                     <TableRow key={shift.id}>
-                      <TableCell className="font-mono text-xs">
-                        {shift.id.substring(0, 8)}...
-                      </TableCell>
                       {isAdmin && (
                         <TableCell>
                           <div className="flex items-center gap-2">

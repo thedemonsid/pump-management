@@ -21,6 +21,14 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { NozzleAssignmentService } from "@/services/nozzle-assignment-service";
 import { SalesmanBillService } from "@/services/salesman-bill-service";
 import { SalesmanBillPaymentService } from "@/services/salesman-bill-payment-service";
@@ -38,19 +46,23 @@ import {
   User,
   IndianRupee,
   Edit,
+  Lock,
 } from "lucide-react";
 import { format } from "date-fns";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type {
   NozzleAssignmentResponse,
   SalesmanBillResponse,
   SalesmanBillPaymentResponse,
   SalesmanShiftAccountingResponse,
+  CloseNozzleRequest,
 } from "@/types";
 
 export function ShiftDetailsPage() {
   const { shiftId } = useParams<{ shiftId: string }>();
   const navigate = useNavigate();
-  const { currentShift, fetchShiftById } = useShiftStore();
+  const { currentShift, fetchShiftById, closeShift } = useShiftStore();
 
   const [nozzleAssignments, setNozzleAssignments] = useState<
     NozzleAssignmentResponse[]
@@ -60,6 +72,81 @@ export function ShiftDetailsPage() {
   const [accounting, setAccounting] =
     useState<SalesmanShiftAccountingResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showCloseDialog, setShowCloseDialog] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+
+  // Nozzle closing state
+  const [selectedNozzle, setSelectedNozzle] =
+    useState<NozzleAssignmentResponse | null>(null);
+  const [closingBalance, setClosingBalance] = useState("");
+  const [isClosingNozzle, setIsClosingNozzle] = useState(false);
+
+  const handleCloseShift = async () => {
+    if (!shiftId) return;
+
+    setIsClosing(true);
+    try {
+      await closeShift(shiftId);
+      toast.success("Shift closed successfully");
+      setShowCloseDialog(false);
+      navigate("/shifts");
+    } catch (err) {
+      toast.error("Failed to close shift");
+      console.error(err);
+    } finally {
+      setIsClosing(false);
+    }
+  };
+
+  const handleOpenCloseNozzleDialog = (nozzle: NozzleAssignmentResponse) => {
+    setSelectedNozzle(nozzle);
+    setClosingBalance(nozzle.openingBalance.toString());
+    setShowCloseDialog(false); // Close shift dialog if open
+  };
+
+  const handleCloseNozzle = async () => {
+    if (!shiftId || !selectedNozzle) return;
+
+    const closingBalanceNum = parseFloat(closingBalance);
+    if (isNaN(closingBalanceNum) || closingBalanceNum < 0) {
+      toast.error("Please enter a valid closing balance");
+      return;
+    }
+
+    setIsClosingNozzle(true);
+    try {
+      const request: CloseNozzleRequest = {
+        closingBalance: closingBalanceNum,
+      };
+
+      await NozzleAssignmentService.closeNozzleAssignment(
+        shiftId,
+        selectedNozzle.id,
+        request
+      );
+
+      toast.success("Nozzle closed successfully");
+
+      // Refresh data
+      const updatedNozzles =
+        await NozzleAssignmentService.getAssignmentsForShift(shiftId);
+      setNozzleAssignments(updatedNozzles);
+
+      // Close dialog and reset
+      setSelectedNozzle(null);
+      setClosingBalance("");
+    } catch (err) {
+      toast.error("Failed to close nozzle");
+      console.error(err);
+    } finally {
+      setIsClosingNozzle(false);
+    }
+  };
+
+  const handleCancelCloseNozzle = () => {
+    setSelectedNozzle(null);
+    setClosingBalance("");
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -149,12 +236,24 @@ export function ShiftDetailsPage() {
             </p>
           </div>
         </div>
-        <Badge
-          variant={isShiftOpen ? "default" : "secondary"}
-          className="text-lg px-4 py-2"
-        >
-          {currentShift.status}
-        </Badge>
+        <div className="flex items-center gap-3">
+          <Badge
+            variant={isShiftOpen ? "default" : "secondary"}
+            className="text-lg px-4 py-2"
+          >
+            {currentShift.status}
+          </Badge>
+          {isShiftOpen && (
+            <Button
+              onClick={() => setShowCloseDialog(true)}
+              variant="outline"
+              className="gap-2"
+            >
+              <Lock className="h-4 w-4" />
+              Close Shift
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Shift Overview */}
@@ -332,10 +431,13 @@ export function ShiftDetailsPage() {
                       <TableRow>
                         <TableHead>Nozzle</TableHead>
                         <TableHead>Product</TableHead>
-                        <TableHead className="text-right">Opening</TableHead>
+                        <TableHead className="text-right">
+                          Opening (L)
+                        </TableHead>
                         <TableHead className="text-right">Closing</TableHead>
                         <TableHead className="text-right">Dispensed</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -366,6 +468,21 @@ export function ShiftDetailsPage() {
                             >
                               {nozzle.status}
                             </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {nozzle.status === "OPEN" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  handleOpenCloseNozzleDialog(nozzle)
+                                }
+                                className="gap-2"
+                              >
+                                <Lock className="h-3 w-3" />
+                                Close
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -672,6 +789,168 @@ export function ShiftDetailsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Close Shift Dialog */}
+      <Sheet open={showCloseDialog} onOpenChange={setShowCloseDialog}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Close Shift</SheetTitle>
+            <SheetDescription>
+              Are you sure you want to close this shift?
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="py-6">
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <p className="font-medium mb-2">Before closing the shift:</p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Make sure all nozzles are closed</li>
+                  <li>Verify all bills and payments are recorded</li>
+                  <li>Check the accounting summary is accurate</li>
+                </ul>
+              </AlertDescription>
+            </Alert>
+          </div>
+
+          <SheetFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowCloseDialog(false)}
+              disabled={isClosing}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCloseShift}
+              disabled={isClosing}
+              className="gap-2"
+            >
+              {isClosing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Closing...
+                </>
+              ) : (
+                <>
+                  <Lock className="h-4 w-4" />
+                  Close Shift
+                </>
+              )}
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      {/* Close Nozzle Dialog */}
+      <Sheet
+        open={!!selectedNozzle}
+        onOpenChange={(open) => !open && handleCancelCloseNozzle()}
+      >
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Close Nozzle Assignment</SheetTitle>
+            <SheetDescription>
+              Enter the closing balance for {selectedNozzle?.nozzleName}
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="space-y-6 py-6">
+            {/* Nozzle Info */}
+            <div className="rounded-lg border p-4 space-y-2 bg-muted/50">
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Nozzle:</span>
+                <span className="font-medium">
+                  {selectedNozzle?.nozzleName}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Product:</span>
+                <span className="font-medium">
+                  {selectedNozzle?.productName}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">
+                  Opening Balance:
+                </span>
+                <span className="font-mono font-semibold">
+                  {selectedNozzle?.openingBalance.toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            {/* Closing Balance Input */}
+            <div className="space-y-2">
+              <Label htmlFor="closingBalance">
+                Closing Balance <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="closingBalance"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="Enter closing balance"
+                value={closingBalance}
+                onChange={(e) => setClosingBalance(e.target.value)}
+                disabled={isClosingNozzle}
+              />
+              {closingBalance && selectedNozzle && (
+                <div className="text-sm space-y-1">
+                  <div className="flex justify-between items-center p-2 rounded bg-blue-50 dark:bg-blue-950">
+                    <span className="text-muted-foreground">
+                      Dispensed Amount:
+                    </span>
+                    <span className="font-semibold text-blue-600 dark:text-blue-400">
+                      ₹
+                      {(
+                        parseFloat(closingBalance) -
+                        selectedNozzle.openingBalance
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Make sure to verify the closing balance from the nozzle meter
+                before submitting.
+              </AlertDescription>
+            </Alert>
+          </div>
+
+          <SheetFooter>
+            <Button
+              variant="outline"
+              onClick={handleCancelCloseNozzle}
+              disabled={isClosingNozzle}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCloseNozzle}
+              disabled={isClosingNozzle || !closingBalance}
+              className="gap-2"
+            >
+              {isClosingNozzle ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Closing...
+                </>
+              ) : (
+                <>
+                  <Lock className="h-4 w-4" />
+                  Close Nozzle
+                </>
+              )}
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

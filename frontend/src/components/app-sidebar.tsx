@@ -116,16 +116,6 @@ const managementItems = [
     url: "/shifts",
     icon: Clock,
   },
-  {
-    title: "Salesman Bills",
-    url: "/salesman-bills",
-    icon: Receipt,
-  },
-  {
-    title: "Salesman Payments",
-    url: "/salesman-bill-payments",
-    icon: CreditCard,
-  },
 ];
 
 const salesmanItems = [
@@ -138,21 +128,6 @@ const salesmanItems = [
     title: "Shifts",
     url: "/shifts",
     icon: Clock,
-  },
-  {
-    title: "My Bills",
-    url: "/salesman/bills",
-    icon: Receipt,
-  },
-  {
-    title: "My Payments",
-    url: "/salesman/payments",
-    icon: CreditCard,
-  },
-  {
-    title: "My Expenses",
-    url: "/expenses",
-    icon: Wallet,
   },
 ];
 

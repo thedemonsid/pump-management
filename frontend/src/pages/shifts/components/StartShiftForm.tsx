@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,7 +34,6 @@ export function StartShiftForm({
   onSuccess,
   onCancel,
 }: StartShiftFormProps) {
-  const navigate = useNavigate();
   const [openingCash, setOpeningCash] = useState<string>("");
   const [selectedSalesman, setSelectedSalesman] =
     useState<SalesmanOption | null>(null);
@@ -44,40 +42,9 @@ export function StartShiftForm({
   const [availableNozzles, setAvailableNozzles] = useState<NozzleOption[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingNozzles, setIsLoadingNozzles] = useState(true);
-  const [isCheckingActiveShift, setIsCheckingActiveShift] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeShiftId, setActiveShiftId] = useState<string | null>(null);
 
   const needsSalesmanSelector = !salesmanId; // Show selector if salesmanId not provided
-
-  // Check for active shift when salesman is selected
-  const checkForActiveShift = useCallback(
-    async (salesmanIdToCheck: string) => {
-      setIsCheckingActiveShift(true);
-      setError(null);
-      setActiveShiftId(null);
-      try {
-        const activeShifts = await SalesmanShiftService.getActiveShifts(
-          salesmanIdToCheck
-        );
-        if (activeShifts && activeShifts.length > 0) {
-          const activeShift = activeShifts[0];
-          setActiveShiftId(activeShift.id);
-          setError(
-            `${
-              selectedSalesman?.label || "This salesman"
-            } already has an active shift. Please close the existing shift before starting a new one.`
-          );
-        }
-      } catch (err) {
-        // If error fetching active shifts, assume no active shift
-        console.error("Error checking active shift:", err);
-      } finally {
-        setIsCheckingActiveShift(false);
-      }
-    },
-    [selectedSalesman]
-  );
 
   // Fetch salesmen if needed (for admin/manager)
   useEffect(() => {
@@ -85,16 +52,6 @@ export function StartShiftForm({
       fetchSalesmen();
     }
   }, [needsSalesmanSelector]);
-
-  // Check for active shift when salesman is selected
-  useEffect(() => {
-    if (selectedSalesman) {
-      checkForActiveShift(selectedSalesman.value);
-    } else {
-      setError(null);
-      setActiveShiftId(null);
-    }
-  }, [selectedSalesman, checkForActiveShift]);
 
   // Fetch available nozzles on mount
   useEffect(() => {
@@ -104,11 +61,37 @@ export function StartShiftForm({
   const fetchSalesmen = async () => {
     try {
       const data = await SalesmanService.getAll();
-      const options: SalesmanOption[] = data.map((s: Salesman) => ({
-        value: s.id!,
-        label: s.username,
-      }));
-      setSalesmen(options);
+
+      // Check each salesman for active shifts and filter them out
+      const salesmenWithActiveShiftCheck = await Promise.all(
+        data.map(async (s: Salesman) => {
+          try {
+            const activeShifts = await SalesmanShiftService.getActiveShifts(
+              s.id!
+            );
+            return {
+              salesman: s,
+              hasActiveShift: activeShifts && activeShifts.length > 0,
+            };
+          } catch {
+            // If error checking, assume no active shift
+            return {
+              salesman: s,
+              hasActiveShift: false,
+            };
+          }
+        })
+      );
+
+      // Filter out salesmen with active shifts
+      const availableSalesmen = salesmenWithActiveShiftCheck
+        .filter((item) => !item.hasActiveShift)
+        .map((item) => ({
+          value: item.salesman.id!,
+          label: item.salesman.username,
+        }));
+
+      setSalesmen(availableSalesmen);
     } catch (err) {
       toast.error("Failed to load salesmen");
       console.error(err);
@@ -120,37 +103,40 @@ export function StartShiftForm({
     try {
       const nozzles = await NozzleService.getAllForPump();
 
-      // Filter out nozzles that are currently assigned to an open shift
-      const availableNozzlesData: NozzleOption[] = [];
+      // Get all open shifts to find which nozzles are currently assigned
+      const openShifts = await SalesmanShiftService.getAll({ status: "OPEN" });
 
-      for (const nozzle of nozzles) {
-        if (!nozzle.id) continue; // Skip nozzles without ID
+      // Collect all nozzle IDs that are assigned to open shifts
+      const assignedNozzleIds = new Set<string>();
 
+      for (const shift of openShifts) {
         try {
-          // Try to get assignments for this nozzle
-          const assignments = await NozzleAssignmentService.getByNozzleId(
-            nozzle.id
-          );
-          // If there are any open assignments, skip this nozzle
-          const hasOpenAssignment = assignments.some(
-            (a) => a.status === "OPEN"
-          );
-          if (!hasOpenAssignment) {
-            availableNozzlesData.push({
-              value: nozzle.id,
-              label: `${nozzle.nozzleName} - ${nozzle.productName}`,
-              data: nozzle,
+          const assignments =
+            await NozzleAssignmentService.getAssignmentsForShift(shift.id);
+          // Add nozzle IDs from OPEN assignments
+          assignments
+            .filter((a) => a.status === "OPEN")
+            .forEach((a) => {
+              if (a.nozzleId) {
+                assignedNozzleIds.add(a.nozzleId);
+              }
             });
-          }
-        } catch {
-          // If no assignments found (404), nozzle is available
-          availableNozzlesData.push({
-            value: nozzle.id,
-            label: `${nozzle.nozzleName} - ${nozzle.productName}`,
-            data: nozzle,
-          });
+        } catch (err) {
+          console.error(
+            `Error fetching assignments for shift ${shift.id}:`,
+            err
+          );
         }
       }
+
+      // Filter out nozzles that are assigned to open shifts
+      const availableNozzlesData: NozzleOption[] = nozzles
+        .filter((nozzle) => nozzle.id && !assignedNozzleIds.has(nozzle.id))
+        .map((nozzle) => ({
+          value: nozzle.id!,
+          label: `${nozzle.nozzleName} - ${nozzle.productName}`,
+          data: nozzle,
+        }));
 
       setAvailableNozzles(availableNozzlesData);
     } catch (err) {
@@ -230,22 +216,7 @@ export function StartShiftForm({
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="flex flex-col gap-2">
-            <span>{error}</span>
-            {activeShiftId && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  navigate(`/shifts/${activeShiftId}`);
-                  onCancel();
-                }}
-              >
-                View Active Shift
-              </Button>
-            )}
-          </AlertDescription>
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
@@ -261,7 +232,7 @@ export function StartShiftForm({
             value={selectedSalesman}
             onChange={setSelectedSalesman}
             placeholder="Select salesman..."
-            isDisabled={isLoading || isCheckingActiveShift}
+            isDisabled={isLoading}
             className="text-base"
             styles={{
               control: (base) => ({
@@ -269,14 +240,11 @@ export function StartShiftForm({
                 minHeight: "40px",
                 fontSize: "16px",
               }),
-              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
             }}
-            menuPortalTarget={document.body}
           />
-          {isCheckingActiveShift && (
-            <p className="text-sm text-muted-foreground flex items-center">
-              <Loader2 className="h-3 w-3 animate-spin mr-1" />
-              Checking for active shift...
+          {salesmen.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No available salesmen. All salesmen have active shifts.
             </p>
           )}
         </div>
@@ -335,9 +303,7 @@ export function StartShiftForm({
                   ...base,
                   fontSize: "16px",
                 }),
-                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
               }}
-              menuPortalTarget={document.body}
               noOptionsMessage={() =>
                 availableNozzles.length === 0
                   ? "No available nozzles. All nozzles are currently assigned."

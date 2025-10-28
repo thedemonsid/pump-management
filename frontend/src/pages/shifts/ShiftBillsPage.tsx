@@ -423,9 +423,7 @@ export function ShiftBillsPage() {
                     minHeight: "40px",
                     fontSize: "16px",
                   }),
-                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                 }}
-                menuPortalTarget={document.body}
               />
             </div>
 
@@ -449,7 +447,6 @@ export function ShiftBillsPage() {
                   }),
                   menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                 }}
-                menuPortalTarget={document.body}
               />
             </div>
 
