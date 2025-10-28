@@ -38,11 +38,11 @@ export const SalesmanShiftAccountingService = {
    * Update accounting
    */
   async update(
-    id: string,
+    shiftId: string,
     request: UpdateSalesmanShiftAccountingRequest
   ): Promise<SalesmanShiftAccountingResponse> {
     const response = await api.put<SalesmanShiftAccountingResponse>(
-      `${BASE_URL}/${id}`,
+      `${BASE_URL}/shift/${shiftId}`,
       request
     );
     return response.data;

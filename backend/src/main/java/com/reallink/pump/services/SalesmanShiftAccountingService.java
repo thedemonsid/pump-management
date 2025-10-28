@@ -58,19 +58,22 @@ public class SalesmanShiftAccountingService {
         BigDecimal totalFuelSales = shift.calculateTotalFuelSales();
         BigDecimal totalCredit = shift.calculateTotalCredit();
         BigDecimal totalPayments = shift.calculateTotalPayments();
+        BigDecimal totalExpenses = shift.calculateTotalExpenses();
+        BigDecimal systemReceivedAmount = totalFuelSales.add(totalPayments);
 
         // Calculate cash in hand from denominations
         BigDecimal cashInHand = calculateCashFromDenominations(request);
 
         // Calculate expected cash
-        // Expected = Opening Cash + Fuel Sales + Payments - Credit - Expenses - UPI - Card
+        // Expected = Opening Cash + Fuel Sales + Payments - Credit - Expenses - UPI - Card - Fleet Card
         BigDecimal expectedCash = shift.getOpeningCash()
                 .add(totalFuelSales)
                 .add(totalPayments)
                 .subtract(totalCredit)
-                .subtract(request.getExpenses())
+                .subtract(totalExpenses)
                 .subtract(request.getUpiReceived())
-                .subtract(request.getCardReceived());
+                .subtract(request.getCardReceived())
+                .subtract(request.getFleetCardReceived());
 
         // Calculate balance (difference between actual and expected)
         BigDecimal balanceAmount = cashInHand.subtract(expectedCash);
@@ -78,19 +81,23 @@ public class SalesmanShiftAccountingService {
         // Create accounting record
         SalesmanShiftAccounting accounting = new SalesmanShiftAccounting();
         accounting.setSalesmanShift(shift);
+
+        // Save calculated values (frozen snapshot)
         accounting.setFuelSales(totalFuelSales);
-        accounting.setCredit(totalCredit);
         accounting.setCustomerReceipt(totalPayments);
+        accounting.setSystemReceivedAmount(systemReceivedAmount);
+        accounting.setCredit(totalCredit);
+        accounting.setExpenses(totalExpenses);
+        accounting.setOpeningCash(shift.getOpeningCash());
+
+        // Save user inputs
         accounting.setUpiReceived(request.getUpiReceived());
         accounting.setCardReceived(request.getCardReceived());
-        accounting.setExpenses(request.getExpenses());
-        accounting.setExpenseReason(request.getExpenseReason());
+        accounting.setFleetCardReceived(request.getFleetCardReceived());
         accounting.setCashInHand(cashInHand);
         accounting.setBalanceAmount(balanceAmount);
 
         // Set denominations
-        accounting.setNotes2000(request.getNotes2000());
-        accounting.setNotes1000(request.getNotes1000());
         accounting.setNotes500(request.getNotes500());
         accounting.setNotes200(request.getNotes200());
         accounting.setNotes100(request.getNotes100());
@@ -140,35 +147,44 @@ public class SalesmanShiftAccountingService {
 
         SalesmanShift shift = accounting.getSalesmanShift();
 
+        // Recalculate totals (in case data changed)
+        BigDecimal totalFuelSales = shift.calculateTotalFuelSales();
+        BigDecimal totalCredit = shift.calculateTotalCredit();
+        BigDecimal totalPayments = shift.calculateTotalPayments();
+        BigDecimal totalExpenses = shift.calculateTotalExpenses();
+        BigDecimal systemReceivedAmount = totalFuelSales.add(totalPayments);
+
         // Recalculate cash in hand
         BigDecimal cashInHand = calculateCashFromDenominations(request);
 
         // Recalculate expected cash
-        BigDecimal totalFuelSales = shift.calculateTotalFuelSales();
-        BigDecimal totalCredit = shift.calculateTotalCredit();
-        BigDecimal totalPayments = shift.calculateTotalPayments();
-
         BigDecimal expectedCash = shift.getOpeningCash()
                 .add(totalFuelSales)
                 .add(totalPayments)
                 .subtract(totalCredit)
-                .subtract(request.getExpenses())
+                .subtract(totalExpenses)
                 .subtract(request.getUpiReceived())
-                .subtract(request.getCardReceived());
+                .subtract(request.getCardReceived())
+                .subtract(request.getFleetCardReceived());
 
         BigDecimal balanceAmount = cashInHand.subtract(expectedCash);
 
-        // Update fields
+        // Update calculated values
+        accounting.setFuelSales(totalFuelSales);
+        accounting.setCustomerReceipt(totalPayments);
+        accounting.setSystemReceivedAmount(systemReceivedAmount);
+        accounting.setCredit(totalCredit);
+        accounting.setExpenses(totalExpenses);
+        accounting.setOpeningCash(shift.getOpeningCash());
+
+        // Update user input fields
         accounting.setUpiReceived(request.getUpiReceived());
         accounting.setCardReceived(request.getCardReceived());
-        accounting.setExpenses(request.getExpenses());
-        accounting.setExpenseReason(request.getExpenseReason());
+        accounting.setFleetCardReceived(request.getFleetCardReceived());
         accounting.setCashInHand(cashInHand);
         accounting.setBalanceAmount(balanceAmount);
 
         // Update denominations
-        accounting.setNotes2000(request.getNotes2000());
-        accounting.setNotes1000(request.getNotes1000());
         accounting.setNotes500(request.getNotes500());
         accounting.setNotes200(request.getNotes200());
         accounting.setNotes100(request.getNotes100());
@@ -190,9 +206,7 @@ public class SalesmanShiftAccountingService {
      * Calculate total cash from denomination counts.
      */
     private BigDecimal calculateCashFromDenominations(CreateShiftAccountingRequest request) {
-        return BigDecimal.valueOf(request.getNotes2000() * 2000)
-                .add(BigDecimal.valueOf(request.getNotes1000() * 1000))
-                .add(BigDecimal.valueOf(request.getNotes500() * 500))
+        return BigDecimal.valueOf(request.getNotes500() * 500)
                 .add(BigDecimal.valueOf(request.getNotes200() * 200))
                 .add(BigDecimal.valueOf(request.getNotes100() * 100))
                 .add(BigDecimal.valueOf(request.getNotes50() * 50))

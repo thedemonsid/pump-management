@@ -212,14 +212,19 @@ export function UpdateSupplierForm({
                   <Input
                     type="number"
                     step="0.01"
-                    placeholder="1000.00"
-                    {...field}
-                    value={field.value?.toString() || ""}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === "" ? null : Number(e.target.value)
-                      )
+                    min="0"
+                    placeholder="0.00"
+                    value={
+                      field.value === null || field.value === 0
+                        ? ""
+                        : field.value
                     }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(
+                        value === "" ? null : parseFloat(value) || null
+                      );
+                    }}
                   />
                 </FormControl>
                 <FormMessage />

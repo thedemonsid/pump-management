@@ -36,20 +36,54 @@ public class SalesmanShiftAccounting extends BaseEntity {
     private SalesmanShift salesmanShift;
 
     /**
-     * Total fuel sales amount for this shift.
+     * Total fuel sales from all nozzles during this shift. Calculated at
+     * accounting creation time and frozen.
      */
+    @NotNull(message = "Fuel sales is required")
     @DecimalMin(value = "0.0", message = "Fuel sales cannot be negative")
     @Digits(integer = 15, fraction = 2, message = "Fuel sales must have at most 15 digits and 2 decimal places")
-    @Column(name = "fuel_sales", precision = 17, scale = 2)
+    @Column(name = "fuel_sales", nullable = false, precision = 17, scale = 2)
     private BigDecimal fuelSales = BigDecimal.ZERO;
 
     /**
-     * Amount received from customers repaying previous credit bills.
+     * Total customer receipts (bill payments) received during this shift.
+     * Calculated at accounting creation time and frozen.
      */
+    @NotNull(message = "Customer receipt is required")
     @DecimalMin(value = "0.0", message = "Customer receipt cannot be negative")
     @Digits(integer = 15, fraction = 2, message = "Customer receipt must have at most 15 digits and 2 decimal places")
-    @Column(name = "customer_receipt", precision = 17, scale = 2)
+    @Column(name = "customer_receipt", nullable = false, precision = 17, scale = 2)
     private BigDecimal customerReceipt = BigDecimal.ZERO;
+
+    /**
+     * System received amount (fuel sales + customer receipts). Calculated at
+     * accounting creation time and frozen.
+     */
+    @NotNull(message = "System received amount is required")
+    @DecimalMin(value = "0.0", message = "System received amount cannot be negative")
+    @Digits(integer = 15, fraction = 2, message = "System received amount must have at most 15 digits and 2 decimal places")
+    @Column(name = "system_received_amount", nullable = false, precision = 17, scale = 2)
+    private BigDecimal systemReceivedAmount = BigDecimal.ZERO;
+
+    /**
+     * Total credit given (sum of all credit bills) during this shift.
+     * Calculated at accounting creation time and frozen.
+     */
+    @NotNull(message = "Credit is required")
+    @DecimalMin(value = "0.0", message = "Credit cannot be negative")
+    @Digits(integer = 15, fraction = 2, message = "Credit must have at most 15 digits and 2 decimal places")
+    @Column(name = "credit", nullable = false, precision = 17, scale = 2)
+    private BigDecimal credit = BigDecimal.ZERO;
+
+    /**
+     * Total expenses incurred during this shift. Calculated at accounting
+     * creation time and frozen.
+     */
+    @NotNull(message = "Expenses is required")
+    @DecimalMin(value = "0.0", message = "Expenses cannot be negative")
+    @Digits(integer = 15, fraction = 2, message = "Expenses must have at most 15 digits and 2 decimal places")
+    @Column(name = "expenses", nullable = false, precision = 17, scale = 2)
+    private BigDecimal expenses = BigDecimal.ZERO;
 
     /**
      * Amount received via UPI payments during this shift.
@@ -68,21 +102,21 @@ public class SalesmanShiftAccounting extends BaseEntity {
     private BigDecimal cardReceived = BigDecimal.ZERO;
 
     /**
-     * Total value of fuel sold on credit (to be collected from customers
-     * later).
+     * Amount received via fleet card payments during this shift.
      */
-    @DecimalMin(value = "0.0", message = "Credit cannot be negative")
-    @Digits(integer = 15, fraction = 2, message = "Credit must have at most 15 digits and 2 decimal places")
-    @Column(name = "credit", precision = 17, scale = 2)
-    private BigDecimal credit = BigDecimal.ZERO;
+    @DecimalMin(value = "0.0", message = "Fleet card received cannot be negative")
+    @Digits(integer = 15, fraction = 2, message = "Fleet card received must have at most 15 digits and 2 decimal places")
+    @Column(name = "fleet_card_received", precision = 17, scale = 2)
+    private BigDecimal fleetCardReceived = BigDecimal.ZERO;
 
-    @DecimalMin(value = "0.0", message = "Expenses cannot be negative")
-    @Digits(integer = 15, fraction = 2, message = "Expenses must have at most 15 digits and 2 decimal places")
-    @Column(name = "expenses", precision = 17, scale = 2)
-    private BigDecimal expenses = BigDecimal.ZERO;
-
-    @Column(name = "expense_reason")
-    private String expenseReason;
+    /**
+     * Opening cash given to salesman at start of shift (copied from shift).
+     */
+    @NotNull(message = "Opening cash is required")
+    @DecimalMin(value = "0.0", message = "Opening cash cannot be negative")
+    @Digits(integer = 15, fraction = 2, message = "Opening cash must have at most 15 digits and 2 decimal places")
+    @Column(name = "opening_cash", nullable = false, precision = 17, scale = 2)
+    private BigDecimal openingCash = BigDecimal.ZERO;
 
     /**
      * Total cash physically counted and submitted by the salesman.
@@ -98,14 +132,6 @@ public class SalesmanShiftAccounting extends BaseEntity {
     @Digits(integer = 15, fraction = 2, message = "Balance amount must have at most 15 digits and 2 decimal places")
     @Column(name = "balance_amount", precision = 17, scale = 2)
     private BigDecimal balanceAmount = BigDecimal.ZERO;
-
-    @Min(value = 0, message = "Number of 2000 notes cannot be negative")
-    @Column(name = "notes_2000")
-    private Integer notes2000 = 0;
-
-    @Min(value = 0, message = "Number of 1000 notes cannot be negative")
-    @Column(name = "notes_1000")
-    private Integer notes1000 = 0;
 
     @Min(value = 0, message = "Number of 500 notes cannot be negative")
     @Column(name = "notes_500")

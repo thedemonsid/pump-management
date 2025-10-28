@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSupplierStore } from '@/store/supplier-store';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSupplierStore } from "@/store/supplier-store";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Plus, Loader2 } from 'lucide-react';
+} from "@/components/ui/card";
+import { Plus, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,13 +17,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { CreateSupplierForm } from './CreateSupplierForm';
-import { UpdateSupplierForm } from './UpdateSupplierForm';
-import { DataTable } from '@/components/ui/data-table';
-import { columns } from './columns';
-import type { Supplier } from '@/types';
-import { Link } from 'react-router-dom';
+} from "@/components/ui/dialog";
+import { CreateSupplierForm } from "./CreateSupplierForm";
+import { UpdateSupplierForm } from "./UpdateSupplierForm";
+import { DataTable } from "@/components/ui/data-table";
+import { columns } from "./columns";
+import type { Supplier } from "@/types";
+import { Link } from "react-router-dom";
 
 export function SuppliersPage() {
   const navigate = useNavigate();
@@ -38,11 +38,11 @@ export function SuppliersPage() {
   }, [fetchSuppliers]);
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this supplier?')) {
+    if (confirm("Are you sure you want to delete this supplier?")) {
       try {
         await removeSupplier(id);
       } catch (error) {
-        console.error('Failed to delete supplier:', error);
+        console.error("Failed to delete supplier:", error);
       }
     }
   };

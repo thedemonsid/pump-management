@@ -16,7 +16,9 @@ import com.reallink.pump.entities.SalesmanShiftAccounting;
 public interface SalesmanShiftAccountingMapper {
 
     /**
-     * Maps SalesmanShiftAccounting entity to SalesmanShiftAccountingResponse
+     * Maps SalesmanShiftAccounting entity to SalesmanShiftAccountingResponse.
+     * All calculated fields (fuelSales, credit, expenses, etc.) are now stored
+     * in the entity as frozen snapshots, so we just map them directly.
      */
     @Mapping(target = "shiftId", source = "salesmanShift.id")
     SalesmanShiftAccountingResponse toResponse(SalesmanShiftAccounting entity);

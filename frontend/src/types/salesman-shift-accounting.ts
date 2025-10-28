@@ -6,9 +6,9 @@ export interface SalesmanShiftAccountingResponse {
   id: string;
   /** Salesman Shift ID */
   shiftId: string;
-  /** Fuel sales amount */
+  /** Fuel sales amount (calculated from nozzles) */
   fuelSales: number;
-  /** Customer receipt (cash from customers) */
+  /** Customer receipt (calculated from bill payments) */
   customerReceipt: number;
   /** System received amount (fuel sales + customer receipt) */
   systemReceivedAmount: number;
@@ -16,20 +16,18 @@ export interface SalesmanShiftAccountingResponse {
   upiReceived: number;
   /** Card received amount */
   cardReceived: number;
-  /** Credit amount */
+  /** Fleet card received amount */
+  fleetCardReceived: number;
+  /** Credit amount (calculated from credit bills) */
   credit: number;
-  /** Expenses amount */
+  /** Expenses amount (calculated from shift expenses) */
   expenses: number;
-  /** Expense reason */
-  expenseReason?: string;
+  /** Opening cash given to salesman at shift start */
+  openingCash: number;
   /** Cash in hand */
   cashInHand: number;
   /** Balance amount (expected cash - actual cash) */
   balanceAmount: number;
-  /** Number of 2000 rupees notes */
-  notes2000: number;
-  /** Number of 1000 rupees notes */
-  notes1000: number;
   /** Number of 500 rupees notes */
   notes500: number;
   /** Number of 200 rupees notes */
@@ -64,14 +62,8 @@ export interface CreateSalesmanShiftAccountingRequest {
   upiReceived: number;
   /** Card received amount */
   cardReceived: number;
-  /** Expenses amount */
-  expenses: number;
-  /** Expense reason */
-  expenseReason?: string;
-  /** Number of 2000 rupees notes */
-  notes2000?: number;
-  /** Number of 1000 rupees notes */
-  notes1000?: number;
+  /** Fleet card received amount */
+  fleetCardReceived: number;
   /** Number of 500 rupees notes */
   notes500?: number;
   /** Number of 200 rupees notes */
@@ -100,14 +92,8 @@ export interface UpdateSalesmanShiftAccountingRequest {
   upiReceived?: number;
   /** Card received amount */
   cardReceived?: number;
-  /** Expenses amount */
-  expenses?: number;
-  /** Expense reason */
-  expenseReason?: string;
-  /** Number of 2000 rupees notes */
-  notes2000?: number;
-  /** Number of 1000 rupees notes */
-  notes1000?: number;
+  /** Fleet card received amount */
+  fleetCardReceived?: number;
   /** Number of 500 rupees notes */
   notes500?: number;
   /** Number of 200 rupees notes */

@@ -27,18 +27,10 @@ public class UpdateSalesmanShiftAccountingRequest {
     @Digits(integer = 15, fraction = 2, message = "Card received must have at most 15 digits and 2 decimal places")
     private BigDecimal cardReceived;
 
-    @NotNull(message = "Expenses is required")
-    @DecimalMin(value = "0.0", message = "Expenses cannot be negative")
-    @Digits(integer = 15, fraction = 2, message = "Expenses must have at most 15 digits and 2 decimal places")
-    private BigDecimal expenses;
-
-    private String expenseReason;
-
-    @Min(value = 0, message = "Number of 2000 notes cannot be negative")
-    private Integer notes2000 = 0;
-
-    @Min(value = 0, message = "Number of 1000 notes cannot be negative")
-    private Integer notes1000 = 0;
+    @NotNull(message = "Fleet card received is required")
+    @DecimalMin(value = "0.0", message = "Fleet card received cannot be negative")
+    @Digits(integer = 15, fraction = 2, message = "Fleet card received must have at most 15 digits and 2 decimal places")
+    private BigDecimal fleetCardReceived;
 
     @Min(value = 0, message = "Number of 500 notes cannot be negative")
     private Integer notes500 = 0;

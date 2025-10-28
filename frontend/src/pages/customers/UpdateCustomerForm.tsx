@@ -156,9 +156,13 @@ export function UpdateCustomerForm({
                 <FormControl>
                   <Input
                     type="number"
-                    placeholder="50000"
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    min="0"
+                    placeholder="0"
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseInt(value) || 0);
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -178,13 +182,13 @@ export function UpdateCustomerForm({
                   <Input
                     type="number"
                     step="0.01"
-                    placeholder="1000.00"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value ? Number(e.target.value) : undefined
-                      )
-                    }
+                    min="0"
+                    placeholder="0.00"
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseFloat(value) || 0);
+                    }}
                   />
                 </FormControl>
                 <FormMessage />

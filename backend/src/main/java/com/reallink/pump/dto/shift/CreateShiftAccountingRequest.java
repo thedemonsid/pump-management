@@ -25,23 +25,11 @@ public class CreateShiftAccountingRequest {
     @Digits(integer = 15, fraction = 2)
     private BigDecimal cardReceived = BigDecimal.ZERO;
 
-    @DecimalMin(value = "0.0", message = "Customer receipt cannot be negative")
+    @DecimalMin(value = "0.0", message = "Fleet card received cannot be negative")
     @Digits(integer = 15, fraction = 2)
-    private BigDecimal customerReceipt = BigDecimal.ZERO;
-
-    @DecimalMin(value = "0.0", message = "Expenses cannot be negative")
-    @Digits(integer = 15, fraction = 2)
-    private BigDecimal expenses = BigDecimal.ZERO;
-
-    private String expenseReason;
+    private BigDecimal fleetCardReceived = BigDecimal.ZERO;
 
     // Cash denomination counts
-    @Min(value = 0, message = "Number of 2000 notes cannot be negative")
-    private Integer notes2000 = 0;
-
-    @Min(value = 0, message = "Number of 1000 notes cannot be negative")
-    private Integer notes1000 = 0;
-
     @Min(value = 0, message = "Number of 500 notes cannot be negative")
     private Integer notes500 = 0;
 

@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useBankAccountStore } from '@/store/bank-account-store';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useBankAccountStore } from "@/store/bank-account-store";
 import {
   BankAccountSchema,
   type BankAccount,
   DEFAULT_PUMP_INFO,
-} from '@/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+} from "@/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -17,9 +17,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Loader2 } from 'lucide-react';
-import { z } from 'zod';
+} from "@/components/ui/form";
+import { Loader2 } from "lucide-react";
+import { z } from "zod";
 
 // Form schema without id, pumpMasterId, createdAt, updatedAt, version (these are handled by the store/API)
 const BankAccountFormSchema = BankAccountSchema.omit({
@@ -57,13 +57,13 @@ export function BankAccountForm({
           openingBalanceDate: bankAccount.openingBalanceDate,
         }
       : {
-          accountHolderName: '',
-          accountNumber: '',
-          ifscCode: '',
-          bank: '',
-          branch: '',
+          accountHolderName: "",
+          accountNumber: "",
+          ifscCode: "",
+          bank: "",
+          branch: "",
           openingBalance: 0,
-          openingBalanceDate: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
+          openingBalanceDate: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
         },
   });
 
@@ -88,7 +88,7 @@ export function BankAccountForm({
       onSuccess();
       form.reset();
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -184,11 +184,13 @@ export function BankAccountForm({
                   <Input
                     type="number"
                     step="0.01"
+                    min="0"
                     placeholder="0.00"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(parseFloat(e.target.value) || 0)
-                    }
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseFloat(value) || 0);
+                    }}
                   />
                 </FormControl>
                 <FormDescription>
@@ -228,7 +230,7 @@ export function BankAccountForm({
           </Button>
           <Button type="submit" disabled={isSubmitting || loading}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {bankAccount ? 'Update' : 'Create'} Bank Account
+            {bankAccount ? "Update" : "Create"} Bank Account
           </Button>
         </div>
       </form>

@@ -32,26 +32,23 @@ public class SalesmanShiftAccountingResponse {
     @Schema(description = "Card received amount", example = "15000.00")
     private BigDecimal cardReceived;
 
+    @Schema(description = "Fleet card received amount", example = "8000.00")
+    private BigDecimal fleetCardReceived;
+
     @Schema(description = "Credit amount", example = "5000.00")
     private BigDecimal credit;
 
-    @Schema(description = "Expenses amount", example = "500.00")
+    @Schema(description = "Total expenses from shift expenses", example = "500.00")
     private BigDecimal expenses;
 
-    @Schema(description = "Expense reason", example = "Fuel purchase")
-    private String expenseReason;
+    @Schema(description = "Opening cash given to salesman at shift start", example = "5000.00")
+    private BigDecimal openingCash;
 
     @Schema(description = "Cash in hand", example = "20000.00")
     private BigDecimal cashInHand;
 
     @Schema(description = "Balance amount (expected cash - actual cash)", example = "0.00")
     private BigDecimal balanceAmount;
-
-    @Schema(description = "Number of 2000 rupees notes", example = "5")
-    private Integer notes2000;
-
-    @Schema(description = "Number of 1000 rupees notes", example = "10")
-    private Integer notes1000;
 
     @Schema(description = "Number of 500 rupees notes", example = "20")
     private Integer notes500;

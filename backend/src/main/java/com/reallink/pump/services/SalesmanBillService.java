@@ -28,6 +28,7 @@ import com.reallink.pump.repositories.ProductRepository;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
 import com.reallink.pump.repositories.SalesmanBillRepository;
 import com.reallink.pump.repositories.SalesmanShiftRepository;
+import com.reallink.pump.security.SecurityHelper;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -46,6 +47,7 @@ public class SalesmanBillService {
     private final SalesmanShiftRepository salesmanShiftRepository;
     private final SalesmanBillMapper mapper;
     private final FileStorageService fileStorageService;
+    private final SecurityHelper securityHelper;
 
     public List<SalesmanBillResponse> getAll() {
         return repository.findAll().stream()
@@ -88,13 +90,15 @@ public class SalesmanBillService {
                     "Salesman bills can only contain FUEL products. Product " + product.getProductName() + " is of type " + product.getProductType());
         }
 
-        // Validate salesman shift exists and is open
+        // Validate salesman shift exists
         SalesmanShift salesmanShift = salesmanShiftRepository.findById(request.getSalesmanShiftId()).orElse(null);
         if (salesmanShift == null) {
             throw new PumpBusinessException("INVALID_SALESMAN_SHIFT",
                     "Salesman shift with ID " + request.getSalesmanShiftId() + " does not exist");
         }
-        if (!salesmanShift.getStatus().equals(SalesmanShift.ShiftStatus.OPEN)) {
+        // Only check shift status for non-admin/manager users
+        if (!salesmanShift.getStatus().equals(SalesmanShift.ShiftStatus.OPEN)
+                && !securityHelper.isAdmin() && !securityHelper.isManager()) {
             throw new PumpBusinessException("SHIFT_NOT_OPEN",
                     "Cannot create salesman bill for closed shift. Shift status: " + salesmanShift.getStatus());
         }
@@ -157,13 +161,15 @@ public class SalesmanBillService {
                     "Salesman bills can only contain FUEL products. Product " + product.getProductName() + " is of type " + product.getProductType());
         }
 
-        // Validate salesman shift exists and is open
+        // Validate salesman shift exists
         SalesmanShift salesmanShift = salesmanShiftRepository.findById(request.getSalesmanShiftId()).orElse(null);
         if (salesmanShift == null) {
             throw new PumpBusinessException("INVALID_SALESMAN_SHIFT",
                     "Salesman shift with ID " + request.getSalesmanShiftId() + " does not exist");
         }
-        if (!salesmanShift.getStatus().equals(SalesmanShift.ShiftStatus.OPEN)) {
+        // Only check shift status for non-admin/manager users
+        if (!salesmanShift.getStatus().equals(SalesmanShift.ShiftStatus.OPEN)
+                && !securityHelper.isAdmin() && !securityHelper.isManager()) {
             throw new PumpBusinessException("SHIFT_NOT_OPEN",
                     "Cannot create salesman bill for closed shift. Shift status: " + salesmanShift.getStatus());
         }
@@ -257,14 +263,16 @@ public class SalesmanBillService {
             existingBill.setProduct(product);
         }
 
-        // Validate salesman shift exists and is open if being updated
+        // Validate salesman shift exists if being updated
         if (request.getSalesmanShiftId() != null) {
             SalesmanShift salesmanShift = salesmanShiftRepository.findById(request.getSalesmanShiftId()).orElse(null);
             if (salesmanShift == null) {
                 throw new PumpBusinessException("INVALID_SALESMAN_SHIFT",
                         "Salesman shift with ID " + request.getSalesmanShiftId() + " does not exist");
             }
-            if (!salesmanShift.getStatus().equals(SalesmanShift.ShiftStatus.OPEN)) {
+            // Only check shift status for non-admin/manager users
+            if (!salesmanShift.getStatus().equals(SalesmanShift.ShiftStatus.OPEN)
+                    && !securityHelper.isAdmin() && !securityHelper.isManager()) {
                 throw new PumpBusinessException("SHIFT_NOT_OPEN",
                         "Cannot update salesman bill to closed shift. Shift status: " + salesmanShift.getStatus());
             }
