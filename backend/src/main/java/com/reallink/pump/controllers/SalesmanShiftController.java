@@ -69,8 +69,8 @@ public class SalesmanShiftController {
      * Get all shifts (filtered by role). GET /api/v1/salesman-shifts
      *
      * Query params: - salesmanId: Filter by salesman (MANAGER/ADMIN only) -
-     * status: Filter by status (OPEN, CLOSED) - fromDate: Filter from date -
-     * toDate: Filter to date
+     * status: Filter by status (OPEN, CLOSED) - fromDate: Filter from date (ISO
+     * DateTime format) - toDate: Filter to date (ISO DateTime format)
      */
     @GetMapping
     @PreAuthorize("hasAnyRole('SALESMAN', 'MANAGER', 'ADMIN')")
@@ -83,7 +83,19 @@ public class SalesmanShiftController {
         log.info("Fetching shifts - salesmanId: {}, status: {}, from: {}, to: {}",
                 salesmanId, status, fromDate, toDate);
 
-        List<SalesmanShift> shifts = salesmanShiftService.getAllShifts();
+        // Parse status if provided
+        SalesmanShift.ShiftStatus shiftStatus = null;
+        if (status != null && !status.isEmpty()) {
+            try {
+                shiftStatus = SalesmanShift.ShiftStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid status value: {}", status);
+                // Continue with null status (no status filter)
+            }
+        }
+
+        List<SalesmanShift> shifts = salesmanShiftService.getAllShifts(
+                salesmanId, shiftStatus, fromDate, toDate);
 
         List<ShiftResponse> response = shifts.stream()
                 .map(ShiftResponse::fromMinimal)

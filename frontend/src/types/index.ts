@@ -43,6 +43,13 @@ export type {
   UpdateSalesmanBillPaymentRequest,
 } from "./salesman-bill-payment";
 
+// Explicitly re-export salesman shift accounting types
+export type {
+  SalesmanShiftAccountingResponse,
+  CreateSalesmanShiftAccountingRequest,
+  UpdateSalesmanShiftAccountingRequest,
+} from "./salesman-shift-accounting";
+
 // Explicitly re-export customer bill payment types from customer-bill-payment.ts
 export type {
   CustomerBillPaymentResponse,

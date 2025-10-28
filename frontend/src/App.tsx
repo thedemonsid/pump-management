@@ -28,15 +28,6 @@ import { TanksPage } from "@/pages/tanks/TanksPage";
 import { NozzlesPage } from "@/pages/nozzles/NozzlesPage";
 import { NozzleDetailPage } from "@/pages/nozzles/NozzleDetailPage";
 import { SalesmenPage } from "@/pages/salesmen/SalesmenPage";
-import { SalesmanShiftsPage } from "@/pages/salesman-shifts/SalesmanShiftsPage";
-import { AccountingTablePage } from "@/pages/salesman-shifts/AccountingTablePage";
-import { AdminSalesmanShiftsPage } from "@/pages/AdminSalesmanShiftsPage";
-import { SalesmanBillsPage as AdminSalesmanBillsPage } from "@/pages/salesman-bills/SalesmanBillsPage";
-import { SalesmanBillDetailPage } from "@/pages/salesman-bills/SalesmanBillDetailPage";
-import { SalesmanBillPaymentsPage } from "@/pages/salesman-bill-payments/SalesmanBillPaymentsPage";
-import { SalesmanBillsPage } from "@/pages/salesman/SalesmanBillsPage";
-import { SalesmanPaymentsPage } from "@/pages/salesman/SalesmanPaymentsPage";
-import { ShiftsPage } from "@/pages/shifts/ShiftsPage";
 import { SuppliersPage } from "@/pages/suppliers/SuppliersPage";
 import { SupplierDetailPage } from "@/pages/suppliers/SupplierDetailPage";
 import { SupplierLedgerPage } from "@/pages/suppliers/SupplierLedgerPage";
@@ -71,6 +62,12 @@ import { AuthProvider } from "@/hooks/AuthContext";
 import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute, PublicRoute } from "@/components/ProtectedRoute";
 import { Toaster } from "sonner";
+import { SalesmanActiveShiftPage } from "@/pages/shifts/SalesmanActiveShiftPage";
+import { ShiftBillsPage } from "@/pages/shifts/ShiftBillsPage";
+import { ShiftPaymentsPage } from "@/pages/shifts/ShiftPaymentsPage";
+import { ShiftAccountingPage } from "@/pages/shifts/ShiftAccountingPage";
+import { ShiftDetailsPage } from "@/pages/shifts/ShiftDetailsPage";
+import { ShiftListPage } from "@/pages/shifts/ShiftListPage";
 
 const allRoutes = [
   {
@@ -200,8 +197,8 @@ const allRoutes = [
   },
   {
     path: "/shifts",
-    element: <ShiftsPage />,
-    requiredRoles: ["ADMIN", "MANAGER"],
+    element: <ShiftListPage />,
+    requiredRoles: ["ADMIN", "MANAGER", "SALESMAN"],
   },
   {
     path: "/fuel-purchases",
@@ -248,50 +245,31 @@ const allRoutes = [
     element: <BillsDetailsPage />,
     requiredRoles: ["ADMIN", "MANAGER"],
   },
+  // New Shift Management Routes
   {
-    path: "/salesman-shifts",
-    element: <SalesmanShiftsPage />,
+    path: "/my-shift",
+    element: <SalesmanActiveShiftPage />,
     requiredRoles: ["SALESMAN"],
   },
   {
-    path: "/salesman/bills",
-    element: <SalesmanBillsPage />,
-    requiredRoles: ["SALESMAN"],
+    path: "/shifts/:shiftId",
+    element: <ShiftDetailsPage />,
+    requiredRoles: ["ADMIN", "MANAGER", "SALESMAN"],
   },
   {
-    path: "/salesman/payments",
-    element: <SalesmanPaymentsPage />,
-    requiredRoles: ["SALESMAN"],
+    path: "/shifts/:shiftId/bills",
+    element: <ShiftBillsPage />,
+    requiredRoles: ["ADMIN", "MANAGER", "SALESMAN"],
   },
   {
-    path: "/salesman/shifts/:shiftId/accounting",
-    element: <AccountingTablePage />,
-    requiredRoles: ["SALESMAN"],
+    path: "/shifts/:shiftId/payments",
+    element: <ShiftPaymentsPage />,
+    requiredRoles: ["ADMIN", "MANAGER", "SALESMAN"],
   },
   {
-    path: "/admin/salesman-shifts",
-    element: <AdminSalesmanShiftsPage />,
-    requiredRoles: ["ADMIN", "MANAGER"],
-  },
-  {
-    path: "/admin/salesman-shifts/:shiftId/accounting",
-    element: <AccountingTablePage />,
-    requiredRoles: ["ADMIN", "MANAGER"],
-  },
-  {
-    path: "/salesman-bills",
-    element: <AdminSalesmanBillsPage />,
-    requiredRoles: ["ADMIN", "MANAGER"],
-  },
-  {
-    path: "/salesman-bills/:id",
-    element: <SalesmanBillDetailPage />,
-    requiredRoles: ["ADMIN", "MANAGER"],
-  },
-  {
-    path: "/salesman-bill-payments",
-    element: <SalesmanBillPaymentsPage />,
-    requiredRoles: ["ADMIN", "MANAGER"],
+    path: "/shifts/:shiftId/accounting",
+    element: <ShiftAccountingPage />,
+    requiredRoles: ["ADMIN", "MANAGER", "SALESMAN"],
   },
   {
     path: "/settings/change-password",
@@ -319,20 +297,16 @@ const headerMap: Record<string, string> = {
   "expense-heads": "Expense Heads",
   expenses: "Expenses",
   salesmen: "Salesmen",
-  "salesman-shifts": "Salesman Shifts",
-  "admin/salesman-shifts": "All Salesman Shifts",
-  "salesman-accountings": "Shift Accountings",
   shifts: "Shifts",
+  "my-shift": "My Active Shift",
   "bank-accounts": "Bank Accounts",
   ledger: "Ledger",
   bills: "Bills",
   "bill-details": "Bill Details",
-  "salesman-bills": "Salesman Bills",
-  "salesman-bill-payments": "Salesman Payments",
   settings: "Settings",
   report: "Report",
-  salesman: "Salesman",
   payments: "Payments",
+  accounting: "Accounting",
 };
 
 export function MainHeader() {

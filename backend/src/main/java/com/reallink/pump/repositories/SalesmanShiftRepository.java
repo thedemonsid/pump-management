@@ -56,6 +56,49 @@ public interface SalesmanShiftRepository extends JpaRepository<SalesmanShift, UU
     );
 
     /**
+     * Find shifts for a salesman within a date range.
+     */
+    @Query("SELECT s FROM SalesmanShift s WHERE s.salesman.id = :salesmanId "
+            + "AND s.pumpMaster.id = :pumpMasterId "
+            + "AND s.startDatetime >= :fromDate AND s.startDatetime <= :toDate "
+            + "ORDER BY s.startDatetime DESC")
+    List<SalesmanShift> findBySalesmanIdAndPumpMasterIdAndDateRange(
+            @Param("salesmanId") UUID salesmanId,
+            @Param("pumpMasterId") UUID pumpMasterId,
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate
+    );
+
+    /**
+     * Find shifts for a salesman with specific status within a date range.
+     */
+    @Query("SELECT s FROM SalesmanShift s WHERE s.salesman.id = :salesmanId "
+            + "AND s.status = :status AND s.pumpMaster.id = :pumpMasterId "
+            + "AND s.startDatetime >= :fromDate AND s.startDatetime <= :toDate "
+            + "ORDER BY s.startDatetime DESC")
+    List<SalesmanShift> findBySalesmanIdAndStatusAndPumpMasterIdAndDateRange(
+            @Param("salesmanId") UUID salesmanId,
+            @Param("status") SalesmanShift.ShiftStatus status,
+            @Param("pumpMasterId") UUID pumpMasterId,
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate
+    );
+
+    /**
+     * Find shifts by status within a date range.
+     */
+    @Query("SELECT s FROM SalesmanShift s WHERE s.status = :status "
+            + "AND s.pumpMaster.id = :pumpMasterId "
+            + "AND s.startDatetime >= :fromDate AND s.startDatetime <= :toDate "
+            + "ORDER BY s.startDatetime DESC")
+    List<SalesmanShift> findByStatusAndPumpMasterIdAndDateRange(
+            @Param("status") SalesmanShift.ShiftStatus status,
+            @Param("pumpMasterId") UUID pumpMasterId,
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate
+    );
+
+    /**
      * Find all shifts by pump master and status.
      */
     List<SalesmanShift> findByPumpMasterIdAndStatusOrderByStartDatetimeDesc(

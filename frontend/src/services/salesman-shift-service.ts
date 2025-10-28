@@ -15,6 +15,7 @@ export class SalesmanShiftService {
     fromDate?: string;
     toDate?: string;
     salesmanId?: string;
+    status?: string;
   }): Promise<ShiftResponse[]> {
     const queryParams = new URLSearchParams();
     if (params?.fromDate)
@@ -22,6 +23,7 @@ export class SalesmanShiftService {
     if (params?.toDate)
       queryParams.append("toDate", `${params.toDate}T23:59:59`);
     if (params?.salesmanId) queryParams.append("salesmanId", params.salesmanId);
+    if (params?.status) queryParams.append("status", params.status);
 
     const url = queryParams.toString()
       ? `${this.BASE_PATH}?${queryParams.toString()}`
@@ -54,11 +56,31 @@ export class SalesmanShiftService {
   }
 
   static async getActiveShifts(salesmanId?: string): Promise<ShiftResponse[]> {
-    const url = salesmanId
-      ? `${this.BASE_PATH}/open?salesmanId=${salesmanId}`
-      : `${this.BASE_PATH}/open`;
-    const response = await api.get<ShiftResponse[]>(url);
-    return response.data;
+    try {
+      if (salesmanId) {
+        // Get specific salesman's open shift
+        const response = await api.get<ShiftResponse>(
+          `${this.BASE_PATH}/salesman/${salesmanId}/open`
+        );
+        // Return as array for consistency
+        return [response.data];
+      } else {
+        // Get all open shifts (admin only)
+        const response = await api.get<ShiftResponse[]>(
+          `${this.BASE_PATH}/open`
+        );
+        return response.data;
+      }
+    } catch (error: unknown) {
+      // If 404, it means no open shift found - return empty array
+      if (
+        (error as { response?: { status?: number } })?.response?.status === 404
+      ) {
+        return [];
+      }
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   // Accounting

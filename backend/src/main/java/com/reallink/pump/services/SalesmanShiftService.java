@@ -238,25 +238,69 @@ public class SalesmanShiftService {
     }
 
     /**
-     * Get all shifts for the current pump master. SALESMAN sees only their own
-     * shifts. MANAGER/ADMIN see all shifts.
+     * Get all shifts with optional filters. Applies role-based access control
+     * and filtering. SALESMAN sees only their own shifts. MANAGER/ADMIN see all
+     * shifts or can filter by salesmanId.
+     *
+     * @param salesmanId Optional salesman ID filter (ADMIN/MANAGER only)
+     * @param status Optional status filter (OPEN, CLOSED)
+     * @param fromDate Optional start date filter
+     * @param toDate Optional end date filter
+     * @return List of filtered shifts
      */
     @PreAuthorize("hasAnyRole('SALESMAN', 'MANAGER', 'ADMIN')")
-    public List<SalesmanShift> getAllShifts() {
+    public List<SalesmanShift> getAllShifts(UUID salesmanId, SalesmanShift.ShiftStatus status,
+            LocalDateTime fromDate, LocalDateTime toDate) {
         UUID pumpMasterId = securityHelper.getCurrentPumpMasterId();
+
+        // Set default date range if not provided (yesterday to tomorrow)
+        LocalDateTime effectiveFromDate = fromDate != null ? fromDate : LocalDateTime.now().minusDays(1);
+        LocalDateTime effectiveToDate = toDate != null ? toDate : LocalDateTime.now().plusDays(1);
 
         if (securityHelper.isSalesman()) {
             // Salesmen only see their own shifts
-            UUID salesmanId = securityHelper.getCurrentUserId();
-            return salesmanShiftRepository.findBySalesmanIdAndPumpMasterIdOrderByStartDatetimeDesc(
-                    salesmanId, pumpMasterId);
+            UUID currentSalesmanId = securityHelper.getCurrentUserId();
+            return filterShifts(currentSalesmanId, status, effectiveFromDate, effectiveToDate, pumpMasterId);
         } else {
-            // Managers and admins see all shifts
-            return salesmanShiftRepository.findByPumpMasterIdAndDateRange(
-                    pumpMasterId,
-                    LocalDateTime.now().minusDays(30),
-                    LocalDateTime.now().plusDays(1));
+            // Managers and admins can see all shifts or filter by salesman
+            return filterShifts(salesmanId, status, effectiveFromDate, effectiveToDate, pumpMasterId);
         }
+    }
+
+    /**
+     * Helper method to filter shifts based on criteria.
+     */
+    private List<SalesmanShift> filterShifts(UUID salesmanId, SalesmanShift.ShiftStatus status,
+            LocalDateTime fromDate, LocalDateTime toDate, UUID pumpMasterId) {
+        List<SalesmanShift> shifts;
+
+        if (salesmanId != null && status != null) {
+            // Filter by salesman and status
+            shifts = salesmanShiftRepository.findBySalesmanIdAndStatusAndPumpMasterIdAndDateRange(
+                    salesmanId, status, pumpMasterId, fromDate, toDate);
+        } else if (salesmanId != null) {
+            // Filter by salesman only
+            shifts = salesmanShiftRepository.findBySalesmanIdAndPumpMasterIdAndDateRange(
+                    salesmanId, pumpMasterId, fromDate, toDate);
+        } else if (status != null) {
+            // Filter by status only
+            shifts = salesmanShiftRepository.findByStatusAndPumpMasterIdAndDateRange(
+                    status, pumpMasterId, fromDate, toDate);
+        } else {
+            // No specific filters, just date range and pump master
+            shifts = salesmanShiftRepository.findByPumpMasterIdAndDateRange(
+                    pumpMasterId, fromDate, toDate);
+        }
+
+        return shifts;
+    }
+
+    /**
+     * @deprecated Use getAllShifts with parameters instead
+     */
+    @Deprecated
+    public List<SalesmanShift> getAllShifts() {
+        return getAllShifts(null, null, null, null);
     }
 
     /**
