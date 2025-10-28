@@ -105,7 +105,7 @@ export function ShiftActionsCard({
             <Button
               variant="outline"
               className="h-auto flex-col items-start p-4 gap-2"
-              onClick={() => navigate(`/expenses?shiftId=${shiftId}`)}
+              onClick={() => navigate(`/shifts/${shiftId}/expenses`)}
             >
               <DollarSign className="h-5 w-5 text-orange-600" />
               <div className="text-left">

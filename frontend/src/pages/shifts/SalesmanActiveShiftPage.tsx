@@ -17,13 +17,16 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Loader2, Plus, Clock, DollarSign } from "lucide-react";
+import { Loader2, Plus, Clock, DollarSign, Receipt } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { StartShiftForm } from "./components/StartShiftForm";
 import { NozzleAssignmentsTable } from "./components/NozzleAssignmentsTable";
 import { ShiftActionsCard } from "./components/ShiftActionsCard";
 import { useNavigate } from "react-router-dom";
+import { ExpenseService } from "@/services/expense-service";
+import { SalesmanBillService } from "@/services/salesman-bill-service";
+import { SalesmanBillPaymentService } from "@/services/salesman-bill-payment-service";
 
 /**
  * SalesmanActiveShiftPage - Main workspace for salesmen
@@ -35,11 +38,53 @@ export function SalesmanActiveShiftPage() {
   const { activeShift, isLoading, fetchActiveShift } = useShiftStore();
   const [isStartShiftOpen, setIsStartShiftOpen] = useState(false);
 
+  // Statistics state
+  const [stats, setStats] = useState({
+    expensesCount: 0,
+    expensesTotal: 0,
+    billsCount: 0,
+    billsTotal: 0,
+    paymentsCount: 0,
+    paymentsTotal: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(false);
+
   useEffect(() => {
     if (user?.userId) {
       fetchActiveShift(user.userId);
     }
   }, [user?.userId, fetchActiveShift]);
+
+  // Fetch shift statistics when activeShift changes
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!activeShift?.id) return;
+
+      setStatsLoading(true);
+      try {
+        const [expenses, bills, payments] = await Promise.all([
+          ExpenseService.getBySalesmanShiftId(activeShift.id),
+          SalesmanBillService.getByShift(activeShift.id),
+          SalesmanBillPaymentService.getByShiftId(activeShift.id),
+        ]);
+
+        setStats({
+          expensesCount: expenses.length,
+          expensesTotal: expenses.reduce((sum, e) => sum + e.amount, 0),
+          billsCount: bills.length,
+          billsTotal: bills.reduce((sum, b) => sum + b.amount, 0),
+          paymentsCount: payments.length,
+          paymentsTotal: payments.reduce((sum, p) => sum + p.amount, 0),
+        });
+      } catch (error) {
+        console.error("Failed to fetch shift statistics:", error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [activeShift?.id]);
 
   const handleShiftStarted = () => {
     setIsStartShiftOpen(false);
@@ -49,9 +94,10 @@ export function SalesmanActiveShiftPage() {
     toast.success("Shift started successfully!");
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     if (user?.userId) {
-      fetchActiveShift(user.userId);
+      await fetchActiveShift(user.userId);
+      // Stats will be refreshed by the useEffect watching activeShift
     }
   };
 
@@ -194,6 +240,85 @@ export function SalesmanActiveShiftPage() {
             shiftId={activeShift.id}
             onNozzleClosed={handleRefresh}
           />
+        </CardContent>
+      </Card>
+
+      {/* Shift Statistics */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Shift Statistics</CardTitle>
+          <CardDescription>
+            Overview of bills, payments, and expenses during this shift
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {statsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Bills */}
+              <div
+                className="flex items-center gap-3 p-4 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-950/30 transition-colors"
+                onClick={() => navigate(`/shifts/${activeShift.id}/bills`)}
+              >
+                <div className="p-2 rounded-full bg-blue-500/10">
+                  <Receipt className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">Credit Bills</p>
+                  <p className="text-lg font-semibold text-blue-700 dark:text-blue-400">
+                    ₹{stats.billsTotal.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.billsCount}{" "}
+                    {stats.billsCount === 1 ? "bill" : "bills"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Payments */}
+              <div
+                className="flex items-center gap-3 p-4 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 cursor-pointer hover:bg-green-100 dark:hover:bg-green-950/30 transition-colors"
+                onClick={() => navigate(`/shifts/${activeShift.id}/payments`)}
+              >
+                <div className="p-2 rounded-full bg-green-500/10">
+                  <DollarSign className="h-5 w-5 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">Payments</p>
+                  <p className="text-lg font-semibold text-green-700 dark:text-green-400">
+                    ₹{stats.paymentsTotal.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.paymentsCount}{" "}
+                    {stats.paymentsCount === 1 ? "payment" : "payments"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Expenses */}
+              <div
+                className="flex items-center gap-3 p-4 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 cursor-pointer hover:bg-red-100 dark:hover:bg-red-950/30 transition-colors"
+                onClick={() => navigate(`/shifts/${activeShift.id}/expenses`)}
+              >
+                <div className="p-2 rounded-full bg-red-500/10">
+                  <Receipt className="h-5 w-5 text-red-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">Expenses</p>
+                  <p className="text-lg font-semibold text-red-700 dark:text-red-400">
+                    ₹{stats.expensesTotal.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.expensesCount}{" "}
+                    {stats.expensesCount === 1 ? "expense" : "expenses"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -47,8 +47,6 @@ import type {
   Customer,
   PaymentMethod,
 } from "@/types";
-import { BankAccountService } from "@/services/bank-account-service";
-import type { BankAccount } from "@/types";
 
 interface Option {
   value: string;
@@ -63,7 +61,6 @@ export function ShiftPaymentsPage() {
 
   const [payments, setPayments] = useState<SalesmanBillPaymentResponse[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -73,16 +70,13 @@ export function ShiftPaymentsPage() {
 
   // Form state
   const [selectedCustomer, setSelectedCustomer] = useState<Option | null>(null);
-  const [selectedBankAccount, setSelectedBankAccount] = useState<Option | null>(
-    null
-  );
   const [amount, setAmount] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<Option | null>({
     value: "CASH",
     label: "Cash",
   });
-  const [referenceNumber, setReferenceNumber] = useState<string>("");
-  const [notes, setNotes] = useState<string>("");
+  const [referenceNumber, setReferenceNumber] = useState<string>("NA");
+  const [notes, setNotes] = useState<string>("NA");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -91,17 +85,14 @@ export function ShiftPaymentsPage() {
 
       setIsLoading(true);
       try {
-        const [, paymentsData, customersData, bankAccountsData] =
-          await Promise.all([
-            fetchShiftById(shiftId),
-            SalesmanBillPaymentService.getByShiftId(shiftId),
-            CustomerService.getAll(),
-            BankAccountService.getAll(),
-          ]);
+        const [, paymentsData, customersData] = await Promise.all([
+          fetchShiftById(shiftId),
+          SalesmanBillPaymentService.getByShiftId(shiftId),
+          CustomerService.getAll(),
+        ]);
 
         setPayments(paymentsData);
         setCustomers(customersData);
-        setBankAccounts(bankAccountsData);
       } catch (err) {
         toast.error("Failed to load data");
         console.error(err);
@@ -117,7 +108,6 @@ export function ShiftPaymentsPage() {
 
   const resetForm = () => {
     setSelectedCustomer(null);
-    setSelectedBankAccount(null);
     setAmount("");
     setPaymentMethod({ value: "CASH", label: "Cash" });
     setReferenceNumber("");
@@ -134,10 +124,7 @@ export function ShiftPaymentsPage() {
       setError("Please select a customer");
       return;
     }
-    if (!selectedBankAccount) {
-      setError("Please select a bank account");
-      return;
-    }
+
     if (!amount || parseFloat(amount) <= 0) {
       setError("Please enter a valid amount");
       return;
@@ -154,9 +141,8 @@ export function ShiftPaymentsPage() {
         pumpMasterId: user?.pumpMasterId || "",
         salesmanShiftId: shiftId!,
         customerId: selectedCustomer.value,
-        bankAccountId: selectedBankAccount.value,
         amount: parseFloat(amount),
-        paymentDate: new Date().toISOString().split("T")[0],
+        paymentDate: new Date().toISOString(),
         paymentMethod: paymentMethod.value as PaymentMethod,
         referenceNumber: referenceNumber || "",
         notes: notes || undefined,
@@ -207,11 +193,6 @@ export function ShiftPaymentsPage() {
   const customerOptions: Option[] = customers.map((c) => ({
     value: c.id!,
     label: `${c.customerName} - ${c.phoneNumber || "N/A"}`,
-  }));
-
-  const bankAccountOptions: Option[] = bankAccounts.map((ba) => ({
-    value: ba.id!,
-    label: ba.accountHolderName || ba.bank || "Unknown Account",
   }));
 
   const paymentMethodOptions: Option[] = [
@@ -421,28 +402,6 @@ export function ShiftPaymentsPage() {
                 value={selectedCustomer}
                 onChange={setSelectedCustomer}
                 placeholder="Select customer..."
-                isDisabled={isCreatingPayment}
-                className="text-base"
-                styles={{
-                  control: (base) => ({
-                    ...base,
-                    minHeight: "40px",
-                    fontSize: "16px",
-                  }),
-                }}
-              />
-            </div>
-
-            {/* Bank Account */}
-            <div className="space-y-2">
-              <Label>
-                Bank Account <span className="text-red-500">*</span>
-              </Label>
-              <ReactSelect
-                options={bankAccountOptions}
-                value={selectedBankAccount}
-                onChange={setSelectedBankAccount}
-                placeholder="Select bank account..."
                 isDisabled={isCreatingPayment}
                 className="text-base"
                 styles={{

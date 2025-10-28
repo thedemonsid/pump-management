@@ -33,6 +33,7 @@ import { NozzleAssignmentService } from "@/services/nozzle-assignment-service";
 import { SalesmanBillService } from "@/services/salesman-bill-service";
 import { SalesmanBillPaymentService } from "@/services/salesman-bill-payment-service";
 import { SalesmanShiftAccountingService } from "@/services/salesman-shift-accounting-service";
+import { ExpenseService } from "@/services/expense-service";
 import { toast } from "sonner";
 import {
   Loader2,
@@ -47,6 +48,7 @@ import {
   IndianRupee,
   Edit,
   Lock,
+  Receipt,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -57,6 +59,7 @@ import type {
   SalesmanBillPaymentResponse,
   SalesmanShiftAccountingResponse,
   CloseNozzleRequest,
+  ExpenseResponse,
 } from "@/types";
 
 export function ShiftDetailsPage() {
@@ -69,6 +72,7 @@ export function ShiftDetailsPage() {
   >([]);
   const [bills, setBills] = useState<SalesmanBillResponse[]>([]);
   const [payments, setPayments] = useState<SalesmanBillPaymentResponse[]>([]);
+  const [expenses, setExpenses] = useState<ExpenseResponse[]>([]);
   const [accounting, setAccounting] =
     useState<SalesmanShiftAccountingResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -154,16 +158,19 @@ export function ShiftDetailsPage() {
 
       setIsLoading(true);
       try {
-        const [, nozzlesData, billsData, paymentsData] = await Promise.all([
-          fetchShiftById(shiftId),
-          NozzleAssignmentService.getAssignmentsForShift(shiftId),
-          SalesmanBillService.getByShift(shiftId),
-          SalesmanBillPaymentService.getByShiftId(shiftId),
-        ]);
+        const [, nozzlesData, billsData, paymentsData, expensesData] =
+          await Promise.all([
+            fetchShiftById(shiftId),
+            NozzleAssignmentService.getAssignmentsForShift(shiftId),
+            SalesmanBillService.getByShift(shiftId),
+            SalesmanBillPaymentService.getByShiftId(shiftId),
+            ExpenseService.getBySalesmanShiftId(shiftId),
+          ]);
 
         setNozzleAssignments(nozzlesData);
         setBills(billsData);
         setPayments(paymentsData);
+        setExpenses(expensesData);
 
         // Try to fetch accounting (may not exist)
         try {
@@ -210,6 +217,10 @@ export function ShiftDetailsPage() {
   const totalBillsAmount = bills.reduce((sum, bill) => sum + bill.amount, 0);
   const totalPaymentsAmount = payments.reduce(
     (sum, payment) => sum + payment.amount,
+    0
+  );
+  const totalExpensesAmount = expenses.reduce(
+    (sum, expense) => sum + expense.amount,
     0
   );
   const totalDispensed = nozzleAssignments.reduce(
@@ -324,7 +335,7 @@ export function ShiftDetailsPage() {
       </Card>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -375,11 +386,28 @@ export function ShiftDetailsPage() {
             </p>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Expenses
+            </CardTitle>
+            <Receipt className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ₹{totalExpensesAmount.toFixed(2)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {expenses.length} expenses recorded
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Tabbed Content */}
       <Tabs defaultValue="nozzles" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="nozzles">
             <Fuel className="h-4 w-4 mr-2" />
             Nozzles
@@ -391,6 +419,10 @@ export function ShiftDetailsPage() {
           <TabsTrigger value="payments">
             <Wallet className="h-4 w-4 mr-2" />
             Payments
+          </TabsTrigger>
+          <TabsTrigger value="expenses">
+            <Receipt className="h-4 w-4 mr-2" />
+            Expenses
           </TabsTrigger>
           <TabsTrigger value="accounting">
             <Calculator className="h-4 w-4 mr-2" />
@@ -615,6 +647,78 @@ export function ShiftDetailsPage() {
                           </TableCell>
                           <TableCell className="text-muted-foreground">
                             {payment.notes || "-"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Expenses Tab */}
+        <TabsContent value="expenses" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Shift Expenses</CardTitle>
+                  <CardDescription>
+                    Expenses incurred during this shift
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/shifts/${shiftId}/expenses`)}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Manage Expenses
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {expenses.length === 0 ? (
+                <p className="text-center py-8 text-muted-foreground">
+                  No expenses recorded during this shift
+                </p>
+              ) : (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Expense Head</TableHead>
+                        <TableHead>Reference</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead>Remarks</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {expenses.map((expense) => (
+                        <TableRow key={expense.id}>
+                          <TableCell>
+                            {format(new Date(expense.expenseDate), "PP")}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {expense.expenseHeadName}
+                          </TableCell>
+                          <TableCell>
+                            {expense.referenceNumber ? (
+                              <Badge variant="outline">
+                                {expense.referenceNumber}
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right font-mono font-semibold">
+                            ₹{expense.amount.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {expense.remarks || "-"}
                           </TableCell>
                         </TableRow>
                       ))}

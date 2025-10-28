@@ -104,6 +104,13 @@ public class SalesmanShift extends BaseEntity {
     private List<SalesmanBillPayment> payments = new ArrayList<>();
 
     /**
+     * Expenses incurred during this shift. Expenses are recorded at shift
+     * level.
+     */
+    @OneToMany(mappedBy = "salesmanShift", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Expense> expenses = new ArrayList<>();
+
+    /**
      * Accounting record for this shift. Created when the shift is closed and
      * accounting is performed.
      */
@@ -199,6 +206,18 @@ public class SalesmanShift extends BaseEntity {
         }
         return payments.stream()
                 .map(SalesmanBillPayment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Calculates total expenses incurred during this shift.
+     */
+    public BigDecimal calculateTotalExpenses() {
+        if (expenses == null || expenses.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        return expenses.stream()
+                .map(Expense::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

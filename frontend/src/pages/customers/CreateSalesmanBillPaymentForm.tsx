@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useSalesmanBillPaymentStore } from "@/store/salesman-bill-payment-store";
-import { useBankAccountStore } from "@/store/bank-account-store";
 import { useSalesmanBillStore } from "@/store/salesman-bill-store";
 import { useSalesmanStore } from "@/store/salesman-store";
 import { PaymentMethod } from "@/types/customer-bill-payment";
@@ -39,7 +38,6 @@ const CreateSalesmanBillPaymentSchema = z.object({
   pumpMasterId: z.string().min(1, "Pump Master ID is required"),
   salesmanShiftId: z.string().min(1, "Salesman Shift is required"),
   customerId: z.string().min(1, "Customer ID is required"),
-  bankAccountId: z.string().min(1, "Bank Account is required"),
   amount: z.number().min(0.01, "Amount must be greater than 0"),
   paymentDate: z.date(),
   paymentMethod: z.string().min(1, "Payment method is required"),
@@ -63,17 +61,15 @@ export function CreateSalesmanBillPaymentForm({
   onSuccess,
 }: CreateSalesmanBillPaymentFormProps) {
   const { createPayment, loading } = useSalesmanBillPaymentStore();
-  const { bankAccounts, fetchBankAccounts } = useBankAccountStore();
   const { customerBills: salesmanBills, fetchBillsByCustomerId } =
     useSalesmanBillStore();
   const { fetchSalesmen } = useSalesmanStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchBankAccounts();
     fetchBillsByCustomerId(customerId);
     fetchSalesmen();
-  }, [fetchBankAccounts, fetchBillsByCustomerId, fetchSalesmen, customerId]);
+  }, [fetchBillsByCustomerId, fetchSalesmen, customerId]);
 
   const form = useForm<CreateSalesmanBillPaymentFormData>({
     resolver: zodResolver(CreateSalesmanBillPaymentSchema),
@@ -81,7 +77,6 @@ export function CreateSalesmanBillPaymentForm({
       pumpMasterId,
       customerId,
       salesmanShiftId: "",
-      bankAccountId: "",
       amount: 0,
       paymentDate: new Date(),
       paymentMethod: "",
@@ -151,31 +146,6 @@ export function CreateSalesmanBillPaymentForm({
                     {uniqueShifts.map((shift) => (
                       <SelectItem key={shift.id} value={shift.id}>
                         {shift.displayName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="bankAccountId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Bank Account</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select bank account" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {bankAccounts.map((account) => (
-                      <SelectItem key={account.id!} value={account.id!}>
-                        {account.accountHolderName} - {account.accountNumber}
                       </SelectItem>
                     ))}
                   </SelectContent>

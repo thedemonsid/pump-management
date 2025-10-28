@@ -17,14 +17,12 @@ public interface SalesmanBillPaymentRepository extends JpaRepository<SalesmanBil
 
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
             + "LEFT JOIN FETCH sbp.customer "
-            + "LEFT JOIN FETCH sbp.bankAccount "
             + "LEFT JOIN FETCH sbp.salesmanShift ss "
             + "LEFT JOIN FETCH ss.salesman")
     List<SalesmanBillPayment> findAllWithRelations();
 
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
             + "LEFT JOIN FETCH sbp.customer "
-            + "LEFT JOIN FETCH sbp.bankAccount "
             + "LEFT JOIN FETCH sbp.salesmanShift ss "
             + "LEFT JOIN FETCH ss.salesman "
             + "WHERE sbp.id = :id")
@@ -32,7 +30,6 @@ public interface SalesmanBillPaymentRepository extends JpaRepository<SalesmanBil
 
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
             + "LEFT JOIN FETCH sbp.customer "
-            + "LEFT JOIN FETCH sbp.bankAccount "
             + "LEFT JOIN FETCH sbp.salesmanShift ss "
             + "LEFT JOIN FETCH ss.salesman "
             + "WHERE sbp.pumpMaster.id = :pumpMasterId")
@@ -40,7 +37,6 @@ public interface SalesmanBillPaymentRepository extends JpaRepository<SalesmanBil
 
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
             + "LEFT JOIN FETCH sbp.customer "
-            + "LEFT JOIN FETCH sbp.bankAccount "
             + "LEFT JOIN FETCH sbp.salesmanShift ss "
             + "LEFT JOIN FETCH ss.salesman "
             + "WHERE sbp.salesmanShift.id = :shiftId")
@@ -48,7 +44,6 @@ public interface SalesmanBillPaymentRepository extends JpaRepository<SalesmanBil
 
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
             + "LEFT JOIN FETCH sbp.customer "
-            + "LEFT JOIN FETCH sbp.bankAccount "
             + "LEFT JOIN FETCH sbp.salesmanShift ss "
             + "LEFT JOIN FETCH ss.salesman "
             + "WHERE sbp.customer.id = :customerId")
@@ -56,15 +51,6 @@ public interface SalesmanBillPaymentRepository extends JpaRepository<SalesmanBil
 
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
             + "LEFT JOIN FETCH sbp.customer "
-            + "LEFT JOIN FETCH sbp.bankAccount "
-            + "LEFT JOIN FETCH sbp.salesmanShift ss "
-            + "LEFT JOIN FETCH ss.salesman "
-            + "WHERE sbp.bankAccount.id = :bankAccountId")
-    List<SalesmanBillPayment> findByBankAccount_Id(@Param("bankAccountId") UUID bankAccountId);
-
-    @Query("SELECT sbp FROM SalesmanBillPayment sbp "
-            + "LEFT JOIN FETCH sbp.customer "
-            + "LEFT JOIN FETCH sbp.bankAccount "
             + "LEFT JOIN FETCH sbp.salesmanShift ss "
             + "LEFT JOIN FETCH ss.salesman "
             + "WHERE sbp.paymentDate BETWEEN :startDate AND :endDate")
@@ -75,7 +61,6 @@ public interface SalesmanBillPaymentRepository extends JpaRepository<SalesmanBil
 
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
             + "LEFT JOIN FETCH sbp.customer "
-            + "LEFT JOIN FETCH sbp.bankAccount "
             + "LEFT JOIN FETCH sbp.salesmanShift ss "
             + "LEFT JOIN FETCH ss.salesman "
             + "WHERE sbp.salesmanShift.id = :shiftId "

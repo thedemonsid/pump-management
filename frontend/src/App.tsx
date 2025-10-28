@@ -65,6 +65,7 @@ import { Toaster } from "sonner";
 import { SalesmanActiveShiftPage } from "@/pages/shifts/SalesmanActiveShiftPage";
 import { ShiftBillsPage } from "@/pages/shifts/ShiftBillsPage";
 import { ShiftPaymentsPage } from "@/pages/shifts/ShiftPaymentsPage";
+import { ShiftExpensesPage } from "@/pages/shifts/ShiftExpensesPage";
 import { ShiftAccountingPage } from "@/pages/shifts/ShiftAccountingPage";
 import { ShiftDetailsPage } from "@/pages/shifts/ShiftDetailsPage";
 import { ShiftListPage } from "@/pages/shifts/ShiftListPage";
@@ -269,6 +270,11 @@ const allRoutes = [
   {
     path: "/shifts/:shiftId/payments",
     element: <ShiftPaymentsPage />,
+    requiredRoles: ["ADMIN", "MANAGER", "SALESMAN"],
+  },
+  {
+    path: "/shifts/:shiftId/expenses",
+    element: <ShiftExpensesPage />,
     requiredRoles: ["ADMIN", "MANAGER", "SALESMAN"],
   },
   {

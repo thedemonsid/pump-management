@@ -11,15 +11,12 @@ import org.springframework.validation.annotation.Validated;
 import com.reallink.pump.dto.request.CreateSalesmanBillPaymentRequest;
 import com.reallink.pump.dto.request.UpdateSalesmanBillPaymentRequest;
 import com.reallink.pump.dto.response.SalesmanBillPaymentResponse;
-import com.reallink.pump.entities.BankAccount;
-import com.reallink.pump.entities.BankTransaction;
 import com.reallink.pump.entities.Customer;
 import com.reallink.pump.entities.PumpInfoMaster;
 import com.reallink.pump.entities.SalesmanBillPayment;
 import com.reallink.pump.entities.SalesmanShift;
 import com.reallink.pump.exception.PumpBusinessException;
 import com.reallink.pump.mapper.SalesmanBillPaymentMapper;
-import com.reallink.pump.repositories.BankAccountRepository;
 import com.reallink.pump.repositories.CustomerRepository;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
 import com.reallink.pump.repositories.SalesmanBillPaymentRepository;
@@ -39,7 +36,6 @@ public class SalesmanBillPaymentService {
     private final SalesmanShiftRepository salesmanShiftRepository;
     private final CustomerRepository customerRepository;
     private final PumpInfoMasterRepository pumpInfoMasterRepository;
-    private final BankAccountRepository bankAccountRepository;
     private final SalesmanBillPaymentMapper mapper;
 
     public List<SalesmanBillPaymentResponse> getAll() {
@@ -86,34 +82,13 @@ public class SalesmanBillPaymentService {
                     "Customer with ID " + request.getCustomerId() + " does not exist");
         }
 
-        // Validate bank account exists
-        BankAccount bankAccount = bankAccountRepository.findById(request.getBankAccountId()).orElse(null);
-        if (bankAccount == null) {
-            throw new PumpBusinessException("INVALID_BANK_ACCOUNT",
-                    "Bank account with ID " + request.getBankAccountId() + " does not exist");
-        }
-
-        // Check for duplicate reference number
-        // Note: We might want to allow same reference for different bills/shifts
-        // Create bank transaction for the payment
-        BankTransaction bankTransaction = new BankTransaction();
-        bankTransaction.setBankAccount(bankAccount);
-        bankTransaction.setTransactionDate(request.getPaymentDate());
-        bankTransaction.setAmount(request.getAmount());
-        bankTransaction.setTransactionType(BankTransaction.TransactionType.CREDIT); // Money coming into the account
-        bankTransaction.setPaymentMethod(request.getPaymentMethod());
-        bankTransaction.setDescription("Payment collected during shift from " + customer.getCustomerName() + " - " + request.getReferenceNumber());
-        // Note: BankTransaction doesn't have referenceNumber field, using description instead
-
         // Create payment entity
         SalesmanBillPayment payment = mapper.toEntity(request);
         payment.setPumpMaster(pumpMaster);
         payment.setSalesmanShift(salesmanShift);
         payment.setCustomer(customer);
-        payment.setBankAccount(bankAccount);
-        payment.setBankTransaction(bankTransaction);
 
-        // Save payment (bank transaction will be cascaded)
+        // Save payment
         SalesmanBillPayment savedPayment = repository.save(payment);
 
         return mapper.toResponse(savedPayment);
@@ -147,33 +122,8 @@ public class SalesmanBillPaymentService {
             existingPayment.setCustomer(customer);
         }
 
-        // Validate bank account if being updated
-        if (request.getBankAccountId() != null) {
-            BankAccount bankAccount = bankAccountRepository.findById(request.getBankAccountId()).orElse(null);
-            if (bankAccount == null) {
-                throw new PumpBusinessException("INVALID_BANK_ACCOUNT",
-                        "Bank account with ID " + request.getBankAccountId() + " does not exist");
-            }
-            existingPayment.setBankAccount(bankAccount);
-        }
-
         // Update payment fields using mapper
         mapper.updateEntityFromRequest(request, existingPayment);
-
-        // Update bank transaction if amount changed
-        if (request.getAmount() != null) {
-            existingPayment.getBankTransaction().setAmount(request.getAmount());
-        }
-        if (request.getPaymentDate() != null) {
-            existingPayment.getBankTransaction().setTransactionDate(request.getPaymentDate());
-        }
-        if (request.getPaymentMethod() != null) {
-            existingPayment.getBankTransaction().setPaymentMethod(request.getPaymentMethod());
-        }
-        if (request.getReferenceNumber() != null) {
-            existingPayment.getBankTransaction().setDescription(
-                    "Payment collected during shift from " + existingPayment.getCustomer().getCustomerName() + " - " + request.getReferenceNumber());
-        }
 
         SalesmanBillPayment updatedPayment = repository.save(existingPayment);
         return mapper.toResponse(updatedPayment);

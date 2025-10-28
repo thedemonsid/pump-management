@@ -3,7 +3,6 @@ package com.reallink.pump.entities;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,7 +11,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.DecimalMin;
@@ -26,7 +24,7 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "pump_salesman_bill_payment_master", uniqueConstraints = {
-    @UniqueConstraint(name = "uk_salesman_payment_reference_bank_transaction", columnNames = {"reference_number", "bank_transaction_id"})
+    @UniqueConstraint(name = "uk_salesman_payment_reference", columnNames = {"reference_number"})
 })
 @Getter
 @Setter
@@ -48,11 +46,6 @@ public class SalesmanBillPayment extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "customer_id", nullable = false, foreignKey = @ForeignKey(name = "fk_salesman_bill_payment_customer"))
     private Customer customer;
-
-    @NotNull(message = "Bank account is required")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "bank_account_id", nullable = false, foreignKey = @ForeignKey(name = "fk_salesman_bill_payment_bank_account"))
-    private BankAccount bankAccount;
 
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0.00")
@@ -76,9 +69,4 @@ public class SalesmanBillPayment extends BaseEntity {
     @Size(max = 255, message = "Notes must be less than 255 characters")
     @Column(name = "notes", length = 255)
     private String notes;
-
-    @NotNull(message = "Bank transaction is required")
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true, optional = false)
-    @JoinColumn(name = "bank_transaction_id", nullable = false, foreignKey = @ForeignKey(name = "fk_salesman_bill_payment_bank_transaction"))
-    private BankTransaction bankTransaction;
 }

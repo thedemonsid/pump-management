@@ -19,10 +19,6 @@ export interface SalesmanBillPaymentResponse {
   customerId: string;
   /** Customer name */
   customerName?: string;
-  /** Bank Account ID */
-  bankAccountId: string;
-  /** Bank account holder name */
-  bankAccountHolderName?: string;
   /** Payment amount */
   amount: number;
   /** Payment date and time */
@@ -49,8 +45,6 @@ export interface CreateSalesmanBillPaymentRequest {
   salesmanShiftId: string;
   /** Customer ID */
   customerId: string;
-  /** Bank Account ID */
-  bankAccountId: string;
   /** Payment amount */
   amount: number;
   /** Payment date and time */

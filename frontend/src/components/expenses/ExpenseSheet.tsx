@@ -120,8 +120,8 @@ export function ExpenseSheet({
 
   // Determine initial default values
   const getInitialExpenseType = () => {
-    if (isSalesman) return ExpenseTypeEnum.SHIFT; // Salesmen can only create shift expenses
-    if (salesmanShiftId) return ExpenseTypeEnum.SHIFT;
+    if (isSalesman) return ExpenseTypeEnum.SALESMAN_SHIFT; // Salesmen can only create shift expenses
+    if (salesmanShiftId) return ExpenseTypeEnum.SALESMAN_SHIFT;
     return ExpenseTypeEnum.BANK_ACCOUNT;
   };
 
@@ -182,13 +182,13 @@ export function ExpenseSheet({
 
       if (isSalesman) {
         // Salesmen can ONLY create shift expenses
-        defaultExpenseType = ExpenseTypeEnum.SHIFT;
+        defaultExpenseType = ExpenseTypeEnum.SALESMAN_SHIFT;
         if (activeShifts.length > 0) {
           defaultShiftId = activeShifts[0].id || "";
         }
       } else if (salesmanShiftId) {
-        // If opened from shift context, default to SHIFT
-        defaultExpenseType = ExpenseTypeEnum.SHIFT;
+        // If opened from shift context, default to SALESMAN_SHIFT
+        defaultExpenseType = ExpenseTypeEnum.SALESMAN_SHIFT;
         defaultShiftId = salesmanShiftId;
       }
 
@@ -211,8 +211,11 @@ export function ExpenseSheet({
     try {
       console.log("Form data being submitted:", data);
 
-      // Validate shift selection for SHIFT type
-      if (data.expenseType === ExpenseTypeEnum.SHIFT && !data.salesmanShiftId) {
+      // Validate shift selection for SALESMAN_SHIFT type
+      if (
+        data.expenseType === ExpenseTypeEnum.SALESMAN_SHIFT &&
+        !data.salesmanShiftId
+      ) {
         toast.error("Please select a shift for shift expenses");
         setIsSubmitting(false);
         return;
@@ -237,7 +240,7 @@ export function ExpenseSheet({
         referenceNumber: data.referenceNumber,
       };
 
-      if (data.expenseType === ExpenseTypeEnum.SHIFT) {
+      if (data.expenseType === ExpenseTypeEnum.SALESMAN_SHIFT) {
         // Only include salesmanShiftId if it has a valid value
         if (data.salesmanShiftId) {
           requestData.salesmanShiftId = data.salesmanShiftId;
@@ -391,7 +394,7 @@ export function ExpenseSheet({
                     const expenseTypeOptions = [];
                     if (isAdmin) {
                       expenseTypeOptions.push({
-                        value: ExpenseTypeEnum.SHIFT,
+                        value: ExpenseTypeEnum.SALESMAN_SHIFT,
                         label: "Shift",
                       });
                     }
@@ -424,16 +427,17 @@ export function ExpenseSheet({
                   }}
                 />
               )}
-              {/* Shift selection - shown for salesmen OR when expense type is SHIFT */}
+              {/* Shift selection - shown for salesmen OR when expense type is SALESMAN_SHIFT */}
               {((isSalesman && !salesmanShiftId) ||
-                (watchExpenseType === ExpenseTypeEnum.SHIFT &&
+                (watchExpenseType === ExpenseTypeEnum.SALESMAN_SHIFT &&
                   !salesmanShiftId)) && (
                 <FormField
                   control={form.control}
                   name="salesmanShiftId"
                   rules={{
                     required:
-                      isSalesman || watchExpenseType === ExpenseTypeEnum.SHIFT
+                      isSalesman ||
+                      watchExpenseType === ExpenseTypeEnum.SALESMAN_SHIFT
                         ? "Shift is required for shift expenses"
                         : false,
                   }}

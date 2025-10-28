@@ -1,7 +1,7 @@
-export type ExpenseType = "SHIFT" | "BANK_ACCOUNT";
+export type ExpenseType = "SALESMAN_SHIFT" | "BANK_ACCOUNT";
 
 export const ExpenseTypeEnum = {
-  SHIFT: "SHIFT" as ExpenseType,
+  SALESMAN_SHIFT: "SALESMAN_SHIFT" as ExpenseType,
   BANK_ACCOUNT: "BANK_ACCOUNT" as ExpenseType,
 };
 

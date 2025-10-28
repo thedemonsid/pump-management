@@ -34,12 +34,6 @@ public class SalesmanBillPaymentResponse {
     @Schema(description = "Customer Name", example = "ABC Transport")
     private String customerName;
 
-    @Schema(description = "Bank Account ID", example = "123e4567-e89b-12d3-a456-426614174000")
-    private UUID bankAccountId;
-
-    @Schema(description = "Bank Account Holder Name", example = "Main Cash Account")
-    private String bankAccountHolderName;
-
     @Schema(description = "Payment amount", example = "5000.00")
     private BigDecimal amount;
 
@@ -54,9 +48,6 @@ public class SalesmanBillPaymentResponse {
 
     @Schema(description = "Additional notes", example = "Payment collected by salesman during shift")
     private String notes;
-
-    @Schema(description = "Bank Transaction ID", example = "123e4567-e89b-12d3-a456-426614174000")
-    private UUID bankTransactionId;
 
     @Schema(description = "Creation timestamp", example = "2025-09-25T14:30:00")
     private LocalDateTime createdAt;
