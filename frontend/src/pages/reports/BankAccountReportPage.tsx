@@ -18,21 +18,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Download,
-  Search,
-  Calendar as CalendarIcon,
-  ArrowLeft,
-} from "lucide-react";
+import { Download, Search } from "lucide-react";
 import { format } from "date-fns";
-import { useNavigate } from "react-router-dom";
 import { useBankAccountStore } from "@/store/bank-account-store";
 import { useBankAccountLedgerStore } from "@/store/bank-account-ledger-store";
 import { pdf } from "@react-pdf/renderer";
 import { BankAccountPDF } from "@/components/pdf-reports";
 
 export default function BankAccountReportPage() {
-  const navigate = useNavigate();
   const { bankAccounts, fetchBankAccounts } = useBankAccountStore();
   const { ledgerData, summary, loading, hasSearched, computeLedgerData } =
     useBankAccountLedgerStore();
@@ -125,14 +118,6 @@ export default function BankAccountReportPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/reports")}
-            className="mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Reports
-          </Button>
           <h2 className="text-3xl font-bold tracking-tight">
             Bank Account Report
           </h2>
@@ -164,7 +149,6 @@ export default function BankAccountReportPage() {
                   value={fromDate}
                   onChange={(e) => setFromDate(e.target.value)}
                 />
-                <CalendarIcon className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground pointer-events-none" />
               </div>
             </div>
 
@@ -177,7 +161,6 @@ export default function BankAccountReportPage() {
                   value={toDate}
                   onChange={(e) => setToDate(e.target.value)}
                 />
-                <CalendarIcon className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground pointer-events-none" />
               </div>
             </div>
 
@@ -269,10 +252,10 @@ export default function BankAccountReportPage() {
                         {entry.description}
                       </TableCell>
                       <TableCell className="text-right text-green-600">
-                        {entry.credit > 0 ? formatCurrency(entry.credit) : ""}
+                        {entry.credit > 0 ? formatCurrency(entry.credit) : "-"}
                       </TableCell>
                       <TableCell className="text-right text-red-600">
-                        {entry.debit > 0 ? formatCurrency(entry.debit) : ""}
+                        {entry.debit > 0 ? formatCurrency(entry.debit) : "-"}
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         {formatCurrency(entry.balance)}

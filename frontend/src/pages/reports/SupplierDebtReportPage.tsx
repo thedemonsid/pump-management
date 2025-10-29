@@ -11,9 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Download, Search, ArrowLeft } from "lucide-react";
+import { Download, Search } from "lucide-react";
 import { format } from "date-fns";
-import { useNavigate } from "react-router-dom";
 import { useSupplierStore } from "@/store/supplier-store";
 import { useSupplierLedgerStore } from "@/store/supplier-ledger-store";
 import { PurchaseService } from "@/services/purchase-service";
@@ -32,7 +31,6 @@ interface SupplierDebt {
 }
 
 export default function SupplierDebtReportPage() {
-  const navigate = useNavigate();
   const { suppliers, fetchSuppliers } = useSupplierStore();
   const { computeSupplierSummaries } = useSupplierLedgerStore();
   const [isLoading, setIsLoading] = useState(false);
@@ -183,14 +181,6 @@ export default function SupplierDebtReportPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/reports")}
-            className="mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Reports
-          </Button>
           <h2 className="text-3xl font-bold tracking-tight">
             Supplier Debt Report
           </h2>
