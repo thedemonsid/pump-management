@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useShiftStore } from "@/store/shifts/shift-store";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import {
   Save,
   Edit,
   ChevronRight,
+  Download,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -325,24 +326,46 @@ export function ShiftAccountingPage() {
     <div className="container mx-auto py-3 px-2 sm:py-6 sm:px-4 space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between px-2 sm:px-0">
-        {accounting && canEdit && !isEditing && (
-          <Button
-            onClick={() => setIsEditing(true)}
-            size="sm"
-            className="hidden sm:flex"
-          >
-            <Edit className="mr-2 h-4 w-4" />
-            Edit Accounting
-          </Button>
-        )}
-        {accounting && canEdit && !isEditing && (
-          <Button
-            onClick={() => setIsEditing(true)}
-            size="icon"
-            className="sm:hidden"
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
+        <div className="flex gap-2">
+          {accounting && canEdit && !isEditing && (
+            <>
+              <Button
+                onClick={() => setIsEditing(true)}
+                size="sm"
+                className="hidden sm:flex"
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Accounting
+              </Button>
+              <Button
+                onClick={() => setIsEditing(true)}
+                size="icon"
+                className="sm:hidden"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+        </div>
+        {accounting && isAdminOrManager && !isEditing && (
+          <>
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="hidden sm:flex"
+            >
+              <Link to={`/shifts/${shiftId}/accounting/report`}>
+                <Download className="mr-2 h-4 w-4" />
+                Download Report
+              </Link>
+            </Button>
+            <Button asChild size="icon" variant="outline" className="sm:hidden">
+              <Link to={`/shifts/${shiftId}/accounting/report`}>
+                <Download className="h-4 w-4" />
+              </Link>
+            </Button>
+          </>
         )}
       </div>
 

@@ -67,6 +67,7 @@ import { ShiftBillsPage } from "@/pages/shifts/ShiftBillsPage";
 import { ShiftPaymentsPage } from "@/pages/shifts/ShiftPaymentsPage";
 import { ShiftExpensesPage } from "@/pages/shifts/ShiftExpensesPage";
 import { ShiftAccountingPage } from "@/pages/shifts/ShiftAccountingPage";
+import { ShiftAccountingReportPage } from "@/pages/shifts/ShiftAccountingReportPage";
 import { ShiftDetailsPage } from "@/pages/shifts/ShiftDetailsPage";
 import { ShiftListPage } from "@/pages/shifts/ShiftListPage";
 
@@ -281,6 +282,11 @@ const allRoutes = [
     path: "/shifts/:shiftId/accounting",
     element: <ShiftAccountingPage />,
     requiredRoles: ["ADMIN", "MANAGER", "SALESMAN"],
+  },
+  {
+    path: "/shifts/:shiftId/accounting/report",
+    element: <ShiftAccountingReportPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
     path: "/settings/change-password",
