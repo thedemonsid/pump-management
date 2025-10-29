@@ -1,25 +1,10 @@
-'use client';
+"use client";
 
-import type { ColumnDef } from '@tanstack/react-table';
-import {
-  ArrowUpDown,
-  MoreHorizontal,
-  Eye,
-  Pencil,
-  Trash2,
-  Loader2,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
-import type { Tank } from '@/types';
+import type { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown, Eye, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import type { Tank } from "@/types";
 
 interface TableMeta {
   onView?: (tank: Tank) => void;
@@ -32,12 +17,12 @@ interface TableMeta {
 
 export const columns: ColumnDef<Tank>[] = [
   {
-    accessorKey: 'tankName',
+    accessorKey: "tankName",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Tank Name
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -50,20 +35,20 @@ export const columns: ColumnDef<Tank>[] = [
     },
   },
   {
-    accessorKey: 'product.productName',
-    header: 'Product',
+    accessorKey: "product.productName",
+    header: "Product",
     cell: ({ row }) => {
       const tank = row.original;
-      return <div>{tank.product?.productName || 'No Product'}</div>;
+      return <div>{tank.product?.productName || "No Product"}</div>;
     },
   },
   {
-    accessorKey: 'capacity',
+    accessorKey: "capacity",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Capacity (L)
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -73,8 +58,8 @@ export const columns: ColumnDef<Tank>[] = [
     cell: ({ row }) => {
       const tank = row.original;
       const formatCapacity = (capacity: number) => {
-        return new Intl.NumberFormat('en-IN', {
-          style: 'decimal',
+        return new Intl.NumberFormat("en-IN", {
+          style: "decimal",
           maximumFractionDigits: 2,
         }).format(capacity);
       };
@@ -82,8 +67,8 @@ export const columns: ColumnDef<Tank>[] = [
     },
   },
   {
-    accessorKey: 'currentLevel',
-    header: 'Current Level (L)',
+    accessorKey: "currentLevel",
+    header: "Current Level (L)",
     cell: ({ row, table }) => {
       const tank = row.original;
       const meta = table.options.meta as TableMeta | undefined;
@@ -91,8 +76,8 @@ export const columns: ColumnDef<Tank>[] = [
       const balancesLoading = meta?.balancesLoading || {};
 
       const formatVolume = (volume: number) => {
-        return new Intl.NumberFormat('en-IN', {
-          style: 'decimal',
+        return new Intl.NumberFormat("en-IN", {
+          style: "decimal",
           maximumFractionDigits: 2,
         }).format(volume);
       };
@@ -114,8 +99,8 @@ export const columns: ColumnDef<Tank>[] = [
     },
   },
   {
-    accessorKey: 'fillPercentage',
-    header: 'Fill %',
+    accessorKey: "fillPercentage",
+    header: "Fill %",
     cell: ({ row, table }) => {
       const tank = row.original;
       const meta = table.options.meta as TableMeta | undefined;
@@ -133,10 +118,10 @@ export const columns: ColumnDef<Tank>[] = [
                 <div
                   className={`h-2 rounded-full ${
                     fillPercentage >= 50
-                      ? 'bg-green-500'
+                      ? "bg-green-500"
                       : fillPercentage >= 25
-                      ? 'bg-yellow-500'
-                      : 'bg-red-500'
+                      ? "bg-yellow-500"
+                      : "bg-red-500"
                   }`}
                   style={{
                     width: `${Math.min(fillPercentage, 100)}%`,
@@ -153,8 +138,8 @@ export const columns: ColumnDef<Tank>[] = [
     },
   },
   {
-    accessorKey: 'isLowLevel',
-    header: 'Level Status',
+    accessorKey: "isLowLevel",
+    header: "Level Status",
     cell: ({ row, table }) => {
       const tank = row.original;
       const meta = table.options.meta as TableMeta | undefined;
@@ -171,7 +156,8 @@ export const columns: ColumnDef<Tank>[] = [
     },
   },
   {
-    id: 'actions',
+    id: "actions",
+    header: "Actions",
     enableHiding: false,
     cell: ({ row, table }) => {
       const tank = row.original;
@@ -182,49 +168,34 @@ export const columns: ColumnDef<Tank>[] = [
       const onDelete = meta?.onDelete;
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
+        <div className="flex items-center gap-2">
+          {onView && (
+            <Button variant="outline" size="sm" onClick={() => onView(tank)}>
+              <Eye className="mr-2 h-4 w-4" />
+              View Ledger
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(tank.id!)}
+          )}
+          {onEdit && (
+            <Button variant="ghost" size="sm" onClick={() => onEdit(tank)}>
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
+          {onDelete && tank.id && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDelete(tank.id!)}
+              disabled={meta?.deletingId === tank.id}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
             >
-              Copy tank ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {onView && (
-              <DropdownMenuItem onClick={() => onView(tank)}>
-                <Eye className="mr-2 h-4 w-4" />
-                View Ledger
-              </DropdownMenuItem>
-            )}
-            {onEdit && (
-              <DropdownMenuItem onClick={() => onEdit(tank)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
-            )}
-            {onDelete && tank.id && (
-              <DropdownMenuItem
-                onClick={() => onDelete(tank.id!)}
-                className="text-red-600"
-                disabled={meta?.deletingId === tank.id}
-              >
-                {meta?.deletingId === tank.id ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="mr-2 h-4 w-4" />
-                )}
-                Delete
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              {meta?.deletingId === tank.id ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+        </div>
       );
     },
   },

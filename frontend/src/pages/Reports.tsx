@@ -13,6 +13,7 @@ import {
   FileText,
   Building2,
   Calendar,
+  DollarSign,
 } from "lucide-react";
 
 export default function Reports() {
@@ -66,6 +67,13 @@ export default function Reports() {
             icon={<Droplet className="h-8 w-8" />}
             color="bg-cyan-500"
             path="/reports/tank-levels"
+          />
+          <ReportCard
+            title="Expense Report"
+            description="View and analyze expenses by head and date range"
+            icon={<DollarSign className="h-8 w-8" />}
+            color="bg-indigo-500"
+            path="/expenses"
           />
           <ReportCard
             title="Sales Report"

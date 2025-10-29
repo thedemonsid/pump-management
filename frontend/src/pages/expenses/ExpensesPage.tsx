@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useExpenseStore } from "@/store/expense-store";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Loader2, FileText, Calendar } from "lucide-react";
+import {
+  Plus,
+  Loader2,
+  FileText,
+  Calendar,
+  DollarSign,
+  Download,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +28,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ExpenseSheet } from "@/components/expenses/ExpenseSheet";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { ExpensePDF } from "@/components/pdf-reports/ExpensePDF";
 import { DataTable } from "@/components/ui/data-table";
 import { createColumns } from "./columns";
 import { toast } from "sonner";
@@ -142,13 +151,39 @@ export function ExpensesPage() {
 
   const columns = createColumns(handleEdit, handleDeleteClick, isAdmin);
 
-  const safeExpenses = Array.isArray(expenses) ? expenses : [];
+  const safeExpenses = useMemo(
+    () => (Array.isArray(expenses) ? expenses : []),
+    [expenses]
+  );
 
   // Calculate total
-  const totalAmount = safeExpenses.reduce(
-    (sum, expense) => sum + (expense.amount || 0),
-    0
+  const totalAmount = useMemo(
+    () => safeExpenses.reduce((sum, expense) => sum + (expense.amount || 0), 0),
+    [safeExpenses]
   );
+
+  // Calculate head-wise totals
+  const headWiseTotals = useMemo(() => {
+    const totalsMap = new Map<
+      string,
+      { expenseHeadName: string; amount: number; count: number }
+    >();
+
+    safeExpenses.forEach((expense) => {
+      const headId = expense.expenseHeadId;
+      const headName = expense.expenseHeadName || "Unknown";
+      const existing = totalsMap.get(headId) || {
+        expenseHeadName: headName,
+        amount: 0,
+        count: 0,
+      };
+      existing.amount += expense.amount || 0;
+      existing.count += 1;
+      totalsMap.set(headId, existing);
+    });
+
+    return Array.from(totalsMap.values()).sort((a, b) => b.amount - a.amount);
+  }, [safeExpenses]);
 
   if (loading && (!expenses || expenses.length === 0)) {
     return (
@@ -170,10 +205,47 @@ export function ExpensesPage() {
               : "View and add your shift expenses"}
           </p>
         </div>
-        <Button onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Expense
-        </Button>
+        <div className="flex gap-2">
+          <PDFDownloadLink
+            document={
+              <ExpensePDF
+                data={safeExpenses.map((expense) => ({
+                  id: expense.id,
+                  referenceNumber: expense.referenceNumber || "N/A",
+                  expenseHeadName: expense.expenseHeadName || "Unknown",
+                  amount: expense.amount,
+                  expenseDate: expense.expenseDate,
+                  description: expense.remarks || "",
+                }))}
+                headWiseTotals={headWiseTotals}
+                fromDate={fromDate}
+                toDate={toDate}
+                totalAmount={totalAmount}
+              />
+            }
+            fileName={`expense-report-${fromDate}-to-${toDate}.pdf`}
+          >
+            {({ loading }) => (
+              <Button variant="outline" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating PDF...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Report
+                  </>
+                )}
+              </Button>
+            )}
+          </PDFDownloadLink>
+          <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Expense
+          </Button>
+        </div>
       </div>
 
       {/* Date Range Filter */}
@@ -297,6 +369,53 @@ export function ExpensesPage() {
           />
         </CardContent>
       </Card>
+
+      {/* Head-wise Expense Summary */}
+      {headWiseTotals.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              Head-wise Expense Summary
+            </CardTitle>
+            <CardDescription>
+              Expenses grouped by expense head in the selected date range
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {headWiseTotals.map((headTotal, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex-1">
+                    <p className="font-medium text-base">
+                      {headTotal.expenseHeadName}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {headTotal.count} expense
+                      {headTotal.count !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-primary">
+                      {new Intl.NumberFormat("en-IN", {
+                        style: "currency",
+                        currency: "INR",
+                      }).format(headTotal.amount)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {((headTotal.amount / totalAmount) * 100).toFixed(1)}% of
+                      total
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <ExpenseSheet
         expense={editingExpense}

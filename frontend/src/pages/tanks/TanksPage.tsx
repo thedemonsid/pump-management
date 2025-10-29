@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTankStore, formatOpeningLevelDate } from "@/store/tank-store";
+import { useTankLedgerStore } from "@/store/tank-ledger-store";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,7 +21,6 @@ import {
 } from "@/components/ui/dialog";
 import { CreateTankForm } from "./CreateTankForm";
 import { UpdateTankForm } from "./UpdateTankForm";
-import { TankTransactionService } from "@/services/tank-transaction-service";
 import { DataTable } from "@/components/ui/data-table";
 import { columns } from "./columns";
 import type { Tank } from "@/types";
@@ -28,6 +28,7 @@ import type { Tank } from "@/types";
 export function TanksPage() {
   const navigate = useNavigate();
   const { tanks, loading, error, fetchTanks, removeTank } = useTankStore();
+  const { getCurrentLevel } = useTankLedgerStore();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingTank, setEditingTank] = useState<Tank | null>(null);
@@ -55,7 +56,7 @@ export function TanksPage() {
     });
     setBalancesLoading(loadingStates);
 
-    // Calculate balance for each tank
+    // Calculate balance for each tank using the optimized getCurrentLevel method
     await Promise.all(
       tanks.map(async (tank) => {
         if (!tank.id) return;
@@ -66,31 +67,14 @@ export function TanksPage() {
             ? formatOpeningLevelDate(tank.openingLevelDate) || today
             : today;
 
-          // Get opening level for the from date
-          const levelBefore = await TankTransactionService.getOpeningLevel(
-            tank.id,
-            fromDate
-          );
-
-          // Get transactions from opening level date to today
-          const transactions =
-            await TankTransactionService.getTransactionsWithDateRange(
-              tank.id,
-              fromDate,
-              today
-            );
-
-          // Calculate running level
-          let runningLevel = levelBefore;
-          transactions.forEach((transaction) => {
-            if (transaction.transactionType === "ADDITION") {
-              runningLevel += transaction.volume;
-            } else if (transaction.transactionType === "REMOVAL") {
-              runningLevel -= transaction.volume;
-            }
+          // Use the optimized method to get only the current level
+          const currentLevel = await getCurrentLevel({
+            tankId: tank.id,
+            fromDate,
+            toDate: today,
           });
 
-          balances[tank.id] = Math.max(0, runningLevel); // Ensure non-negative
+          balances[tank.id] = currentLevel;
         } catch (error) {
           console.error(
             `Failed to calculate balance for tank ${tank.id}:`,
@@ -106,7 +90,7 @@ export function TanksPage() {
 
     setCurrentBalances(balances);
     setBalancesLoading(loadingStates);
-  }, [tanks]);
+  }, [tanks, getCurrentLevel]);
 
   // Calculate current balances for all tanks
   useEffect(() => {

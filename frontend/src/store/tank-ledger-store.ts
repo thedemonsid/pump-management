@@ -1,13 +1,13 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { toast } from 'sonner';
-import { TankTransactionService } from '@/services/tank-transaction-service';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import { toast } from "sonner";
+import { TankTransactionService } from "@/services/tank-transaction-service";
 import type {
   TankLedgerEntry,
   TankLedgerSummary,
   TankLedgerState,
   ComputeTankLedgerParams,
-} from '@/types/tank-transaction';
+} from "@/types/tank-transaction";
 
 interface TankLedgerStore extends TankLedgerState {
   // Actions
@@ -20,6 +20,13 @@ interface TankLedgerStore extends TankLedgerState {
 
   // Computation methods
   computeLedgerData: (params: ComputeTankLedgerParams) => Promise<void>;
+
+  // Optimized method to get only the current level
+  getCurrentLevel: (params: {
+    tankId: string;
+    fromDate: string;
+    toDate: string;
+  }) => Promise<number>;
 }
 
 const initialState: TankLedgerState = {
@@ -61,10 +68,15 @@ export const useTankLedgerStore = create<TankLedgerStore>()(
         set({ loading: true, error: null });
 
         try {
-          // Fetch opening level for the from date
+          // Calculate the date one day before fromDate for "before" calculations
+          const beforeDate = new Date(fromDate);
+          beforeDate.setDate(beforeDate.getDate() - 1);
+          const beforeDateString = beforeDate.toISOString().split("T")[0];
+
+          // Fetch opening level for the day before from date
           const levelBefore = await TankTransactionService.getOpeningLevel(
             tankId,
-            fromDate
+            beforeDateString
           );
 
           // Fetch transactions for the date range
@@ -83,19 +95,19 @@ export const useTankLedgerStore = create<TankLedgerStore>()(
             ledgerEntries.push({
               date: transaction.transactionDate,
               action:
-                transaction.transactionType === 'ADDITION'
-                  ? 'Addition'
-                  : 'Removal',
+                transaction.transactionType === "ADDITION"
+                  ? "Addition"
+                  : "Removal",
               volume: transaction.volume,
               type:
-                transaction.transactionType === 'ADDITION'
-                  ? 'addition'
-                  : 'removal',
+                transaction.transactionType === "ADDITION"
+                  ? "addition"
+                  : "removal",
               level: 0, // Will be calculated later
               description: transaction.description,
               supplierName: transaction.supplierName,
               invoiceNumber: transaction.invoiceNumber,
-              entryBy: transaction.entryBy || 'System',
+              entryBy: transaction.entryBy || "System",
               transactionDetails: transaction,
             });
           });
@@ -108,9 +120,9 @@ export const useTankLedgerStore = create<TankLedgerStore>()(
           // Calculate running levels starting from levelBefore
           let runningLevel = levelBefore;
           ledgerEntries.forEach((entry) => {
-            if (entry.type === 'addition') {
+            if (entry.type === "addition") {
               runningLevel += entry.volume;
-            } else if (entry.type === 'removal') {
+            } else if (entry.type === "removal") {
               runningLevel -= entry.volume;
             }
             entry.level = runningLevel;
@@ -118,10 +130,10 @@ export const useTankLedgerStore = create<TankLedgerStore>()(
 
           // Compute summary
           const totalAdditionsInRange = ledgerEntries
-            .filter((entry) => entry.type === 'addition')
+            .filter((entry) => entry.type === "addition")
             .reduce((sum, entry) => sum + entry.volume, 0);
           const totalRemovalsInRange = ledgerEntries
-            .filter((entry) => entry.type === 'removal')
+            .filter((entry) => entry.type === "removal")
             .reduce((sum, entry) => sum + entry.volume, 0);
           const closingLevel = runningLevel;
 
@@ -152,14 +164,56 @@ export const useTankLedgerStore = create<TankLedgerStore>()(
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to compute tank ledger data';
+              : "Failed to compute tank ledger data";
           toast.error(errorMessage);
           set({ error: errorMessage, loading: false });
         }
       },
+
+      getCurrentLevel: async ({ tankId, fromDate, toDate }) => {
+        try {
+          // Calculate the date one day before fromDate for "before" calculations
+          const beforeDate = new Date(fromDate);
+          beforeDate.setDate(beforeDate.getDate() - 1);
+          const beforeDateString = beforeDate.toISOString().split("T")[0];
+
+          // Fetch opening level for the day before from date
+          const levelBefore = await TankTransactionService.getOpeningLevel(
+            tankId,
+            beforeDateString
+          );
+
+          // Fetch transactions for the date range
+          const transactions =
+            await TankTransactionService.getTransactionsWithDateRange(
+              tankId,
+              fromDate,
+              toDate
+            );
+
+          // Calculate current level by applying transactions to levelBefore
+          let currentLevel = levelBefore;
+          transactions.forEach((transaction) => {
+            if (transaction.transactionType === "ADDITION") {
+              currentLevel += transaction.volume;
+            } else if (transaction.transactionType === "REMOVAL") {
+              currentLevel -= transaction.volume;
+            }
+          });
+
+          return Math.max(0, currentLevel); // Ensure non-negative
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Failed to get current level";
+          console.error(errorMessage, error);
+          throw error;
+        }
+      },
     }),
     {
-      name: 'tank-ledger-store',
+      name: "tank-ledger-store",
     }
   )
 );

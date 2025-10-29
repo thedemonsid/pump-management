@@ -22,6 +22,8 @@ interface CollectionData {
 interface DaywiseCollectionPDFProps {
   data: CollectionData;
   selectedDate: string;
+  fromDate?: string;
+  toDate?: string;
 }
 
 // Register font
@@ -122,54 +124,72 @@ const formatDate = (dateString: string) => {
   });
 };
 
-const formatTime = (dateString: string) => {
-  return new Date(dateString).toLocaleTimeString("en-IN", {
+const formatDateTime = (dateString: string) => {
+  const date = new Date(dateString);
+  const dateStr = date.toLocaleDateString("en-IN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const timeStr = date.toLocaleTimeString("en-IN", {
     hour: "2-digit",
     minute: "2-digit",
   });
+  return `${dateStr} ${timeStr}`;
 };
 
 export function DaywiseCollectionPDF({
   data,
   selectedDate,
+  fromDate,
+  toDate,
 }: DaywiseCollectionPDFProps) {
+  const displayDate =
+    fromDate && toDate
+      ? fromDate === toDate
+        ? formatDate(fromDate)
+        : `${formatDate(fromDate)} to ${formatDate(toDate)}`
+      : formatDate(selectedDate);
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.title}>Daywise Collection Report</Text>
           <Text style={styles.subtitle}>Money Collection Summary</Text>
-          <Text style={styles.dateRange}>Date: {formatDate(selectedDate)}</Text>
+          <Text style={styles.dateRange}>Date: {displayDate}</Text>
         </View>
 
         {/* All Payments Combined */}
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={{ width: "7%", textAlign: "center" }}>Sr.</Text>
-            <Text style={{ width: "12%" }}>Type</Text>
-            <Text style={{ width: "12%", textAlign: "center" }}>Time</Text>
-            <Text style={{ width: "25%" }}>Customer Name</Text>
-            <Text style={{ width: "20%" }}>Payment Method</Text>
-            <Text style={{ width: "24%", textAlign: "right" }}>Amount</Text>
+            <Text style={{ width: "5%", textAlign: "center" }}>Sr.</Text>
+            <Text style={{ width: "10%" }}>Type</Text>
+            <Text style={{ width: "22%", textAlign: "center", fontSize: 9 }}>
+              Date & Time
+            </Text>
+            <Text style={{ width: "28%" }}>Customer Name</Text>
+            <Text style={{ width: "17%" }}>Payment Method</Text>
+            <Text style={{ width: "18%", textAlign: "right" }}>Amount</Text>
           </View>
 
           {/* Customer Payments */}
           {data.customerPayments.map((payment, index) => (
             <View key={`customer-${payment.id}`} style={styles.tableRow}>
-              <Text style={{ width: "7%", textAlign: "center" }}>
+              <Text style={{ width: "5%", textAlign: "center" }}>
                 {index + 1}
               </Text>
               <Text
-                style={{ width: "12%", color: "#2563eb", fontWeight: "bold" }}
+                style={{ width: "10%", color: "#2563eb", fontWeight: "bold" }}
               >
                 Customer
               </Text>
-              <Text style={{ width: "12%", textAlign: "center" }}>
-                {formatTime(payment.paymentDate)}
+              <Text style={{ width: "22%", textAlign: "center", fontSize: 8 }}>
+                {formatDateTime(payment.paymentDate)}
               </Text>
-              <Text style={{ width: "25%" }}>{payment.customerName}</Text>
-              <Text style={{ width: "20%" }}>{payment.paymentMethod}</Text>
-              <Text style={{ width: "24%", textAlign: "right" }}>
+              <Text style={{ width: "28%" }}>{payment.customerName}</Text>
+              <Text style={{ width: "17%" }}>{payment.paymentMethod}</Text>
+              <Text style={{ width: "18%", textAlign: "right" }}>
                 {formatCurrency(payment.amount)}
               </Text>
             </View>
@@ -178,20 +198,20 @@ export function DaywiseCollectionPDF({
           {/* Salesman Payments */}
           {data.salesmanPayments.map((payment, index) => (
             <View key={`salesman-${payment.id}`} style={styles.tableRow}>
-              <Text style={{ width: "7%", textAlign: "center" }}>
+              <Text style={{ width: "5%", textAlign: "center" }}>
                 {data.customerPayments.length + index + 1}
               </Text>
               <Text
-                style={{ width: "12%", color: "#9333ea", fontWeight: "bold" }}
+                style={{ width: "10%", color: "#9333ea", fontWeight: "bold" }}
               >
                 Salesman
               </Text>
-              <Text style={{ width: "12%", textAlign: "center" }}>
-                {formatTime(payment.paymentDate)}
+              <Text style={{ width: "22%", textAlign: "center", fontSize: 8 }}>
+                {formatDateTime(payment.paymentDate)}
               </Text>
-              <Text style={{ width: "25%" }}>{payment.customerName}</Text>
-              <Text style={{ width: "20%" }}>{payment.paymentMethod}</Text>
-              <Text style={{ width: "24%", textAlign: "right" }}>
+              <Text style={{ width: "28%" }}>{payment.customerName}</Text>
+              <Text style={{ width: "17%" }}>{payment.paymentMethod}</Text>
+              <Text style={{ width: "18%", textAlign: "right" }}>
                 {formatCurrency(payment.amount)}
               </Text>
             </View>
@@ -200,11 +220,11 @@ export function DaywiseCollectionPDF({
           {/* Total Row */}
           <View style={styles.tableRowTotal}>
             <Text
-              style={{ width: "76%", textAlign: "right", paddingRight: 10 }}
+              style={{ width: "82%", textAlign: "right", paddingRight: 10 }}
             >
               Total:
             </Text>
-            <Text style={{ width: "24%", textAlign: "right" }}>
+            <Text style={{ width: "18%", textAlign: "right" }}>
               {formatCurrency(data.grandTotal)}
             </Text>
           </View>

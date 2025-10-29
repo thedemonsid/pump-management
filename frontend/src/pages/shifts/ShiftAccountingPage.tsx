@@ -452,6 +452,31 @@ export function ShiftAccountingPage() {
                           ₹{accounting.fuelSales.toFixed(2)}
                         </td>
                       </tr>
+                      <tr className="border-t">
+                        <td
+                          className="sticky left-0 z-10 bg-background p-2 sm:p-3 text-xs sm:text-sm"
+                          colSpan={4}
+                        >
+                          Customer Receipts
+                        </td>
+                        <td className="sticky right-0 z-10 bg-background p-2 sm:p-3 text-right font-mono text-xs sm:text-sm text-green-600 dark:text-green-400">
+                          ₹{accounting.customerReceipt.toFixed(2)}
+                        </td>
+                      </tr>
+                      <tr className="border-t bg-blue-50 dark:bg-blue-950">
+                        <td
+                          className="sticky left-0 z-10 bg-blue-50 dark:bg-blue-950 p-2 sm:p-3 font-semibold text-xs sm:text-sm"
+                          colSpan={4}
+                        >
+                          Total (Fuel Sales + Receipts)
+                        </td>
+                        <td className="sticky right-0 z-10 bg-blue-50 dark:bg-blue-950 p-2 sm:p-3 text-right font-mono font-semibold text-xs sm:text-sm">
+                          ₹
+                          {(
+                            accounting.fuelSales + accounting.customerReceipt
+                          ).toFixed(2)}
+                        </td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
@@ -506,37 +531,6 @@ export function ShiftAccountingPage() {
                       </td>
                       <td className="p-2 sm:p-3 text-right font-mono text-xs sm:text-sm text-red-600 dark:text-red-400">
                         ₹{accounting.credit.toFixed(2)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Receipts & Expenses */}
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
-                Receipts & Expenses
-              </h3>
-              <div className="rounded-md border">
-                <table className="w-full">
-                  <thead className="bg-muted/50">
-                    <tr>
-                      <th className="text-left p-2 sm:p-3 font-medium text-xs sm:text-sm">
-                        Description
-                      </th>
-                      <th className="text-right p-2 sm:p-3 font-medium text-xs sm:text-sm">
-                        Amount (₹)
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-t">
-                      <td className="p-2 sm:p-3 text-xs sm:text-sm">
-                        Customer Receipts
-                      </td>
-                      <td className="p-2 sm:p-3 text-right font-mono text-xs sm:text-sm text-green-600 dark:text-green-400">
-                        ₹{accounting.customerReceipt.toFixed(2)}
                       </td>
                     </tr>
                     <tr className="border-t">
@@ -785,6 +779,31 @@ export function ShiftAccountingPage() {
                             ₹{calculateFuelSales().toFixed(2)}
                           </td>
                         </tr>
+                        <tr className="border-t">
+                          <td
+                            className="sticky left-0 z-10 bg-background p-3"
+                            colSpan={4}
+                          >
+                            Customer Receipts
+                          </td>
+                          <td className="sticky right-0 z-10 bg-background p-3 text-right font-mono text-green-600 dark:text-green-400">
+                            ₹{calculateCustomerReceipt().toFixed(2)}
+                          </td>
+                        </tr>
+                        <tr className="border-t bg-blue-50 dark:bg-blue-950">
+                          <td
+                            className="sticky left-0 z-10 bg-blue-50 dark:bg-blue-950 p-3 font-semibold"
+                            colSpan={4}
+                          >
+                            Total (Fuel Sales + Receipts)
+                          </td>
+                          <td className="sticky right-0 z-10 bg-blue-50 dark:bg-blue-950 p-3 text-right font-mono font-semibold">
+                            ₹
+                            {(
+                              calculateFuelSales() + calculateCustomerReceipt()
+                            ).toFixed(2)}
+                          </td>
+                        </tr>
                       </tbody>
                     </table>
                   </div>
@@ -869,35 +888,6 @@ export function ShiftAccountingPage() {
                         <td className="p-3">Credit Sales</td>
                         <td className="p-3 text-right font-mono text-red-600 dark:text-red-400">
                           ₹{calculateCredit().toFixed(2)}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Receipts & Expenses */}
-              <div>
-                <h3 className="text-lg font-semibold mb-3">
-                  Receipts & Expenses
-                </h3>
-                <div className="rounded-md border">
-                  <table className="w-full">
-                    <thead className="bg-muted/50">
-                      <tr>
-                        <th className="text-left p-3 font-medium">
-                          Description
-                        </th>
-                        <th className="text-right p-3 font-medium">
-                          Amount (₹)
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-t">
-                        <td className="p-3">Customer Receipts</td>
-                        <td className="p-3 text-right font-mono text-green-600 dark:text-green-400">
-                          ₹{calculateCustomerReceipt().toFixed(2)}
                         </td>
                       </tr>
                       <tr className="border-t">

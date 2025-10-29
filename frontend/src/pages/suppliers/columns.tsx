@@ -1,25 +1,9 @@
-'use client';
+"use client";
 
-import type { ColumnDef } from '@tanstack/react-table';
-import {
-  ArrowUpDown,
-  MoreHorizontal,
-  Phone,
-  Mail,
-  Eye,
-  Pencil,
-  Trash2,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import type { Supplier } from '@/types';
+import type { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown, Phone, Mail, Eye, Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import type { Supplier } from "@/types";
 
 interface TableMeta {
   onView?: (supplier: Supplier) => void;
@@ -29,12 +13,12 @@ interface TableMeta {
 
 export const columns: ColumnDef<Supplier>[] = [
   {
-    accessorKey: 'supplierName',
+    accessorKey: "supplierName",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Supplier Name
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -47,12 +31,12 @@ export const columns: ColumnDef<Supplier>[] = [
     },
   },
   {
-    accessorKey: 'contactPersonName',
-    header: 'Contact Person',
+    accessorKey: "contactPersonName",
+    header: "Contact Person",
   },
   {
-    accessorKey: 'contactNumber',
-    header: 'Contact Number',
+    accessorKey: "contactNumber",
+    header: "Contact Number",
     cell: ({ row }) => {
       const supplier = row.original;
       return (
@@ -64,12 +48,12 @@ export const columns: ColumnDef<Supplier>[] = [
     },
   },
   {
-    accessorKey: 'email',
+    accessorKey: "email",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Email
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -87,20 +71,20 @@ export const columns: ColumnDef<Supplier>[] = [
     },
   },
   {
-    accessorKey: 'gstNumber',
-    header: 'GST Number',
+    accessorKey: "gstNumber",
+    header: "GST Number",
     cell: ({ row }) => {
       const supplier = row.original;
       return <div className="font-mono text-sm">{supplier.gstNumber}</div>;
     },
   },
   {
-    accessorKey: 'openingBalance',
+    accessorKey: "openingBalance",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Opening Balance
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -110,12 +94,12 @@ export const columns: ColumnDef<Supplier>[] = [
     cell: ({ row }) => {
       const supplier = row.original;
       const balance = supplier.openingBalance;
-      if (balance === undefined || balance === null) return '-';
+      if (balance === undefined || balance === null) return "-";
 
       return (
         <div
           className={`font-mono ${
-            balance < 0 ? 'text-red-600' : 'text-green-600'
+            balance < 0 ? "text-red-600" : "text-green-600"
           }`}
         >
           ₹{balance.toLocaleString()}
@@ -124,18 +108,18 @@ export const columns: ColumnDef<Supplier>[] = [
     },
   },
   {
-    accessorKey: 'openingBalanceDate',
-    header: 'Opening Balance Date',
+    accessorKey: "openingBalanceDate",
+    header: "Opening Balance Date",
     cell: ({ row }) => {
       const supplier = row.original;
       return supplier.openingBalanceDate
         ? new Date(supplier.openingBalanceDate).toLocaleDateString()
-        : '-';
+        : "-";
     },
   },
   {
-    accessorKey: 'address',
-    header: 'Address',
+    accessorKey: "address",
+    header: "Address",
     cell: ({ row }) => {
       const supplier = row.original;
       return (
@@ -146,7 +130,8 @@ export const columns: ColumnDef<Supplier>[] = [
     },
   },
   {
-    id: 'actions',
+    id: "actions",
+    header: "Actions",
     enableHiding: false,
     cell: ({ row, table }) => {
       const supplier = row.original;
@@ -158,44 +143,33 @@ export const columns: ColumnDef<Supplier>[] = [
       const onDelete = meta?.onDelete;
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(supplier.id!)}
+        <div className="flex items-center gap-2">
+          {onView && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onView(supplier)}
             >
-              Copy supplier ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {onView && (
-              <DropdownMenuItem onClick={() => onView(supplier)}>
-                <Eye className="mr-2 h-4 w-4" />
-                View Details
-              </DropdownMenuItem>
-            )}
-            {onEdit && (
-              <DropdownMenuItem onClick={() => onEdit(supplier)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
-            )}
-            {onDelete && supplier.id && (
-              <DropdownMenuItem
-                onClick={() => onDelete(supplier.id!)}
-                className="text-red-600"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <Eye className="mr-2 h-4 w-4" />
+              View Details
+            </Button>
+          )}
+          {onEdit && (
+            <Button variant="ghost" size="sm" onClick={() => onEdit(supplier)}>
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
+          {onDelete && supplier.id && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDelete(supplier.id!)}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       );
     },
   },

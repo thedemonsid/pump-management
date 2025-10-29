@@ -427,7 +427,7 @@ export function CreateFuelPurchaseForm({
             name="readingKm"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Reading (KM)</FormLabel>
+                <FormLabel>Vehicle Reading (KM)</FormLabel>
                 <FormControl>
                   <Input
                     type="number"

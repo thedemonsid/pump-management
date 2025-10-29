@@ -32,7 +32,10 @@ interface CollectionData {
 
 export default function DaywiseCollectionReportPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string>(
+  const [fromDate, setFromDate] = useState<string>(
+    format(new Date(), "yyyy-MM-dd")
+  );
+  const [toDate, setToDate] = useState<string>(
     format(new Date(), "yyyy-MM-dd")
   );
   const [hasSearched, setHasSearched] = useState(false);
@@ -49,10 +52,10 @@ export default function DaywiseCollectionReportPage() {
     setHasSearched(true);
 
     try {
-      // Fetch all payment data for the selected date using optimized endpoints
+      // Fetch all payment data for the selected date range using optimized endpoints
       const [customerPayments, salesmanPayments] = await Promise.all([
-        CustomerBillPaymentService.getByDateRange(selectedDate, selectedDate),
-        SalesmanBillPaymentService.getByDateRange(selectedDate, selectedDate),
+        CustomerBillPaymentService.getByDateRange(fromDate, toDate),
+        SalesmanBillPaymentService.getByDateRange(fromDate, toDate),
       ]);
 
       // Calculate totals
@@ -89,14 +92,16 @@ export default function DaywiseCollectionReportPage() {
       const blob = await pdf(
         <DaywiseCollectionPDF
           data={collectionData}
-          selectedDate={selectedDate}
+          selectedDate={fromDate}
+          fromDate={fromDate}
+          toDate={toDate}
         />
       ).toBlob();
 
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `daywise-collection-report-${selectedDate}.pdf`;
+      link.download = `daywise-collection-report-${fromDate}-to-${toDate}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
     } catch (error) {
@@ -120,12 +125,18 @@ export default function DaywiseCollectionReportPage() {
       day: "2-digit",
     });
   };
-
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString("en-IN", {
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const dateStr = date.toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    const timeStr = date.toLocaleTimeString("en-IN", {
       hour: "2-digit",
       minute: "2-digit",
     });
+    return `${dateStr} ${timeStr}`;
   };
 
   return (
@@ -147,20 +158,36 @@ export default function DaywiseCollectionReportPage() {
         <CardHeader>
           <CardTitle className="text-center text-xl">
             {hasSearched
-              ? `Collection Report for ${formatDate(selectedDate)}`
-              : "SELECT DATE"}
+              ? `Collection Report for ${formatDate(fromDate)}${
+                  fromDate !== toDate ? ` to ${formatDate(toDate)}` : ""
+                }`
+              : "SELECT DATE RANGE"}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex justify-center items-end gap-4">
             <div className="space-y-2 w-64">
-              <Label htmlFor="selectedDate">Select Date</Label>
+              <Label htmlFor="fromDate">From Date</Label>
               <div className="relative">
                 <Input
-                  id="selectedDate"
+                  id="fromDate"
                   type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  max={toDate}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2 w-64">
+              <Label htmlFor="toDate">To Date</Label>
+              <div className="relative">
+                <Input
+                  id="toDate"
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  min={fromDate}
                 />
               </div>
             </div>
@@ -194,7 +221,7 @@ export default function DaywiseCollectionReportPage() {
                     <TableRow className="bg-muted/50">
                       <TableHead className="font-bold">Sr. No.</TableHead>
                       <TableHead className="font-bold">Type</TableHead>
-                      <TableHead className="font-bold">Time</TableHead>
+                      <TableHead className="font-bold">Date & Time</TableHead>
                       <TableHead className="font-bold">Customer Name</TableHead>
                       <TableHead className="font-bold">
                         Payment Method
@@ -230,7 +257,7 @@ export default function DaywiseCollectionReportPage() {
                                 Customer
                               </TableCell>
                               <TableCell>
-                                {formatTime(payment.paymentDate)}
+                                {formatDateTime(payment.paymentDate)}
                               </TableCell>
                               <TableCell className="font-medium">
                                 {payment.customerName}
@@ -262,7 +289,7 @@ export default function DaywiseCollectionReportPage() {
                                 Salesman
                               </TableCell>
                               <TableCell>
-                                {formatTime(payment.paymentDate)}
+                                {formatDateTime(payment.paymentDate)}
                               </TableCell>
                               <TableCell className="font-medium">
                                 {payment.customerName}

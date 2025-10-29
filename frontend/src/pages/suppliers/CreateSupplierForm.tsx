@@ -211,16 +211,15 @@ export function CreateSupplierForm({ onSuccess }: CreateSupplierFormProps) {
                     step="0.01"
                     min="0"
                     placeholder="0.00"
-                    value={
-                      field.value === null || field.value === 0
-                        ? ""
-                        : field.value
-                    }
+                    value={field.value === null ? "" : field.value}
                     onChange={(e) => {
                       const value = e.target.value;
-                      field.onChange(
-                        value === "" ? null : parseFloat(value) || null
-                      );
+                      if (value === "") {
+                        field.onChange(null);
+                      } else {
+                        const parsed = parseFloat(value);
+                        field.onChange(isNaN(parsed) ? null : parsed);
+                      }
                     }}
                   />
                 </FormControl>

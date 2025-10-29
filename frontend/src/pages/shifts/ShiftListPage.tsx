@@ -288,6 +288,7 @@ export function ShiftListPage() {
                     <TableHead>Duration</TableHead>
                     <TableHead className="text-right">Opening Cash</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Accounting</TableHead>
                     <TableHead className="text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -329,6 +330,20 @@ export function ShiftListPage() {
                           }
                         >
                           {shift.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            shift.isAccountingDone ? "default" : "outline"
+                          }
+                          className={
+                            shift.isAccountingDone
+                              ? "bg-green-500 text-white hover:bg-green-600"
+                              : "border-orange-500 text-orange-600"
+                          }
+                        >
+                          {shift.isAccountingDone ? "Done" : "Pending"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center">
