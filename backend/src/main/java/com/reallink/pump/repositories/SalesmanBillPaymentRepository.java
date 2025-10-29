@@ -1,6 +1,7 @@
 package com.reallink.pump.repositories;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -48,6 +49,14 @@ public interface SalesmanBillPaymentRepository extends JpaRepository<SalesmanBil
             + "LEFT JOIN FETCH ss.salesman "
             + "WHERE sbp.customer.id = :customerId")
     List<SalesmanBillPayment> findByCustomer_Id(@Param("customerId") UUID customerId);
+
+    @Query("SELECT sbp FROM SalesmanBillPayment sbp "
+            + "LEFT JOIN FETCH sbp.customer "
+            + "LEFT JOIN FETCH sbp.salesmanShift ss "
+            + "LEFT JOIN FETCH ss.salesman "
+            + "WHERE DATE(sbp.paymentDate) >= :fromDate AND DATE(sbp.paymentDate) <= :toDate "
+            + "ORDER BY sbp.paymentDate ASC")
+    List<SalesmanBillPayment> findByPaymentDateRange(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
 
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
             + "LEFT JOIN FETCH sbp.customer "

@@ -1,12 +1,12 @@
-import api from './api';
+import api from "./api";
 import type {
   CreateCustomerBillPaymentRequest,
   UpdateCustomerBillPaymentRequest,
   CustomerBillPaymentResponse,
-} from '@/types';
+} from "@/types";
 
 export class CustomerBillPaymentService {
-  private static readonly BASE_PATH = '/api/v1/customer-bill-payments';
+  private static readonly BASE_PATH = "/api/v1/customer-bill-payments";
 
   // Get all customer bill payments
   static async getAll(): Promise<CustomerBillPaymentResponse[]> {
@@ -52,6 +52,17 @@ export class CustomerBillPaymentService {
   ): Promise<CustomerBillPaymentResponse[]> {
     const response = await api.get<CustomerBillPaymentResponse[]>(
       `${this.BASE_PATH}/bill/${billId}`
+    );
+    return response.data;
+  }
+
+  // Get payments by date range
+  static async getByDateRange(
+    fromDate: string,
+    toDate: string
+  ): Promise<CustomerBillPaymentResponse[]> {
+    const response = await api.get<CustomerBillPaymentResponse[]>(
+      `${this.BASE_PATH}/date-range?fromDate=${fromDate}&toDate=${toDate}`
     );
     return response.data;
   }

@@ -54,6 +54,7 @@ import BankAccountReportPage from "./pages/reports/BankAccountReportPage";
 import TankLevelReportPage from "./pages/reports/TankLevelReportPage";
 import SupplierDebtReportPage from "./pages/reports/SupplierDebtReportPage";
 import CustomerCreditReportPage from "./pages/reports/CustomerCreditReportPage";
+import DaywiseCollectionReportPage from "./pages/reports/DaywiseCollectionReportPage";
 import { ExpenseHeadsPage } from "./pages/expense-heads/ExpenseHeadsPage";
 import { ExpensesPage } from "./pages/expenses/ExpensesPage";
 import ChangePasswordPage from "./pages/settings/ChangePasswordPage";
@@ -108,6 +109,11 @@ const allRoutes = [
   {
     path: "/reports/customer-credit",
     element: <CustomerCreditReportPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/reports/daywise-collection",
+    element: <DaywiseCollectionReportPage />,
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {

@@ -24,6 +24,9 @@ public interface CustomerBillPaymentRepository extends JpaRepository<CustomerBil
 
     List<CustomerBillPayment> findByPaymentDateBetween(LocalDateTime startDate, LocalDateTime endDate);
 
+    @Query("SELECT p FROM CustomerBillPayment p WHERE DATE(p.paymentDate) >= :fromDate AND DATE(p.paymentDate) <= :toDate ORDER BY p.paymentDate ASC")
+    List<CustomerBillPayment> findByPaymentDateRange(@Param("fromDate") java.time.LocalDate fromDate, @Param("toDate") java.time.LocalDate toDate);
+
     @Query("SELECT p FROM CustomerBillPayment p WHERE p.pumpMaster.id = :pumpMasterId ORDER BY p.paymentDate DESC")
     List<CustomerBillPayment> findByPumpMasterIdOrderByPaymentDateDesc(@Param("pumpMasterId") UUID pumpMasterId);
 

@@ -1,9 +1,11 @@
 package com.reallink.pump.controllers;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.reallink.pump.dto.request.CreateSalesmanBillPaymentRequest;
@@ -64,6 +67,14 @@ public class SalesmanBillPaymentController {
     @Operation(summary = "Get payments by customer ID")
     public ResponseEntity<List<SalesmanBillPaymentResponse>> getPaymentsByCustomerId(@PathVariable UUID customerId) {
         return ResponseEntity.ok(service.getByCustomerId(customerId));
+    }
+
+    @GetMapping("/date-range")
+    @Operation(summary = "Get salesman bill payments by date range", description = "Retrieve all salesman bill payments between fromDate and toDate")
+    public ResponseEntity<List<SalesmanBillPaymentResponse>> getPaymentsByDateRange(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+        return ResponseEntity.ok(service.getByDateRange(fromDate, toDate));
     }
 
     @PostMapping

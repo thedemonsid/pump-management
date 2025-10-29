@@ -1,6 +1,7 @@
 package com.reallink.pump.services;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -145,6 +146,12 @@ public class SalesmanBillPaymentService {
 
     public List<SalesmanBillPaymentResponse> getByCustomerId(@NotNull UUID customerId) {
         return repository.findByCustomer_Id(customerId).stream()
+                .map(mapper::toResponse)
+                .toList();
+    }
+
+    public List<SalesmanBillPaymentResponse> getByDateRange(@NotNull LocalDate fromDate, @NotNull LocalDate toDate) {
+        return repository.findByPaymentDateRange(fromDate, toDate).stream()
                 .map(mapper::toResponse)
                 .toList();
     }

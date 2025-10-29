@@ -56,6 +56,17 @@ export class SalesmanBillPaymentService {
     return response.data;
   }
 
+  // Get payments by date range
+  static async getByDateRange(
+    fromDate: string,
+    toDate: string
+  ): Promise<SalesmanBillPaymentResponse[]> {
+    const response = await api.get<SalesmanBillPaymentResponse[]>(
+      `${this.BASE_PATH}/date-range?fromDate=${fromDate}&toDate=${toDate}`
+    );
+    return response.data;
+  }
+
   // Get total payments for a bill
   static async getTotalByBillId(salesmanBillId: string): Promise<number> {
     const response = await api.get<number>(
