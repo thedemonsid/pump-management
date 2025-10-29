@@ -227,9 +227,13 @@ export const ledgerColumns: ColumnDef<LedgerEntry>[] = [
       if (entry.type === "bill" && entry.billDetails) {
         // Check if it's a salesman bill or regular bill
         const isSalesmanBill = entry.action === "Salesman Bill";
-        const billUrl = isSalesmanBill
-          ? `/salesman-bills/${entry.billDetails.id}`
-          : `/bills/${entry.billDetails.id}`;
+
+        // Don't show actions for salesman bills
+        if (isSalesmanBill) {
+          return null;
+        }
+
+        const billUrl = `/bills/${entry.billDetails.id}`;
 
         return (
           <Link to={billUrl}>

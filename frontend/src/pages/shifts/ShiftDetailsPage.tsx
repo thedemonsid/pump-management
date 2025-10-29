@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useShiftStore } from "@/store/shifts/shift-store";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -66,6 +67,7 @@ export function ShiftDetailsPage() {
   const { shiftId } = useParams<{ shiftId: string }>();
   const navigate = useNavigate();
   const { currentShift, fetchShiftById, closeShift } = useShiftStore();
+  const isMobile = useIsMobile();
 
   const [nozzleAssignments, setNozzleAssignments] = useState<
     NozzleAssignmentResponse[]
@@ -409,24 +411,24 @@ export function ShiftDetailsPage() {
       <Tabs defaultValue="nozzles" className="w-full">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="nozzles">
-            <Fuel className="h-4 w-4 mr-2" />
-            Nozzles
+            <Fuel className={`h-4 w-4 ${!isMobile && "mr-2"}`} />
+            {!isMobile && "Nozzles"}
           </TabsTrigger>
           <TabsTrigger value="bills">
-            <FileText className="h-4 w-4 mr-2" />
-            Bills
+            <FileText className={`h-4 w-4 ${!isMobile && "mr-2"}`} />
+            {!isMobile && "Bills"}
           </TabsTrigger>
           <TabsTrigger value="payments">
-            <Wallet className="h-4 w-4 mr-2" />
-            Payments
+            <Wallet className={`h-4 w-4 ${!isMobile && "mr-2"}`} />
+            {!isMobile && "Payments"}
           </TabsTrigger>
           <TabsTrigger value="expenses">
-            <Receipt className="h-4 w-4 mr-2" />
-            Expenses
+            <Receipt className={`h-4 w-4 ${!isMobile && "mr-2"}`} />
+            {!isMobile && "Expenses"}
           </TabsTrigger>
           <TabsTrigger value="accounting">
-            <Calculator className="h-4 w-4 mr-2" />
-            Accounting
+            <Calculator className={`h-4 w-4 ${!isMobile && "mr-2"}`} />
+            {!isMobile && "Accounting"}
           </TabsTrigger>
         </TabsList>
 

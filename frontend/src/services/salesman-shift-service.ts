@@ -83,6 +83,25 @@ export class SalesmanShiftService {
     }
   }
 
+  static async getShiftsNeedingAccounting(
+    salesmanId: string
+  ): Promise<ShiftResponse[]> {
+    try {
+      const response = await api.get<ShiftResponse[]>(
+        `${this.BASE_PATH}/salesman/${salesmanId}/pending-accounting`
+      );
+      return response.data;
+    } catch (error: unknown) {
+      // If 404, return empty array
+      if (
+        (error as { response?: { status?: number } })?.response?.status === 404
+      ) {
+        return [];
+      }
+      throw error;
+    }
+  }
+
   // Accounting
   static async createAccounting(
     shiftId: string,

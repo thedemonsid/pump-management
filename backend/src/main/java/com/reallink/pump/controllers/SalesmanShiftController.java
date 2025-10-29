@@ -150,6 +150,24 @@ public class SalesmanShiftController {
     }
 
     /**
+     * Get shifts needing accounting for a specific salesman. GET
+     * /api/v1/salesman-shifts/salesman/{salesmanId}/pending-accounting
+     */
+    @GetMapping("/salesman/{salesmanId}/pending-accounting")
+    @PreAuthorize("hasAnyRole('SALESMAN', 'MANAGER', 'ADMIN')")
+    public ResponseEntity<List<ShiftResponse>> getShiftsNeedingAccounting(@PathVariable UUID salesmanId) {
+        log.info("Fetching shifts needing accounting for salesman: {}", salesmanId);
+
+        List<SalesmanShift> shifts = salesmanShiftService.getShiftsNeedingAccountingForSalesman(salesmanId);
+
+        List<ShiftResponse> response = shifts.stream()
+                .map(ShiftResponse::fromMinimal)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Close a shift. PUT /api/v1/salesman-shifts/{id}/close
      */
     @PutMapping("/{id}/close")

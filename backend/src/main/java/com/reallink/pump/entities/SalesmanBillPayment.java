@@ -12,7 +12,6 @@ import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,9 +22,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "pump_salesman_bill_payment_master", uniqueConstraints = {
-    @UniqueConstraint(name = "uk_salesman_payment_reference", columnNames = {"reference_number"})
-})
+@Table(name = "pump_salesman_bill_payment_master", uniqueConstraints = {})
 @Getter
 @Setter
 @NoArgsConstructor

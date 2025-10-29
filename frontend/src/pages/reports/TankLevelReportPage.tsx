@@ -18,21 +18,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Download,
-  Search,
-  Calendar as CalendarIcon,
-  ArrowLeft,
-} from "lucide-react";
+import { Download, Search } from "lucide-react";
 import { format } from "date-fns";
-import { useNavigate } from "react-router-dom";
 import { useTankStore } from "@/store/tank-store";
 import { useTankLedgerStore } from "@/store/tank-ledger-store";
 import { pdf } from "@react-pdf/renderer";
 import { TankLevelPDF } from "@/components/pdf-reports";
 
 export default function TankLevelReportPage() {
-  const navigate = useNavigate();
   const { tanks, fetchTanks } = useTankStore();
   const { ledgerData, summary, loading, hasSearched, computeLedgerData } =
     useTankLedgerStore();
@@ -122,14 +115,6 @@ export default function TankLevelReportPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/reports")}
-            className="mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Reports
-          </Button>
           <h2 className="text-3xl font-bold tracking-tight">
             Tank Level Report
           </h2>
@@ -161,7 +146,6 @@ export default function TankLevelReportPage() {
                   value={fromDate}
                   onChange={(e) => setFromDate(e.target.value)}
                 />
-                <CalendarIcon className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground pointer-events-none" />
               </div>
             </div>
 
@@ -174,7 +158,6 @@ export default function TankLevelReportPage() {
                   value={toDate}
                   onChange={(e) => setToDate(e.target.value)}
                 />
-                <CalendarIcon className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground pointer-events-none" />
               </div>
             </div>
 
@@ -264,13 +247,13 @@ export default function TankLevelReportPage() {
                           {entry.type === "addition" ? "Addition" : "Removal"}
                         </span>
                       </TableCell>
-                      <TableCell className="max-w-md">
+                      <TableCell className="max-w-md truncate">
                         {entry.description}
                       </TableCell>
                       <TableCell className="text-right text-green-600">
                         {entry.type === "addition"
                           ? formatVolume(entry.volume)
-                          : ""}
+                          : "-"}
                       </TableCell>
                       <TableCell className="text-right text-red-600">
                         {entry.type === "removal"

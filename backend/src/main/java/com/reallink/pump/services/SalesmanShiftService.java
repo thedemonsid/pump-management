@@ -336,6 +336,22 @@ public class SalesmanShiftService {
         return salesmanShiftRepository.findOpenShiftsByPumpMasterId(pumpMasterId);
     }
 
+    /**
+     * Get shifts needing accounting for a specific salesman. Returns closed
+     * shifts where accounting has not been completed.
+     */
+    @PreAuthorize("hasAnyRole('SALESMAN', 'MANAGER', 'ADMIN')")
+    public List<SalesmanShift> getShiftsNeedingAccountingForSalesman(UUID salesmanId) {
+        UUID pumpMasterId = securityHelper.getCurrentPumpMasterId();
+
+        // Security check: SALESMAN can only view their own shifts
+        if (securityHelper.isSalesman() && !securityHelper.getCurrentUserId().equals(salesmanId)) {
+            throw new IllegalArgumentException("You can only view your own shifts");
+        }
+
+        return salesmanShiftRepository.findShiftsNeedingAccountingBySalesman(salesmanId, pumpMasterId);
+    }
+
     // Private helper methods
     private void createTankTransactionForNozzleClose(NozzleAssignment assignment) {
         Tank tank = assignment.getNozzle().getTank();
@@ -355,9 +371,8 @@ public class SalesmanShiftService {
         transaction.setTransactionType(TankTransaction.TransactionType.REMOVAL);
         transaction.setVolume(dispensedAmount);
         transaction.setTransactionDate(assignment.getEndTime());
-        transaction.setDescription(String.format("Fuel dispensed from nozzle %s (Shift: %s, Salesman: %s)",
+        transaction.setDescription(String.format("Fuel dispensed from nozzle %s (Salesman: %s)",
                 assignment.getNozzle().getNozzleName(),
-                assignment.getSalesmanShift().getId(),
                 assignment.getSalesman().getUsername()));
         transaction.setEntryBy(securityHelper.getCurrentUsername());
 

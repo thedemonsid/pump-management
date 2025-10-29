@@ -11,12 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Download,
-  Search,
-  Calendar as CalendarIcon,
-  ArrowLeft,
-} from "lucide-react";
+import { Download, Search, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useSupplierStore } from "@/store/supplier-store";
@@ -227,7 +222,6 @@ export default function SupplierDebtReportPage() {
                   value={fromDate}
                   onChange={(e) => setFromDate(e.target.value)}
                 />
-                <CalendarIcon className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground pointer-events-none" />
               </div>
             </div>
 
@@ -240,7 +234,6 @@ export default function SupplierDebtReportPage() {
                   value={toDate}
                   onChange={(e) => setToDate(e.target.value)}
                 />
-                <CalendarIcon className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground pointer-events-none" />
               </div>
             </div>
 

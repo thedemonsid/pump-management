@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useShiftStore } from "@/store/shifts/shift-store";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { SalesmanShiftAccountingService } from "@/services/salesman-shift-accounting-service";
 import { NozzleAssignmentService } from "@/services/nozzle-assignment-service";
 import { SalesmanBillService } from "@/services/salesman-bill-service";
@@ -21,13 +21,14 @@ import { ExpenseService } from "@/services/expense-service";
 import { toast } from "sonner";
 import {
   Loader2,
-  ArrowLeft,
   AlertCircle,
   Calculator,
   Save,
   Edit,
+  ChevronRight,
 } from "lucide-react";
 import { format } from "date-fns";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type {
   SalesmanShiftAccountingResponse,
   CreateSalesmanShiftAccountingRequest,
@@ -64,9 +65,9 @@ const DENOMINATIONS = [
 
 export function ShiftAccountingPage() {
   const { shiftId } = useParams<{ shiftId: string }>();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { currentShift, fetchShiftById } = useShiftStore();
+  const isMobile = useIsMobile();
 
   const [accounting, setAccounting] =
     useState<SalesmanShiftAccountingResponse | null>(null);
@@ -78,6 +79,7 @@ export function ShiftAccountingPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showDenominationsSheet, setShowDenominationsSheet] = useState(false);
 
   // Form state
   const [upiReceived, setUpiReceived] = useState<string>("0");
@@ -220,6 +222,30 @@ export function ShiftAccountingPage() {
     }));
   };
 
+  // Handle Enter key press to move to next input or close sheet
+  const handleDenominationKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    currentIndex: number
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+
+      // If this is the last input, close the sheet
+      if (currentIndex === DENOMINATIONS.length - 1) {
+        setShowDenominationsSheet(false);
+      } else {
+        // Focus next input
+        const nextKey = DENOMINATIONS[currentIndex + 1].key;
+        const nextInput = document.getElementById(nextKey) as HTMLInputElement;
+        if (nextInput) {
+          nextInput.focus();
+          // Select all text for easy replacement
+          nextInput.select();
+        }
+      }
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -296,46 +322,44 @@ export function ShiftAccountingPage() {
   const isFormDisabled = !canEdit || (!isEditing && !!accounting) || isSaving;
 
   return (
-    <div className="container mx-auto py-6 px-4 space-y-6">
+    <div className="container mx-auto py-3 px-2 sm:py-6 sm:px-4 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(`/shifts/${shiftId}`)}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">Shift Accounting</h1>
-            <p className="text-sm text-muted-foreground">
-              Cash reconciliation and accounting
-            </p>
-          </div>
-        </div>
+      <div className="flex items-center justify-between px-2 sm:px-0">
         {accounting && canEdit && !isEditing && (
-          <Button onClick={() => setIsEditing(true)}>
+          <Button
+            onClick={() => setIsEditing(true)}
+            size="sm"
+            className="hidden sm:flex"
+          >
             <Edit className="mr-2 h-4 w-4" />
             Edit Accounting
+          </Button>
+        )}
+        {accounting && canEdit && !isEditing && (
+          <Button
+            onClick={() => setIsEditing(true)}
+            size="icon"
+            className="sm:hidden"
+          >
+            <Edit className="h-4 w-4" />
           </Button>
         )}
       </div>
 
       {/* Shift Info */}
-      <Card>
-        <CardHeader>
+      <div className="rounded-lg border bg-card">
+        <div className="p-3 sm:p-6 border-b">
           <div className="flex items-center justify-between">
-            <CardTitle>Shift Information</CardTitle>
+            <h2 className="font-semibold">Shift Information</h2>
             <Badge
               variant={currentShift.status === "OPEN" ? "default" : "secondary"}
             >
               {currentShift.status}
             </Badge>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        </div>
+        <div className="p-3 sm:p-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-sm">
             <div>
               <p className="text-muted-foreground">Salesman</p>
               <p className="font-medium">{currentShift.salesmanUsername}</p>
@@ -355,117 +379,133 @@ export function ShiftAccountingPage() {
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Accounting Summary (if exists) */}
       {accounting && !isEditing && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">
+        <div className="rounded-lg border bg-card">
+          <div className="p-1 sm:p-6 border-b">
+            <h2 className="text-lg sm:text-2xl font-semibold">
               🧾 Daily Fuel Sales & Reconciliation Sheet
-            </CardTitle>
-            <CardDescription>
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Created on {format(new Date(accounting.createdAt), "PPp")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
+            </p>
+          </div>
+          <div className="p-1 sm:p-6 space-y-4 sm:space-y-6">
             {/* Fuel Sales Summary */}
             <div>
-              <h3 className="text-lg font-semibold mb-3">Fuel Sales Summary</h3>
-              <div className="rounded-md border">
-                <table className="w-full">
-                  <thead className="bg-muted/50">
-                    <tr>
-                      <th className="text-left p-3 font-medium">Nozzle</th>
-                      <th className="text-center p-3 font-medium">Product</th>
-                      <th className="text-right p-3 font-medium">Litres</th>
-                      <th className="text-right p-3 font-medium">Rate (₹)</th>
-                      <th className="text-right p-3 font-medium">Amount (₹)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {nozzles.map((nozzle) => (
-                      <tr key={nozzle.id} className="border-t">
-                        <td className="p-3">{nozzle.nozzleName}</td>
-                        <td className="p-3 text-center">
-                          {nozzle.productName || "-"}
+              <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
+                Fuel Sales Summary
+              </h3>
+              <div className="rounded-md border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full relative">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="sticky left-0 z-10 bg-muted/50 text-left p-2 sm:p-3 font-medium min-w-[80px] sm:min-w-[100px] text-xs sm:text-sm">
+                          Nozzle
+                        </th>
+                        <th className="text-center p-2 sm:p-3 font-medium min-w-[80px] sm:min-w-[100px] text-xs sm:text-sm">
+                          Product
+                        </th>
+                        <th className="text-right p-2 sm:p-3 font-medium min-w-[70px] sm:min-w-[100px] text-xs sm:text-sm">
+                          Litres
+                        </th>
+                        <th className="text-right p-2 sm:p-3 font-medium min-w-[70px] sm:min-w-[100px] text-xs sm:text-sm">
+                          Rate (₹)
+                        </th>
+                        <th className="sticky right-0 z-10 bg-muted/50 text-right p-2 sm:p-3 font-medium min-w-[100px] sm:min-w-[120px] text-xs sm:text-sm">
+                          Amount (₹)
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {nozzles.map((nozzle) => (
+                        <tr key={nozzle.id} className="border-t">
+                          <td className="sticky left-0 z-10 bg-background p-2 sm:p-3 text-xs sm:text-sm">
+                            {nozzle.nozzleName}
+                          </td>
+                          <td className="p-2 sm:p-3 text-center text-xs sm:text-sm">
+                            {nozzle.productName || "-"}
+                          </td>
+                          <td className="p-2 sm:p-3 text-right font-mono text-xs sm:text-sm">
+                            {(nozzle.dispensedAmount || 0).toFixed(2)}
+                          </td>
+                          <td className="p-2 sm:p-3 text-right font-mono text-xs sm:text-sm">
+                            {(nozzle.productRate || 0).toFixed(2)}
+                          </td>
+                          <td className="sticky right-0 z-10 bg-background p-2 sm:p-3 text-right font-mono text-xs sm:text-sm">
+                            ₹{(nozzle.totalAmount || 0).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                      <tr className="border-t bg-muted/30">
+                        <td
+                          className="sticky left-0 z-10 bg-muted/30 p-2 sm:p-3 font-semibold text-xs sm:text-sm"
+                          colSpan={4}
+                        >
+                          Total Fuel Sales
                         </td>
-                        <td className="p-3 text-right font-mono">
-                          {(nozzle.dispensedAmount || 0).toFixed(2)}
-                        </td>
-                        <td className="p-3 text-right font-mono">
-                          {(nozzle.productRate || 0).toFixed(2)}
-                        </td>
-                        <td className="p-3 text-right font-mono">
-                          {(nozzle.totalAmount || 0).toFixed(2)}
+                        <td className="sticky right-0 z-10 bg-muted/30 p-2 sm:p-3 text-right font-mono font-semibold text-xs sm:text-sm">
+                          ₹{accounting.fuelSales.toFixed(2)}
                         </td>
                       </tr>
-                    ))}
-                    <tr className="border-t bg-muted/30">
-                      <td className="p-3 font-semibold" colSpan={4}>
-                        Total Fuel Sales
-                      </td>
-                      <td className="p-3 text-right font-mono font-semibold">
-                        {accounting.fuelSales.toFixed(2)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
             {/* Non-Cash / Digital Sales */}
             <div>
-              <h3 className="text-lg font-semibold mb-3">
+              <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
                 Non-Cash / Digital Sales
               </h3>
               <div className="rounded-md border">
                 <table className="w-full">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="text-left p-3 font-medium">
+                      <th className="text-left p-2 sm:p-3 font-medium text-xs sm:text-sm">
                         Payment Type
                       </th>
-                      <th className="text-right p-3 font-medium">Amount (₹)</th>
+                      <th className="text-right p-2 sm:p-3 font-medium text-xs sm:text-sm">
+                        Amount (₹)
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr className="border-t">
-                      <td className="p-3">UPI Sales</td>
-                      <td className="p-3 text-right font-mono">
-                        {accounting.upiReceived.toFixed(2)}
+                      <td className="p-2 sm:p-3 text-xs sm:text-sm">
+                        UPI Sales
+                      </td>
+                      <td className="p-2 sm:p-3 text-right font-mono text-xs sm:text-sm">
+                        ₹{accounting.upiReceived.toFixed(2)}
                       </td>
                     </tr>
                     <tr className="border-t">
-                      <td className="p-3">Card Sales</td>
-                      <td className="p-3 text-right font-mono">
-                        {accounting.cardReceived.toFixed(2)}
+                      <td className="p-2 sm:p-3 text-xs sm:text-sm">
+                        Card Sales
+                      </td>
+                      <td className="p-2 sm:p-3 text-right font-mono text-xs sm:text-sm">
+                        ₹{accounting.cardReceived.toFixed(2)}
                       </td>
                     </tr>
                     <tr className="border-t">
-                      <td className="p-3">Fleet Card Sales</td>
-                      <td className="p-3 text-right font-mono">
-                        {accounting.fleetCardReceived.toFixed(2)}
+                      <td className="p-2 sm:p-3 text-xs sm:text-sm">
+                        Fleet Card Sales
+                      </td>
+                      <td className="p-2 sm:p-3 text-right font-mono text-xs sm:text-sm">
+                        ₹{accounting.fleetCardReceived.toFixed(2)}
                       </td>
                     </tr>
                     <tr className="border-t">
-                      <td className="p-3">Credit Sales (Credit Customers)</td>
-                      <td className="p-3 text-right font-mono">
-                        {accounting.credit.toFixed(2)}
+                      <td className="p-2 sm:p-3 text-xs sm:text-sm">
+                        Credit Sales
                       </td>
-                    </tr>
-                    <tr className="border-t bg-muted/30">
-                      <td className="p-3 font-semibold">
-                        Total Non-Cash Sales
-                      </td>
-                      <td className="p-3 text-right font-mono font-semibold">
-                        {(
-                          accounting.upiReceived +
-                          accounting.cardReceived +
-                          accounting.fleetCardReceived +
-                          accounting.credit
-                        ).toFixed(2)}
+                      <td className="p-2 sm:p-3 text-right font-mono text-xs sm:text-sm text-red-600 dark:text-red-400">
+                        ₹{accounting.credit.toFixed(2)}
                       </td>
                     </tr>
                   </tbody>
@@ -473,59 +513,38 @@ export function ShiftAccountingPage() {
               </div>
             </div>
 
-            {/* Receipts */}
+            {/* Receipts & Expenses */}
             <div>
-              <h3 className="text-lg font-semibold mb-3">
-                Receipts (Bill Payments Received)
+              <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
+                Receipts & Expenses
               </h3>
               <div className="rounded-md border">
                 <table className="w-full">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="text-left p-3 font-medium">Description</th>
-                      <th className="text-right p-3 font-medium">Amount (₹)</th>
+                      <th className="text-left p-2 sm:p-3 font-medium text-xs sm:text-sm">
+                        Description
+                      </th>
+                      <th className="text-right p-2 sm:p-3 font-medium text-xs sm:text-sm">
+                        Amount (₹)
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr className="border-t">
-                      <td className="p-3">Customer Receipt (Bill Payments)</td>
-                      <td className="p-3 text-right font-mono">
-                        {accounting.customerReceipt.toFixed(2)}
+                      <td className="p-2 sm:p-3 text-xs sm:text-sm">
+                        Customer Receipts
+                      </td>
+                      <td className="p-2 sm:p-3 text-right font-mono text-xs sm:text-sm text-green-600 dark:text-green-400">
+                        ₹{accounting.customerReceipt.toFixed(2)}
                       </td>
                     </tr>
-                    <tr className="border-t bg-muted/30">
-                      <td className="p-3 font-semibold">Total Receipts</td>
-                      <td className="p-3 text-right font-mono font-semibold">
-                        {accounting.customerReceipt.toFixed(2)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Expenses */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Expenses</h3>
-              <div className="rounded-md border">
-                <table className="w-full">
-                  <thead className="bg-muted/50">
-                    <tr>
-                      <th className="text-left p-3 font-medium">Description</th>
-                      <th className="text-right p-3 font-medium">Amount (₹)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
                     <tr className="border-t">
-                      <td className="p-3">Total Expenses</td>
-                      <td className="p-3 text-right font-mono">
-                        {accounting.expenses.toFixed(2)}
+                      <td className="p-2 sm:p-3 text-xs sm:text-sm">
+                        Expenses
                       </td>
-                    </tr>
-                    <tr className="border-t bg-muted/30">
-                      <td className="p-3 font-semibold">Total Expenses</td>
-                      <td className="p-3 text-right font-mono font-semibold">
-                        {accounting.expenses.toFixed(2)}
+                      <td className="p-2 sm:p-3 text-right font-mono text-xs sm:text-sm text-red-600 dark:text-red-400">
+                        ₹{accounting.expenses.toFixed(2)}
                       </td>
                     </tr>
                   </tbody>
@@ -535,39 +554,36 @@ export function ShiftAccountingPage() {
 
             {/* Cash Denominations */}
             <div>
-              <h3 className="text-lg font-semibold mb-3">Cash Denominations</h3>
+              <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
+                Cash Denominations
+              </h3>
               <div className="rounded-md border">
                 <table className="w-full">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="text-left p-3 font-medium">
-                        Denomination
+                      <th className="text-left p-2 sm:p-3 font-medium text-xs sm:text-sm">
+                        Description
                       </th>
-                      <th className="text-center p-3 font-medium">Count</th>
-                      <th className="text-right p-3 font-medium">Amount (₹)</th>
+                      <th className="text-right p-2 sm:p-3 font-medium text-xs sm:text-sm">
+                        Amount (₹)
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {DENOMINATIONS.map((denom) => (
-                      <tr key={denom.key} className="border-t">
-                        <td className="p-3 font-medium">{denom.label}</td>
-                        <td className="p-3 text-center font-mono">
-                          {accounting[denom.key as keyof DenominationCounts]}
-                        </td>
-                        <td className="p-3 text-right font-mono">
-                          {(
-                            accounting[denom.key as keyof DenominationCounts] *
-                            denom.value
-                          ).toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
-                    <tr className="border-t bg-muted/30 font-semibold">
-                      <td className="p-3" colSpan={2}>
-                        Total Cash
+                    <tr
+                      className="border-t cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => setShowDenominationsSheet(true)}
+                    >
+                      <td className="p-2 sm:p-3">
+                        <div className="flex items-center gap-2 font-medium text-xs sm:text-sm">
+                          Total Cash (Click to view breakdown)
+                        </div>
                       </td>
-                      <td className="p-3 text-right font-mono">
-                        ₹{calculateCashFromDenominations().toFixed(2)}
+                      <td className="p-2 sm:p-3 text-right">
+                        <div className="flex items-center justify-end gap-2 font-mono text-xs sm:text-sm">
+                          ₹{calculateCashFromDenominations().toFixed(2)}
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        </div>
                       </td>
                     </tr>
                   </tbody>
@@ -577,7 +593,7 @@ export function ShiftAccountingPage() {
 
             {/* Reconciliation Summary */}
             <div>
-              <h3 className="text-lg font-semibold mb-3">
+              <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
                 Reconciliation Summary
               </h3>
               <div className="rounded-md border">
@@ -685,13 +701,13 @@ export function ShiftAccountingPage() {
                 </Alert>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Accounting Form */}
       {(!accounting || isEditing) && (
-        <form onSubmit={handleSave} className="space-y-6">
+        <form onSubmit={handleSave} className="space-y-4 sm:space-y-6">
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
@@ -700,63 +716,78 @@ export function ShiftAccountingPage() {
           )}
 
           {/* Daily Fuel Sales & Reconciliation Sheet */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">
+          <div className="rounded-lg border bg-card">
+            <div className="p-3 sm:p-6 border-b">
+              <h2 className="text-lg sm:text-2xl font-semibold">
                 🧾 Daily Fuel Sales & Reconciliation Sheet
-              </CardTitle>
-              <CardDescription>
+              </h2>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                 Complete accounting for {currentShift.salesmanUsername}'s shift
                 on {format(new Date(currentShift.startDatetime), "PPP")}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+              </p>
+            </div>
+            <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
               {/* Fuel Sales Summary */}
               <div>
                 <h3 className="text-lg font-semibold mb-3">
                   Fuel Sales Summary
                 </h3>
-                <div className="rounded-md border">
-                  <table className="w-full">
-                    <thead className="bg-muted/50">
-                      <tr>
-                        <th className="text-left p-3 font-medium">Nozzle</th>
-                        <th className="text-center p-3 font-medium">Product</th>
-                        <th className="text-right p-3 font-medium">Litres</th>
-                        <th className="text-right p-3 font-medium">Rate (₹)</th>
-                        <th className="text-right p-3 font-medium">
-                          Amount (₹)
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {nozzles.map((nozzle) => (
-                        <tr key={nozzle.id} className="border-t">
-                          <td className="p-3">{nozzle.nozzleName}</td>
-                          <td className="p-3 text-center">
-                            {nozzle.productName || "-"}
+                <div className="rounded-md border overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full relative">
+                      <thead className="bg-muted/50">
+                        <tr>
+                          <th className="sticky left-0 z-10 bg-muted/50 text-left p-3 font-medium min-w-[100px]">
+                            Nozzle
+                          </th>
+                          <th className="text-center p-3 font-medium min-w-[100px]">
+                            Product
+                          </th>
+                          <th className="text-right p-3 font-medium min-w-[100px]">
+                            Litres
+                          </th>
+                          <th className="text-right p-3 font-medium min-w-[100px]">
+                            Rate (₹)
+                          </th>
+                          <th className="sticky right-0 z-10 bg-muted/50 text-right p-3 font-medium min-w-[120px]">
+                            Amount (₹)
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {nozzles.map((nozzle) => (
+                          <tr key={nozzle.id} className="border-t">
+                            <td className="sticky left-0 z-10 bg-background p-3">
+                              {nozzle.nozzleName}
+                            </td>
+                            <td className="p-3 text-center">
+                              {nozzle.productName || "-"}
+                            </td>
+                            <td className="p-3 text-right font-mono">
+                              {(nozzle.dispensedAmount || 0).toFixed(2)}
+                            </td>
+                            <td className="p-3 text-right font-mono">
+                              {(nozzle.productRate || 0).toFixed(2)}
+                            </td>
+                            <td className="sticky right-0 z-10 bg-background p-3 text-right font-mono">
+                              ₹{(nozzle.totalAmount || 0).toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                        <tr className="border-t bg-muted/30">
+                          <td
+                            className="sticky left-0 z-10 bg-muted/30 p-3 font-semibold"
+                            colSpan={4}
+                          >
+                            Total Fuel Sales
                           </td>
-                          <td className="p-3 text-right font-mono">
-                            {(nozzle.dispensedAmount || 0).toFixed(2)}
-                          </td>
-                          <td className="p-3 text-right font-mono">
-                            {(nozzle.productRate || 0).toFixed(2)}
-                          </td>
-                          <td className="p-3 text-right font-mono">
-                            {(nozzle.totalAmount || 0).toFixed(2)}
+                          <td className="sticky right-0 z-10 bg-muted/30 p-3 text-right font-mono font-semibold">
+                            ₹{calculateFuelSales().toFixed(2)}
                           </td>
                         </tr>
-                      ))}
-                      <tr className="border-t bg-muted/30">
-                        <td className="p-3 font-semibold" colSpan={4}>
-                          Total Fuel Sales
-                        </td>
-                        <td className="p-3 text-right font-mono font-semibold">
-                          {calculateFuelSales().toFixed(2)}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
 
@@ -785,9 +816,13 @@ export function ShiftAccountingPage() {
                             type="number"
                             step="0.01"
                             min="0"
-                            value={upiReceived}
-                            onChange={(e) => setUpiReceived(e.target.value)}
+                            value={upiReceived === "0" ? "" : upiReceived}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              setUpiReceived(value === "" ? "0" : value);
+                            }}
                             disabled={isFormDisabled}
+                            placeholder="0.00"
                             className="text-right font-mono max-w-[200px] ml-auto"
                           />
                         </td>
@@ -799,9 +834,13 @@ export function ShiftAccountingPage() {
                             type="number"
                             step="0.01"
                             min="0"
-                            value={cardReceived}
-                            onChange={(e) => setCardReceived(e.target.value)}
+                            value={cardReceived === "0" ? "" : cardReceived}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              setCardReceived(value === "" ? "0" : value);
+                            }}
                             disabled={isFormDisabled}
+                            placeholder="0.00"
                             className="text-right font-mono max-w-[200px] ml-auto"
                           />
                         </td>
@@ -813,32 +852,23 @@ export function ShiftAccountingPage() {
                             type="number"
                             step="0.01"
                             min="0"
-                            value={fleetCardReceived}
-                            onChange={(e) =>
-                              setFleetCardReceived(e.target.value)
+                            value={
+                              fleetCardReceived === "0" ? "" : fleetCardReceived
                             }
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              setFleetCardReceived(value === "" ? "0" : value);
+                            }}
                             disabled={isFormDisabled}
+                            placeholder="0.00"
                             className="text-right font-mono max-w-[200px] ml-auto"
                           />
                         </td>
                       </tr>
                       <tr className="border-t">
-                        <td className="p-3">Credit Sales (Credit Customers)</td>
-                        <td className="p-3 text-right font-mono">
-                          {calculateCredit().toFixed(2)}
-                        </td>
-                      </tr>
-                      <tr className="border-t bg-muted/30">
-                        <td className="p-3 font-semibold">
-                          Total Non-Cash Sales
-                        </td>
-                        <td className="p-3 text-right font-mono font-semibold">
-                          {(
-                            parseFloat(upiReceived || "0") +
-                            parseFloat(cardReceived || "0") +
-                            parseFloat(fleetCardReceived || "0") +
-                            calculateCredit()
-                          ).toFixed(2)}
+                        <td className="p-3">Credit Sales</td>
+                        <td className="p-3 text-right font-mono text-red-600 dark:text-red-400">
+                          ₹{calculateCredit().toFixed(2)}
                         </td>
                       </tr>
                     </tbody>
@@ -846,107 +876,34 @@ export function ShiftAccountingPage() {
                 </div>
               </div>
 
-              {/* Receipts */}
+              {/* Receipts & Expenses */}
               <div>
                 <h3 className="text-lg font-semibold mb-3">
-                  Receipts (Bill Payments Received)
+                  Receipts & Expenses
                 </h3>
                 <div className="rounded-md border">
                   <table className="w-full">
                     <thead className="bg-muted/50">
                       <tr>
-                        <th className="text-left p-3 font-medium">Customer</th>
-                        <th className="text-center p-3 font-medium">
-                          Payment Mode
-                        </th>
-                        <th className="text-right p-3 font-medium">
-                          Amount (₹)
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {payments.map((payment) => (
-                        <tr key={payment.id} className="border-t">
-                          <td className="p-3">
-                            {payment.customerName || "N/A"}
-                          </td>
-                          <td className="p-3 text-center">
-                            {payment.paymentMethod || "Cash"}
-                          </td>
-                          <td className="p-3 text-right font-mono">
-                            {payment.amount.toFixed(2)}
-                          </td>
-                        </tr>
-                      ))}
-                      {payments.length === 0 && (
-                        <tr className="border-t">
-                          <td
-                            className="p-3 text-center text-muted-foreground"
-                            colSpan={3}
-                          >
-                            No bill payments received
-                          </td>
-                        </tr>
-                      )}
-                      <tr className="border-t bg-muted/30">
-                        <td className="p-3 font-semibold" colSpan={2}>
-                          Total Receipts
-                        </td>
-                        <td className="p-3 text-right font-mono font-semibold">
-                          {calculateCustomerReceipt().toFixed(2)}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Expenses */}
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Expenses</h3>
-                <div className="rounded-md border">
-                  <table className="w-full">
-                    <thead className="bg-muted/50">
-                      <tr>
                         <th className="text-left p-3 font-medium">
-                          Expense Head
+                          Description
                         </th>
-                        <th className="text-left p-3 font-medium">Remarks</th>
                         <th className="text-right p-3 font-medium">
                           Amount (₹)
                         </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {expenses.map((expense) => (
-                        <tr key={expense.id} className="border-t">
-                          <td className="p-3">
-                            {expense.expenseHeadName || "N/A"}
-                          </td>
-                          <td className="p-3 text-muted-foreground text-sm">
-                            {expense.remarks || "-"}
-                          </td>
-                          <td className="p-3 text-right font-mono">
-                            {expense.amount.toFixed(2)}
-                          </td>
-                        </tr>
-                      ))}
-                      {expenses.length === 0 && (
-                        <tr className="border-t">
-                          <td
-                            className="p-3 text-center text-muted-foreground"
-                            colSpan={3}
-                          >
-                            No expenses recorded
-                          </td>
-                        </tr>
-                      )}
-                      <tr className="border-t bg-muted/30">
-                        <td className="p-3 font-semibold" colSpan={2}>
-                          Total Expenses
+                      <tr className="border-t">
+                        <td className="p-3">Customer Receipts</td>
+                        <td className="p-3 text-right font-mono text-green-600 dark:text-green-400">
+                          ₹{calculateCustomerReceipt().toFixed(2)}
                         </td>
-                        <td className="p-3 text-right font-mono font-semibold">
-                          {calculateExpenses().toFixed(2)}
+                      </tr>
+                      <tr className="border-t">
+                        <td className="p-3">Expenses</td>
+                        <td className="p-3 text-right font-mono text-red-600 dark:text-red-400">
+                          ₹{calculateExpenses().toFixed(2)}
                         </td>
                       </tr>
                     </tbody>
@@ -964,58 +921,31 @@ export function ShiftAccountingPage() {
                     <thead className="bg-muted/50">
                       <tr>
                         <th className="text-left p-3 font-medium">
-                          Denomination
+                          Description
                         </th>
-                        <th className="text-center p-3 font-medium">Count</th>
                         <th className="text-right p-3 font-medium">
                           Amount (₹)
                         </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {DENOMINATIONS.map((denom) => (
-                        <tr key={denom.key} className="border-t">
-                          <td className="p-3 font-medium">{denom.label}</td>
-                          <td className="p-3">
-                            <Input
-                              id={denom.key}
-                              type="number"
-                              min="0"
-                              value={
-                                denominations[
-                                  denom.key as keyof DenominationCounts
-                                ] === 0
-                                  ? ""
-                                  : denominations[
-                                      denom.key as keyof DenominationCounts
-                                    ]
-                              }
-                              onChange={(e) =>
-                                handleDenominationChange(
-                                  denom.key as keyof DenominationCounts,
-                                  e.target.value
-                                )
-                              }
-                              disabled={isFormDisabled}
-                              className="text-center font-mono"
-                              placeholder="0"
-                            />
-                          </td>
-                          <td className="p-3 text-right font-mono">
-                            {(
-                              denominations[
-                                denom.key as keyof DenominationCounts
-                              ] * denom.value
-                            ).toFixed(2)}
-                          </td>
-                        </tr>
-                      ))}
-                      <tr className="border-t bg-muted/30 font-semibold">
-                        <td className="p-3" colSpan={2}>
-                          Total Cash
+                      <tr
+                        className="border-t cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() =>
+                          !isFormDisabled && setShowDenominationsSheet(true)
+                        }
+                      >
+                        <td className="p-3">
+                          <div className="flex items-center gap-2 font-medium">
+                            Total Cash (Click to{" "}
+                            {isFormDisabled ? "view" : "enter"} breakdown)
+                          </div>
                         </td>
-                        <td className="p-3 text-right font-mono">
-                          ₹{calculateCashFromDenominations().toFixed(2)}
+                        <td className="p-3 text-right">
+                          <div className="flex items-center justify-end gap-2 font-mono">
+                            ₹{calculateCashFromDenominations().toFixed(2)}
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          </div>
                         </td>
                       </tr>
                     </tbody>
@@ -1125,8 +1055,8 @@ export function ShiftAccountingPage() {
                   </Alert>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Actions */}
           {canEdit && (!accounting || isEditing) && (
@@ -1179,7 +1109,7 @@ export function ShiftAccountingPage() {
                     ) : (
                       <>
                         <Calculator className="mr-2 h-4 w-4" />
-                        Create Accounting
+                        Save Accounting
                       </>
                     )}
                   </>
@@ -1189,6 +1119,98 @@ export function ShiftAccountingPage() {
           )}
         </form>
       )}
+
+      {/* Cash Denominations Sheet */}
+      <Sheet
+        open={showDenominationsSheet}
+        onOpenChange={setShowDenominationsSheet}
+      >
+        <SheetContent
+          side="right"
+          className={isMobile ? "w-full" : "sm:max-w-lg"}
+        >
+          <SheetHeader>
+            <SheetTitle>Cash Denominations</SheetTitle>
+            <SheetDescription>
+              {isFormDisabled ? "View" : "Enter"} the breakdown of cash by
+              denomination
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-6 space-y-4">
+            <div className="rounded-md border">
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="text-left p-3 font-medium">Denomination</th>
+                    <th className="text-center p-3 font-medium">Count</th>
+                    <th className="text-right p-3 font-medium">Amount (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {DENOMINATIONS.map((denom, index) => (
+                    <tr key={denom.key} className="border-t">
+                      <td className="p-3 font-medium">{denom.label}</td>
+                      <td className="p-3">
+                        <Input
+                          id={denom.key}
+                          type="number"
+                          min="0"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          value={
+                            denominations[
+                              denom.key as keyof DenominationCounts
+                            ] === 0
+                              ? ""
+                              : denominations[
+                                  denom.key as keyof DenominationCounts
+                                ]
+                          }
+                          onChange={(e) =>
+                            handleDenominationChange(
+                              denom.key as keyof DenominationCounts,
+                              e.target.value
+                            )
+                          }
+                          onKeyDown={(e) => handleDenominationKeyDown(e, index)}
+                          disabled={isFormDisabled}
+                          className="text-center font-mono"
+                          placeholder="0"
+                        />
+                      </td>
+                      <td className="p-3 text-right font-mono">
+                        ₹
+                        {(
+                          denominations[denom.key as keyof DenominationCounts] *
+                          denom.value
+                        ).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="border-t bg-muted/30 font-semibold">
+                    <td className="p-3" colSpan={2}>
+                      Total Cash
+                    </td>
+                    <td className="p-3 text-right font-mono text-lg">
+                      ₹{calculateCashFromDenominations().toFixed(2)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {!isFormDisabled && (
+              <Button
+                onClick={() => setShowDenominationsSheet(false)}
+                className="w-full"
+              >
+                Done
+              </Button>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

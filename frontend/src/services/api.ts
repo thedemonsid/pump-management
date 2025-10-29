@@ -76,8 +76,81 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response) {
-      // Server responded with error status
-      if (error.response.status === 401 && !originalRequest._retry) {
+      const { status, data } = error.response;
+
+      // Handle 403 Forbidden - authorization/permission errors
+      if (status === 403) {
+        console.error(
+          "Access denied - insufficient permissions or invalid token"
+        );
+
+        // Check if this is an authorization error (not just permission issue)
+        const errorCode = data?.errorCode;
+        if (errorCode === "ACCESS_DENIED" && !originalRequest._retry) {
+          // This might be due to expired/invalid token, try to refresh
+          const refreshToken = localStorage.getItem("refreshToken");
+
+          if (refreshToken && !isRefreshing) {
+            originalRequest._retry = true;
+            isRefreshing = true;
+
+            try {
+              console.log("Attempting to refresh token after 403 error...");
+
+              const response = await axios.post(
+                `${getApiBaseUrl()}/api/v1/users/refresh`,
+                { refreshToken }
+              );
+
+              const { token: newAccessToken, refreshToken: newRefreshToken } =
+                response.data;
+
+              console.log("Token refreshed successfully after 403");
+
+              // Update stored tokens
+              localStorage.setItem("authToken", newAccessToken);
+              if (newRefreshToken) {
+                localStorage.setItem("refreshToken", newRefreshToken);
+              }
+
+              // Update the authorization header for the original request
+              originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+              // Process queued requests with new token
+              processQueue(null, newAccessToken);
+              isRefreshing = false;
+
+              // Retry the original request
+              return api(originalRequest);
+            } catch (refreshError) {
+              console.error("Token refresh failed after 403:", refreshError);
+              processQueue(refreshError as Error, null);
+              isRefreshing = false;
+              handleTokenExpiration();
+              return Promise.reject(
+                new Error("Session expired. Please log in again.")
+              );
+            }
+          } else {
+            // No refresh possible, logout
+            console.log(
+              "No refresh token available for 403 error, logging out..."
+            );
+            handleTokenExpiration();
+            return Promise.reject(
+              new Error("Access denied. Please log in again.")
+            );
+          }
+        }
+
+        // If it's a genuine permission error after token is valid, just reject
+        const message =
+          data?.message || "You do not have permission to access this resource";
+        throw new Error(`403: ${message}`);
+      }
+
+      // Handle 401 Unauthorized - authentication errors
+      if (status === 401 && !originalRequest._retry) {
         // Token expired or invalid - try to refresh
         const refreshToken = localStorage.getItem("refreshToken");
 

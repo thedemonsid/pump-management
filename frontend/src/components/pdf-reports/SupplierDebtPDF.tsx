@@ -205,7 +205,7 @@ export function SupplierDebtPDF({
 
           <View style={styles.tableRowTotal}>
             <Text
-              style={{ width: "40%", textAlign: "right", paddingRight: 10 }}
+              style={{ width: "50%", textAlign: "right", paddingRight: 10 }}
             >
               Total:
             </Text>

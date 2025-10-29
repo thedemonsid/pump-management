@@ -14,6 +14,8 @@ interface CustomerCredit {
   openingBalance: number;
   billAmount: number;
   paidAmount: number;
+  salesmanBillAmount: number;
+  salesmanPaidAmount: number;
   creditAmount: number;
 }
 
@@ -88,11 +90,12 @@ const styles = StyleSheet.create({
   col1: { width: "5%", textAlign: "center" },
   col2: { width: "15%" },
   col3: { width: "10%" },
-  col4: { width: "20%", fontSize: 8 },
-  col5: { width: "12.5%", textAlign: "right" },
-  col6: { width: "12.5%", textAlign: "right" },
-  col7: { width: "12.5%", textAlign: "right" },
-  col8: { width: "12.5%", textAlign: "right" },
+  col4: { width: "15%", fontSize: 8 },
+  col5: { width: "11%", textAlign: "right" },
+  col6: { width: "11%", textAlign: "right" },
+  col7: { width: "11%", textAlign: "right" },
+  col8: { width: "11%", textAlign: "right" },
+  col9: { width: "11%", textAlign: "right" },
   summary: {
     marginTop: 20,
     padding: 10,
@@ -130,7 +133,7 @@ const styles = StyleSheet.create({
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-IN", {
-    minimumFractionDigits: 2,
+    minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount);
 };
@@ -154,6 +157,14 @@ export function CustomerCreditPDF({
   );
   const totalBillAmount = data.reduce((sum, item) => sum + item.billAmount, 0);
   const totalPaidAmount = data.reduce((sum, item) => sum + item.paidAmount, 0);
+  const totalSalesmanBillAmount = data.reduce(
+    (sum, item) => sum + item.salesmanBillAmount,
+    0
+  );
+  const totalSalesmanPaidAmount = data.reduce(
+    (sum, item) => sum + item.salesmanPaidAmount,
+    0
+  );
   const totalCreditAmount = data.reduce(
     (sum, item) => sum + item.creditAmount,
     0
@@ -179,7 +190,9 @@ export function CustomerCreditPDF({
             <Text style={styles.col5}>Opening</Text>
             <Text style={styles.col6}>Bills</Text>
             <Text style={styles.col7}>Paid</Text>
-            <Text style={styles.col8}>Credit</Text>
+            <Text style={styles.col8}>S.Bill</Text>
+            <Text style={styles.col9}>S.Paid</Text>
+            <Text style={styles.col5}>Credit</Text>
           </View>
 
           {data.map((customer, index) => (
@@ -198,6 +211,12 @@ export function CustomerCreditPDF({
                 {formatCurrency(customer.paidAmount)}
               </Text>
               <Text style={styles.col8}>
+                {formatCurrency(customer.salesmanBillAmount)}
+              </Text>
+              <Text style={styles.col9}>
+                {formatCurrency(customer.salesmanPaidAmount)}
+              </Text>
+              <Text style={styles.col5}>
                 {formatCurrency(customer.creditAmount)}
               </Text>
             </View>
@@ -205,7 +224,7 @@ export function CustomerCreditPDF({
 
           <View style={styles.tableRowTotal}>
             <Text
-              style={{ width: "40%", textAlign: "right", paddingRight: 10 }}
+              style={{ width: "45%", textAlign: "right", paddingRight: 10 }}
             >
               Total:
             </Text>
@@ -214,23 +233,15 @@ export function CustomerCreditPDF({
             </Text>
             <Text style={styles.col6}>{formatCurrency(totalBillAmount)}</Text>
             <Text style={styles.col7}>{formatCurrency(totalPaidAmount)}</Text>
-            <Text style={styles.col8}>{formatCurrency(totalCreditAmount)}</Text>
-          </View>
-        </View>
-
-        <View style={styles.summary}>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Total Customers:</Text>
-            <Text style={styles.summaryValue}>{data.length}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Total Outstanding Credit:</Text>
-            <Text style={styles.summaryValue}>
-              {formatCurrency(totalCreditAmount)}
+            <Text style={styles.col8}>
+              {formatCurrency(totalSalesmanBillAmount)}
             </Text>
+            <Text style={styles.col9}>
+              {formatCurrency(totalSalesmanPaidAmount)}
+            </Text>
+            <Text style={styles.col5}>{formatCurrency(totalCreditAmount)}</Text>
           </View>
         </View>
-
         <View style={styles.footer}>
           <Text>Generated on {new Date().toLocaleString("en-IN")}</Text>
         </View>

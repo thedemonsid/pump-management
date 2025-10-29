@@ -38,7 +38,7 @@ public class SalesmanShiftAccountingController {
      * Create accounting for a shift
      */
     @PostMapping("/shift/{shiftId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER','SALESMAN')")
     public ResponseEntity<SalesmanShiftAccountingResponse> create(
             @PathVariable UUID shiftId,
             @Valid @RequestBody CreateShiftAccountingRequest request) {

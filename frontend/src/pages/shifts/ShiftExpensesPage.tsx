@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useShiftStore } from "@/store/shifts/shift-store";
+import api from "@/services/api";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,6 +20,12 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ExpenseService } from "@/services/expense-service";
 import { ExpenseSheet } from "@/components/expenses/ExpenseSheet";
 import { toast } from "sonner";
@@ -30,6 +37,7 @@ import {
   Receipt,
   Trash2,
   Edit,
+  Image as ImageIcon,
 } from "lucide-react";
 import { format } from "date-fns";
 import type { ExpenseResponse } from "@/types";
@@ -46,6 +54,11 @@ export function ShiftExpensesPage() {
   const [editingExpense, setEditingExpense] = useState<ExpenseResponse | null>(
     null
   );
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<{
+    url: string;
+    title: string;
+  } | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -114,6 +127,20 @@ export function ShiftExpensesPage() {
       }
     } catch (err) {
       toast.error("Failed to delete expense");
+      console.error(err);
+    }
+  };
+
+  const handleImageClick = async (imageId: string, title: string) => {
+    try {
+      const response = await api.get(`/api/v1/files/${imageId}`, {
+        responseType: "blob",
+      });
+      const imageUrl = URL.createObjectURL(response.data);
+      setSelectedImage({ url: imageUrl, title });
+      setIsImageDialogOpen(true);
+    } catch (err) {
+      toast.error("Failed to load image");
       console.error(err);
     }
   };
@@ -254,6 +281,7 @@ export function ShiftExpensesPage() {
                     <TableHead>Reference</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
                     <TableHead>Remarks</TableHead>
+                    <TableHead className="text-center">Image</TableHead>
                     <TableHead className="text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -280,6 +308,34 @@ export function ShiftExpensesPage() {
                       </TableCell>
                       <TableCell className="text-muted-foreground max-w-xs truncate">
                         {expense.remarks || "-"}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {expense.fileStorageId ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() =>
+                              handleImageClick(
+                                expense.fileStorageId!,
+                                "Receipt/Invoice"
+                              )
+                            }
+                          >
+                            <div className="relative group">
+                              <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+                                <ImageIcon className="h-4 w-4 text-blue-600" />
+                              </div>
+                              <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                View
+                              </span>
+                            </div>
+                          </Button>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">
+                            -
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
@@ -323,6 +379,24 @@ export function ShiftExpensesPage() {
         expense={editingExpense || undefined}
         salesmanShiftId={shiftId}
       />
+
+      {/* Image Preview Dialog */}
+      <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>{selectedImage?.title || "Image"}</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center">
+            {selectedImage?.url && (
+              <img
+                src={selectedImage.url}
+                alt={selectedImage.title}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

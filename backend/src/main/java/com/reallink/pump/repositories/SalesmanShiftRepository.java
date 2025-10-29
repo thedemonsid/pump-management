@@ -120,4 +120,17 @@ public interface SalesmanShiftRepository extends JpaRepository<SalesmanShift, UU
             + "AND s.status = 'CLOSED' AND s.isAccountingDone = false "
             + "ORDER BY s.endDatetime DESC")
     List<SalesmanShift> findShiftsNeedingAccounting(@Param("pumpMasterId") UUID pumpMasterId);
+
+    /**
+     * Find shifts requiring accounting for a specific salesman (closed but
+     * accounting not done).
+     */
+    @Query("SELECT s FROM SalesmanShift s WHERE s.salesman.id = :salesmanId "
+            + "AND s.pumpMaster.id = :pumpMasterId "
+            + "AND s.status = 'CLOSED' AND s.isAccountingDone = false "
+            + "ORDER BY s.endDatetime DESC")
+    List<SalesmanShift> findShiftsNeedingAccountingBySalesman(
+            @Param("salesmanId") UUID salesmanId,
+            @Param("pumpMasterId") UUID pumpMasterId
+    );
 }

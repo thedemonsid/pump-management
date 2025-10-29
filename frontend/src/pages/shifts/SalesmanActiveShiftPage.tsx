@@ -27,6 +27,10 @@ import { useNavigate } from "react-router-dom";
 import { ExpenseService } from "@/services/expense-service";
 import { SalesmanBillService } from "@/services/salesman-bill-service";
 import { SalesmanBillPaymentService } from "@/services/salesman-bill-payment-service";
+import { SalesmanShiftService } from "@/services/salesman-shift-service";
+import type { ShiftResponse } from "@/types";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, ArrowRight } from "lucide-react";
 
 /**
  * SalesmanActiveShiftPage - Main workspace for salesmen
@@ -49,11 +53,49 @@ export function SalesmanActiveShiftPage() {
   });
   const [statsLoading, setStatsLoading] = useState(false);
 
+  // Track the last closed shift needing accounting
+  const [shiftNeedingAccounting, setShiftNeedingAccounting] =
+    useState<ShiftResponse | null>(null);
+  const [loadingPendingShift, setLoadingPendingShift] = useState(false);
+
   useEffect(() => {
     if (user?.userId) {
       fetchActiveShift(user.userId);
     }
   }, [user?.userId, fetchActiveShift]);
+
+  // Fetch shifts needing accounting when there's no active shift
+  useEffect(() => {
+    const fetchPendingAccounting = async () => {
+      if (!user?.userId) return;
+
+      setLoadingPendingShift(true);
+      try {
+        const shiftsNeedingAccounting =
+          await SalesmanShiftService.getShiftsNeedingAccounting(user.userId);
+
+        if (shiftsNeedingAccounting.length > 0) {
+          // Get the most recent one (they're already sorted by endDatetime DESC)
+          setShiftNeedingAccounting(shiftsNeedingAccounting[0]);
+        } else {
+          setShiftNeedingAccounting(null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch shifts needing accounting:", error);
+        setShiftNeedingAccounting(null);
+      } finally {
+        setLoadingPendingShift(false);
+      }
+    };
+
+    // Only fetch when there's no active shift
+    if (!isLoading && !activeShift && user?.userId) {
+      fetchPendingAccounting();
+    } else {
+      // Clear if there's an active shift
+      setShiftNeedingAccounting(null);
+    }
+  }, [user?.userId, activeShift, isLoading]);
 
   // Fetch shift statistics when activeShift changes
   useEffect(() => {
@@ -112,7 +154,38 @@ export function SalesmanActiveShiftPage() {
   // No active shift - show start shift option
   if (!activeShift) {
     return (
-      <div className="container max-w-4xl mx-auto py-8 px-4">
+      <div className="container max-w-4xl mx-auto py-8 px-4 space-y-6">
+        {/* Accounting Reminder - Show if there's a closed shift needing accounting */}
+        {shiftNeedingAccounting && !loadingPendingShift && (
+          <Alert className="border-orange-500 bg-orange-50 dark:bg-orange-950/20">
+            <AlertCircle className="h-5 w-5 text-orange-600" />
+            <AlertTitle className="text-orange-800 dark:text-orange-400 font-semibold">
+              Accounting Pending
+            </AlertTitle>
+            <AlertDescription className="text-orange-700 dark:text-orange-300">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <span>
+                  Your previous shift (ended on{" "}
+                  {format(new Date(shiftNeedingAccounting.endDatetime!), "PPp")}
+                  ) needs accounting. Please complete it to finalize your
+                  records.
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    navigate(`/shifts/${shiftNeedingAccounting.id}/accounting`)
+                  }
+                  className="shrink-0 border-orange-600 text-orange-700 hover:bg-orange-100 dark:hover:bg-orange-950/40"
+                >
+                  Complete Accounting
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Card className="border-dashed">
           <CardHeader className="text-center space-y-4">
             <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">

@@ -45,12 +45,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           throw new Error("Token expired");
         }
 
-        // Token is valid, set auth state
+        // Token appears valid, set auth state
         setToken(storedToken);
         setUser(parsedUser);
       } catch (error) {
         console.error("Token validation failed:", error);
-        // Token is invalid or expired, clear auth data
+        // Token is invalid or expired, clear ALL auth data
         localStorage.removeItem("authToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");

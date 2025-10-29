@@ -38,7 +38,7 @@ public class SalesmanShiftAccountingService {
      * accounting.
      */
     @Transactional
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN','SALESMAN')")
     public SalesmanShiftAccounting createAccounting(UUID shiftId, CreateShiftAccountingRequest request) {
         // Get shift
         SalesmanShift shift = salesmanShiftRepository.findById(shiftId)

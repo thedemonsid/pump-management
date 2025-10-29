@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useShiftStore } from "@/store/shifts/shift-store";
+import api from "@/services/api";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,10 +26,17 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ImageUpload } from "@/components/ui/image-upload";
 import ReactSelect from "react-select";
 import { SalesmanBillService } from "@/services/salesman-bill-service";
 import { CustomerService } from "@/services/customer-service";
@@ -37,10 +45,10 @@ import { toast } from "sonner";
 import {
   Loader2,
   Plus,
-  ArrowLeft,
   AlertCircle,
   Receipt,
   Trash2,
+  Image as ImageIcon,
 } from "lucide-react";
 import { format } from "date-fns";
 import type {
@@ -57,7 +65,6 @@ interface Option {
 
 export function ShiftBillsPage() {
   const { shiftId } = useParams<{ shiftId: string }>();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { currentShift, fetchShiftById } = useShiftStore();
 
@@ -67,6 +74,11 @@ export function ShiftBillsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingBill, setIsCreatingBill] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<{
+    url: string;
+    title: string;
+  } | null>(null);
 
   // Check if user is admin or manager
   const isAdminOrManager = user?.role === "ADMIN" || user?.role === "MANAGER";
@@ -76,8 +88,11 @@ export function ShiftBillsPage() {
   const [selectedProduct, setSelectedProduct] = useState<Option | null>(null);
   const [quantity, setQuantity] = useState<string>("");
   const [rate, setRate] = useState<string>("");
-  const [vehicleNo, setVehicleNo] = useState<string>("");
-  const [driverName, setDriverName] = useState<string>("");
+  const [vehicleNo, setVehicleNo] = useState<string>("NA");
+  const [driverName, setDriverName] = useState<string>("NA");
+  const [meterImage, setMeterImage] = useState<File | null>(null);
+  const [vehicleImage, setVehicleImage] = useState<File | null>(null);
+  const [extraImage, setExtraImage] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -115,8 +130,11 @@ export function ShiftBillsPage() {
     setSelectedProduct(null);
     setQuantity("");
     setRate("");
-    setVehicleNo("");
-    setDriverName("");
+    setVehicleNo("NA");
+    setDriverName("NA");
+    setMeterImage(null);
+    setVehicleImage(null);
+    setExtraImage(null);
     setError(null);
   };
 
@@ -151,6 +169,14 @@ export function ShiftBillsPage() {
       setError("Please enter a valid rate");
       return;
     }
+    if (!vehicleNo || vehicleNo.trim() === "") {
+      setError("Please enter a vehicle number");
+      return;
+    }
+    if (!driverName || driverName.trim() === "") {
+      setError("Please enter a driver name");
+      return;
+    }
 
     setIsCreatingBill(true);
 
@@ -165,11 +191,15 @@ export function ShiftBillsPage() {
         quantity: parseFloat(quantity),
         rate: parseFloat(rate),
         rateType: "INCLUDING_GST",
-        vehicleNo: vehicleNo || undefined,
-        driverName: driverName || undefined,
+        vehicleNo: vehicleNo.trim(),
+        driverName: driverName.trim(),
       };
 
-      await SalesmanBillService.create(billData);
+      await SalesmanBillService.create(billData, {
+        meterImage: meterImage || undefined,
+        vehicleImage: vehicleImage || undefined,
+        extraImage: extraImage || undefined,
+      });
       toast.success("Bill created successfully!");
       setIsSheetOpen(false);
       resetForm();
@@ -206,15 +236,43 @@ export function ShiftBillsPage() {
     }
   };
 
+  const handleImageClick = async (imageId: string, title: string) => {
+    try {
+      const response = await api.get(`/api/v1/files/${imageId}`, {
+        responseType: "blob",
+      });
+      const imageUrl = URL.createObjectURL(response.data);
+      setSelectedImage({ url: imageUrl, title });
+      setIsImageDialogOpen(true);
+    } catch (err) {
+      toast.error("Failed to load image");
+      console.error(err);
+    }
+  };
+
   const customerOptions: Option[] = customers.map((c) => ({
     value: c.id!,
     label: `${c.customerName} - ${c.phoneNumber || "N/A"}`,
   }));
 
-  const productOptions: Option[] = products.map((p) => ({
-    value: p.id!,
-    label: p.productName,
-  }));
+  // Filter products based on nozzles assigned to the shift
+  const allowedProductNames = new Set(
+    currentShift?.nozzleAssignments
+      ?.filter((assignment) => assignment.productName)
+      .map((assignment) => assignment.productName?.toLowerCase()) || []
+  );
+
+  const productOptions: Option[] = products
+    .filter((p) => {
+      // If no nozzle assignments, allow all products (backward compatibility)
+      if (allowedProductNames.size === 0) return true;
+      // Otherwise, only show products that match assigned nozzles
+      return allowedProductNames.has(p.productName.toLowerCase());
+    })
+    .map((p) => ({
+      value: p.id!,
+      label: p.productName,
+    }));
 
   const totalAmount = bills.reduce((sum, bill) => sum + bill.amount, 0);
 
@@ -244,13 +302,6 @@ export function ShiftBillsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(`/shifts/${shiftId}`)}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
           <div>
             <h1 className="text-2xl font-bold">Shift Bills</h1>
             <p className="text-sm text-muted-foreground">
@@ -341,6 +392,7 @@ export function ShiftBillsPage() {
                     <TableHead className="text-right">Rate</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
                     <TableHead>Vehicle</TableHead>
+                    <TableHead className="text-center">Images</TableHead>
                     {(isShiftOpen || isAdminOrManager) && (
                       <TableHead className="text-center">Actions</TableHead>
                     )}
@@ -367,6 +419,83 @@ export function ShiftBillsPage() {
                         ₹{bill.amount.toFixed(2)}
                       </TableCell>
                       <TableCell>{bill.vehicleNo || "-"}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-center gap-1">
+                          {bill.meterImageId && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() =>
+                                handleImageClick(
+                                  bill.meterImageId!,
+                                  "Meter Image"
+                                )
+                              }
+                            >
+                              <div className="relative group">
+                                <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+                                  <ImageIcon className="h-4 w-4 text-blue-600" />
+                                </div>
+                                <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                  Meter
+                                </span>
+                              </div>
+                            </Button>
+                          )}
+                          {bill.vehicleImageId && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() =>
+                                handleImageClick(
+                                  bill.vehicleImageId!,
+                                  "Vehicle Image"
+                                )
+                              }
+                            >
+                              <div className="relative group">
+                                <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center">
+                                  <ImageIcon className="h-4 w-4 text-green-600" />
+                                </div>
+                                <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                  Vehicle
+                                </span>
+                              </div>
+                            </Button>
+                          )}
+                          {bill.extraImageId && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() =>
+                                handleImageClick(
+                                  bill.extraImageId!,
+                                  "Extra Image"
+                                )
+                              }
+                            >
+                              <div className="relative group">
+                                <div className="w-8 h-8 bg-purple-100 rounded flex items-center justify-center">
+                                  <ImageIcon className="h-4 w-4 text-purple-600" />
+                                </div>
+                                <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                  Extra
+                                </span>
+                              </div>
+                            </Button>
+                          )}
+                          {!bill.meterImageId &&
+                            !bill.vehicleImageId &&
+                            !bill.extraImageId && (
+                              <span className="text-muted-foreground text-sm">
+                                -
+                              </span>
+                            )}
+                        </div>
+                      </TableCell>
                       {(isShiftOpen || isAdminOrManager) && (
                         <TableCell className="text-center">
                           <Button
@@ -481,9 +610,9 @@ export function ShiftBillsPage() {
                 step="0.01"
                 placeholder="0.00"
                 value={rate}
-                onChange={(e) => setRate(e.target.value)}
+                readOnly
                 disabled={isCreatingBill}
-                className="text-base"
+                className="text-base bg-muted"
               />
             </div>
 
@@ -501,29 +630,69 @@ export function ShiftBillsPage() {
 
             {/* Vehicle Number */}
             <div className="space-y-2">
-              <Label htmlFor="vehicleNo">Vehicle Number</Label>
+              <Label htmlFor="vehicleNo">
+                Vehicle Number <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="vehicleNo"
                 type="text"
-                placeholder="MH-01-XX-1234"
+                placeholder="NA"
                 value={vehicleNo}
                 onChange={(e) => setVehicleNo(e.target.value)}
                 disabled={isCreatingBill}
                 className="text-base"
+                required
               />
             </div>
 
             {/* Driver Name */}
             <div className="space-y-2">
-              <Label htmlFor="driverName">Driver Name</Label>
+              <Label htmlFor="driverName">
+                Driver Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="driverName"
                 type="text"
-                placeholder="Driver name"
+                placeholder="NA"
                 value={driverName}
                 onChange={(e) => setDriverName(e.target.value)}
                 disabled={isCreatingBill}
                 className="text-base"
+                required
+              />
+            </div>
+
+            {/* Image Uploads */}
+            <div className="space-y-4 pt-4 border-t">
+              <div>
+                <h3 className="text-sm font-medium">Images (Optional)</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Upload meter reading, vehicle, and other supporting images
+                </p>
+              </div>
+
+              {/* Meter Image */}
+              <ImageUpload
+                id="meterImage"
+                label="Meter Image"
+                onChange={(file) => setMeterImage(file)}
+                disabled={isCreatingBill}
+              />
+
+              {/* Vehicle Image */}
+              <ImageUpload
+                id="vehicleImage"
+                label="Vehicle Image"
+                onChange={(file) => setVehicleImage(file)}
+                disabled={isCreatingBill}
+              />
+
+              {/* Extra Image */}
+              <ImageUpload
+                id="extraImage"
+                label="Extra Image"
+                onChange={(file) => setExtraImage(file)}
+                disabled={isCreatingBill}
               />
             </div>
 
@@ -559,6 +728,30 @@ export function ShiftBillsPage() {
           </form>
         </SheetContent>
       </Sheet>
+
+      {/* Image Preview Dialog */}
+      <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>{selectedImage?.title || "Image"}</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center">
+            {selectedImage?.url && (
+              <img
+                src={selectedImage.url}
+                alt={selectedImage.title}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                onLoad={() => {
+                  // Cleanup the blob URL after image is loaded
+                  if (selectedImage.url.startsWith("blob:")) {
+                    // Keep it for viewing, cleanup will happen on dialog close
+                  }
+                }}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

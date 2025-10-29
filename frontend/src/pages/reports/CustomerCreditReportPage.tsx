@@ -11,19 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Download,
-  Search,
-  Calendar as CalendarIcon,
-  ArrowLeft,
-  MessageCircle,
-} from "lucide-react";
+import { Download, Search } from "lucide-react";
 import { format } from "date-fns";
-import { useNavigate } from "react-router-dom";
 import { useCustomerStore } from "@/store/customer-store";
 import { useLedgerStore } from "@/store/ledger-store";
 import { BillService } from "@/services/bill-service";
 import { CustomerBillPaymentService } from "@/services/customer-bill-payment-service";
+import { SalesmanBillService, SalesmanBillPaymentService } from "@/services";
 import { pdf } from "@react-pdf/renderer";
 import { CustomerCreditPDF } from "@/components/pdf-reports";
 
@@ -34,11 +28,12 @@ interface CustomerCredit {
   openingBalance: number;
   billAmount: number;
   paidAmount: number;
+  salesmanBillAmount: number;
+  salesmanPaidAmount: number;
   creditAmount: number;
 }
 
 export default function CustomerCreditReportPage() {
-  const navigate = useNavigate();
   const { customers, fetchCustomers } = useCustomerStore();
   const { computeCustomerSummaries } = useLedgerStore();
   const [isLoading, setIsLoading] = useState(false);
@@ -68,18 +63,40 @@ export default function CustomerCreditReportPage() {
     setHasSearched(true);
 
     try {
-      // Fetch all bills and payments
-      const [bills, payments] = await Promise.all([
-        BillService.getAll(),
-        CustomerBillPaymentService.getAll(),
-      ]);
+      // Fetch all bills and payments (both regular and salesman)
+      const [bills, payments, salesmanBills, salesmanPayments] =
+        await Promise.all([
+          BillService.getAll(),
+          CustomerBillPaymentService.getAll(),
+          SalesmanBillService.getAll(),
+          SalesmanBillPaymentService.getAll(),
+        ]);
 
       // Use the store's computation method to get summaries for all customers
       const summaries = computeCustomerSummaries(customers, bills, payments);
 
-      // Convert summaries to CustomerCredit format
+      // Convert summaries to CustomerCredit format and include salesman bills/payments
       let credits: CustomerCredit[] = summaries.map((summary) => {
         const customer = customers.find((c) => c.id === summary.customerId);
+
+        // Calculate salesman bills for this customer
+        const customerSalesmanBills = salesmanBills.filter(
+          (bill) => bill.customerId === summary.customerId
+        );
+        const salesmanBillAmount = customerSalesmanBills.reduce(
+          (sum, bill) => sum + bill.amount,
+          0
+        );
+
+        // Calculate salesman payments for this customer
+        const customerSalesmanPayments = salesmanPayments.filter(
+          (payment) => payment.customerId === summary.customerId
+        );
+        const salesmanPaidAmount = customerSalesmanPayments.reduce(
+          (sum, payment) => sum + payment.amount,
+          0
+        );
+
         return {
           customerName: summary.customerName,
           address: customer?.address || "N/A",
@@ -87,7 +104,10 @@ export default function CustomerCreditReportPage() {
           openingBalance: customer?.openingBalance || 0,
           billAmount: summary.totalBills,
           paidAmount: summary.totalPaid,
-          creditAmount: summary.balance,
+          salesmanBillAmount,
+          salesmanPaidAmount,
+          creditAmount:
+            summary.balance + salesmanBillAmount - salesmanPaidAmount,
         };
       });
 
@@ -136,33 +156,14 @@ export default function CustomerCreditReportPage() {
     }
   };
 
-  const handleSendWhatsApp = (customer: CustomerCredit) => {
-    const message = `Dear ${
-      customer.customerName
-    },\n\nYour account statement:\nOpening Balance: ₹${customer.openingBalance.toFixed(
-      2
-    )}\nBill Amount: ₹${customer.billAmount.toFixed(
-      2
-    )}\nPaid Amount: ₹${customer.paidAmount.toFixed(
-      2
-    )}\nOutstanding Credit: ₹${customer.creditAmount.toFixed(
-      2
-    )}\n\nThank you for your business!`;
-
-    const phoneNumber = customer.mobile.replace(/[^0-9]/g, "");
-    const whatsappUrl = `https://wa.me/91${phoneNumber}?text=${encodeURIComponent(
-      message
-    )}`;
-    window.open(whatsappUrl, "_blank");
-  };
-
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-IN", {
+    const formatted = new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(amount);
+    return formatted;
   };
 
   const formatDate = (dateString: string) => {
@@ -186,6 +187,14 @@ export default function CustomerCreditReportPage() {
     (sum, c) => sum + c.paidAmount,
     0
   );
+  const totalSalesmanBillAmount = customerCredits.reduce(
+    (sum, c) => sum + c.salesmanBillAmount,
+    0
+  );
+  const totalSalesmanPaidAmount = customerCredits.reduce(
+    (sum, c) => sum + c.salesmanPaidAmount,
+    0
+  );
   const totalCreditAmount = customerCredits.reduce(
     (sum, c) => sum + c.creditAmount,
     0
@@ -196,14 +205,6 @@ export default function CustomerCreditReportPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/reports")}
-            className="mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Reports
-          </Button>
           <h2 className="text-3xl font-bold tracking-tight">
             Customer Credit Report
           </h2>
@@ -235,7 +236,6 @@ export default function CustomerCreditReportPage() {
                   value={fromDate}
                   onChange={(e) => setFromDate(e.target.value)}
                 />
-                <CalendarIcon className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground pointer-events-none" />
               </div>
             </div>
 
@@ -248,7 +248,6 @@ export default function CustomerCreditReportPage() {
                   value={toDate}
                   onChange={(e) => setToDate(e.target.value)}
                 />
-                <CalendarIcon className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground pointer-events-none" />
               </div>
             </div>
 
@@ -317,10 +316,13 @@ export default function CustomerCreditReportPage() {
                       Paid Amount
                     </TableHead>
                     <TableHead className="font-bold text-right">
-                      Credit Amount
+                      Salesman Bill
                     </TableHead>
-                    <TableHead className="font-bold text-center">
-                      Action
+                    <TableHead className="font-bold text-right">
+                      Salesman Paid
+                    </TableHead>
+                    <TableHead className="font-bold text-right">
+                      Credit Amount
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -328,7 +330,7 @@ export default function CustomerCreditReportPage() {
                   {customerCredits.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={9}
+                        colSpan={10}
                         className="text-center py-8 text-muted-foreground"
                       >
                         No customers found with credit in the selected criteria
@@ -352,19 +354,14 @@ export default function CustomerCreditReportPage() {
                         <TableCell className="text-right text-green-600">
                           {formatCurrency(customer.paidAmount)}
                         </TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(customer.salesmanBillAmount)}
+                        </TableCell>
+                        <TableCell className="text-right text-green-600">
+                          {formatCurrency(customer.salesmanPaidAmount)}
+                        </TableCell>
                         <TableCell className="text-right font-semibold text-red-600">
                           {formatCurrency(customer.creditAmount)}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleSendWhatsApp(customer)}
-                            className="gap-2"
-                          >
-                            <MessageCircle className="h-4 w-4" />
-                            Send WhatsApp Message
-                          </Button>
                         </TableCell>
                       </TableRow>
                     ))
@@ -383,57 +380,20 @@ export default function CustomerCreditReportPage() {
                       <TableCell className="text-right text-green-600">
                         {formatCurrency(totalPaidAmount)}
                       </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(totalSalesmanBillAmount)}
+                      </TableCell>
+                      <TableCell className="text-right text-green-600">
+                        {formatCurrency(totalSalesmanPaidAmount)}
+                      </TableCell>
                       <TableCell className="text-right text-red-600">
                         {formatCurrency(totalCreditAmount)}
                       </TableCell>
-                      <TableCell></TableCell>
                     </TableRow>
                   )}
                 </TableBody>
               </Table>
             </div>
-
-            {/* Summary Cards */}
-            {customerCredits.length > 0 && (
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                <div className="p-4 border rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    Total Customers
-                  </p>
-                  <p className="text-2xl font-bold">{customerCredits.length}</p>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    Total Opening Balance
-                  </p>
-                  <p className="text-2xl font-bold text-purple-600">
-                    {formatCurrency(totalOpeningBalance)}
-                  </p>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    Total Bill Amount
-                  </p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {formatCurrency(totalBillAmount)}
-                  </p>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <p className="text-sm text-muted-foreground">Total Paid</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {formatCurrency(totalPaidAmount)}
-                  </p>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    Total Outstanding
-                  </p>
-                  <p className="text-2xl font-bold text-red-600">
-                    {formatCurrency(totalCreditAmount)}
-                  </p>
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
       )}
