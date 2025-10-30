@@ -1,15 +1,15 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useBankAccountStore } from '@/store/bank-account-store';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { useBankAccountStore } from "@/store/bank-account-store";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Plus, Loader2 } from 'lucide-react';
+} from "@/components/ui/card";
+import { Plus, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,15 +17,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { BankAccountForm } from './BankAccountForm';
-import { BankAccountService } from '@/services/bank-account-service';
-import { DataTable } from '@/components/ui/data-table';
-import { columns } from './columns';
-import type { BankAccount } from '@/types';
+} from "@/components/ui/dialog";
+import { BankAccountForm } from "./BankAccountForm";
+import { BankAccountService } from "@/services/bank-account-service";
+import { DataTable } from "@/components/ui/data-table";
+import { columns } from "./columns";
+import type { BankAccount } from "@/types";
 
 export function BankAccountsPage() {
-  const { bankAccounts, loading, error, fetchBankAccounts, removeBankAccount } =
+  const { bankAccounts, loading, error, fetchBankAccounts } =
     useBankAccountStore();
   const navigate = useNavigate();
 
@@ -47,8 +47,8 @@ export function BankAccountsPage() {
     const today = new Date();
     const twoDaysBefore = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
     const twoDaysAfter = new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000);
-    const fromDate = twoDaysBefore.toISOString().split('T')[0];
-    const toDate = twoDaysAfter.toISOString().split('T')[0];
+    const fromDate = twoDaysBefore.toISOString().split("T")[0];
+    const toDate = twoDaysAfter.toISOString().split("T")[0];
 
     const balances: Record<string, number> = {};
     const loadingStates: Record<string, boolean> = {};
@@ -82,9 +82,9 @@ export function BankAccountsPage() {
           // Calculate running balance
           let runningBalance = openingBalance;
           transactions.forEach((transaction) => {
-            if (transaction.transactionType === 'CREDIT') {
+            if (transaction.transactionType === "CREDIT") {
               runningBalance += transaction.amount;
-            } else if (transaction.transactionType === 'DEBIT') {
+            } else if (transaction.transactionType === "DEBIT") {
               runningBalance -= transaction.amount;
             }
           });
@@ -114,16 +114,6 @@ export function BankAccountsPage() {
       calculateCurrentBalances();
     }
   }, [bankAccounts, calculateCurrentBalances]);
-
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this bank account?')) {
-      try {
-        await removeBankAccount(id);
-      } catch (error) {
-        console.error('Failed to delete bank account:', error);
-      }
-    }
-  };
 
   if (loading && bankAccounts.length === 0) {
     return (
@@ -197,7 +187,6 @@ export function BankAccountsPage() {
                   navigate(`/bank-accounts/${bankAccount.id}/ledger`),
                 onEdit: (bankAccount: BankAccount) =>
                   setEditingBankAccount(bankAccount),
-                onDelete: (id: string) => handleDelete(id),
                 currentBalances,
                 balancesLoading,
               }}

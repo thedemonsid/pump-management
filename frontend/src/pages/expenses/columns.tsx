@@ -2,11 +2,10 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { ExpenseResponse } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, ArrowUpDown, Image as ImageIcon } from "lucide-react";
+import { Pencil, ArrowUpDown, Image as ImageIcon } from "lucide-react";
 
 export const createColumns = (
   onEdit: (expense: ExpenseResponse) => void,
-  onDelete: (id: string) => void,
   onImageClick: (imageId: string, title: string) => void,
   isAdmin: boolean = true
 ): ColumnDef<ExpenseResponse>[] => [
@@ -138,13 +137,6 @@ export const createColumns = (
                   onClick={() => onEdit(row.original)}
                 >
                   <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onDelete(row.original.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             );

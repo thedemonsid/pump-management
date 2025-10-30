@@ -20,8 +20,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -54,16 +52,13 @@ const getToday = () => {
 
 export function ExpensesPage() {
   const { user } = useAuth();
-  const { expenses, loading, fetchExpensesByDateRange, removeExpense } =
-    useExpenseStore();
+  const { expenses, loading, fetchExpensesByDateRange } = useExpenseStore();
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sheetMode, setSheetMode] = useState<"create" | "edit">("create");
   const [editingExpense, setEditingExpense] = useState<ExpenseResponse | null>(
     null
   );
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Date filter states - Initialize with default dates (last 7 days)
   const [fromDate, setFromDate] = useState<Date | undefined>(getOneWeekAgo());
@@ -102,26 +97,6 @@ export function ExpensesPage() {
     setIsSheetOpen(true);
   };
 
-  const handleDeleteClick = (id: string) => {
-    setDeletingId(id);
-    setShowDeleteDialog(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!deletingId) return;
-
-    try {
-      await removeExpense(deletingId);
-      toast.success("Expense deleted successfully");
-    } catch (error) {
-      toast.error("Failed to delete expense");
-      console.error("Failed to delete expense:", error);
-    } finally {
-      setDeletingId(null);
-      setShowDeleteDialog(false);
-    }
-  };
-
   // Handle filter reset
   const handleClearFilters = () => {
     setFromDate(getOneWeekAgo());
@@ -143,12 +118,7 @@ export function ExpensesPage() {
     }
   };
 
-  const columns = createColumns(
-    handleEdit,
-    handleDeleteClick,
-    handleImageClick,
-    isAdmin
-  );
+  const columns = createColumns(handleEdit, handleImageClick, isAdmin);
 
   const safeExpenses = useMemo(
     () => (Array.isArray(expenses) ? expenses : []),
@@ -468,34 +438,6 @@ export function ExpensesPage() {
         onOpenChange={setIsSheetOpen}
         mode={sheetMode}
       />
-
-      {isAdmin && (
-        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Are you sure?</DialogTitle>
-              <DialogDescription>
-                This will permanently delete this expense record. This action
-                cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setDeletingId(null);
-                  setShowDeleteDialog(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={handleDeleteConfirm}>
-                Delete
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
 
       {/* Image Preview Dialog */}
       <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>

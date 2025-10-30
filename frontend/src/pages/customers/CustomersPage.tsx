@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useCustomerStore } from '@/store/customer-store';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useCustomerStore } from "@/store/customer-store";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Plus, Loader2 } from 'lucide-react';
+} from "@/components/ui/card";
+import { Plus, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,18 +17,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { CreateCustomerForm } from './CreateCustomerForm';
-import { UpdateCustomerForm } from './UpdateCustomerForm';
-import { DataTable } from '@/components/ui/data-table';
-import { columns } from './columns';
-import type { Customer } from '@/types';
-import { Link } from 'react-router-dom';
+} from "@/components/ui/dialog";
+import { CreateCustomerForm } from "./CreateCustomerForm";
+import { UpdateCustomerForm } from "./UpdateCustomerForm";
+import { DataTable } from "@/components/ui/data-table";
+import { columns } from "./columns";
+import type { Customer } from "@/types";
+import { Link } from "react-router-dom";
 
 export function CustomersPage() {
   const navigate = useNavigate();
-  const { customers, loading, error, fetchCustomers, removeCustomer } =
-    useCustomerStore();
+  const { customers, loading, error, fetchCustomers } = useCustomerStore();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
@@ -36,16 +35,6 @@ export function CustomersPage() {
   useEffect(() => {
     fetchCustomers();
   }, [fetchCustomers]);
-
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this customer?')) {
-      try {
-        await removeCustomer(id);
-      } catch (error) {
-        console.error('Failed to delete customer:', error);
-      }
-    }
-  };
 
   if (loading && customers.length === 0) {
     return (
@@ -131,7 +120,6 @@ export function CustomersPage() {
                 onView: (customer: Customer) =>
                   navigate(`/customers/${customer.id}`),
                 onEdit: (customer: Customer) => setEditingCustomer(customer),
-                onDelete: (id: string) => handleDelete(id),
               }}
             />
           )}

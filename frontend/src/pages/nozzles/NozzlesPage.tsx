@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Loader2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -31,29 +31,14 @@ import { UpdateNozzleForm } from "./UpdateNozzleForm";
 import type { Nozzle } from "@/types";
 
 export function NozzlesPage() {
-  const { nozzles, loading, error, fetchNozzles, removeNozzle } =
-    useNozzleStore();
+  const { nozzles, loading, error, fetchNozzles } = useNozzleStore();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingNozzle, setEditingNozzle] = useState<Nozzle | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchNozzles();
   }, [fetchNozzles]);
-
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this nozzle?")) {
-      setDeletingId(id);
-      try {
-        await removeNozzle(id);
-      } catch (error) {
-        console.error("Failed to delete nozzle:", error);
-      } finally {
-        setDeletingId(null);
-      }
-    }
-  };
 
   const handleEdit = (nozzle: Nozzle) => {
     setEditingNozzle(nozzle);
@@ -177,18 +162,6 @@ export function NozzlesPage() {
                             onClick={() => handleEdit(nozzle)}
                           >
                             <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(nozzle.id!)}
-                            disabled={deletingId === nozzle.id}
-                          >
-                            {deletingId === nozzle.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
                           </Button>
                         </div>
                       </TableCell>

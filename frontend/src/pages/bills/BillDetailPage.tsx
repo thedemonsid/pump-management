@@ -1,17 +1,19 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Receipt, Calendar, Package, Loader2 } from 'lucide-react';
-import { useBillStore } from '@/store/bill-store';
-import type { BillResponse } from '@/types';
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Receipt, Calendar, Package, Loader2 } from "lucide-react";
+import { useBillStore } from "@/store/bill-store";
+import type { BillResponse } from "@/types";
+import { DataTable } from "@/components/ui/data-table";
+import { getBillItemsColumns } from "./BillItemsColumns";
 
 export function BillDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -43,7 +45,7 @@ export function BillDetailPage() {
   if (error || !bill) {
     return (
       <div className="flex items-center justify-center h-96">
-        <p className="text-red-600">{error || 'Bill not found'}</p>
+        <p className="text-red-600">{error || "Bill not found"}</p>
       </div>
     );
   }
@@ -71,10 +73,10 @@ export function BillDetailPage() {
                 <span>Bill Date</span>
               </div>
               <p className="font-medium">
-                {new Date(bill.billDate).toLocaleDateString('en-IN', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
+                {new Date(bill.billDate).toLocaleDateString("en-IN", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
                 })}
               </p>
             </div>
@@ -103,46 +105,25 @@ export function BillDetailPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Bill Items
+            Bill Items ({bill.billItems.length})
           </CardTitle>
           <CardDescription>
             Products and quantities included in this bill
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {bill.billItems.map((item, index) => (
-              <div key={item.id || index}>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="space-y-1 flex-1">
-                    <h4 className="font-medium">
-                      {item.productName || `Product ${item.productId}`}
-                    </h4>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span>Qty: {item.quantity}</span>
-                      {item.salesUnit && <span>Unit: {item.salesUnit}</span>}
-                      <span>Rate: ₹{item.rate.toLocaleString('en-IN')}</span>
-                      {item.hsnCode && <span>HSN: {item.hsnCode}</span>}
-                      {item.discount > 0 && (
-                        <span className="text-green-600">
-                          Discount: ₹{item.discount.toLocaleString('en-IN')}
-                        </span>
-                      )}
-                      <span>GST: {item.gst}%</span>
-                    </div>
-                  </div>
-                  <div className="text-right space-y-1">
-                    <div className="font-semibold text-lg">
-                      ₹{item.netAmount.toLocaleString('en-IN')}
-                    </div>
-                  </div>
-                </div>
-                {index < bill.billItems.length - 1 && (
-                  <Separator className="my-4" />
-                )}
-              </div>
-            ))}
-          </div>
+          <DataTable
+            columns={getBillItemsColumns()}
+            data={bill.billItems}
+            searchKey="productName"
+            searchPlaceholder="Search by product name..."
+            pageSize={10}
+            enableRowSelection={false}
+            enableColumnVisibility={true}
+            enablePagination={true}
+            enableSorting={true}
+            enableFiltering={true}
+          />
 
           {/* Amount Breakdown */}
           <Separator className="my-6" />
@@ -150,14 +131,14 @@ export function BillDetailPage() {
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Subtotal</span>
               <span className="font-medium">
-                ₹{bill.totalAmount.toLocaleString('en-IN')}
+                ₹{bill.totalAmount.toLocaleString("en-IN")}
               </span>
             </div>
             {bill.discountAmount > 0 && (
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Discount</span>
                 <span className="font-medium text-green-600">
-                  -₹{bill.discountAmount.toLocaleString('en-IN')}
+                  -₹{bill.discountAmount.toLocaleString("en-IN")}
                 </span>
               </div>
             )}
@@ -165,7 +146,7 @@ export function BillDetailPage() {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Tax</span>
                 <span className="font-medium">
-                  ₹{bill.taxAmount.toLocaleString('en-IN')}
+                  ₹{bill.taxAmount.toLocaleString("en-IN")}
                 </span>
               </div>
             )}
@@ -173,7 +154,7 @@ export function BillDetailPage() {
             <div className="flex items-center justify-between">
               <span className="font-semibold">Net Amount</span>
               <span className="text-xl font-bold text-primary">
-                ₹{bill.netAmount.toLocaleString('en-IN')}
+                ₹{bill.netAmount.toLocaleString("en-IN")}
               </span>
             </div>
           </div>
@@ -191,14 +172,14 @@ export function BillDetailPage() {
               <div>
                 <span className="text-muted-foreground">Created:</span>
                 <p className="font-medium">
-                  {new Date(bill.createdAt).toLocaleString('en-IN')}
+                  {new Date(bill.createdAt).toLocaleString("en-IN")}
                 </p>
               </div>
               {bill.updatedAt && (
                 <div>
                   <span className="text-muted-foreground">Last Updated:</span>
                   <p className="font-medium">
-                    {new Date(bill.updatedAt).toLocaleString('en-IN')}
+                    {new Date(bill.updatedAt).toLocaleString("en-IN")}
                   </p>
                 </div>
               )}

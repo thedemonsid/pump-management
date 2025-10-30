@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, Eye, Pencil, Trash2, Loader2 } from "lucide-react";
+import { ArrowUpDown, Eye, Pencil, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Tank } from "@/types";
@@ -9,10 +9,8 @@ import type { Tank } from "@/types";
 interface TableMeta {
   onView?: (tank: Tank) => void;
   onEdit?: (tank: Tank) => void;
-  onDelete?: (id: string) => void;
   currentBalances?: Record<string, number>;
   balancesLoading?: Record<string, boolean>;
-  deletingId?: string | null;
 }
 
 export const columns: ColumnDef<Tank>[] = [
@@ -165,7 +163,6 @@ export const columns: ColumnDef<Tank>[] = [
       const meta = table.options.meta as TableMeta | undefined;
       const onView = meta?.onView;
       const onEdit = meta?.onEdit;
-      const onDelete = meta?.onDelete;
 
       return (
         <div className="flex items-center gap-2">
@@ -178,21 +175,6 @@ export const columns: ColumnDef<Tank>[] = [
           {onEdit && (
             <Button variant="ghost" size="sm" onClick={() => onEdit(tank)}>
               <Pencil className="h-4 w-4" />
-            </Button>
-          )}
-          {onDelete && tank.id && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onDelete(tank.id!)}
-              disabled={meta?.deletingId === tank.id}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-            >
-              {meta?.deletingId === tank.id ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="h-4 w-4" />
-              )}
             </Button>
           )}
         </div>

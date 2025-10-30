@@ -1,62 +1,74 @@
-import { useEffect, useState } from 'react';
-import { useCustomerStore } from '@/store/customer-store';
-import { useBillStore } from '@/store/bill-store';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useEffect, useState } from "react";
+import { useCustomerStore } from "@/store/customer-store";
+import { useBillStore } from "@/store/bill-store";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import {
-  Loader2,
-  RefreshCw,
-  Calendar,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  CalendarIcon,
   User,
   Receipt,
   CreditCard,
   FileText,
   Eye,
   AlertCircle,
-} from 'lucide-react';
-import type { BillResponse } from '@/types';
+} from "lucide-react";
+import { format, subDays } from "date-fns";
+import { cn } from "@/lib/utils";
+import type { BillResponse } from "@/types";
+import { DataTable } from "@/components/ui/data-table";
+import { getBillsColumns } from "./BillsColumns";
+
+// Helper functions for default date range
+const getOneWeekAgo = () => subDays(new Date(), 7);
+const getToday = () => new Date();
 
 export function BillsDetailsPage() {
   const { customers, fetchCustomers } = useCustomerStore();
   const {
-    loading,
     error,
-    startDate,
-    endDate,
     selectedCustomerId,
+    setSelectedCustomerId,
     setStartDate,
     setEndDate,
-    setSelectedCustomerId,
     fetchBillsByDateRange,
     getFilteredDateRangeBills,
   } = useBillStore();
+
+  // Date filter states - Initialize with default dates (last 7 days)
+  const [fromDate, setFromDate] = useState<Date | undefined>(getOneWeekAgo());
+  const [toDate, setToDate] = useState<Date | undefined>(getToday());
+  const [isFromDateOpen, setIsFromDateOpen] = useState(false);
+  const [isToDateOpen, setIsToDateOpen] = useState(false);
 
   const [selectedBill, setSelectedBill] = useState<BillResponse | null>(null);
   const [isBillItemsDialogOpen, setIsBillItemsDialogOpen] = useState(false);
@@ -66,9 +78,22 @@ export function BillsDetailsPage() {
     fetchCustomers();
   }, [fetchCustomers]);
 
+  // Fetch data when dates change
   useEffect(() => {
-    fetchBillsByDateRange();
-  }, [fetchBillsByDateRange]);
+    if (fromDate && toDate) {
+      const startDateStr = format(fromDate, "yyyy-MM-dd");
+      const endDateStr = format(toDate, "yyyy-MM-dd");
+      setStartDate(startDateStr);
+      setEndDate(endDateStr);
+      fetchBillsByDateRange();
+    }
+  }, [fromDate, toDate, setStartDate, setEndDate, fetchBillsByDateRange]);
+
+  const handleClearFilters = () => {
+    setFromDate(getOneWeekAgo());
+    setToDate(getToday());
+    setSelectedCustomerId("all-customers");
+  };
 
   const filteredBills = getFilteredDateRangeBills();
 
@@ -94,39 +119,83 @@ export function BillsDetailsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Eye className="h-5 w-5" />
-            Filters
+            Filter by Date Range
           </CardTitle>
+          <CardDescription>Select a date range to filter bills</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="start-date" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Start Date
+          <div className="flex flex-wrap items-end gap-4">
+            {/* From Date */}
+            <div className="flex-1 min-w-[200px]">
+              <Label className="text-sm font-medium mb-2 block">
+                From Date
               </Label>
-              <Input
-                id="start-date"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full"
-              />
+              <Popover open={isFromDateOpen} onOpenChange={setIsFromDateOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !fromDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {fromDate ? format(fromDate, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={fromDate}
+                    onSelect={(date) => {
+                      setFromDate(date);
+                      setIsFromDateOpen(false);
+                    }}
+                    disabled={(date) => date > new Date()}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="end-date" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                End Date
-              </Label>
-              <Input
-                id="end-date"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full"
-              />
+
+            {/* To Date */}
+            <div className="flex-1 min-w-[200px]">
+              <Label className="text-sm font-medium mb-2 block">To Date</Label>
+              <Popover open={isToDateOpen} onOpenChange={setIsToDateOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !toDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {toDate ? format(toDate, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={toDate}
+                    onSelect={(date) => {
+                      setToDate(date);
+                      setIsToDateOpen(false);
+                    }}
+                    disabled={(date) => {
+                      if (date > new Date()) return true;
+                      if (fromDate && date < fromDate) return true;
+                      return false;
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="customer" className="flex items-center gap-2">
+
+            {/* Customer Filter */}
+            <div className="flex-1 min-w-[200px]">
+              <Label className="text-sm font-medium mb-2 flex items-center gap-2">
                 <User className="h-4 w-4" />
                 Customer
               </Label>
@@ -152,21 +221,19 @@ export function BillsDetailsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2 flex flex-col justify-end">
-              <Button
-                onClick={fetchBillsByDateRange}
-                disabled={loading}
-                className="w-full"
-              >
-                {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                )}
-                Refresh
-              </Button>
-            </div>
+
+            <Button variant="outline" onClick={handleClearFilters}>
+              Reset to Default
+            </Button>
           </div>
+
+          {(fromDate || toDate) && (
+            <div className="mt-4 text-sm text-muted-foreground">
+              Showing {filteredBills.length} bills
+              {fromDate && ` from ${format(fromDate, "PPP")}`}
+              {toDate && ` to ${format(toDate, "PPP")}`}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -181,127 +248,34 @@ export function BillsDetailsPage() {
       {/* Bills Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Bills List
-            </span>
-            <Badge variant="secondary" className="text-sm">
-              {filteredBills.length} bills found
-            </Badge>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Bills List
           </CardTitle>
+          <CardDescription>{filteredBills.length} bills found</CardDescription>
         </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="font-semibold">Bill No</TableHead>
-                  <TableHead className="font-semibold">Date</TableHead>
-                  <TableHead className="font-semibold">Customer</TableHead>
-                  <TableHead className="font-semibold">Rate Type</TableHead>
-                  <TableHead className="font-semibold text-right">
-                    Total Amount
-                  </TableHead>
-                  <TableHead className="font-semibold text-right">
-                    Discount
-                  </TableHead>
-                  <TableHead className="font-semibold text-right">
-                    Tax
-                  </TableHead>
-                  <TableHead className="font-semibold text-right">
-                    Net Amount
-                  </TableHead>
-                  <TableHead className="font-semibold">Created</TableHead>
-                  <TableHead className="font-semibold">Updated</TableHead>
-                  <TableHead className="font-semibold text-center">
-                    Items
-                  </TableHead>
-                  <TableHead className="font-semibold text-center">
-                    Payments
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredBills.map((bill) => (
-                  <TableRow key={bill.id} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">{bill.billNo}</TableCell>
-                    <TableCell>{bill.billDate}</TableCell>
-                    <TableCell
-                      className="max-w-[150px] truncate"
-                      title={bill.customerName}
-                    >
-                      {bill.customerName}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{bill.rateType}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      ₹{bill.totalAmount.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      ₹{bill.discountAmount.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      ₹{bill.taxAmount.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      ₹{bill.netAmount.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(bill.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(bill.updatedAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedBill(bill);
-                          setIsBillItemsDialogOpen(true);
-                        }}
-                        className="h-8 px-2"
-                      >
-                        <FileText className="h-4 w-4 mr-1" />
-                        {bill.billItems.length}
-                      </Button>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedBill(bill);
-                          setIsPaymentsDialogOpen(true);
-                        }}
-                        className="h-8 px-2"
-                      >
-                        <CreditCard className="h-4 w-4 mr-1" />
-                        {bill.payments?.length || 0}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          {filteredBills.length === 0 && !loading && (
-            <div className="p-12 text-center">
-              <div className="flex flex-col items-center gap-3">
-                <div className="p-3 bg-muted rounded-full">
-                  <FileText className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-lg font-medium">No bills found</p>
-                  <p className="text-sm text-muted-foreground">
-                    Try adjusting your filters or date range
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+        <CardContent>
+          <DataTable
+            columns={getBillsColumns({
+              onViewItems: (bill) => {
+                setSelectedBill(bill);
+                setIsBillItemsDialogOpen(true);
+              },
+              onViewPayments: (bill) => {
+                setSelectedBill(bill);
+                setIsPaymentsDialogOpen(true);
+              },
+            })}
+            data={filteredBills}
+            searchKey="customerName"
+            searchPlaceholder="Search by customer name or bill number..."
+            pageSize={10}
+            enableRowSelection={false}
+            enableColumnVisibility={true}
+            enablePagination={true}
+            enableSorting={true}
+            enableFiltering={true}
+          />
         </CardContent>
       </Card>
 

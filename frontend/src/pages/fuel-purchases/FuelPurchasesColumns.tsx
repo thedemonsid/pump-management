@@ -1,20 +1,16 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import type { FuelPurchase } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Loader2, Calendar } from "lucide-react";
+import { Pencil, Calendar } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils/index";
 import { ArrowUpDown } from "lucide-react";
 
 interface FuelPurchaseColumnsProps {
   onEdit: (fuelPurchase: FuelPurchase) => void;
-  onDelete: (id: string) => void;
-  deletingId: string | null;
 }
 
 export const getFuelPurchaseColumns = ({
   onEdit,
-  onDelete,
-  deletingId,
 }: FuelPurchaseColumnsProps): ColumnDef<FuelPurchase>[] => [
   {
     accessorKey: "fuelPurchaseId",
@@ -184,18 +180,6 @@ export const getFuelPurchaseColumns = ({
             onClick={() => onEdit(fuelPurchase)}
           >
             <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fuelPurchase.id && onDelete(fuelPurchase.id)}
-            disabled={deletingId === fuelPurchase.id}
-          >
-            {deletingId === fuelPurchase.id ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Trash2 className="h-4 w-4" />
-            )}
           </Button>
         </div>
       );

@@ -27,8 +27,7 @@ import { Link } from "react-router-dom";
 
 export function SuppliersPage() {
   const navigate = useNavigate();
-  const { suppliers, loading, error, fetchSuppliers, removeSupplier } =
-    useSupplierStore();
+  const { suppliers, loading, error, fetchSuppliers } = useSupplierStore();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
@@ -36,16 +35,6 @@ export function SuppliersPage() {
   useEffect(() => {
     fetchSuppliers();
   }, [fetchSuppliers]);
-
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this supplier?")) {
-      try {
-        await removeSupplier(id);
-      } catch (error) {
-        console.error("Failed to delete supplier:", error);
-      }
-    }
-  };
 
   if (loading && suppliers.length === 0) {
     return (
@@ -131,7 +120,6 @@ export function SuppliersPage() {
                 onView: (supplier: Supplier) =>
                   navigate(`/suppliers/${supplier.id}`),
                 onEdit: (supplier: Supplier) => setEditingSupplier(supplier),
-                onDelete: (id: string) => handleDelete(id),
               }}
             />
           )}

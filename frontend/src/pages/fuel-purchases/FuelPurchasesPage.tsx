@@ -42,18 +42,12 @@ const getToday = () => {
 };
 
 export function FuelPurchasesPage() {
-  const {
-    fuelPurchases,
-    loading,
-    error,
-    fetchFuelPurchases,
-    removeFuelPurchase,
-  } = useFuelPurchaseStore();
+  const { fuelPurchases, loading, error, fetchFuelPurchases } =
+    useFuelPurchaseStore();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingFuelPurchase, setEditingFuelPurchase] =
     useState<FuelPurchase | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Date filter states - Initialize with 1 week ago to today
   const [fromDate, setFromDate] = useState<Date | undefined>(getOneWeekAgo());
@@ -66,19 +60,6 @@ export function FuelPurchasesPage() {
     fetchFuelPurchases(fromDate, toDate);
   }, [fetchFuelPurchases, fromDate, toDate]);
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this fuel purchase?")) {
-      setDeletingId(id);
-      try {
-        await removeFuelPurchase(id);
-      } catch (error) {
-        console.error("Failed to delete fuel purchase:", error);
-      } finally {
-        setDeletingId(null);
-      }
-    }
-  };
-
   const handleClearFilters = () => {
     setFromDate(getOneWeekAgo());
     setToDate(getToday());
@@ -86,8 +67,6 @@ export function FuelPurchasesPage() {
 
   const columns = getFuelPurchaseColumns({
     onEdit: setEditingFuelPurchase,
-    onDelete: handleDelete,
-    deletingId,
   });
 
   if (loading && fuelPurchases.length === 0) {

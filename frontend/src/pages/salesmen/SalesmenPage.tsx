@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
-import { useSalesmanStore } from '@/store/salesman-store';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import { useSalesmanStore } from "@/store/salesman-store";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+} from "@/components/ui/card";
+import { Plus, Pencil, Loader2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -17,8 +17,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -26,41 +26,26 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { CreateSalesmanForm } from './CreateSalesmanForm';
-import { UpdateSalesmanForm } from './UpdateSalesmanForm';
-import type { Salesman } from '@/types';
+} from "@/components/ui/dialog";
+import { CreateSalesmanForm } from "./CreateSalesmanForm";
+import { UpdateSalesmanForm } from "./UpdateSalesmanForm";
+import type { Salesman } from "@/types";
 
 export function SalesmenPage() {
   const { user } = useAuth();
-  const { salesmen, loading, error, fetchSalesmen, removeSalesman } =
-    useSalesmanStore();
+  const { salesmen, loading, error, fetchSalesmen } = useSalesmanStore();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingSalesman, setEditingSalesman] = useState<Salesman | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Check if user has permission to manage salesmen
-  const canManageSalesmen = user?.role === 'ADMIN' || user?.role === 'MANAGER';
+  const canManageSalesmen = user?.role === "ADMIN" || user?.role === "MANAGER";
 
   useEffect(() => {
     if (canManageSalesmen) {
       fetchSalesmen();
     }
   }, [fetchSalesmen, canManageSalesmen]);
-
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this salesman?')) {
-      setDeletingId(id);
-      try {
-        await removeSalesman(id);
-      } catch (error) {
-        console.error('Failed to delete salesman:', error);
-      } finally {
-        setDeletingId(null);
-      }
-    }
-  };
 
   const handleEdit = (salesman: Salesman) => {
     setEditingSalesman(salesman);
@@ -165,14 +150,14 @@ export function SalesmenPage() {
                       {salesman.username}
                     </TableCell>
                     <TableCell>{salesman.mobileNumber}</TableCell>
-                    <TableCell>{salesman.email || '-'}</TableCell>
-                    <TableCell>{salesman.aadharNumber || '-'}</TableCell>
-                    <TableCell>{salesman.panNumber || '-'}</TableCell>
+                    <TableCell>{salesman.email || "-"}</TableCell>
+                    <TableCell>{salesman.aadharNumber || "-"}</TableCell>
+                    <TableCell>{salesman.panNumber || "-"}</TableCell>
                     <TableCell>
                       <Badge
-                        variant={salesman.enabled ? 'default' : 'secondary'}
+                        variant={salesman.enabled ? "default" : "secondary"}
                       >
-                        {salesman.enabled ? 'Enabled' : 'Disabled'}
+                        {salesman.enabled ? "Enabled" : "Disabled"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -183,18 +168,6 @@ export function SalesmenPage() {
                           onClick={() => handleEdit(salesman)}
                         >
                           <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(salesman.id!)}
-                          disabled={deletingId === salesman.id}
-                        >
-                          {deletingId === salesman.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
                         </Button>
                       </div>
                     </TableCell>

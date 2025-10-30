@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Loader2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -34,13 +34,11 @@ import { Link } from "react-router-dom";
 import { TankTransactionService } from "@/services/tank-transaction-service";
 
 export function ProductsPage() {
-  const { products, loading, error, fetchProducts, removeProduct } =
-    useProductStore();
+  const { products, loading, error, fetchProducts } = useProductStore();
   const { tanks, fetchTanks } = useTankStore();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   // const [currentBalances, setCurrentBalances] = useState<
   //   Record<string, number>
   // >({});
@@ -118,19 +116,6 @@ export function ProductsPage() {
       calculateCurrentBalances();
     }
   }, [tanks, calculateCurrentBalances]);
-
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this product?")) {
-      setDeletingId(id);
-      try {
-        await removeProduct(id);
-      } catch (error) {
-        console.error("Failed to delete product:", error);
-      } finally {
-        setDeletingId(null);
-      }
-    }
-  };
 
   // Compute tank quantities per product
   // const getTankQuantityForProduct = (productId: string) => {
@@ -280,18 +265,6 @@ export function ProductsPage() {
                           onClick={() => setEditingProduct(product)}
                         >
                           <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(product.id!)}
-                          disabled={deletingId === product.id}
-                        >
-                          {deletingId === product.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
                         </Button>
                       </div>
                     </TableCell>

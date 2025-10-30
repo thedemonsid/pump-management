@@ -27,12 +27,11 @@ import type { Tank } from "@/types";
 
 export function TanksPage() {
   const navigate = useNavigate();
-  const { tanks, loading, error, fetchTanks, removeTank } = useTankStore();
+  const { tanks, loading, error, fetchTanks } = useTankStore();
   const { getCurrentLevel } = useTankLedgerStore();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingTank, setEditingTank] = useState<Tank | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [currentBalances, setCurrentBalances] = useState<
     Record<string, number>
   >({});
@@ -98,19 +97,6 @@ export function TanksPage() {
       calculateCurrentBalances();
     }
   }, [tanks, calculateCurrentBalances]);
-
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this tank?")) {
-      setDeletingId(id);
-      try {
-        await removeTank(id);
-      } catch (error) {
-        console.error("Failed to delete tank:", error);
-      } finally {
-        setDeletingId(null);
-      }
-    }
-  };
 
   if (loading && tanks.length === 0) {
     return (
@@ -181,10 +167,8 @@ export function TanksPage() {
               meta={{
                 onView: (tank: Tank) => navigate(`/tanks/${tank.id}/ledger`),
                 onEdit: (tank: Tank) => setEditingTank(tank),
-                onDelete: (id: string) => handleDelete(id),
                 currentBalances,
                 balancesLoading,
-                deletingId,
               }}
             />
           )}

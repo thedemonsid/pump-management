@@ -9,14 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Plus, Loader2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { ExpenseHeadSheet } from "@/components/expense-heads/ExpenseHeadSheet";
 import { DataTable } from "@/components/ui/data-table";
 import { createColumns } from "./columns";
@@ -24,20 +16,13 @@ import { toast } from "sonner";
 import type { ExpenseHeadResponse } from "@/types";
 
 export function ExpenseHeadsPage() {
-  const {
-    expenseHeads,
-    loading,
-    fetchExpenseHeads,
-    removeExpenseHead,
-    toggleExpenseHeadActive,
-  } = useExpenseHeadStore();
+  const { expenseHeads, loading, fetchExpenseHeads, toggleExpenseHeadActive } =
+    useExpenseHeadStore();
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sheetMode, setSheetMode] = useState<"create" | "edit">("create");
   const [editingExpenseHead, setEditingExpenseHead] =
     useState<ExpenseHeadResponse | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
     fetchExpenseHeads();
@@ -55,26 +40,6 @@ export function ExpenseHeadsPage() {
     setIsSheetOpen(true);
   };
 
-  const handleDeleteClick = (id: string) => {
-    setDeletingId(id);
-    setShowDeleteDialog(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!deletingId) return;
-
-    try {
-      await removeExpenseHead(deletingId);
-      toast.success("Expense head deleted successfully");
-    } catch (error) {
-      toast.error("Failed to delete expense head");
-      console.error("Failed to delete expense head:", error);
-    } finally {
-      setDeletingId(null);
-      setShowDeleteDialog(false);
-    }
-  };
-
   const handleToggleActive = async (id: string) => {
     try {
       await toggleExpenseHeadActive(id);
@@ -85,11 +50,7 @@ export function ExpenseHeadsPage() {
     }
   };
 
-  const columns = createColumns(
-    handleEdit,
-    handleDeleteClick,
-    handleToggleActive
-  );
+  const columns = createColumns(handleEdit, handleToggleActive);
 
   const safeExpenseHeads = Array.isArray(expenseHeads) ? expenseHeads : [];
 
@@ -146,32 +107,6 @@ export function ExpenseHeadsPage() {
         onOpenChange={setIsSheetOpen}
         mode={sheetMode}
       />
-
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Are you sure?</DialogTitle>
-            <DialogDescription>
-              This will permanently delete this expense head. This action cannot
-              be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setDeletingId(null);
-                setShowDeleteDialog(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteConfirm}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

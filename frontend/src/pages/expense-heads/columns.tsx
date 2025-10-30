@@ -2,11 +2,10 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { ExpenseHeadResponse } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, ArrowUpDown } from "lucide-react";
+import { Pencil, ArrowUpDown } from "lucide-react";
 
 export const createColumns = (
   onEdit: (expenseHead: ExpenseHeadResponse) => void,
-  onDelete: (id: string) => void,
   onToggleActive: (id: string) => void
 ): ColumnDef<ExpenseHeadResponse>[] => [
   {
@@ -97,13 +96,6 @@ export const createColumns = (
             onClick={() => onEdit(row.original)}
           >
             <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDelete(row.original.id)}
-          >
-            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       );

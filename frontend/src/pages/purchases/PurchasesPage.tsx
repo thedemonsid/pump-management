@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react';
-import { usePurchaseStore } from '@/store/purchase-store';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import { usePurchaseStore } from "@/store/purchase-store";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Plus, Pencil, Trash2, Loader2, Calendar, Package } from 'lucide-react';
+} from "@/components/ui/card";
+import { Plus, Pencil, Loader2, Calendar, Package } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -16,7 +16,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -24,37 +24,22 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { CreatePurchaseForm } from './CreatePurchaseForm';
-import { UpdatePurchaseForm } from './UpdatePurchaseForm';
-import type { Purchase } from '@/types';
-import { formatCurrency, formatDate } from '@/lib/utils/index';
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { CreatePurchaseForm } from "./CreatePurchaseForm";
+import { UpdatePurchaseForm } from "./UpdatePurchaseForm";
+import type { Purchase } from "@/types";
+import { formatCurrency, formatDate } from "@/lib/utils/index";
 
 export function PurchasesPage() {
-  const { purchases, loading, error, fetchPurchases, removePurchase } =
-    usePurchaseStore();
+  const { purchases, loading, error, fetchPurchases } = usePurchaseStore();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPurchases();
   }, [fetchPurchases]);
-
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this purchase?')) {
-      setDeletingId(id);
-      try {
-        await removePurchase(id);
-      } catch (error) {
-        console.error('Failed to delete purchase:', error);
-      } finally {
-        setDeletingId(null);
-      }
-    }
-  };
 
   if (loading && purchases.length === 0) {
     return (
@@ -157,9 +142,9 @@ export function PurchasesPage() {
                     <TableCell>
                       <Badge
                         variant={
-                          purchase.paymentType === 'CASH'
-                            ? 'default'
-                            : 'secondary'
+                          purchase.paymentType === "CASH"
+                            ? "default"
+                            : "secondary"
                         }
                       >
                         {purchase.paymentType}
@@ -197,20 +182,6 @@ export function PurchasesPage() {
                             )}
                           </DialogContent>
                         </Dialog>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            purchase.id && handleDelete(purchase.id)
-                          }
-                          disabled={deletingId === purchase.id}
-                        >
-                          {deletingId === purchase.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>

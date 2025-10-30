@@ -1,41 +1,25 @@
-'use client';
+"use client";
 
-import type { ColumnDef } from '@tanstack/react-table';
-import {
-  ArrowUpDown,
-  MoreHorizontal,
-  Eye,
-  Pencil,
-  Trash2,
-  Loader2,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import type { BankAccount } from '@/types';
+import type { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown, Eye, Pencil, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import type { BankAccount } from "@/types";
 
 interface TableMeta {
   onView?: (bankAccount: BankAccount) => void;
   onEdit?: (bankAccount: BankAccount) => void;
-  onDelete?: (id: string) => void;
   currentBalances?: Record<string, number>;
   balancesLoading?: Record<string, boolean>;
 }
 
 export const columns: ColumnDef<BankAccount>[] = [
   {
-    accessorKey: 'accountHolderName',
+    accessorKey: "accountHolderName",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Account Holder
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -48,8 +32,8 @@ export const columns: ColumnDef<BankAccount>[] = [
     },
   },
   {
-    accessorKey: 'accountNumber',
-    header: 'Account Number',
+    accessorKey: "accountNumber",
+    header: "Account Number",
     cell: ({ row }) => {
       const bankAccount = row.original;
       return (
@@ -58,12 +42,12 @@ export const columns: ColumnDef<BankAccount>[] = [
     },
   },
   {
-    accessorKey: 'bank',
+    accessorKey: "bank",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Bank
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -72,24 +56,24 @@ export const columns: ColumnDef<BankAccount>[] = [
     },
   },
   {
-    accessorKey: 'branch',
-    header: 'Branch',
+    accessorKey: "branch",
+    header: "Branch",
   },
   {
-    accessorKey: 'ifscCode',
-    header: 'IFSC Code',
+    accessorKey: "ifscCode",
+    header: "IFSC Code",
     cell: ({ row }) => {
       const bankAccount = row.original;
       return <div className="font-mono text-sm">{bankAccount.ifscCode}</div>;
     },
   },
   {
-    accessorKey: 'openingBalance',
+    accessorKey: "openingBalance",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Opening Balance
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -99,9 +83,9 @@ export const columns: ColumnDef<BankAccount>[] = [
     cell: ({ row }) => {
       const bankAccount = row.original;
       const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-IN', {
-          style: 'currency',
-          currency: 'INR',
+        return new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         }).format(amount);
@@ -115,8 +99,8 @@ export const columns: ColumnDef<BankAccount>[] = [
     },
   },
   {
-    accessorKey: 'currentBalance',
-    header: 'Current Balance',
+    accessorKey: "currentBalance",
+    header: "Current Balance",
     cell: ({ row, table }) => {
       const bankAccount = row.original;
       const meta = table.options.meta as TableMeta | undefined;
@@ -124,9 +108,9 @@ export const columns: ColumnDef<BankAccount>[] = [
       const balancesLoading = meta?.balancesLoading || {};
 
       const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-IN', {
-          style: 'currency',
-          currency: 'INR',
+        return new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         }).format(amount);
@@ -153,17 +137,18 @@ export const columns: ColumnDef<BankAccount>[] = [
     },
   },
   {
-    accessorKey: 'openingBalanceDate',
-    header: 'Opening Date',
+    accessorKey: "openingBalanceDate",
+    header: "Opening Date",
     cell: ({ row }) => {
       const bankAccount = row.original;
       return bankAccount.openingBalanceDate
         ? new Date(bankAccount.openingBalanceDate).toLocaleDateString()
-        : '-';
+        : "-";
     },
   },
   {
-    id: 'actions',
+    id: "actions",
+    header: "Actions",
     enableHiding: false,
     cell: ({ row, table }) => {
       const bankAccount = row.original;
@@ -172,47 +157,29 @@ export const columns: ColumnDef<BankAccount>[] = [
       const meta = table.options.meta as TableMeta | undefined;
       const onView = meta?.onView;
       const onEdit = meta?.onEdit;
-      const onDelete = meta?.onDelete;
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(bankAccount.id!)}
+        <div className="flex items-center gap-2">
+          {onView && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onView(bankAccount)}
             >
-              Copy bank account ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {onView && (
-              <DropdownMenuItem onClick={() => onView(bankAccount)}>
-                <Eye className="mr-2 h-4 w-4" />
-                View Ledger
-              </DropdownMenuItem>
-            )}
-            {onEdit && (
-              <DropdownMenuItem onClick={() => onEdit(bankAccount)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
-            )}
-            {onDelete && bankAccount.id && (
-              <DropdownMenuItem
-                onClick={() => onDelete(bankAccount.id!)}
-                className="text-red-600"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <Eye className="mr-2 h-4 w-4" />
+              View Ledger
+            </Button>
+          )}
+          {onEdit && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onEdit(bankAccount)}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       );
     },
   },
