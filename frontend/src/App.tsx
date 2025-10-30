@@ -55,6 +55,8 @@ import TankLevelReportPage from "./pages/reports/TankLevelReportPage";
 import SupplierDebtReportPage from "./pages/reports/SupplierDebtReportPage";
 import CustomerCreditReportPage from "./pages/reports/CustomerCreditReportPage";
 import DaywiseCollectionReportPage from "./pages/reports/DaywiseCollectionReportPage";
+import ProductSalesUnitChangeReportPage from "./pages/reports/ProductSalesUnitChangeReportPage";
+import FuelCreditSalesReportPage from "./pages/reports/FuelCreditSalesReportPage";
 import { ExpenseHeadsPage } from "./pages/expense-heads/ExpenseHeadsPage";
 import { ExpensesPage } from "./pages/expenses/ExpensesPage";
 import ChangePasswordPage from "./pages/settings/ChangePasswordPage";
@@ -115,6 +117,16 @@ const allRoutes = [
   {
     path: "/reports/daywise-collection",
     element: <DaywiseCollectionReportPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/reports/product-changes",
+    element: <ProductSalesUnitChangeReportPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/reports/fuel-credit-sales",
+    element: <FuelCreditSalesReportPage />,
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {

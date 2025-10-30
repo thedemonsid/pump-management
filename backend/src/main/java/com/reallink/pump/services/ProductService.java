@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -14,10 +15,12 @@ import com.reallink.pump.dto.request.CreateProductRequest;
 import com.reallink.pump.dto.request.UpdateProductRequest;
 import com.reallink.pump.dto.response.ProductResponse;
 import com.reallink.pump.entities.Product;
+import com.reallink.pump.entities.ProductSalesUnitChangeLog;
 import com.reallink.pump.entities.PumpInfoMaster;
 import com.reallink.pump.exception.PumpBusinessException;
 import com.reallink.pump.mapper.ProductMapper;
 import com.reallink.pump.repositories.ProductRepository;
+import com.reallink.pump.repositories.ProductSalesUnitChangeLogRepository;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
 
 import jakarta.validation.Valid;
@@ -32,6 +35,7 @@ public class ProductService {
 
     private final ProductRepository repository;
     private final PumpInfoMasterRepository pumpInfoMasterRepository;
+    private final ProductSalesUnitChangeLogRepository changeLogRepository;
     private final ProductMapper mapper;
 
     public List<ProductResponse> getAll() {
@@ -99,6 +103,53 @@ public class ProductService {
         if (existingProduct == null) {
             throw new PumpBusinessException("PRODUCT_NOT_FOUND", "Product with ID " + id + " not found");
         }
+        // Detect changes: sales unit and/or sales rate
+        String oldSalesUnit = existingProduct.getSalesUnit();
+        String newSalesUnit = request.getSalesUnit() != null ? request.getSalesUnit() : oldSalesUnit;
+
+        // Sales rate change detection (BigDecimal-safe)
+        boolean priceChanged = false;
+        if (request.getSalesRate() != null) {
+            if (existingProduct.getSalesRate() == null) {
+                priceChanged = true;
+            } else {
+                priceChanged = existingProduct.getSalesRate().compareTo(request.getSalesRate()) != 0;
+            }
+        }
+
+        boolean unitChanged = newSalesUnit != null && !newSalesUnit.equals(oldSalesUnit);
+
+        if (unitChanged || priceChanged) {
+            BigDecimal oldSalesRate = existingProduct.getSalesRate();
+            BigDecimal newSalesRate = request.getSalesRate() != null ? request.getSalesRate() : oldSalesRate;
+
+            String reason;
+            if (unitChanged && priceChanged) {
+                reason = "Sales unit and price changed via product update";
+            } else if (unitChanged) {
+                reason = "Sales unit changed via product update";
+            } else {
+                reason = "Sales price changed via product update";
+            }
+
+            // Get the current authenticated username
+            String changedBy = SecurityContextHolder.getContext().getAuthentication().getName();
+
+            ProductSalesUnitChangeLog changeLog = new ProductSalesUnitChangeLog(
+                    existingProduct,
+                    oldSalesUnit,
+                    newSalesUnit,
+                    existingProduct.getStockQuantity(), // old stock quantity
+                    existingProduct.getStockQuantity(), // new stock quantity unchanged here
+                    oldSalesRate,
+                    newSalesRate,
+                    reason,
+                    changedBy
+            );
+            changeLogRepository.save(changeLog);
+        }
+
+        // Apply updates and save product
         mapper.updateEntity(request, existingProduct);
         Product updatedProduct = repository.save(existingProduct);
         return mapper.toResponse(updatedProduct);

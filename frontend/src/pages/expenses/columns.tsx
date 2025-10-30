@@ -2,11 +2,12 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { ExpenseResponse } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, ArrowUpDown } from "lucide-react";
+import { Pencil, Trash2, ArrowUpDown, Image as ImageIcon } from "lucide-react";
 
 export const createColumns = (
   onEdit: (expense: ExpenseResponse) => void,
   onDelete: (id: string) => void,
+  onImageClick: (imageId: string, title: string) => void,
   isAdmin: boolean = true
 ): ColumnDef<ExpenseResponse>[] => [
   {
@@ -89,6 +90,36 @@ export const createColumns = (
       return (
         <div className="max-w-[200px] truncate" title={remarks}>
           {remarks || "-"}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "fileStorageId",
+    header: () => <div className="text-center">Image</div>,
+    cell: ({ row }) => {
+      const fileStorageId = row.original.fileStorageId;
+      return (
+        <div className="flex justify-center">
+          {fileStorageId ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => onImageClick(fileStorageId, "Receipt/Invoice")}
+            >
+              <div className="relative group">
+                <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+                  <ImageIcon className="h-4 w-4 text-blue-600" />
+                </div>
+                <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                  View
+                </span>
+              </div>
+            </Button>
+          ) : (
+            <span className="text-muted-foreground text-sm">-</span>
+          )}
         </div>
       );
     },

@@ -2,8 +2,6 @@ import { useEffect, useState, useMemo } from "react";
 import { useExpenseStore } from "@/store/expense-store";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -15,7 +13,7 @@ import {
   Plus,
   Loader2,
   FileText,
-  Calendar,
+  CalendarIcon,
   DollarSign,
   Download,
 } from "lucide-react";
@@ -27,48 +25,31 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { ExpenseSheet } from "@/components/expenses/ExpenseSheet";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { ExpensePDF } from "@/components/pdf-reports/ExpensePDF";
 import { DataTable } from "@/components/ui/data-table";
 import { createColumns } from "./columns";
 import { toast } from "sonner";
+import { format, subDays } from "date-fns";
+import { cn } from "@/lib/utils";
+import api from "@/services/api";
 import type { ExpenseResponse } from "@/types";
 
-// Helper function to get first day of current month
-const getFirstDayOfMonth = () => {
-  const date = new Date();
-  return new Date(date.getFullYear(), date.getMonth(), 1)
-    .toISOString()
-    .split("T")[0];
+// Helper function to get date from 7 days ago
+const getOneWeekAgo = () => {
+  return subDays(new Date(), 7);
 };
 
 // Helper function to get today's date
-const getTodayDate = () => {
-  return new Date().toISOString().split("T")[0];
-};
-
-// Helper function to get first day of last month
-const getFirstDayOfLastMonth = () => {
-  const date = new Date();
-  return new Date(date.getFullYear(), date.getMonth() - 1, 1)
-    .toISOString()
-    .split("T")[0];
-};
-
-// Helper function to get last day of last month
-const getLastDayOfLastMonth = () => {
-  const date = new Date();
-  return new Date(date.getFullYear(), date.getMonth(), 0)
-    .toISOString()
-    .split("T")[0];
-};
-
-// Helper function to get date 7 days ago
-const getDateDaysAgo = (days: number) => {
-  const date = new Date();
-  date.setDate(date.getDate() - days);
-  return date.toISOString().split("T")[0];
+const getToday = () => {
+  return new Date();
 };
 
 export function ExpensesPage() {
@@ -84,15 +65,28 @@ export function ExpensesPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  // Date range state - default to current month
-  const [fromDate, setFromDate] = useState(getFirstDayOfMonth());
-  const [toDate, setToDate] = useState(getTodayDate());
+  // Date filter states - Initialize with default dates (last 7 days)
+  const [fromDate, setFromDate] = useState<Date | undefined>(getOneWeekAgo());
+  const [toDate, setToDate] = useState<Date | undefined>(getToday());
+  const [isFromDateOpen, setIsFromDateOpen] = useState(false);
+  const [isToDateOpen, setIsToDateOpen] = useState(false);
+
+  // Image dialog states
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<{
+    url: string;
+    title: string;
+  } | null>(null);
 
   const isAdmin = user?.role === "ADMIN" || user?.role === "MANAGER";
 
+  // Fetch data when dates change
   useEffect(() => {
     if (fromDate && toDate) {
-      fetchExpensesByDateRange(fromDate, toDate);
+      // Format dates as YYYY-MM-DD for API
+      const fromDateStr = fromDate.toISOString().split("T")[0];
+      const toDateStr = toDate.toISOString().split("T")[0];
+      fetchExpensesByDateRange(fromDateStr, toDateStr);
     }
   }, [fromDate, toDate, fetchExpensesByDateRange]);
 
@@ -128,28 +122,33 @@ export function ExpensesPage() {
     }
   };
 
-  // Date preset functions
-  const setThisMonth = () => {
-    setFromDate(getFirstDayOfMonth());
-    setToDate(getTodayDate());
+  // Handle filter reset
+  const handleClearFilters = () => {
+    setFromDate(getOneWeekAgo());
+    setToDate(getToday());
   };
 
-  const setLastMonth = () => {
-    setFromDate(getFirstDayOfLastMonth());
-    setToDate(getLastDayOfLastMonth());
+  // Handle image click
+  const handleImageClick = async (imageId: string, title: string) => {
+    try {
+      const response = await api.get(`/api/v1/files/${imageId}`, {
+        responseType: "blob",
+      });
+      const imageUrl = URL.createObjectURL(response.data);
+      setSelectedImage({ url: imageUrl, title });
+      setIsImageDialogOpen(true);
+    } catch (err) {
+      toast.error("Failed to load image");
+      console.error(err);
+    }
   };
 
-  const setLast7Days = () => {
-    setFromDate(getDateDaysAgo(7));
-    setToDate(getTodayDate());
-  };
-
-  const setLast30Days = () => {
-    setFromDate(getDateDaysAgo(30));
-    setToDate(getTodayDate());
-  };
-
-  const columns = createColumns(handleEdit, handleDeleteClick, isAdmin);
+  const columns = createColumns(
+    handleEdit,
+    handleDeleteClick,
+    handleImageClick,
+    isAdmin
+  );
 
   const safeExpenses = useMemo(
     () => (Array.isArray(expenses) ? expenses : []),
@@ -218,12 +217,14 @@ export function ExpensesPage() {
                   description: expense.remarks || "",
                 }))}
                 headWiseTotals={headWiseTotals}
-                fromDate={fromDate}
-                toDate={toDate}
+                fromDate={fromDate?.toISOString().split("T")[0] || ""}
+                toDate={toDate?.toISOString().split("T")[0] || ""}
                 totalAmount={totalAmount}
               />
             }
-            fileName={`expense-report-${fromDate}-to-${toDate}.pdf`}
+            fileName={`expense-report-${
+              fromDate?.toISOString().split("T")[0]
+            }-to-${toDate?.toISOString().split("T")[0]}.pdf`}
           >
             {({ loading }) => (
               <Button variant="outline" disabled={loading}>
@@ -251,49 +252,93 @@ export function ExpensesPage() {
       {/* Date Range Filter */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Filter by Date Range</CardTitle>
+          <CardTitle>Filter by Date Range</CardTitle>
           <CardDescription>
-            Select date range to view expenses (defaults to current month)
+            Select a date range to filter expenses
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={setLast7Days}>
-              Last 7 Days
-            </Button>
-            <Button variant="outline" size="sm" onClick={setLast30Days}>
-              Last 30 Days
-            </Button>
-            <Button variant="outline" size="sm" onClick={setThisMonth}>
-              This Month
-            </Button>
-            <Button variant="outline" size="sm" onClick={setLastMonth}>
-              Last Month
+        <CardContent>
+          <div className="flex flex-wrap items-end gap-4">
+            {/* From Date */}
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium mb-2 block">
+                From Date
+              </label>
+              <Popover open={isFromDateOpen} onOpenChange={setIsFromDateOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !fromDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {fromDate ? format(fromDate, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={fromDate}
+                    onSelect={(date) => {
+                      setFromDate(date);
+                      setIsFromDateOpen(false);
+                    }}
+                    disabled={(date) => date > new Date()}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* To Date */}
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium mb-2 block">To Date</label>
+              <Popover open={isToDateOpen} onOpenChange={setIsToDateOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !toDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {toDate ? format(toDate, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={toDate}
+                    onSelect={(date) => {
+                      setToDate(date);
+                      setIsToDateOpen(false);
+                    }}
+                    disabled={(date) => {
+                      if (date > new Date()) return true;
+                      if (fromDate && date < fromDate) return true;
+                      return false;
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <Button variant="outline" onClick={handleClearFilters}>
+              Reset to Default
             </Button>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="fromDate">From Date</Label>
-              <Input
-                id="fromDate"
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                max={toDate}
-              />
+
+          {(fromDate || toDate) && (
+            <div className="mt-4 text-sm text-muted-foreground">
+              Showing {safeExpenses.length} records
+              {fromDate && ` from ${format(fromDate, "PPP")}`}
+              {toDate && ` to ${format(toDate, "PPP")}`}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="toDate">To Date</Label>
-              <Input
-                id="toDate"
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                min={fromDate}
-                max={getTodayDate()}
-              />
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
@@ -304,7 +349,7 @@ export function ExpensesPage() {
             <CardTitle className="text-sm font-medium">
               Total Expenses
             </CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{safeExpenses.length}</div>
@@ -451,6 +496,24 @@ export function ExpensesPage() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Image Preview Dialog */}
+      <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>{selectedImage?.title || "Image"}</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center">
+            {selectedImage?.url && (
+              <img
+                src={selectedImage.url}
+                alt={selectedImage.title}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

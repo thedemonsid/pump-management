@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useShiftStore } from "@/store/shifts/shift-store";
 import api from "@/services/api";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,6 @@ import { toast } from "sonner";
 import {
   Loader2,
   Plus,
-  ArrowLeft,
   AlertCircle,
   Receipt,
   Trash2,
@@ -44,7 +43,6 @@ import type { ExpenseResponse } from "@/types";
 
 export function ShiftExpensesPage() {
   const { shiftId } = useParams<{ shiftId: string }>();
-  const navigate = useNavigate();
   const { currentShift, fetchShiftById } = useShiftStore();
 
   const [expenses, setExpenses] = useState<ExpenseResponse[]>([]);
@@ -175,13 +173,6 @@ export function ShiftExpensesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(`/shifts/${shiftId}`)}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
           <div>
             <h1 className="text-2xl font-bold">Shift Expenses</h1>
             <p className="text-sm text-muted-foreground">

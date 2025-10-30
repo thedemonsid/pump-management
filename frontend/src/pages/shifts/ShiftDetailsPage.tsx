@@ -38,7 +38,6 @@ import { ExpenseService } from "@/services/expense-service";
 import { toast } from "sonner";
 import {
   Loader2,
-  ArrowLeft,
   AlertCircle,
   Fuel,
   FileText,
@@ -235,13 +234,6 @@ export function ShiftDetailsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/shifts")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
           <div>
             <h1 className="text-2xl font-bold">Shift Details</h1>
             <p className="text-sm text-muted-foreground">

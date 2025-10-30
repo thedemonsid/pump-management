@@ -14,6 +14,7 @@ import {
   Building2,
   Calendar,
   DollarSign,
+  TrendingUp,
 } from "lucide-react";
 
 export default function Reports() {
@@ -76,10 +77,24 @@ export default function Reports() {
             path="/expenses"
           />
           <ReportCard
+            title="Product Unit & Price Changes"
+            description="Track sales unit and price changes for all products"
+            icon={<TrendingUp className="h-8 w-8" />}
+            color="bg-yellow-500"
+            path="/reports/product-changes"
+          />
+          <ReportCard
+            title="Fuel Credit Sales Report"
+            description="View all credit sales bills by date range with detailed breakdown"
+            icon={<FileText className="h-8 w-8" />}
+            color="bg-red-500"
+            path="/reports/fuel-credit-sales"
+          />
+          <ReportCard
             title="Sales Report"
             description="Comprehensive sales analysis and billing reports"
             icon={<FileText className="h-8 w-8" />}
-            color="bg-red-500"
+            color="bg-pink-500"
             path="/reports/sales"
             comingSoon
           />
