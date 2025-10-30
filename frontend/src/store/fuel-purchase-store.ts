@@ -20,7 +20,7 @@ interface FuelPurchaseState {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
 
-  fetchFuelPurchases: () => Promise<void>;
+  fetchFuelPurchases: (fromDate?: Date, toDate?: Date) => Promise<void>;
   fetchFuelPurchasesByPumpMasterId: (pumpMasterId: string) => Promise<void>;
   createFuelPurchase: (fuelPurchase: CreateFuelPurchase) => Promise<void>;
   editFuelPurchase: (
@@ -67,10 +67,13 @@ export const useFuelPurchaseStore = create<FuelPurchaseState>()(
       setLoading: (loading) => set({ loading }),
       setError: (error) => set({ error }),
 
-      fetchFuelPurchases: async () => {
+      fetchFuelPurchases: async (fromDate?: Date, toDate?: Date) => {
         set({ loading: true, error: null });
         try {
-          const fuelPurchases = await FuelPurchaseService.getAll();
+          const fuelPurchases = await FuelPurchaseService.getAll(
+            fromDate,
+            toDate
+          );
           set({ fuelPurchases, loading: false });
         } catch (error) {
           const errorMessage =

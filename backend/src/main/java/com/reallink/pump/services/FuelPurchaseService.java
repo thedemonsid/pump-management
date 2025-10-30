@@ -59,6 +59,30 @@ public class FuelPurchaseService {
                 .toList();
     }
 
+    /**
+     * Get fuel purchases by pump master ID and date range This method provides
+     * efficient filtering at the database level
+     *
+     * @param pumpMasterId The pump master ID
+     * @param fromDate The start date (inclusive), if null will use a very old
+     * date
+     * @param toDate The end date (inclusive), if null will use current date
+     * @return List of fuel purchases within the date range
+     */
+    public List<FuelPurchaseResponse> getByPumpMasterIdAndDateRange(
+            @NotNull UUID pumpMasterId,
+            java.time.LocalDate fromDate,
+            java.time.LocalDate toDate) {
+
+        // Set default values if dates are not provided
+        java.time.LocalDate effectiveFromDate = fromDate != null ? fromDate : java.time.LocalDate.of(2000, 1, 1);
+        java.time.LocalDate effectiveToDate = toDate != null ? toDate : java.time.LocalDate.now();
+
+        return repository.findByPumpMasterIdAndDateRange(pumpMasterId, effectiveFromDate, effectiveToDate).stream()
+                .map(mapper::toResponse)
+                .toList();
+    }
+
     public FuelPurchaseResponse getByFuelPurchaseIdAndPumpMasterId(@NotNull Long fuelPurchaseId, @NotNull UUID pumpMasterId) {
         FuelPurchase fuelPurchase = repository.findByFuelPurchaseIdAndPumpMaster_Id(fuelPurchaseId, pumpMasterId)
                 .orElseThrow(() -> new PumpBusinessException("FUEL_PURCHASE_NOT_FOUND",

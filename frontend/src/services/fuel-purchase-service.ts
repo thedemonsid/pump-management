@@ -8,9 +8,24 @@ import type {
 export class FuelPurchaseService {
   private static readonly BASE_PATH = "/api/v1/fuel-purchases";
 
-  // Get all fuel purchases
-  static async getAll(): Promise<FuelPurchase[]> {
-    const response = await api.get<FuelPurchase[]>(this.BASE_PATH);
+  // Get all fuel purchases with optional date range filter
+  static async getAll(fromDate?: Date, toDate?: Date): Promise<FuelPurchase[]> {
+    const params = new URLSearchParams();
+
+    if (fromDate) {
+      // Format date as YYYY-MM-DD
+      params.append("fromDate", fromDate.toISOString().split("T")[0]);
+    }
+
+    if (toDate) {
+      // Format date as YYYY-MM-DD
+      params.append("toDate", toDate.toISOString().split("T")[0]);
+    }
+
+    const url = params.toString()
+      ? `${this.BASE_PATH}?${params.toString()}`
+      : this.BASE_PATH;
+    const response = await api.get<FuelPurchase[]>(url);
     return response.data;
   }
 

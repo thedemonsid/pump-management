@@ -48,9 +48,21 @@ public class FuelPurchaseController {
     }
 
     @GetMapping
-    @Operation(summary = "Get fuel purchases by pump master ID")
-    public ResponseEntity<List<FuelPurchaseResponse>> getFuelPurchasesByPumpMasterId(HttpServletRequest request) {
+    @Operation(summary = "Get fuel purchases by pump master ID with optional date range filter")
+    public ResponseEntity<List<FuelPurchaseResponse>> getFuelPurchasesByPumpMasterId(
+            HttpServletRequest request,
+            @org.springframework.web.bind.annotation.RequestParam(required = false)
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate fromDate,
+            @org.springframework.web.bind.annotation.RequestParam(required = false)
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate toDate) {
         UUID pumpMasterId = extractPumpMasterId(request);
+
+        // If date range is provided, use the filtered query for better performance
+        if (fromDate != null || toDate != null) {
+            return ResponseEntity.ok(service.getByPumpMasterIdAndDateRange(pumpMasterId, fromDate, toDate));
+        }
+
+        // Otherwise, return all records
         return ResponseEntity.ok(service.getByPumpMasterId(pumpMasterId));
     }
 

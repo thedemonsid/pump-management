@@ -29,4 +29,24 @@ public interface FuelPurchaseRepository extends JpaRepository<FuelPurchase, UUID
 
     @Query("SELECT COALESCE(SUM(fp.amount), 0) FROM FuelPurchase fp WHERE fp.pumpMaster.id = :pumpMasterId AND fp.createdAt BETWEEN :startDate AND :endDate")
     java.math.BigDecimal findTotalFuelPurchasesInPeriod(@Param("pumpMasterId") UUID pumpMasterId, @Param("startDate") java.time.LocalDateTime startDate, @Param("endDate") java.time.LocalDateTime endDate);
+
+    /**
+     * Find fuel purchases by pump master ID and date range (optimized with
+     * indexed query) Uses purchaseDate field which should be indexed for
+     * performance
+     *
+     * @param pumpMasterId The pump master ID
+     * @param fromDate The start date (inclusive)
+     * @param toDate The end date (inclusive)
+     * @return List of fuel purchases within the date range
+     */
+    @Query("SELECT fp FROM FuelPurchase fp "
+            + "WHERE fp.pumpMaster.id = :pumpMasterId "
+            + "AND fp.purchaseDate >= :fromDate "
+            + "AND fp.purchaseDate <= :toDate "
+            + "ORDER BY fp.purchaseDate DESC, fp.fuelPurchaseId DESC")
+    List<FuelPurchase> findByPumpMasterIdAndDateRange(
+            @Param("pumpMasterId") UUID pumpMasterId,
+            @Param("fromDate") java.time.LocalDate fromDate,
+            @Param("toDate") java.time.LocalDate toDate);
 }
