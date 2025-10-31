@@ -1,5 +1,5 @@
-import type { UseFormReturn } from 'react-hook-form';
-import type { TransactionFormValues } from '@/types';
+import type { UseFormReturn } from "react-hook-form";
+import type { TransactionFormValues } from "@/types";
 import {
   Form,
   FormControl,
@@ -7,24 +7,24 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Minus } from 'lucide-react';
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Loader2, Plus, Minus } from "lucide-react";
 
 interface TransactionFormProps {
   form: UseFormReturn<TransactionFormValues>;
   onSubmit: (data: TransactionFormValues) => void;
   onCancel: () => void;
-  type: 'credit' | 'debit';
+  type: "credit" | "debit";
 }
 
 export function TransactionForm({
@@ -33,7 +33,7 @@ export function TransactionForm({
   onCancel,
   type,
 }: TransactionFormProps) {
-  const isCredit = type === 'credit';
+  const isCredit = type === "credit";
 
   return (
     <Form {...form}>
@@ -48,11 +48,15 @@ export function TransactionForm({
                 <Input
                   type="number"
                   step="0.01"
-                  placeholder="Enter amount"
+                  min="0"
+                  placeholder="0.00"
                   {...field}
-                  onChange={(e) =>
-                    field.onChange(parseFloat(e.target.value) || 0)
-                  }
+                  value={field.value === 0 ? "" : field.value}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    field.onChange(value === "" ? 0 : parseFloat(value) || 0);
+                  }}
+                  className="text-right"
                 />
               </FormControl>
               <FormMessage />
@@ -125,7 +129,7 @@ export function TransactionForm({
             ) : (
               <Minus className="mr-2 h-4 w-4" />
             )}
-            Add {isCredit ? 'Credit' : 'Debit'}
+            Add {isCredit ? "Credit" : "Debit"}
           </Button>
         </div>
       </form>

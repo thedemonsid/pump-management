@@ -1,16 +1,14 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -18,27 +16,39 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import {
   Loader2,
   Building2,
-  Calendar,
+  Calendar as CalendarIcon,
   CreditCard,
   Search,
   FileText,
   Plus,
   Minus,
-} from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
-import { useBankAccountStore } from '@/store/bank-account-store';
-import { useBankAccountLedgerStore } from '@/store/bank-account-ledger-store';
-import { BankAccountService } from '@/services/bank-account-service';
-import { DataTable } from '@/components/ui/data-table';
-import { ledgerColumns } from './ledger-columns';
-import { TransactionForm } from '@/components/bank-accounts/transaction-form';
-import { TransactionFormSchema, type TransactionFormValues } from '@/types';
+} from "lucide-react";
+import { format, subDays } from "date-fns";
+import { cn } from "@/lib/utils";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { useBankAccountStore } from "@/store/bank-account-store";
+import { useBankAccountLedgerStore } from "@/store/bank-account-ledger-store";
+import { BankAccountService } from "@/services/bank-account-service";
+import { DataTable } from "@/components/ui/data-table";
+import { ledgerColumns } from "./ledger-columns";
+import { TransactionForm } from "@/components/bank-accounts/transaction-form";
+import { TransactionFormSchema, type TransactionFormValues } from "@/types";
+
+// Helper functions for date defaults
+const getOneWeekAgo = () => subDays(new Date(), 7);
+const getToday = () => new Date();
 
 export function BankAccountLedgerPage() {
   const { id } = useParams<{ id: string }>();
@@ -48,8 +58,11 @@ export function BankAccountLedgerPage() {
   const { ledgerData, summary, loading, hasSearched, computeLedgerData } =
     useBankAccountLedgerStore();
 
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+  // Date filter states - Initialize with default dates
+  const [fromDate, setFromDate] = useState<Date | undefined>(getOneWeekAgo());
+  const [toDate, setToDate] = useState<Date | undefined>(getToday());
+  const [isFromDateOpen, setIsFromDateOpen] = useState(false);
+  const [isToDateOpen, setIsToDateOpen] = useState(false);
   const [isCreditDialogOpen, setIsCreditDialogOpen] = useState(false);
   const [isDebitDialogOpen, setIsDebitDialogOpen] = useState(false);
 
@@ -57,8 +70,8 @@ export function BankAccountLedgerPage() {
     resolver: zodResolver(TransactionFormSchema),
     defaultValues: {
       amount: 0,
-      paymentMethod: 'CASH',
-      description: '',
+      paymentMethod: "CASH",
+      description: "",
       transactionDate: new Date().toISOString().slice(0, 16),
     },
   });
@@ -67,8 +80,8 @@ export function BankAccountLedgerPage() {
     resolver: zodResolver(TransactionFormSchema),
     defaultValues: {
       amount: 0,
-      paymentMethod: 'CASH',
-      description: '',
+      paymentMethod: "CASH",
+      description: "",
       transactionDate: new Date().toISOString().slice(0, 16),
     },
   });
@@ -79,21 +92,21 @@ export function BankAccountLedgerPage() {
       await BankAccountService.credit(id, {
         bankAccountId: id,
         amount: data.amount,
-        transactionType: 'CREDIT',
+        transactionType: "CREDIT",
         paymentMethod: data.paymentMethod,
         description: data.description,
         transactionDate: data.transactionDate,
       });
       setIsCreditDialogOpen(false);
       creditForm.reset();
-      toast.success('Credit transaction added successfully');
+      toast.success("Credit transaction added successfully");
       // Refresh ledger data if it's already been searched
       if (hasSearched) {
         handleFetchLedger();
       }
     } catch (error) {
-      console.error('Failed to create credit transaction:', error);
-      toast.error('Failed to add credit transaction');
+      console.error("Failed to create credit transaction:", error);
+      toast.error("Failed to add credit transaction");
     }
   };
 
@@ -103,21 +116,21 @@ export function BankAccountLedgerPage() {
       await BankAccountService.debit(id, {
         bankAccountId: id,
         amount: data.amount,
-        transactionType: 'DEBIT',
+        transactionType: "DEBIT",
         paymentMethod: data.paymentMethod,
         description: data.description,
         transactionDate: data.transactionDate,
       });
       setIsDebitDialogOpen(false);
       debitForm.reset();
-      toast.success('Debit transaction added successfully');
+      toast.success("Debit transaction added successfully");
       // Refresh ledger data if it's already been searched
       if (hasSearched) {
         handleFetchLedger();
       }
     } catch (error) {
-      console.error('Failed to create debit transaction:', error);
-      toast.error('Failed to add debit transaction');
+      console.error("Failed to create debit transaction:", error);
+      toast.error("Failed to add debit transaction");
     }
   };
 
@@ -131,18 +144,30 @@ export function BankAccountLedgerPage() {
 
   useEffect(() => {
     if (bankAccount?.openingBalanceDate) {
-      setFromDate(bankAccount.openingBalanceDate);
+      setFromDate(new Date(bankAccount.openingBalanceDate));
     }
   }, [bankAccount]);
 
   const handleFetchLedger = () => {
     if (!id || !fromDate) return;
+
+    // Format dates as YYYY-MM-DD for the API
+    const formattedFromDate = fromDate.toISOString().split("T")[0];
+    const formattedToDate =
+      toDate?.toISOString().split("T")[0] ||
+      new Date().toISOString().split("T")[0];
+
     computeLedgerData({
       bankAccountId: id,
-      fromDate,
-      toDate,
+      fromDate: formattedFromDate,
+      toDate: formattedToDate,
       openingBalance: bankAccount?.openingBalance || 0,
     });
+  };
+
+  const handleClearFilters = () => {
+    setFromDate(getOneWeekAgo());
+    setToDate(getToday());
   };
 
   if (!bankAccount) {
@@ -159,19 +184,19 @@ export function BankAccountLedgerPage() {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
   };
 
@@ -253,7 +278,7 @@ export function BankAccountLedgerPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
+            <CalendarIcon className="h-5 w-5" />
             Date Range Filter
           </CardTitle>
           <CardDescription>
@@ -261,32 +286,88 @@ export function BankAccountLedgerPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="from-date" className="text-sm font-medium">
+          <div className="flex flex-wrap items-end gap-4">
+            {/* From Date */}
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium mb-2 block">
                 From Date
-              </Label>
-              <Input
-                id="from-date"
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="w-full"
-              />
+              </label>
+              <Popover open={isFromDateOpen} onOpenChange={setIsFromDateOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !fromDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {fromDate ? format(fromDate, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={fromDate}
+                    onSelect={(date) => {
+                      setFromDate(date);
+                      setIsFromDateOpen(false);
+                    }}
+                    disabled={(date) => date > new Date()}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="to-date" className="text-sm font-medium">
-                To Date
-              </Label>
-              <Input
-                id="to-date"
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="w-full"
-              />
+
+            {/* To Date */}
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium mb-2 block">To Date</label>
+              <Popover open={isToDateOpen} onOpenChange={setIsToDateOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !toDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {toDate ? format(toDate, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={toDate}
+                    onSelect={(date) => {
+                      setToDate(date);
+                      setIsToDateOpen(false);
+                    }}
+                    disabled={(date) => {
+                      if (date > new Date()) return true;
+                      if (fromDate && date < fromDate) return true;
+                      return false;
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
+
+            <Button variant="outline" onClick={handleClearFilters}>
+              Reset to Default
+            </Button>
           </div>
+
+          {(fromDate || toDate) && (
+            <div className="mt-4 text-sm text-muted-foreground">
+              Showing {ledgerData.length} records
+              {fromDate && ` from ${format(fromDate, "PPP")}`}
+              {toDate && ` to ${format(toDate, "PPP")}`}
+            </div>
+          )}
+
           <div className="mt-6 flex justify-center gap-4">
             <Button
               onClick={handleFetchLedger}
@@ -308,11 +389,15 @@ export function BankAccountLedgerPage() {
             </Button>
             {hasSearched && (
               <Button
-                onClick={() =>
+                onClick={() => {
+                  const formattedFromDate =
+                    fromDate?.toISOString().split("T")[0] || "";
+                  const formattedToDate =
+                    toDate?.toISOString().split("T")[0] || "";
                   navigate(
-                    `/bank-accounts/${id}/ledger/report?fromDate=${fromDate}&toDate=${toDate}`
-                  )
-                }
+                    `/bank-accounts/${id}/ledger/report?fromDate=${formattedFromDate}&toDate=${formattedToDate}`
+                  );
+                }}
                 variant="outline"
                 size="lg"
                 className="min-w-[150px]"
@@ -353,7 +438,7 @@ export function BankAccountLedgerPage() {
                   <p className="text-xl font-semibold text-foreground">
                     {bankAccount?.openingBalanceDate
                       ? formatDate(bankAccount.openingBalanceDate)
-                      : 'Not specified'}
+                      : "Not specified"}
                   </p>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
@@ -373,7 +458,8 @@ export function BankAccountLedgerPage() {
             <CardHeader>
               <CardTitle>Summary Before Selected Date Range</CardTitle>
               <CardDescription>
-                Financial summary before {formatDate(fromDate)}
+                Financial summary before{" "}
+                {fromDate ? format(fromDate, "PPP") : ""}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -401,8 +487,8 @@ export function BankAccountLedgerPage() {
                   <p
                     className={`text-2xl font-bold ${
                       summary.balanceBefore >= 0
-                        ? 'text-green-600'
-                        : 'text-red-600'
+                        ? "text-green-600"
+                        : "text-red-600"
                     }`}
                   >
                     {formatCurrency(Math.abs(summary.balanceBefore))}
@@ -466,8 +552,8 @@ export function BankAccountLedgerPage() {
                   <p
                     className={`text-xl font-bold ${
                       summary.closingBalance >= 0
-                        ? 'text-green-700'
-                        : 'text-red-700'
+                        ? "text-green-700"
+                        : "text-red-700"
                     }`}
                   >
                     {formatCurrency(Math.abs(summary.closingBalance))}

@@ -48,7 +48,6 @@ import {
 import { CreateCustomerBillPaymentForm } from "./CreateCustomerBillPaymentForm";
 import { UpdateCustomerBillPaymentForm } from "./UpdateCustomerBillPaymentForm";
 import { SalesmanBillPaymentsManager } from "./SalesmanBillPaymentsManager";
-import { CreateSalesmanBillPaymentForm } from "./CreateSalesmanBillPaymentForm";
 import type { CustomerBillPaymentResponse } from "@/types";
 
 export function CustomerDetailPage() {
@@ -97,10 +96,6 @@ export function CustomerDetailPage() {
     string | null
   >(null);
   const [isPaymentsDialogOpen, setIsPaymentsDialogOpen] = useState(false);
-  const [
-    isCreateSalesmanBillPaymentDialogOpen,
-    setIsCreateSalesmanBillPaymentDialogOpen,
-  ] = useState(false);
 
   const customer = customers.find((c) => c.id === id);
 
@@ -356,35 +351,6 @@ export function CustomerDetailPage() {
                     }}
                   />
                 )}
-              </DialogContent>
-            </Dialog>
-
-            <Dialog
-              open={isCreateSalesmanBillPaymentDialogOpen}
-              onOpenChange={setIsCreateSalesmanBillPaymentDialogOpen}
-            >
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Salesman Payment
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Create Salesman Bill Payment</DialogTitle>
-                  <DialogDescription>
-                    Record a new payment for salesman bills from this customer
-                  </DialogDescription>
-                </DialogHeader>
-                <CreateSalesmanBillPaymentForm
-                  customerId={customer.id!}
-                  pumpMasterId={customer.pumpMasterId!}
-                  onSuccess={() => {
-                    setIsCreateSalesmanBillPaymentDialogOpen(false);
-                    // Refresh payments data
-                    fetchSalesmanBillPaymentsByCustomerId(customer.id!);
-                  }}
-                />
               </DialogContent>
             </Dialog>
 

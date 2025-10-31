@@ -19,6 +19,10 @@ public class WebConfig implements WebMvcConfigurer {
                 .setCachePeriod(31536000); // 1 year cache
 
         // Handle favicon and other root-level files
+        registry.addResourceHandler("/favicon.svg")
+                .addResourceLocations("classpath:/static/")
+                .setCachePeriod(86400); // 1 day cache
+
         registry.addResourceHandler("/favicon.ico")
                 .addResourceLocations("classpath:/static/")
                 .setCachePeriod(86400); // 1 day cache
