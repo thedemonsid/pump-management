@@ -12,6 +12,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -29,9 +30,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "pump_purchase_master", uniqueConstraints = {
-    @UniqueConstraint(name = "uk_purchase_id_pump", columnNames = {"purchase_id", "pump_master_id"})
-})
+@Table(name = "pump_purchase_master",
+        uniqueConstraints = {
+            @UniqueConstraint(name = "uk_purchase_id_pump", columnNames = {"purchase_id", "pump_master_id"})
+        },
+        indexes = {
+            @Index(name = "idx_purchase_pump_date", columnList = "pump_master_id, purchase_date DESC")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor

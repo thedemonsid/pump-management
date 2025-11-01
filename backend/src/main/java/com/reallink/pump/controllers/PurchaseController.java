@@ -1,8 +1,10 @@
 package com.reallink.pump.controllers;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.reallink.pump.dto.request.CreatePurchaseRequest;
@@ -43,9 +46,22 @@ public class PurchaseController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all purchases", description = "Retrieve all purchases (no pagination)")
-    public ResponseEntity<List<PurchaseResponse>> getAllPurchases(HttpServletRequest request) {
+    @Operation(summary = "Get all purchases with optional date range filter",
+            description = "Retrieve all purchases. Optionally filter by date range using fromDate and toDate query parameters")
+    public ResponseEntity<List<PurchaseResponse>> getAllPurchases(
+            HttpServletRequest request,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
         UUID pumpMasterId = extractPumpMasterId(request);
+
+        // If date range is provided, use filtered query
+        if (fromDate != null || toDate != null) {
+            return ResponseEntity.ok(service.getByPumpMasterIdAndDateRange(pumpMasterId, fromDate, toDate));
+        }
+
+        // Otherwise, return all purchases
         return ResponseEntity.ok(service.getAllByPumpMasterId(pumpMasterId));
     }
 

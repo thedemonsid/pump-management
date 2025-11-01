@@ -26,4 +26,23 @@ public interface PurchaseRepository extends JpaRepository<Purchase, UUID> {
 
     @Query("SELECT COALESCE(MAX(p.purchaseId), 0) FROM Purchase p WHERE p.pumpMaster.id = :pumpMasterId")
     Long findMaxPurchaseIdByPumpMasterId(@Param("pumpMasterId") UUID pumpMasterId);
+
+    /**
+     * Find purchases by pump master ID and date range (optimized with indexed
+     * query)
+     *
+     * @param pumpMasterId The pump master ID
+     * @param fromDate The start date (inclusive)
+     * @param toDate The end date (inclusive)
+     * @return List of purchases within the date range
+     */
+    @Query("SELECT p FROM Purchase p "
+            + "WHERE p.pumpMaster.id = :pumpMasterId "
+            + "AND p.purchaseDate >= :fromDate "
+            + "AND p.purchaseDate <= :toDate "
+            + "ORDER BY p.purchaseDate DESC, p.id DESC")
+    List<Purchase> findByPumpMasterIdAndDateRange(
+            @Param("pumpMasterId") UUID pumpMasterId,
+            @Param("fromDate") java.time.LocalDate fromDate,
+            @Param("toDate") java.time.LocalDate toDate);
 }

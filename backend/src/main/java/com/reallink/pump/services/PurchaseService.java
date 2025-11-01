@@ -81,6 +81,21 @@ public class PurchaseService {
                 .toList();
     }
 
+    public List<PurchaseResponse> getByPumpMasterIdAndDateRange(
+            @NotNull UUID pumpMasterId,
+            java.time.LocalDate fromDate,
+            java.time.LocalDate toDate) {
+
+        // Set default values if dates are not provided
+        java.time.LocalDate effectiveFromDate = fromDate != null ? fromDate : java.time.LocalDate.of(2000, 1, 1);
+        java.time.LocalDate effectiveToDate = toDate != null ? toDate : java.time.LocalDate.now();
+
+        return repository.findByPumpMasterIdAndDateRange(pumpMasterId, effectiveFromDate, effectiveToDate)
+                .stream()
+                .map(mapper::toResponse)
+                .toList();
+    }
+
     public PurchaseResponse getByPurchaseIdAndPumpMasterId(@NotNull Long purchaseId, @NotNull UUID pumpMasterId) {
         Purchase purchase = repository.findByPurchaseIdAndPumpMaster_Id(purchaseId, pumpMasterId).orElse(null);
         if (purchase == null) {

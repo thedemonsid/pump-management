@@ -10,7 +10,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Pencil, Loader2, Calendar, Package, Eye } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Plus, Loader2, Package, CalendarIcon } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -28,6 +34,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { formatCurrency, formatDate } from "@/lib/utils/index";
+import { format, subDays } from "date-fns";
+import { cn } from "@/lib/utils";
+import { DataTable } from "@/components/ui/data-table";
+import { getPurchaseColumns } from "./PurchasesColumns";
+
+// Helper functions for date defaults
+const getOneWeekAgo = () => subDays(new Date(), 7);
+const getToday = () => new Date();
 
 export function PurchasesPage() {
   const { purchases, loading, error, fetchPurchases } = usePurchaseStore();
@@ -37,14 +51,38 @@ export function PurchasesPage() {
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // Date filter states - Initialize with default dates
+  const [fromDate, setFromDate] = useState<Date | undefined>(getOneWeekAgo());
+  const [toDate, setToDate] = useState<Date | undefined>(getToday());
+  const [isFromDateOpen, setIsFromDateOpen] = useState(false);
+  const [isToDateOpen, setIsToDateOpen] = useState(false);
+
+  // Fetch data when dates change
   useEffect(() => {
-    fetchPurchases();
-  }, [fetchPurchases]);
+    fetchPurchases(fromDate, toDate);
+  }, [fetchPurchases, fromDate, toDate]);
 
   const handleViewItems = (purchase: Purchase) => {
     setSelectedPurchase(purchase);
     setIsDialogOpen(true);
   };
+
+  const handleEdit = (purchase: Purchase) => {
+    if (purchase.id) {
+      navigate(`/purchases/${purchase.id}/edit`);
+    }
+  };
+
+  const handleClearFilters = () => {
+    setFromDate(getOneWeekAgo());
+    setToDate(getToday());
+  };
+
+  // Get columns for DataTable
+  const columns = getPurchaseColumns({
+    onEdit: handleEdit,
+    onViewItems: handleViewItems,
+  });
 
   if (loading && purchases.length === 0) {
     return (
@@ -75,6 +113,100 @@ export function PurchasesPage() {
         </div>
       )}
 
+      {/* Date Filter Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filter by Date Range</CardTitle>
+          <CardDescription>
+            Select a date range to filter purchase records
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap items-end gap-4">
+            {/* From Date */}
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium mb-2 block">
+                From Date
+              </label>
+              <Popover open={isFromDateOpen} onOpenChange={setIsFromDateOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !fromDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {fromDate ? format(fromDate, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={fromDate}
+                    onSelect={(date) => {
+                      setFromDate(date);
+                      setIsFromDateOpen(false);
+                    }}
+                    disabled={(date) => date > new Date()}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* To Date */}
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium mb-2 block">To Date</label>
+              <Popover open={isToDateOpen} onOpenChange={setIsToDateOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !toDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {toDate ? format(toDate, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={toDate}
+                    onSelect={(date) => {
+                      setToDate(date);
+                      setIsToDateOpen(false);
+                    }}
+                    disabled={(date) => {
+                      if (date > new Date()) return true;
+                      if (fromDate && date < fromDate) return true;
+                      return false;
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <Button variant="outline" onClick={handleClearFilters}>
+              Reset to Default
+            </Button>
+          </div>
+
+          {(fromDate || toDate) && (
+            <div className="mt-4 text-sm text-muted-foreground">
+              Showing {purchases.length} record(s)
+              {fromDate && ` from ${format(fromDate, "PPP")}`}
+              {toDate && ` to ${format(toDate, "PPP")}`}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* DataTable Card */}
       <Card>
         <CardHeader>
           <CardTitle>Purchase Records</CardTitle>
@@ -92,83 +224,18 @@ export function PurchasesPage() {
               </p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Invoice No</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Supplier</TableHead>
-                  <TableHead>Items</TableHead>
-                  <TableHead>Total Amount</TableHead>
-                  <TableHead>Net Amount</TableHead>
-                  <TableHead>Payment Type</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {purchases.map((purchase) => (
-                  <TableRow key={purchase.id}>
-                    <TableCell className="font-medium">
-                      {purchase.invoiceNumber}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        {formatDate(purchase.purchaseDate)}
-                      </div>
-                    </TableCell>
-                    <TableCell>{purchase.supplierName}</TableCell>
-                    <TableCell>
-                      {purchase.purchaseItems &&
-                      purchase.purchaseItems.length > 0 ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewItems(purchase)}
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View {purchase.purchaseItems.length} item(s)
-                        </Button>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">
-                          No items
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {formatCurrency(purchase.totalAmount || 0)}
-                    </TableCell>
-                    <TableCell className="font-semibold">
-                      {formatCurrency(purchase.netAmount || 0)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          purchase.paymentType === "CASH"
-                            ? "default"
-                            : "secondary"
-                        }
-                      >
-                        {purchase.paymentType}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            navigate(`/purchases/${purchase.id}/edit`)
-                          }
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={columns}
+              data={purchases}
+              searchKey="supplierName"
+              searchPlaceholder="Search by supplier..."
+              pageSize={10}
+              enableRowSelection={false}
+              enableColumnVisibility={true}
+              enablePagination={true}
+              enableSorting={true}
+              enableFiltering={true}
+            />
           )}
         </CardContent>
       </Card>

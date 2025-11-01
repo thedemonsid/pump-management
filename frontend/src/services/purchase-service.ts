@@ -4,9 +4,24 @@ import type { Purchase, CreatePurchase, UpdatePurchase } from "@/types";
 export class PurchaseService {
   private static readonly BASE_PATH = "/api/v1/purchases";
 
-  // Get all purchases
-  static async getAll(): Promise<Purchase[]> {
-    const response = await api.get<Purchase[]>(this.BASE_PATH);
+  // Get all purchases with optional date filtering
+  static async getAll(fromDate?: Date, toDate?: Date): Promise<Purchase[]> {
+    const params = new URLSearchParams();
+
+    if (fromDate) {
+      // Format date as YYYY-MM-DD
+      params.append("fromDate", fromDate.toISOString().split("T")[0]);
+    }
+
+    if (toDate) {
+      // Format date as YYYY-MM-DD
+      params.append("toDate", toDate.toISOString().split("T")[0]);
+    }
+
+    const url = params.toString()
+      ? `${this.BASE_PATH}?${params.toString()}`
+      : this.BASE_PATH;
+    const response = await api.get<Purchase[]>(url);
     return response.data;
   }
 

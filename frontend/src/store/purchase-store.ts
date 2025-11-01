@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import type { Purchase, CreatePurchase, UpdatePurchase } from '@/types';
-import { PurchaseService } from '@/services/api';
-import { toast } from 'sonner';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import type { Purchase, CreatePurchase, UpdatePurchase } from "@/types";
+import { PurchaseService } from "@/services/api";
+import { toast } from "sonner";
 
 interface PurchaseState {
   purchases: Purchase[];
@@ -18,7 +18,7 @@ interface PurchaseState {
   setError: (error: string | null) => void;
 
   // API methods
-  fetchPurchases: () => Promise<void>;
+  fetchPurchases: (fromDate?: Date, toDate?: Date) => Promise<void>;
   fetchPurchasesByPumpMasterId: (pumpMasterId: string) => Promise<void>;
   createPurchase: (purchase: CreatePurchase) => Promise<void>;
   editPurchase: (id: string, purchase: UpdatePurchase) => Promise<void>;
@@ -59,17 +59,17 @@ export const usePurchaseStore = create<PurchaseState>()(
       setError: (error) => set({ error }),
 
       // API methods using backend
-      fetchPurchases: async () => {
+      fetchPurchases: async (fromDate?: Date, toDate?: Date) => {
         set({ loading: true, error: null });
         try {
-          const purchases = await PurchaseService.getAll();
-          console.log('Purchases:', purchases);
+          const purchases = await PurchaseService.getAll(fromDate, toDate);
+          console.log("Purchases:", purchases);
           set({ purchases, loading: false });
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to fetch purchases';
+              : "Failed to fetch purchases";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
         }
@@ -81,13 +81,13 @@ export const usePurchaseStore = create<PurchaseState>()(
           const purchases = await PurchaseService.getByPumpMasterId(
             pumpMasterId
           );
-          console.log('Purchases by pump master:', purchases);
+          console.log("Purchases by pump master:", purchases);
           set({ purchases, loading: false });
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to fetch purchases by pump master';
+              : "Failed to fetch purchases by pump master";
           set({ error: errorMessage, loading: false });
         }
       },
@@ -101,12 +101,12 @@ export const usePurchaseStore = create<PurchaseState>()(
             purchases: [...state.purchases, newPurchase],
             loading: false,
           }));
-          toast.success('Purchase created successfully');
+          toast.success("Purchase created successfully");
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to create purchase';
+              : "Failed to create purchase";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -127,12 +127,12 @@ export const usePurchaseStore = create<PurchaseState>()(
             ),
             loading: false,
           }));
-          toast.success('Purchase updated successfully');
+          toast.success("Purchase updated successfully");
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to update purchase';
+              : "Failed to update purchase";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -148,12 +148,12 @@ export const usePurchaseStore = create<PurchaseState>()(
             purchases: state.purchases.filter((purchase) => purchase.id !== id),
             loading: false,
           }));
-          toast.success('Purchase deleted successfully');
+          toast.success("Purchase deleted successfully");
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to delete purchase';
+              : "Failed to delete purchase";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -168,14 +168,14 @@ export const usePurchaseStore = create<PurchaseState>()(
           return purchase;
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to fetch purchase';
+            error instanceof Error ? error.message : "Failed to fetch purchase";
           set({ error: errorMessage, loading: false });
           throw error;
         }
       },
     }),
     {
-      name: 'purchase-store',
+      name: "purchase-store",
     }
   )
 );
