@@ -61,3 +61,4 @@ export type {
 export * from "./supplier-payment";
 export * from "./ledger";
 export * from "./supplier-ledger";
+export * from "./profit-report";

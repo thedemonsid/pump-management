@@ -13,6 +13,7 @@ import { useTankStore } from "@/store/tank-store";
 import { useNozzleStore } from "@/store/nozzle-store";
 import { useSalesmanStore } from "@/store/salesman-store";
 import { Fuel, Database, Gauge, Users } from "lucide-react";
+import { ProfitReportCard } from "@/components/reports/ProfitReportCard";
 
 export function DashboardPage() {
   const { user } = useAuth();
@@ -114,6 +115,21 @@ export function DashboardPage() {
           </Card>
         </Link>
       </div>
+
+      {/* Profit Reports - Admin Only */}
+      {user?.role === "ADMIN" && (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold tracking-tight">
+              Profit Analysis
+            </h2>
+            <p className="text-muted-foreground">
+              Fuel sales profit reports for day, month, and year
+            </p>
+          </div>
+          <ProfitReportCard />
+        </div>
+      )}
 
       {/* Recent Activity */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">

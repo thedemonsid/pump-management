@@ -19,5 +19,6 @@ export { CustomerBillPaymentService } from "./customer-bill-payment-service";
 export { SupplierPaymentService } from "./supplier-payment-service";
 export { ExpenseHeadService } from "./expense-head-service";
 export { ExpenseService } from "./expense-service";
+export { ProfitReportService } from "./profit-report-service";
 
 export { default as api } from "./api";

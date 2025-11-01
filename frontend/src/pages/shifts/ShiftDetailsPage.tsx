@@ -481,7 +481,7 @@ export function ShiftDetailsPage() {
                           </TableCell>
                           <TableCell className="text-right font-mono font-semibold">
                             {nozzle.dispensedAmount
-                              ? `₹${nozzle.dispensedAmount.toFixed(2)}`
+                              ? `${nozzle.dispensedAmount.toFixed(2)}`
                               : "-"}
                           </TableCell>
                           <TableCell>
