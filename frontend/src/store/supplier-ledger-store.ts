@@ -1,22 +1,22 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { toast } from 'sonner';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import { toast } from "sonner";
 import type {
   Supplier,
   Purchase,
   FuelPurchase,
   SupplierPaymentResponse,
-} from '@/types';
-import { PurchaseService } from '@/services/purchase-service';
-import { FuelPurchaseService } from '@/services/fuel-purchase-service';
-import { SupplierPaymentService } from '@/services/supplier-payment-service';
+} from "@/types";
+import { PurchaseService } from "@/services/purchase-service";
+import { FuelPurchaseService } from "@/services/fuel-purchase-service";
+import { SupplierPaymentService } from "@/services/supplier-payment-service";
 import type {
   SupplierLedgerEntry,
   SupplierLedgerSummary,
   SupplierLedgerState,
   ComputeSupplierLedgerParams,
   SupplierSummary,
-} from '@/types/supplier-ledger';
+} from "@/types/supplier-ledger";
 
 interface SupplierLedgerStore extends SupplierLedgerState {
   // Actions
@@ -104,7 +104,7 @@ export const useSupplierLedgerStore = create<SupplierLedgerStore>()(
           const totalPurchasesBefore =
             supplierPurchases
               .filter((p) => new Date(p.purchaseDate) < beforeDate)
-              .reduce((sum, p) => sum + p.amount, 0) +
+              .reduce((sum, p) => sum + (p.netAmount || 0), 0) +
             supplierFuelPurchases
               .filter((fp) => new Date(fp.purchaseDate) < beforeDate)
               .reduce((sum, fp) => sum + fp.amount, 0);
@@ -119,24 +119,29 @@ export const useSupplierLedgerStore = create<SupplierLedgerStore>()(
           // Create ledger entries for the date range
           const ledgerEntries: SupplierLedgerEntry[] = [];
 
-          // Add purchases
+          // Add purchases (with new structure containing purchaseItems array)
           supplierPurchases
             .filter((p) => {
               const purchaseDate = new Date(p.purchaseDate);
               return purchaseDate >= beforeDate && purchaseDate <= endDate;
             })
             .forEach((purchase) => {
+              // Get product names from purchaseItems array
+              const productNames = purchase.purchaseItems
+                .map((item) => item.productName)
+                .join(", ");
+
               ledgerEntries.push({
                 date: purchase.purchaseDate,
-                action: 'Purchase',
+                action: "Purchase",
                 invoiceNo: purchase.invoiceNumber,
-                purchaseAmount: purchase.amount,
+                purchaseAmount: purchase.netAmount || 0,
                 amountPaid: 0,
                 balanceAmount: 0, // Will be calculated later
                 debtAmount: 0, // Will be calculated later
-                entryBy: 'System',
-                comments: `Purchase - ${purchase.productName}`,
-                type: 'purchase',
+                entryBy: "System",
+                comments: `Purchase - ${productNames || "Multiple Items"}`,
+                type: "purchase",
                 purchaseDetails: purchase,
               });
             });
@@ -150,15 +155,15 @@ export const useSupplierLedgerStore = create<SupplierLedgerStore>()(
             .forEach((fuelPurchase) => {
               ledgerEntries.push({
                 date: fuelPurchase.purchaseDate,
-                action: 'Fuel Purchase',
+                action: "Fuel Purchase",
                 invoiceNo: fuelPurchase.invoiceNumber,
                 purchaseAmount: fuelPurchase.amount,
                 amountPaid: 0,
                 balanceAmount: 0,
                 debtAmount: 0,
-                entryBy: 'System',
+                entryBy: "System",
                 comments: `Fuel Purchase - ${fuelPurchase.productName}`,
-                type: 'fuel-purchase',
+                type: "fuel-purchase",
                 fuelPurchaseDetails: fuelPurchase,
               });
             });
@@ -172,15 +177,15 @@ export const useSupplierLedgerStore = create<SupplierLedgerStore>()(
             .forEach((payment) => {
               ledgerEntries.push({
                 date: payment.paymentDate,
-                action: 'Payment',
+                action: "Payment",
                 invoiceNo: payment.referenceNumber,
                 purchaseAmount: 0,
                 amountPaid: payment.amount,
                 balanceAmount: 0,
                 debtAmount: 0,
-                entryBy: 'System',
-                comments: `${payment.paymentMethod} - ${payment.notes || ''}`,
-                type: 'payment',
+                entryBy: "System",
+                comments: `${payment.paymentMethod} - ${payment.notes || ""}`,
+                type: "payment",
                 paymentDetails: {
                   paymentMethod: payment.paymentMethod,
                   referenceNumber: payment.referenceNumber,
@@ -198,9 +203,9 @@ export const useSupplierLedgerStore = create<SupplierLedgerStore>()(
           // Calculate running balances
           let runningBalance = totalDebtBefore;
           ledgerEntries.forEach((entry) => {
-            if (entry.type === 'purchase' || entry.type === 'fuel-purchase') {
+            if (entry.type === "purchase" || entry.type === "fuel-purchase") {
               runningBalance += entry.purchaseAmount;
-            } else if (entry.type === 'payment') {
+            } else if (entry.type === "payment") {
               runningBalance -= entry.amountPaid;
             }
             entry.balanceAmount = runningBalance;
@@ -247,7 +252,7 @@ export const useSupplierLedgerStore = create<SupplierLedgerStore>()(
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to compute supplier ledger data';
+              : "Failed to compute supplier ledger data";
           toast.error(errorMessage);
           set({ error: errorMessage, loading: false });
         }
@@ -271,7 +276,7 @@ export const useSupplierLedgerStore = create<SupplierLedgerStore>()(
           );
 
           const totalPurchases =
-            supplierPurchases.reduce((sum, p) => sum + p.amount, 0) +
+            supplierPurchases.reduce((sum, p) => sum + (p.netAmount || 0), 0) +
             supplierFuelPurchases.reduce((sum, fp) => sum + fp.amount, 0);
           const totalPaid = supplierPayments.reduce(
             (sum, p) => sum + p.amount,
@@ -291,7 +296,7 @@ export const useSupplierLedgerStore = create<SupplierLedgerStore>()(
       },
     }),
     {
-      name: 'supplier-ledger-store',
+      name: "supplier-ledger-store",
     }
   )
 );

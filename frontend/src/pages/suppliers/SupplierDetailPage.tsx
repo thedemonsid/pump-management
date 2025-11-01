@@ -152,9 +152,12 @@ export function SupplierDetailPage() {
     (fuelPurchase) => fuelPurchase.supplierId === id
   );
 
-  // Calculate total purchases amount
+  // Calculate total purchases amount (using netAmount for new purchase structure)
   const totalPurchasesAmount =
-    supplierPurchases.reduce((sum, purchase) => sum + purchase.amount, 0) +
+    supplierPurchases.reduce(
+      (sum, purchase) => sum + (purchase.netAmount || 0),
+      0
+    ) +
     supplierFuelPurchases.reduce(
       (sum, fuelPurchase) => sum + fuelPurchase.amount,
       0
@@ -563,33 +566,56 @@ export function SupplierDetailPage() {
                     <TableRow>
                       <TableHead>Invoice</TableHead>
                       <TableHead>Date</TableHead>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Quantity</TableHead>
-                      <TableHead>Rate</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead>Products</TableHead>
+                      <TableHead>Items</TableHead>
+                      <TableHead>Payment</TableHead>
+                      <TableHead className="text-right">Net Amount</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {supplierPurchases.map((purchase) => (
-                      <TableRow key={`purchase-${purchase.id}`}>
-                        <TableCell className="font-medium font-mono text-sm">
-                          {purchase.invoiceNumber}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(purchase.purchaseDate).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>{purchase.productName}</TableCell>
-                        <TableCell>
-                          {purchase.quantity} {purchase.purchaseUnit}
-                        </TableCell>
-                        <TableCell className="font-mono">
-                          ₹{purchase.purchaseRate.toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right font-mono font-semibold">
-                          ₹{purchase.amount.toLocaleString()}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {supplierPurchases.map((purchase) => {
+                      const productNames =
+                        purchase.purchaseItems
+                          ?.map((item) => item.productName)
+                          .join(", ") || "N/A";
+                      const itemCount = purchase.purchaseItems?.length || 0;
+
+                      return (
+                        <TableRow key={`purchase-${purchase.id}`}>
+                          <TableCell className="font-medium font-mono text-sm">
+                            {purchase.invoiceNumber}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(
+                              purchase.purchaseDate
+                            ).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell
+                            className="max-w-xs truncate"
+                            title={productNames}
+                          >
+                            {productNames}
+                          </TableCell>
+                          <TableCell>
+                            {itemCount} {itemCount === 1 ? "item" : "items"}
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={`text-xs px-2 py-1 rounded ${
+                                purchase.paymentType === "CASH"
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-orange-100 text-orange-800"
+                              }`}
+                            >
+                              {purchase.paymentType}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right font-mono font-semibold">
+                            ₹{(purchase.netAmount || 0).toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               )}

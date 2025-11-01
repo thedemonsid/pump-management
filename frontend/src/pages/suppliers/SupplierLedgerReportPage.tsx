@@ -39,15 +39,28 @@ export function SupplierLedgerReportPage() {
   // Transform ledger data to match report component expectations
   const transformedLedgerData = ledgerData.map((entry) => ({
     ...entry,
+    // For new purchase structure with purchaseItems array
     productDetails: entry.purchaseDetails
-      ? {
-          productName: entry.purchaseDetails.productName,
-          quantity: entry.purchaseDetails.quantity,
-          purchaseRate: entry.purchaseDetails.purchaseRate,
-          amount: entry.purchaseDetails.amount,
-          purchaseUnit: entry.purchaseDetails.purchaseUnit,
-          taxPercentage: entry.purchaseDetails.taxPercentage,
-        }
+      ? entry.purchaseDetails.purchaseItems &&
+        entry.purchaseDetails.purchaseItems.length > 0
+        ? {
+            // If multiple items, show first one in the table (full details in expandable row)
+            productName: entry.purchaseDetails.purchaseItems
+              .map((item) => item.productName)
+              .join(", "),
+            quantity: entry.purchaseDetails.purchaseItems.reduce(
+              (sum, item) => sum + item.quantity,
+              0
+            ),
+            purchaseRate:
+              entry.purchaseDetails.purchaseItems[0]?.purchaseRate || 0,
+            amount: entry.purchaseDetails.netAmount || 0,
+            purchaseUnit:
+              entry.purchaseDetails.purchaseItems[0]?.purchaseUnit || "",
+            taxPercentage:
+              entry.purchaseDetails.purchaseItems[0]?.taxPercentage || 0,
+          }
+        : undefined
       : entry.fuelPurchaseDetails
       ? {
           productName: entry.fuelPurchaseDetails.productName,
