@@ -35,7 +35,7 @@ import { CustomerDetailPage } from "@/pages/customers/CustomerDetailPage";
 import { CustomerLedgerPage } from "@/pages/customers/CustomerLedgerPage";
 import { CustomerLedgerReportPage } from "@/pages/customers/CustomerLedgerReportPage";
 import { PurchasesPage } from "@/pages/purchases/PurchasesPage";
-import CreatePurchase from "./pages/purchases/create-purchase";
+import { CreatePurchase } from "./pages/purchases/create-purchase";
 import UpdatePurchase from "./pages/purchases/update-purchase";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { FuelPurchasesPage } from "./pages/fuel-purchases/FuelPurchasesPage";

@@ -12,7 +12,7 @@ import { PurchaseItemsTable } from "@/components/purchases/PurchaseItemsTable";
 import { PurchaseItemsList } from "@/components/purchases/PurchaseItemsList";
 import { SupplierPaymentsTable } from "@/components/purchases/SupplierPaymentsTable";
 import { usePurchaseStore } from "@/store/purchase-store";
-import type { CreatePurchase } from "@/types/purchase";
+import type { CreatePurchase as CreatePurchaseType } from "@/types/purchase";
 import { DEFAULT_PUMP_INFO } from "@/types";
 
 interface LocalPurchaseItem {
@@ -145,7 +145,7 @@ const CreatePurchase = () => {
 
     const supplierId = selectedSupplier.id;
 
-    const purchaseRequest: CreatePurchase = {
+    const purchaseRequest: CreatePurchaseType = {
       pumpMasterId: DEFAULT_PUMP_INFO.id!,
       supplierId,
       invoiceNumber,
@@ -282,4 +282,4 @@ const CreatePurchase = () => {
   );
 };
 
-export default CreatePurchase;
+export { CreatePurchase };
