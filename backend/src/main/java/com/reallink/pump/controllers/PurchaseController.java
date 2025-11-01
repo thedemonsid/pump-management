@@ -89,4 +89,11 @@ public class PurchaseController {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/next-purchase-id")
+    @Operation(summary = "Get next purchase ID for the current pump master")
+    public ResponseEntity<Long> getNextPurchaseId(HttpServletRequest request) {
+        UUID pumpMasterId = extractPumpMasterId(request);
+        return ResponseEntity.ok(service.getNextPurchaseId(pumpMasterId));
+    }
 }

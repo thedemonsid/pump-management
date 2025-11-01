@@ -3,6 +3,8 @@ package com.reallink.pump.dto.response;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import com.reallink.pump.entities.PaymentType;
@@ -42,38 +44,23 @@ public class PurchaseResponse {
     @Schema(description = "Invoice number", example = "INV001")
     private String invoiceNumber;
 
-    @Schema(description = "Add to stock", example = "true")
-    private Boolean addToStock;
-
-    @Schema(description = "Product ID", example = "123e4567-e89b-12d3-a456-426614174000")
-    private UUID productId;
-
-    @Schema(description = "Product name", example = "Petrol")
-    private String productName;
-
-    @Schema(description = "Quantity", example = "100.00")
-    private BigDecimal quantity;
-
-    @Schema(description = "Purchase rate", example = "50.00")
-    private BigDecimal purchaseRate;
-
-    @Schema(description = "Amount", example = "5000.00")
-    private BigDecimal amount;
-
-    @Schema(description = "Vehicle", example = "Truck ABC")
-    private String vehicle;
-
     @Schema(description = "Goods received by", example = "John Doe")
     private String goodsReceivedBy;
 
-    @Schema(description = "Purchase unit", example = "Liters")
-    private String purchaseUnit;
+    @Schema(description = "Total amount", example = "10000.00")
+    private BigDecimal totalAmount;
 
-    @Schema(description = "Tax percentage", example = "18.00")
-    private BigDecimal taxPercentage;
+    @Schema(description = "Tax amount", example = "1800.00")
+    private BigDecimal taxAmount;
 
-    @Schema(description = "Reading km", example = "12345.67")
-    private BigDecimal readingKm;
+    @Schema(description = "Net amount", example = "11800.00")
+    private BigDecimal netAmount;
+
+    @Schema(description = "Purchase items")
+    private List<PurchaseItemResponse> purchaseItems = new ArrayList<>();
+
+    @Schema(description = "Supplier payments")
+    private List<SupplierPaymentResponse> supplierPayments = new ArrayList<>();
 
     @Schema(description = "Creation timestamp", example = "2023-10-01T12:00:00")
     private LocalDateTime createdAt;

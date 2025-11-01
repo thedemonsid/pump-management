@@ -35,6 +35,8 @@ import { CustomerDetailPage } from "@/pages/customers/CustomerDetailPage";
 import { CustomerLedgerPage } from "@/pages/customers/CustomerLedgerPage";
 import { CustomerLedgerReportPage } from "@/pages/customers/CustomerLedgerReportPage";
 import { PurchasesPage } from "@/pages/purchases/PurchasesPage";
+import CreatePurchase from "./pages/purchases/create-purchase";
+import UpdatePurchase from "./pages/purchases/update-purchase";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { FuelPurchasesPage } from "./pages/fuel-purchases/FuelPurchasesPage";
 import { BankAccountsPage } from "./pages/bank-accounts/BankAccountsPage";
@@ -210,6 +212,16 @@ const allRoutes = [
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
+    path: "/purchases/create",
+    element: <CreatePurchase />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/purchases/:id/edit",
+    element: <UpdatePurchase />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
     path: "/salesmen",
     element: <SalesmenPage />,
     requiredRoles: ["ADMIN", "MANAGER"],
@@ -322,6 +334,7 @@ const headerMap: Record<string, string> = {
   suppliers: "Suppliers",
   customers: "Customers",
   purchases: "Purchases",
+  create: "Create",
   "fuel-purchases": "Fuel Purchases",
   "expense-heads": "Expense Heads",
   expenses: "Expenses",

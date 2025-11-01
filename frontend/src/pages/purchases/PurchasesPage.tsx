@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { usePurchaseStore } from "@/store/purchase-store";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,25 +18,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { CreatePurchaseForm } from "./CreatePurchaseForm";
-import { UpdatePurchaseForm } from "./UpdatePurchaseForm";
-import type { Purchase } from "@/types";
 import { formatCurrency, formatDate } from "@/lib/utils/index";
 
 export function PurchasesPage() {
   const { purchases, loading, error, fetchPurchases } = usePurchaseStore();
-
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchPurchases();
@@ -58,25 +46,10 @@ export function PurchasesPage() {
             Manage your fuel and product purchases
           </p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Purchase
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Create New Purchase</DialogTitle>
-              <DialogDescription>
-                Add a new purchase record to the system.
-              </DialogDescription>
-            </DialogHeader>
-            <CreatePurchaseForm
-              onSuccess={() => setIsCreateDialogOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => navigate("/purchases/create")}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Purchase
+        </Button>
       </div>
 
       {error && (
@@ -105,13 +78,12 @@ export function PurchasesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Purchase ID</TableHead>
+                  <TableHead>Invoice No</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Supplier</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Rate</TableHead>
-                  <TableHead>Amount</TableHead>
+                  <TableHead>Items</TableHead>
+                  <TableHead>Total Amount</TableHead>
+                  <TableHead>Net Amount</TableHead>
                   <TableHead>Payment Type</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -120,7 +92,7 @@ export function PurchasesPage() {
                 {purchases.map((purchase) => (
                   <TableRow key={purchase.id}>
                     <TableCell className="font-medium">
-                      #{purchase.purchaseId}
+                      {purchase.invoiceNumber}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -129,15 +101,28 @@ export function PurchasesPage() {
                       </div>
                     </TableCell>
                     <TableCell>{purchase.supplierName}</TableCell>
-                    <TableCell>{purchase.productName}</TableCell>
                     <TableCell>
-                      {purchase.quantity} {purchase.purchaseUnit}
+                      <div className="flex flex-col gap-1">
+                        {purchase.purchaseItems &&
+                        purchase.purchaseItems.length > 0 ? (
+                          purchase.purchaseItems.map((item, idx) => (
+                            <span key={idx} className="text-sm">
+                              {item.productName || "Product"} ({item.quantity}{" "}
+                              {item.purchaseUnit})
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-sm text-muted-foreground">
+                            No items
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
-                      {formatCurrency(purchase.purchaseRate)}
+                      {formatCurrency(purchase.totalAmount || 0)}
                     </TableCell>
                     <TableCell className="font-semibold">
-                      {formatCurrency(purchase.amount)}
+                      {formatCurrency(purchase.netAmount || 0)}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -152,36 +137,15 @@ export function PurchasesPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Dialog
-                          open={!!editingPurchase}
-                          onOpenChange={(open) => {
-                            if (!open) setEditingPurchase(null);
-                          }}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            navigate(`/purchases/${purchase.id}/edit`)
+                          }
                         >
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setEditingPurchase(purchase)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                            <DialogHeader>
-                              <DialogTitle>Edit Purchase</DialogTitle>
-                              <DialogDescription>
-                                Update the purchase details.
-                              </DialogDescription>
-                            </DialogHeader>
-                            {editingPurchase && (
-                              <UpdatePurchaseForm
-                                purchase={editingPurchase}
-                                onSuccess={() => setEditingPurchase(null)}
-                              />
-                            )}
-                          </DialogContent>
-                        </Dialog>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>

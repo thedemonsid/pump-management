@@ -2,13 +2,19 @@ package com.reallink.pump.entities;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.DecimalMin;
@@ -47,10 +53,12 @@ public class Purchase extends BaseEntity {
     private LocalDate purchaseDate;
 
     @NotNull(message = "Rate type is required")
+    @Enumerated(EnumType.STRING)
     @Column(name = "rate_type", nullable = false)
     private RateType rateType;
 
     @NotNull(message = "Payment type is required")
+    @Enumerated(EnumType.STRING)
     @Column(name = "payment_type", nullable = false)
     private PaymentType paymentType;
 
@@ -64,44 +72,30 @@ public class Purchase extends BaseEntity {
     @Column(name = "invoice_number", nullable = false, length = 50)
     private String invoiceNumber;
 
-    @Column(name = "add_to_stock", nullable = false)
-    private Boolean addToStock = false;
-
-    @NotNull(message = "Product is required")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "product_id", nullable = false, foreignKey = @ForeignKey(name = "fk_purchase_product"))
-    private Product product;
-
-    @NotNull(message = "Quantity is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Quantity must be positive")
-    @Digits(integer = 10, fraction = 2, message = "Quantity must have at most 10 digits and 2 decimal places")
-    @Column(name = "quantity", nullable = false, precision = 12, scale = 2)
-    private BigDecimal quantity;
-
-    @NotNull(message = "Purchase rate is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Purchase rate must be positive")
-    @Digits(integer = 10, fraction = 2, message = "Purchase rate must have at most 10 digits and 2 decimal places")
-    @Column(name = "purchase_rate", nullable = false, precision = 12, scale = 2)
-    private BigDecimal purchaseRate;
-
-    @NotNull(message = "Amount is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Amount must be positive")
-    @Digits(integer = 10, fraction = 2, message = "Amount must have at most 10 digits and 2 decimal places")
-    @Column(name = "amount", nullable = false, precision = 12, scale = 2)
-    private BigDecimal amount;
-
     @Size(max = 100, message = "Goods received by cannot exceed 100 characters")
     @Column(name = "goods_received_by", length = 100)
     private String goodsReceivedBy;
 
-    @NotBlank(message = "Purchase unit is required")
-    @Size(max = 20, message = "Purchase unit cannot exceed 20 characters")
-    @Column(name = "purchase_unit", nullable = false, length = 20)
-    private String purchaseUnit;
+    @NotNull(message = "Total amount is required")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Total amount must be non-negative")
+    @Digits(integer = 10, fraction = 2, message = "Total amount must have at most 10 digits and 2 decimal places")
+    @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal totalAmount = BigDecimal.ZERO;
 
-    @NotNull(message = "Tax percentage is required")
-    @DecimalMin(value = "0.0", inclusive = true, message = "Tax percentage must be non-negative")
-    @Digits(integer = 5, fraction = 2, message = "Tax percentage must have at most 5 digits and 2 decimal places")
-    @Column(name = "tax_percentage", nullable = false, precision = 7, scale = 2)
-    private BigDecimal taxPercentage;
+    @DecimalMin(value = "0.0", inclusive = true, message = "Tax amount must be non-negative")
+    @Digits(integer = 10, fraction = 2, message = "Tax amount must have at most 10 digits and 2 decimal places")
+    @Column(name = "tax_amount", precision = 12, scale = 2)
+    private BigDecimal taxAmount = BigDecimal.ZERO;
+
+    @NotNull(message = "Net amount is required")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Net amount must be non-negative")
+    @Digits(integer = 10, fraction = 2, message = "Net amount must have at most 10 digits and 2 decimal places")
+    @Column(name = "net_amount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal netAmount = BigDecimal.ZERO;
+
+    @OneToMany(mappedBy = "purchase", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<PurchaseItem> purchaseItems = new HashSet<>();
+
+    @OneToMany(mappedBy = "purchase", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<SupplierPayment> supplierPayments = new HashSet<>();
 }

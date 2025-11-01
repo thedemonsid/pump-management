@@ -291,6 +291,7 @@ export function StartShiftForm({
               }
               placeholder="Select nozzles to assign..."
               isDisabled={isLoading}
+              closeMenuOnSelect={false}
               className="text-base"
               classNamePrefix="react-select"
               styles={{

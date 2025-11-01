@@ -1,8 +1,8 @@
-import api from './api';
-import type { Purchase, CreatePurchase, UpdatePurchase } from '@/types';
+import api from "./api";
+import type { Purchase, CreatePurchase, UpdatePurchase } from "@/types";
 
 export class PurchaseService {
-  private static readonly BASE_PATH = '/api/v1/purchases';
+  private static readonly BASE_PATH = "/api/v1/purchases";
 
   // Get all purchases
   static async getAll(): Promise<Purchase[]> {
@@ -53,5 +53,13 @@ export class PurchaseService {
   // Delete purchase
   static async delete(id: string): Promise<void> {
     await api.delete(`${this.BASE_PATH}/${id}`);
+  }
+
+  // Get next purchase ID
+  static async getNextPurchaseId(): Promise<number> {
+    const response = await api.get<number>(
+      `${this.BASE_PATH}/next-purchase-id`
+    );
+    return response.data;
   }
 }
