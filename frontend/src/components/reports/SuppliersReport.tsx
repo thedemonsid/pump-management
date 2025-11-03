@@ -271,7 +271,7 @@ export function SuppliersReport({
     );
 
     const totalPurchases =
-      supplierPurchases.reduce((sum, p) => sum + p.amount, 0) +
+      supplierPurchases.reduce((sum, p) => sum + p.netAmount, 0) +
       supplierFuelPurchases.reduce((sum, fp) => sum + fp.amount, 0);
     const totalPaid = supplierPayments.reduce((sum, p) => sum + p.amount, 0);
     const balance = (supplier.openingBalance || 0) + totalPurchases - totalPaid;
