@@ -61,6 +61,7 @@ import CustomerCreditReportPage from "./pages/reports/CustomerCreditReportPage";
 import DaywiseCollectionReportPage from "./pages/reports/DaywiseCollectionReportPage";
 import ProductSalesUnitChangeReportPage from "./pages/reports/ProductSalesUnitChangeReportPage";
 import FuelCreditSalesReportPage from "./pages/reports/FuelCreditSalesReportPage";
+import { UserAbsenceReportPage } from "./pages/reports/UserAbsenceReportPage";
 import { ExpenseHeadsPage } from "./pages/expense-heads/ExpenseHeadsPage";
 import { ExpensesPage } from "./pages/expenses/ExpensesPage";
 import ChangePasswordPage from "./pages/settings/ChangePasswordPage";
@@ -131,6 +132,11 @@ const allRoutes = [
   {
     path: "/reports/fuel-credit-sales",
     element: <FuelCreditSalesReportPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/reports/user-absence",
+    element: <UserAbsenceReportPage />,
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {

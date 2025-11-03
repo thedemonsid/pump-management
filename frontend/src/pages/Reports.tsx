@@ -91,6 +91,13 @@ export default function Reports() {
             path="/reports/fuel-credit-sales"
           />
           <ReportCard
+            title="User Absence Report"
+            description="Date-wise and employee-wise absence tracking with detailed analysis"
+            icon={<Calendar className="h-8 w-8" />}
+            color="bg-teal-500"
+            path="/reports/user-absence"
+          />
+          <ReportCard
             title="Sales Report"
             description="Comprehensive sales analysis and billing reports"
             icon={<FileText className="h-8 w-8" />}
