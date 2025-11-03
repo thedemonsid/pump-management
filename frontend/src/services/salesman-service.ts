@@ -1,8 +1,8 @@
-import api from './api';
-import type { Salesman } from '@/types';
+import api from "./api";
+import type { Salesman } from "@/types";
 
 export class SalesmanService {
-  private static readonly BASE_PATH = '/api/v1/salesmen';
+  private static readonly BASE_PATH = "/api/v1/salesmen";
 
   // Get all salesmen
   static async getAll(): Promise<Salesman[]> {
@@ -48,10 +48,5 @@ export class SalesmanService {
       salesman
     );
     return response.data;
-  }
-
-  // Delete salesman
-  static async delete(id: string): Promise<void> {
-    await api.delete(`${this.BASE_PATH}/${id}`);
   }
 }

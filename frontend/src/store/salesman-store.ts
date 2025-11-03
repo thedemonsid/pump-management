@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import type { Salesman } from '@/types';
-import { SalesmanService } from '@/services/api';
-import { toast } from 'sonner';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import type { Salesman } from "@/types";
+import { SalesmanService } from "@/services/api";
+import { toast } from "sonner";
 
 interface SalesmanState {
   salesmen: Salesman[];
@@ -13,7 +13,6 @@ interface SalesmanState {
   setSalesmen: (salesmen: Salesman[]) => void;
   addSalesman: (salesman: Salesman) => void;
   updateSalesman: (id: string, salesman: Partial<Salesman>) => void;
-  deleteSalesman: (id: string) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
 
@@ -22,11 +21,10 @@ interface SalesmanState {
   createSalesman: (
     salesman: Omit<
       Salesman,
-      'id' | 'createdAt' | 'updatedAt' | 'pumpMasterId'
+      "id" | "createdAt" | "updatedAt" | "pumpMasterId"
     > & { password: string }
   ) => Promise<void>;
   editSalesman: (id: string, salesman: Partial<Salesman>) => Promise<void>;
-  removeSalesman: (id: string) => Promise<void>;
 }
 
 export const useSalesmanStore = create<SalesmanState>()(
@@ -51,11 +49,6 @@ export const useSalesmanStore = create<SalesmanState>()(
           ),
         })),
 
-      deleteSalesman: (id) =>
-        set((state) => ({
-          salesmen: state.salesmen.filter((salesman) => salesman.id !== id),
-        })),
-
       setLoading: (loading) => set({ loading }),
 
       setError: (error) => set({ error }),
@@ -72,9 +65,9 @@ export const useSalesmanStore = create<SalesmanState>()(
           setSalesmen(salesmen);
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to fetch salesmen';
+            error instanceof Error ? error.message : "Failed to fetch salesmen";
           setError(errorMessage);
-          console.error('Error fetching salesmen:', error);
+          console.error("Error fetching salesmen:", error);
           toast.error(errorMessage);
         } finally {
           setLoading(false);
@@ -91,21 +84,21 @@ export const useSalesmanStore = create<SalesmanState>()(
           // Ensure email is always a string (empty string if undefined)
           const salesmanToCreateWithEmail = {
             ...salesmanData,
-            email: salesmanData.email ?? '',
+            email: salesmanData.email ?? "",
           };
 
           const createdSalesman = await SalesmanService.create(
             salesmanToCreateWithEmail
           );
           addSalesman(createdSalesman);
-          toast.success('Salesman created successfully');
+          toast.success("Salesman created successfully");
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to create salesman';
+              : "Failed to create salesman";
           setError(errorMessage);
-          console.error('Error creating salesman:', error);
+          console.error("Error creating salesman:", error);
           toast.error(errorMessage);
           throw error;
         } finally {
@@ -131,42 +124,18 @@ export const useSalesmanStore = create<SalesmanState>()(
             id,
             updateData as Omit<
               Salesman,
-              'id' | 'createdAt' | 'updatedAt' | 'version'
+              "id" | "createdAt" | "updatedAt" | "version"
             >
           );
           updateSalesman(id, updatedSalesman);
-          toast.success('Salesman updated successfully');
+          toast.success("Salesman updated successfully");
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to update salesman';
+              : "Failed to update salesman";
           setError(errorMessage);
-          console.error('Error updating salesman:', error);
-          toast.error(errorMessage);
-          throw error;
-        } finally {
-          setLoading(false);
-        }
-      },
-
-      removeSalesman: async (id) => {
-        const { setLoading, setError, deleteSalesman } = get();
-
-        setLoading(true);
-        setError(null);
-
-        try {
-          await SalesmanService.delete(id);
-          deleteSalesman(id);
-          toast.success('Salesman deleted successfully');
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error
-              ? error.message
-              : 'Failed to delete salesman';
-          setError(errorMessage);
-          console.error('Error deleting salesman:', error);
+          console.error("Error updating salesman:", error);
           toast.error(errorMessage);
           throw error;
         } finally {
@@ -174,6 +143,6 @@ export const useSalesmanStore = create<SalesmanState>()(
         }
       },
     }),
-    { name: 'salesman-store' }
+    { name: "salesman-store" }
   )
 );

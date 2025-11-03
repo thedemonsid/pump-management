@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.reallink.pump.dto.request.CreateSalesmanRequest;
-import com.reallink.pump.dto.request.UpdateSalesmanRequest;
-import com.reallink.pump.dto.response.SalesmanResponse;
-import com.reallink.pump.services.SalesmanService;
+import com.reallink.pump.dto.request.CreateManagerRequest;
+import com.reallink.pump.dto.request.UpdateManagerRequest;
+import com.reallink.pump.dto.response.ManagerResponse;
+import com.reallink.pump.services.ManagerService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,12 +25,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1/salesmen")
+@RequestMapping("/api/v1/managers")
 @RequiredArgsConstructor
-@Tag(name = "Salesman Management", description = "APIs for managing salesmen")
-public class SalesmanController {
+@Tag(name = "Manager Management", description = "APIs for managing managers")
+public class ManagerController {
 
-    private final SalesmanService service;
+    private final ManagerService service;
 
     private UUID extractPumpMasterId(HttpServletRequest request) {
         Object pumpMasterIdObj = request.getAttribute("pumpMasterId");
@@ -41,30 +41,30 @@ public class SalesmanController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all salesmen", description = "Retrieve all salesmen for the authenticated pump master")
-    public ResponseEntity<List<SalesmanResponse>> getAllSalesmen(HttpServletRequest request) {
+    @Operation(summary = "Get all managers", description = "Retrieve all managers for the authenticated pump master")
+    public ResponseEntity<List<ManagerResponse>> getAllManagers(HttpServletRequest request) {
         UUID pumpMasterId = extractPumpMasterId(request);
         return ResponseEntity.ok(service.getAllByPumpMasterId(pumpMasterId));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get salesman by ID")
-    public ResponseEntity<SalesmanResponse> getSalesmanById(@PathVariable UUID id) {
+    @Operation(summary = "Get manager by ID")
+    public ResponseEntity<ManagerResponse> getManagerById(@PathVariable UUID id) {
         return ResponseEntity.ok(service.getById(id));
     }
 
     @PostMapping
-    @Operation(summary = "Create salesman")
-    public ResponseEntity<SalesmanResponse> createSalesman(@Valid @RequestBody CreateSalesmanRequest request,
+    @Operation(summary = "Create manager")
+    public ResponseEntity<ManagerResponse> createManager(@Valid @RequestBody CreateManagerRequest request,
             HttpServletRequest httpRequest) {
         UUID pumpMasterId = extractPumpMasterId(httpRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(service.create(request, pumpMasterId));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update salesman")
-    public ResponseEntity<SalesmanResponse> updateSalesman(@PathVariable UUID id,
-            @Valid @RequestBody UpdateSalesmanRequest request) {
+    @Operation(summary = "Update manager")
+    public ResponseEntity<ManagerResponse> updateManager(@PathVariable UUID id,
+            @Valid @RequestBody UpdateManagerRequest request) {
         return ResponseEntity.ok(service.update(id, request));
     }
 }

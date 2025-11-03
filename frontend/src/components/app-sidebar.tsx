@@ -21,7 +21,9 @@ import {
   Database,
   Gauge,
   Users,
+  UserCog,
   Clock,
+  CalendarX,
   Zap,
   Sparkles,
   Truck,
@@ -112,6 +114,17 @@ const managementItems = [
     icon: Users,
   },
   {
+    title: "Managers",
+    url: "/managers",
+    icon: UserCog,
+    requiredRoles: ["ADMIN"],
+  },
+  {
+    title: "Absences",
+    url: "/user-absences",
+    icon: CalendarX,
+  },
+  {
     title: "Shifts",
     url: "/shifts",
     icon: Clock,
@@ -150,6 +163,7 @@ interface SidebarMenuItemProps {
   title: string;
   url: string;
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  requiredRoles?: string[];
 }
 
 function NavItem({ title, url, icon: Icon }: SidebarMenuItemProps) {
@@ -199,8 +213,13 @@ function NavItem({ title, url, icon: Icon }: SidebarMenuItemProps) {
   );
 }
 
-const renderMenuItems = (items: SidebarMenuItemProps[]): React.ReactNode =>
-  items.map((i) => <NavItem key={i.title} {...i} />);
+const renderMenuItems = (
+  items: SidebarMenuItemProps[],
+  role: string
+): React.ReactNode =>
+  items
+    .filter((i) => !i.requiredRoles || i.requiredRoles.includes(role))
+    .map((i) => <NavItem key={i.title} {...i} />);
 
 interface AppSidebarProps {
   role: string;
@@ -241,7 +260,7 @@ export function AppSidebar({ role, pumpName }: AppSidebarProps) {
               Pump Operations
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>{renderMenuItems(mainItems)}</SidebarMenu>
+              <SidebarMenu>{renderMenuItems(mainItems, role)}</SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         )}
@@ -252,7 +271,9 @@ export function AppSidebar({ role, pumpName }: AppSidebarProps) {
                 Partners
               </SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>{renderMenuItems(partnersItems)}</SidebarMenu>
+                <SidebarMenu>
+                  {renderMenuItems(partnersItems, role)}
+                </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
             <SidebarGroup>
@@ -260,7 +281,9 @@ export function AppSidebar({ role, pumpName }: AppSidebarProps) {
                 Staff & Shifts
               </SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>{renderMenuItems(managementItems)}</SidebarMenu>
+                <SidebarMenu>
+                  {renderMenuItems(managementItems, role)}
+                </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
           </>
@@ -271,7 +294,7 @@ export function AppSidebar({ role, pumpName }: AppSidebarProps) {
               My Work
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>{renderMenuItems(salesmanItems)}</SidebarMenu>
+              <SidebarMenu>{renderMenuItems(salesmanItems, role)}</SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         )}
@@ -281,7 +304,7 @@ export function AppSidebar({ role, pumpName }: AppSidebarProps) {
               Settings
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>{renderMenuItems(settingsItems)}</SidebarMenu>
+              <SidebarMenu>{renderMenuItems(settingsItems, role)}</SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         )}

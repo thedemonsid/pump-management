@@ -27,6 +27,8 @@ import { ProductsPage } from "@/pages/products/ProductsPage";
 import { TanksPage } from "@/pages/tanks/TanksPage";
 import { NozzlesPage } from "@/pages/nozzles/NozzlesPage";
 import { SalesmenPage } from "@/pages/salesmen/SalesmenPage";
+import { ManagersPage } from "@/pages/managers/ManagersPage";
+import { UserAbsencesPage } from "@/pages/user-absences/UserAbsencesPage";
 import { SuppliersPage } from "@/pages/suppliers/SuppliersPage";
 import { SupplierDetailPage } from "@/pages/suppliers/SupplierDetailPage";
 import { SupplierLedgerPage } from "@/pages/suppliers/SupplierLedgerPage";
@@ -224,6 +226,16 @@ const allRoutes = [
   {
     path: "/salesmen",
     element: <SalesmenPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/managers",
+    element: <ManagersPage />,
+    requiredRoles: ["ADMIN"],
+  },
+  {
+    path: "/user-absences",
+    element: <UserAbsencesPage />,
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
