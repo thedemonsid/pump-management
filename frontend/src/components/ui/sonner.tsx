@@ -10,6 +10,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
       className="toaster group"
       position="top-center"
       richColors
+      expand={true}
+      duration={4000}
+      gap={12}
+      visibleToasts={5}
+      offset={20}
       style={
         {
           "--normal-bg": "var(--popover)",
@@ -17,6 +22,15 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--normal-border": "var(--border)",
         } as React.CSSProperties
       }
+      toastOptions={{
+        style: {
+          padding: "16px 24px",
+          fontSize: "16px",
+          minWidth: "400px",
+          maxWidth: "600px",
+        },
+        className: "toast-popup",
+      }}
       {...props}
     />
   );
