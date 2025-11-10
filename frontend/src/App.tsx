@@ -68,7 +68,7 @@ import ChangePasswordPage from "./pages/settings/ChangePasswordPage";
 import { AuthProvider } from "@/hooks/AuthContext";
 import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute, PublicRoute } from "@/components/ProtectedRoute";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { SalesmanActiveShiftPage } from "@/pages/shifts/SalesmanActiveShiftPage";
 import { ShiftBillsPage } from "@/pages/shifts/ShiftBillsPage";
 import { ShiftPaymentsPage } from "@/pages/shifts/ShiftPaymentsPage";
