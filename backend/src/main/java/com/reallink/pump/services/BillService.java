@@ -258,13 +258,13 @@ public class BillService {
         BigDecimal totalNetAmount = BigDecimal.ZERO;
 
         for (BillItem item : billItems) {
-            totalAmount = totalAmount.add(item.getAmount());
-            BigDecimal discountAmount = item.getAmount().multiply(item.getDiscount().divide(BigDecimal.valueOf(100))).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal taxableAmount = item.getAmount().subtract(discountAmount);
-            BigDecimal gstAmount = taxableAmount.multiply(item.getGst().divide(BigDecimal.valueOf(100))).setScale(2, RoundingMode.HALF_UP);
-            totalDiscount = totalDiscount.add(discountAmount);
-            totalTax = totalTax.add(gstAmount);
-            totalNetAmount = totalNetAmount.add(item.getNetAmount());
+            totalAmount = totalAmount.add(item.getAmount()).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal discountAmount = item.getAmount().multiply(item.getDiscount().divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP)).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal taxableAmount = item.getAmount().subtract(discountAmount).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal gstAmount = taxableAmount.multiply(item.getGst().divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP)).setScale(2, RoundingMode.HALF_UP);
+            totalDiscount = totalDiscount.add(discountAmount).setScale(2, RoundingMode.HALF_UP);
+            totalTax = totalTax.add(gstAmount).setScale(2, RoundingMode.HALF_UP);
+            totalNetAmount = totalNetAmount.add(item.getNetAmount()).setScale(2, RoundingMode.HALF_UP);
         }
 
         bill.setTotalAmount(totalAmount.setScale(2, RoundingMode.HALF_UP));
@@ -281,11 +281,11 @@ public class BillService {
         // Calculate discount amount (percentage) - round to 2 decimal places
         BigDecimal discount = request.getDiscount().setScale(2, RoundingMode.HALF_UP);
         billItem.setDiscount(discount);
-        BigDecimal discountAmount = amount.multiply(discount.divide(BigDecimal.valueOf(100)));
+        BigDecimal discountAmount = amount.multiply(discount.divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP)).setScale(2, RoundingMode.HALF_UP);
 
         // Calculate GST amount on (amount - discount) - round GST to 2 decimal places
         BigDecimal gst = request.getGst().setScale(2, RoundingMode.HALF_UP);
-        BigDecimal taxableAmount = amount.subtract(discountAmount);
+        BigDecimal taxableAmount = amount.subtract(discountAmount).setScale(2, RoundingMode.HALF_UP);
 
         BigDecimal netAmount;
         if (rateType == RateType.INCLUDING_GST) {
@@ -294,9 +294,9 @@ public class BillService {
             netAmount = taxableAmount;
         } else {
             // EXCLUDING_GST: add GST
-            BigDecimal gstAmount = taxableAmount.multiply(gst.divide(BigDecimal.valueOf(100)));
+            BigDecimal gstAmount = taxableAmount.multiply(gst.divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP)).setScale(2, RoundingMode.HALF_UP);
             billItem.setGst(gst);
-            netAmount = taxableAmount.add(gstAmount);
+            netAmount = taxableAmount.add(gstAmount).setScale(2, RoundingMode.HALF_UP);
         }
 
         billItem.setNetAmount(netAmount.setScale(2, RoundingMode.HALF_UP));
@@ -399,7 +399,7 @@ public class BillService {
         if (totalPaid == null) {
             totalPaid = BigDecimal.ZERO;
         }
-        BigDecimal outstandingAmount = bill.getNetAmount().subtract(totalPaid);
+        BigDecimal outstandingAmount = bill.getNetAmount().subtract(totalPaid).setScale(2, RoundingMode.HALF_UP);
         if (request.getAmount().compareTo(outstandingAmount) > 0) {
             throw new PumpBusinessException("PAYMENT_AMOUNT_EXCEEDS_OUTSTANDING",
                     "Payment amount " + request.getAmount() + " exceeds outstanding amount " + outstandingAmount);
