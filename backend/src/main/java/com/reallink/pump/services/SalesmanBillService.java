@@ -1,6 +1,7 @@
 package com.reallink.pump.services;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -118,7 +119,7 @@ public class SalesmanBillService {
         bill.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
 
         // Calculate amounts
-        BigDecimal amount = request.getQuantity().multiply(request.getRate());
+        BigDecimal amount = request.getQuantity().multiply(request.getRate()).setScale(2, RoundingMode.HALF_UP);
         bill.setAmount(amount);
         bill.setNetAmount(amount); // No tax, no discount
 
@@ -214,7 +215,7 @@ public class SalesmanBillService {
         bill.setExtraImage(extraImageFile);
 
         // Calculate amounts
-        BigDecimal amount = request.getQuantity().multiply(request.getRate());
+        BigDecimal amount = request.getQuantity().multiply(request.getRate()).setScale(2, RoundingMode.HALF_UP);
         bill.setAmount(amount);
         bill.setNetAmount(amount); // No tax, no discount
 
@@ -286,7 +287,7 @@ public class SalesmanBillService {
         if (request.getQuantity() != null || request.getRate() != null) {
             BigDecimal quantity = request.getQuantity() != null ? request.getQuantity() : existingBill.getQuantity();
             BigDecimal rate = request.getRate() != null ? request.getRate() : existingBill.getRate();
-            BigDecimal amount = quantity.multiply(rate);
+            BigDecimal amount = quantity.multiply(rate).setScale(2, RoundingMode.HALF_UP);
             existingBill.setAmount(amount);
             existingBill.setNetAmount(amount);
         }
