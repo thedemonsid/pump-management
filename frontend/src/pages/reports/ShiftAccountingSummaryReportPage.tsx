@@ -106,6 +106,7 @@ export default function ShiftAccountingSummaryReportPage() {
   const calculateTotals = () => {
     return shiftsData.reduce(
       (totals, data) => {
+        totals.openingCash += data.shift.openingCash || 0;
         if (data.accounting) {
           totals.fuelSales += data.accounting.fuelSales;
           totals.customerReceipt += data.accounting.customerReceipt;
@@ -120,6 +121,7 @@ export default function ShiftAccountingSummaryReportPage() {
         return totals;
       },
       {
+        openingCash: 0,
         fuelSales: 0,
         customerReceipt: 0,
         systemReceived: 0,
@@ -166,6 +168,7 @@ export default function ShiftAccountingSummaryReportPage() {
         "Salesman Name",
         "Salesman Username",
         "Duration (hours)",
+        "Opening Cash",
         "Fuel Sales",
         "Customer Receipt",
         "System Received",
@@ -199,6 +202,7 @@ export default function ShiftAccountingSummaryReportPage() {
           shift.salesmanFullName || shift.salesmanUsername,
           shift.salesmanUsername,
           duration.toString(),
+          (shift.openingCash || 0).toFixed(2),
           accounting?.fuelSales?.toFixed(2) || "0.00",
           accounting?.customerReceipt?.toFixed(2) || "0.00",
           accounting?.systemReceivedAmount?.toFixed(2) || "0.00",
@@ -220,6 +224,7 @@ export default function ShiftAccountingSummaryReportPage() {
         "",
         "",
         "",
+        totals.openingCash.toFixed(2),
         totals.fuelSales.toFixed(2),
         totals.customerReceipt.toFixed(2),
         totals.systemReceived.toFixed(2),
@@ -496,6 +501,14 @@ export default function ShiftAccountingSummaryReportPage() {
                     <Card className="bg-muted/50">
                       <CardContent className="pt-6">
                         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">
+                              Opening Cash
+                            </p>
+                            <p className="text-lg font-bold">
+                              {formatCurrency(totals.openingCash)}
+                            </p>
+                          </div>
                           <div>
                             <p className="text-xs text-muted-foreground mb-1">
                               Total Fuel Sales

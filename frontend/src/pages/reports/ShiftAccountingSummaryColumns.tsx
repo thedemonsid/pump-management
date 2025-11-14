@@ -97,6 +97,29 @@ export const shiftAccountingColumns: ColumnDef<ShiftAccountingData>[] = [
     },
   },
   {
+    accessorKey: "shift.openingCash",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="w-full justify-end"
+        >
+          Opening Cash
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const { shift } = row.original;
+      return (
+        <div className="text-right font-medium">
+          {formatCurrency(shift.openingCash || 0)}
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "accounting.fuelSales",
     header: ({ column }) => {
       return (
