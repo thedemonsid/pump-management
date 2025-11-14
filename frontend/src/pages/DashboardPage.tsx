@@ -1,12 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useProductStore } from "@/store/product-store";
 import { useTankStore } from "@/store/tank-store";
@@ -130,48 +124,6 @@ export function DashboardPage() {
           <ProfitReportCard />
         </div>
       )}
-
-      {/* Recent Activity */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>
-              Latest pump operations and readings
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-6 text-muted-foreground">
-              No recent activity to display
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>System Status</CardTitle>
-            <CardDescription>Current pump system status</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Pump Status</span>
-              <span className="text-sm font-medium text-green-600">Online</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Database Connection</span>
-              <span className="text-sm font-medium text-green-600">
-                Connected
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Last Sync</span>
-              <span className="text-sm font-medium text-muted-foreground">
-                Just now
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }

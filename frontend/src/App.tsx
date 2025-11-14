@@ -62,6 +62,7 @@ import DaywiseCollectionReportPage from "./pages/reports/DaywiseCollectionReport
 import ProductSalesUnitChangeReportPage from "./pages/reports/ProductSalesUnitChangeReportPage";
 import FuelCreditSalesReportPage from "./pages/reports/FuelCreditSalesReportPage";
 import { UserAbsenceReportPage } from "./pages/reports/UserAbsenceReportPage";
+import ShiftAccountingSummaryReportPage from "./pages/reports/ShiftAccountingSummaryReportPage";
 import { ExpenseHeadsPage } from "./pages/expense-heads/ExpenseHeadsPage";
 import { ExpensesPage } from "./pages/expenses/ExpensesPage";
 import ChangePasswordPage from "./pages/settings/ChangePasswordPage";
@@ -137,6 +138,11 @@ const allRoutes = [
   {
     path: "/reports/user-absence",
     element: <UserAbsenceReportPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/reports/shift-accounting",
+    element: <ShiftAccountingSummaryReportPage />,
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {

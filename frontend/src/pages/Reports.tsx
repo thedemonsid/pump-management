@@ -15,6 +15,7 @@ import {
   Calendar,
   DollarSign,
   TrendingUp,
+  Calculator,
 } from "lucide-react";
 
 export default function Reports() {
@@ -96,6 +97,13 @@ export default function Reports() {
             icon={<Calendar className="h-8 w-8" />}
             color="bg-teal-500"
             path="/reports/user-absence"
+          />
+          <ReportCard
+            title="Shift Accounting Report"
+            description="View accounting details for all shifts in a date range with salesman info"
+            icon={<Calculator className="h-8 w-8" />}
+            color="bg-violet-500"
+            path="/reports/shift-accounting"
           />
           <ReportCard
             title="Sales Report"
