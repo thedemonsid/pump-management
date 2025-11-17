@@ -72,6 +72,11 @@ public class SalesmanBill extends BaseEntity {
     @Column(name = "rate_type", nullable = false)
     private RateType rateType;
 
+    @NotNull(message = "Billing mode is required")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "billing_mode", nullable = false)
+    private BillingMode billingMode;
+
     @NotBlank(message = "Vehicle number is required")
     @Size(max = 20, message = "Vehicle number cannot exceed 20 characters")
     @Column(name = "vehicle_no", nullable = false, length = 20)
@@ -84,8 +89,8 @@ public class SalesmanBill extends BaseEntity {
 
     @NotNull(message = "Quantity is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Quantity must be positive")
-    @Digits(integer = 10, fraction = 2, message = "Quantity must have at most 10 digits and 2 decimal places")
-    @Column(name = "quantity", nullable = false, precision = 12, scale = 2)
+    @Digits(integer = 10, fraction = 3, message = "Quantity must have at most 10 digits and 3 decimal places")
+    @Column(name = "quantity", nullable = false, precision = 12, scale = 3)
     private BigDecimal quantity;
 
     @NotNull(message = "Rate is required")

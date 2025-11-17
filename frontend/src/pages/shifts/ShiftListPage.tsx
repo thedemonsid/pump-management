@@ -28,12 +28,19 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { StartShiftForm } from "./components/StartShiftForm";
 import { toast } from "sonner";
 import {
   Loader2,
   Eye,
   Calendar,
+  CalendarIcon,
   Search,
   RefreshCw,
   Clock,
@@ -41,19 +48,22 @@ import {
   Plus,
 } from "lucide-react";
 import { format, subDays } from "date-fns";
+import { cn } from "@/lib/utils";
+
+// Helper functions for default dates
+const getYesterday = () => subDays(new Date(), 1);
+const getToday = () => new Date();
 
 export function ShiftListPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { shifts, fetchShifts, isLoading } = useShiftStore();
 
-  // Date filters - default to yesterday and today
-  const [startDate, setStartDate] = useState<string>(
-    format(subDays(new Date(), 1), "yyyy-MM-dd")
-  );
-  const [endDate, setEndDate] = useState<string>(
-    format(new Date(), "yyyy-MM-dd")
-  );
+  // Date filters - using Date objects as per guide
+  const [startDate, setStartDate] = useState<Date | undefined>(getYesterday());
+  const [endDate, setEndDate] = useState<Date | undefined>(getToday());
+  const [isStartDateOpen, setIsStartDateOpen] = useState(false);
+  const [isEndDateOpen, setIsEndDateOpen] = useState(false);
 
   // Other filters
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -68,10 +78,15 @@ export function ShiftListPage() {
 
   const loadShifts = async () => {
     try {
-      const filters: Record<string, string> = {
-        fromDate: startDate,
-        toDate: endDate,
-      };
+      const filters: Record<string, string> = {};
+
+      // Format dates as YYYY-MM-DD for API
+      if (startDate) {
+        filters.fromDate = format(startDate, "yyyy-MM-dd");
+      }
+      if (endDate) {
+        filters.toDate = format(endDate, "yyyy-MM-dd");
+      }
 
       // For non-admin users, filter by salesman (use userId as salesmanId)
       if (!isAdmin && user?.userId) {
@@ -89,18 +104,15 @@ export function ShiftListPage() {
     }
   };
 
+  // Fetch data when dates or filters change
   useEffect(() => {
     loadShifts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleSearch = () => {
-    loadShifts();
-  };
+  }, [startDate, endDate, statusFilter]);
 
   const handleReset = () => {
-    setStartDate(format(subDays(new Date(), 1), "yyyy-MM-dd"));
-    setEndDate(format(new Date(), "yyyy-MM-dd"));
+    setStartDate(getYesterday());
+    setEndDate(getToday());
     setSearchQuery("");
     setStatusFilter("ALL");
   };
@@ -155,57 +167,115 @@ export function ShiftListPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Filters
+            Filter by Date Range
           </CardTitle>
           <CardDescription>
-            Filter shifts by date range and status
+            Select date range and filter shifts by status
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div
-            className={`grid grid-cols-1 md:grid-cols-2 ${
-              isAdmin ? "lg:grid-cols-4" : "lg:grid-cols-3"
-            } gap-4`}
-          >
-            {/* Start Date */}
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="text-base"
-              />
-            </div>
+          <div className="space-y-4">
+            {/* Date Pickers Row */}
+            <div className="flex flex-wrap items-end gap-4">
+              {/* Start Date */}
+              <div className="flex-1 min-w-[200px]">
+                <Label className="text-sm font-medium mb-2 block">
+                  Start Date
+                </Label>
+                <Popover
+                  open={isStartDateOpen}
+                  onOpenChange={setIsStartDateOpen}
+                >
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "PPP") : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={startDate}
+                      onSelect={(date) => {
+                        setStartDate(date);
+                        setIsStartDateOpen(false);
+                      }}
+                      disabled={(date) => date > new Date()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-            {/* End Date */}
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="text-base"
-              />
-            </div>
+              {/* End Date */}
+              <div className="flex-1 min-w-[200px]">
+                <Label className="text-sm font-medium mb-2 block">
+                  End Date
+                </Label>
+                <Popover open={isEndDateOpen} onOpenChange={setIsEndDateOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "PPP") : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={endDate}
+                      onSelect={(date) => {
+                        setEndDate(date);
+                        setIsEndDateOpen(false);
+                      }}
+                      disabled={(date) => {
+                        if (date > new Date()) return true;
+                        if (startDate && date < startDate) return true;
+                        return false;
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-            {/* Status Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <select
-                id="status"
-                value={statusFilter}
-                onChange={(e) =>
-                  setStatusFilter(e.target.value as "ALL" | "OPEN" | "CLOSED")
-                }
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="ALL">All Status</option>
-                <option value="OPEN">Open</option>
-                <option value="CLOSED">Closed</option>
-              </select>
+              {/* Status Filter */}
+              <div className="flex-1 min-w-[200px]">
+                <Label
+                  htmlFor="status"
+                  className="text-sm font-medium mb-2 block"
+                >
+                  Status
+                </Label>
+                <select
+                  id="status"
+                  value={statusFilter}
+                  onChange={(e) =>
+                    setStatusFilter(e.target.value as "ALL" | "OPEN" | "CLOSED")
+                  }
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="ALL">All Status</option>
+                  <option value="OPEN">Open</option>
+                  <option value="CLOSED">Closed</option>
+                </select>
+              </div>
+
+              <Button variant="outline" onClick={handleReset}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Reset to Default
+              </Button>
             </div>
 
             {/* Search - Only for Admin/Manager */}
@@ -217,7 +287,7 @@ export function ShiftListPage() {
                   <Input
                     id="search"
                     type="text"
-                    placeholder="Salesman name..."
+                    placeholder="Search by salesman name or shift ID..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9 text-base"
@@ -225,27 +295,16 @@ export function ShiftListPage() {
                 </div>
               </div>
             )}
-          </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 mt-4">
-            <Button onClick={handleSearch} disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                <>
-                  <Search className="mr-2 h-4 w-4" />
-                  Search
-                </>
-              )}
-            </Button>
-            <Button variant="outline" onClick={handleReset}>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Reset
-            </Button>
+            {/* Active Filter Summary */}
+            {(startDate || endDate) && (
+              <div className="text-sm text-muted-foreground">
+                Showing {filteredShifts.length} shift(s)
+                {startDate && ` from ${format(startDate, "PPP")}`}
+                {endDate && ` to ${format(endDate, "PPP")}`}
+                {statusFilter !== "ALL" && ` with status: ${statusFilter}`}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

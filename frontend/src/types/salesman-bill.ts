@@ -3,6 +3,8 @@
  * Updated to align with new architecture where bills are linked to SalesmanShift
  */
 
+export type BillingMode = "BY_QUANTITY" | "BY_AMOUNT";
+
 export interface SalesmanBillResponse {
   /** Unique identifier */
   id: string;
@@ -28,6 +30,8 @@ export interface SalesmanBillResponse {
   nozzleName?: string;
   /** Rate type */
   rateType: "EXCLUDING_GST" | "INCLUDING_GST";
+  /** Billing mode - how the bill was created */
+  billingMode: BillingMode;
   /** Quantity in liters */
   quantity: number;
   /** Rate per liter */
@@ -67,10 +71,14 @@ export interface CreateSalesmanBillRequest {
   nozzleId?: string;
   /** Rate type */
   rateType: "EXCLUDING_GST" | "INCLUDING_GST";
-  /** Quantity in liters */
-  quantity: number;
+  /** Billing mode - BY_QUANTITY when customer specifies liters, BY_AMOUNT when customer specifies rupees */
+  billingMode: BillingMode;
+  /** Quantity in liters - required when billingMode is BY_QUANTITY, calculated when BY_AMOUNT */
+  quantity?: number;
   /** Rate per liter */
   rate: number;
+  /** Requested amount - required when billingMode is BY_AMOUNT, calculated when BY_QUANTITY */
+  requestedAmount?: number;
   /** Vehicle number */
   vehicleNo?: string;
   /** Driver name */

@@ -84,9 +84,13 @@ export function ShiftBillsPage() {
   const isAdminOrManager = user?.role === "ADMIN" || user?.role === "MANAGER";
 
   // Form state
+  const [billingMode, setBillingMode] = useState<"BY_QUANTITY" | "BY_AMOUNT">(
+    "BY_QUANTITY"
+  );
   const [selectedCustomer, setSelectedCustomer] = useState<Option | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Option | null>(null);
   const [quantity, setQuantity] = useState<string>("");
+  const [requestedAmount, setRequestedAmount] = useState<string>("");
   const [rate, setRate] = useState<string>("");
   const [vehicleNo, setVehicleNo] = useState<string>("NA");
   const [driverName, setDriverName] = useState<string>("NA");
@@ -126,9 +130,11 @@ export function ShiftBillsPage() {
   }, [shiftId, fetchShiftById]);
 
   const resetForm = () => {
+    setBillingMode("BY_QUANTITY");
     setSelectedCustomer(null);
     setSelectedProduct(null);
     setQuantity("");
+    setRequestedAmount("");
     setRate("");
     setVehicleNo("NA");
     setDriverName("NA");
@@ -161,10 +167,20 @@ export function ShiftBillsPage() {
       setError("Please select a product");
       return;
     }
-    if (!quantity || parseFloat(quantity) <= 0) {
-      setError("Please enter a valid quantity");
-      return;
+
+    // Validate based on billing mode
+    if (billingMode === "BY_QUANTITY") {
+      if (!quantity || parseFloat(quantity) <= 0) {
+        setError("Please enter a valid quantity");
+        return;
+      }
+    } else {
+      if (!requestedAmount || parseFloat(requestedAmount) <= 0) {
+        setError("Please enter a valid amount");
+        return;
+      }
     }
+
     if (!rate || parseFloat(rate) <= 0) {
       setError("Please enter a valid rate");
       return;
@@ -188,7 +204,11 @@ export function ShiftBillsPage() {
         productId: selectedProduct.value,
         billNo: Date.now(), // Generate bill number (backend should handle this)
         billDate: new Date().toISOString().split("T")[0],
-        quantity: parseFloat(quantity),
+        billingMode: billingMode,
+        quantity:
+          billingMode === "BY_QUANTITY" ? parseFloat(quantity) : undefined,
+        requestedAmount:
+          billingMode === "BY_AMOUNT" ? parseFloat(requestedAmount) : undefined,
         rate: parseFloat(rate),
         rateType: "INCLUDING_GST",
         vehicleNo: vehicleNo.trim(),
@@ -582,21 +602,44 @@ export function ShiftBillsPage() {
               />
             </div>
 
-            {/* Quantity */}
-            <div className="space-y-2">
-              <Label htmlFor="quantity">
-                Quantity (Liters) <span className="text-red-500">*</span>
+            {/* Billing Mode Toggle */}
+            <div className="space-y-3 pt-2 border-t">
+              <Label className="text-base">
+                Billing Mode <span className="text-red-500">*</span>
               </Label>
-              <Input
-                id="quantity"
-                type="number"
-                step="0.001"
-                placeholder="0.000"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                disabled={isCreatingBill}
-                className="text-base"
-              />
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant={
+                    billingMode === "BY_QUANTITY" ? "default" : "outline"
+                  }
+                  onClick={() => {
+                    setBillingMode("BY_QUANTITY");
+                    setRequestedAmount("");
+                  }}
+                  disabled={isCreatingBill}
+                  className="flex-1"
+                >
+                  By Quantity (Liters)
+                </Button>
+                <Button
+                  type="button"
+                  variant={billingMode === "BY_AMOUNT" ? "default" : "outline"}
+                  onClick={() => {
+                    setBillingMode("BY_AMOUNT");
+                    setQuantity("");
+                  }}
+                  disabled={isCreatingBill}
+                  className="flex-1"
+                >
+                  By Amount (₹)
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {billingMode === "BY_QUANTITY"
+                  ? "Customer requests specific liters (e.g., 10L, 30L)"
+                  : "Customer requests fuel worth specific amount (e.g., ₹1000, ₹2000)"}
+              </p>
             </div>
 
             {/* Rate */}
@@ -616,16 +659,72 @@ export function ShiftBillsPage() {
               />
             </div>
 
-            {/* Calculated Amount */}
-            {quantity && rate && (
-              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">Total Amount:</span>
-                  <span className="text-2xl font-bold text-primary">
-                    ₹{(parseFloat(quantity) * parseFloat(rate)).toFixed(2)}
-                  </span>
+            {/* Conditional Fields Based on Billing Mode */}
+            {billingMode === "BY_QUANTITY" ? (
+              <>
+                {/* Quantity Input */}
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">
+                    Quantity (Liters) <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    step="0.001"
+                    placeholder="0.000"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    disabled={isCreatingBill}
+                    className="text-base"
+                  />
                 </div>
-              </div>
+
+                {/* Calculated Amount Display */}
+                {quantity && rate && (
+                  <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Calculated Amount:</span>
+                      <span className="text-2xl font-bold text-primary">
+                        ₹{(parseFloat(quantity) * parseFloat(rate)).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Amount Input */}
+                <div className="space-y-2">
+                  <Label htmlFor="requestedAmount">
+                    Amount (₹) <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="requestedAmount"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={requestedAmount}
+                    onChange={(e) => setRequestedAmount(e.target.value)}
+                    disabled={isCreatingBill}
+                    className="text-base"
+                  />
+                </div>
+
+                {/* Calculated Quantity Display */}
+                {requestedAmount && rate && (
+                  <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Calculated Quantity:</span>
+                      <span className="text-2xl font-bold text-primary">
+                        {(
+                          parseFloat(requestedAmount) / parseFloat(rate)
+                        ).toFixed(3)}{" "}
+                        L
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Vehicle Number */}
