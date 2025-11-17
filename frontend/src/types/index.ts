@@ -3,6 +3,7 @@ export * from "./common";
 export * from "./product";
 export * from "./tank";
 export * from "./tank-transaction";
+export * from "./dip-reading";
 export * from "./nozzle";
 export * from "./nozzle-shift";
 export * from "./salesman";

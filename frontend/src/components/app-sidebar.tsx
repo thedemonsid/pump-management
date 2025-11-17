@@ -34,6 +34,7 @@ import {
   FolderTree,
   Wallet,
   KeyRound,
+  Activity,
 } from "lucide-react";
 
 const mainItems = [
@@ -56,6 +57,11 @@ const mainItems = [
     title: "Tanks",
     url: "/tanks",
     icon: Database,
+  },
+  {
+    title: "Dip Readings",
+    url: "/dip-readings",
+    icon: Activity,
   },
   {
     title: "Nozzles",

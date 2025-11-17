@@ -1,6 +1,7 @@
 export { ProductService } from "./product-service";
 export { TankService } from "./tank-service";
 export { TankTransactionService } from "./tank-transaction-service";
+export { DipReadingService } from "./dip-reading-service";
 export { NozzleService } from "./nozzle-service";
 export { SalesmanService } from "./salesman-service";
 export { SalesmanShiftService } from "./salesman-shift-service";

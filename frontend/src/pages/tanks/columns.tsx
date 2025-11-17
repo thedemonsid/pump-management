@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, Eye, Pencil, Loader2 } from "lucide-react";
+import { ArrowUpDown, Eye, Pencil, Loader2, Gauge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Tank } from "@/types";
@@ -9,6 +9,7 @@ import type { Tank } from "@/types";
 interface TableMeta {
   onView?: (tank: Tank) => void;
   onEdit?: (tank: Tank) => void;
+  onDipReading?: (tank: Tank) => void;
   currentBalances?: Record<string, number>;
   balancesLoading?: Record<string, boolean>;
 }
@@ -163,6 +164,7 @@ export const columns: ColumnDef<Tank>[] = [
       const meta = table.options.meta as TableMeta | undefined;
       const onView = meta?.onView;
       const onEdit = meta?.onEdit;
+      const onDipReading = meta?.onDipReading;
 
       return (
         <div className="flex items-center gap-2">
@@ -170,6 +172,16 @@ export const columns: ColumnDef<Tank>[] = [
             <Button variant="outline" size="sm" onClick={() => onView(tank)}>
               <Eye className="mr-2 h-4 w-4" />
               View Ledger
+            </Button>
+          )}
+          {onDipReading && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDipReading(tank)}
+            >
+              <Gauge className="mr-2 h-4 w-4" />
+              Dip Readings
             </Button>
           )}
           {onEdit && (

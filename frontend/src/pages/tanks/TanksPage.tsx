@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { CreateTankForm } from "./CreateTankForm";
 import { UpdateTankForm } from "./UpdateTankForm";
+import { DipReadingSheet } from "./DipReadingSheet";
 import { DataTable } from "@/components/ui/data-table";
 import { columns } from "./columns";
 import type { Tank } from "@/types";
@@ -32,6 +33,7 @@ export function TanksPage() {
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingTank, setEditingTank] = useState<Tank | null>(null);
+  const [dipReadingTank, setDipReadingTank] = useState<Tank | null>(null);
   const [currentBalances, setCurrentBalances] = useState<
     Record<string, number>
   >({});
@@ -167,6 +169,7 @@ export function TanksPage() {
               meta={{
                 onView: (tank: Tank) => navigate(`/tanks/${tank.id}/ledger`),
                 onEdit: (tank: Tank) => setEditingTank(tank),
+                onDipReading: (tank: Tank) => setDipReadingTank(tank),
                 currentBalances,
                 balancesLoading,
               }}
@@ -193,6 +196,13 @@ export function TanksPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Dip Reading Sheet */}
+      <DipReadingSheet
+        tank={dipReadingTank}
+        open={dipReadingTank !== null}
+        onOpenChange={(open) => !open && setDipReadingTank(null)}
+      />
     </div>
   );
 }

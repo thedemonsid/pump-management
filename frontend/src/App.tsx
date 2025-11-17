@@ -25,6 +25,7 @@ import {
 } from "react-router-dom";
 import { ProductsPage } from "@/pages/products/ProductsPage";
 import { TanksPage } from "@/pages/tanks/TanksPage";
+import { DipReadingsPage } from "@/pages/tanks/DipReadingsPage";
 import { NozzlesPage } from "@/pages/nozzles/NozzlesPage";
 import { SalesmenPage } from "@/pages/salesmen/SalesmenPage";
 import { ManagersPage } from "@/pages/managers/ManagersPage";
@@ -163,6 +164,11 @@ const allRoutes = [
   {
     path: "/tanks/:id/ledger",
     element: <TankLedgerPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/dip-readings",
+    element: <DipReadingsPage />,
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
@@ -354,6 +360,7 @@ const headerMap: Record<string, string> = {
   nozzles: "Nozzles",
   "nozzle-readings": "Nozzle Readings",
   tanks: "Tanks",
+  "dip-readings": "Dip Readings",
   products: "Products",
   suppliers: "Suppliers",
   customers: "Customers",
