@@ -1,6 +1,7 @@
 package com.reallink.pump.dto.request;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -25,6 +26,14 @@ public class UpdateTankRequest {
     @Digits(integer = 10, fraction = 2, message = "Capacity must have at most 10 digits and 2 decimal places")
     @Schema(description = "Tank capacity in litres", example = "5000.00", required = true)
     private BigDecimal capacity;
+
+    @DecimalMin(value = "0.00", message = "Opening level must be greater than or equal to 0.00")
+    @Digits(integer = 10, fraction = 2, message = "Opening level must have at most 10 digits and 2 decimal places")
+    @Schema(description = "Opening level in litres", example = "1000.00")
+    private BigDecimal openingLevel;
+
+    @Schema(description = "Opening level date", example = "2025-01-01")
+    private LocalDate openingLevelDate;
 
     @DecimalMin(value = "0.0", message = "Current level cannot be negative")
     @Digits(integer = 10, fraction = 2, message = "Current level must have at most 10 digits and 2 decimal places")

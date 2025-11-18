@@ -60,20 +60,18 @@ public class SalesmanBillService {
         }
 
         switch (request.getBillingMode()) {
-            case BY_QUANTITY:
+            case BY_QUANTITY -> {
                 if (request.getQuantity() == null || request.getQuantity().compareTo(BigDecimal.ZERO) <= 0) {
                     throw new PumpBusinessException("INVALID_QUANTITY",
                             "Quantity is required and must be positive when billing mode is BY_QUANTITY");
                 }
-                break;
-            case BY_AMOUNT:
+            }
+            case BY_AMOUNT -> {
                 if (request.getRequestedAmount() == null || request.getRequestedAmount().compareTo(BigDecimal.ZERO) <= 0) {
                     throw new PumpBusinessException("INVALID_AMOUNT",
                             "Requested amount is required and must be positive when billing mode is BY_AMOUNT");
                 }
-                break;
-            default:
-                throw new PumpBusinessException("INVALID_BILLING_MODE", "Invalid billing mode: " + request.getBillingMode());
+            }
         }
 
         if (request.getRate() == null || request.getRate().compareTo(BigDecimal.ZERO) <= 0) {
@@ -153,22 +151,17 @@ public class SalesmanBillService {
         bill.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
 
         // Calculate quantity and amount based on billing mode
-        BigDecimal quantity;
-        BigDecimal amount;
+        final BigDecimal quantity;
+        final BigDecimal amount;
 
-        switch (request.getBillingMode()) {
-            case BY_QUANTITY:
-                // Customer specified quantity, calculate amount
-                quantity = request.getQuantity();
-                amount = quantity.multiply(request.getRate()).setScale(2, RoundingMode.HALF_UP);
-                break;
-            case BY_AMOUNT:
-                // Customer specified amount, calculate quantity
-                amount = request.getRequestedAmount();
-                quantity = amount.divide(request.getRate(), 3, RoundingMode.HALF_UP);
-                break;
-            default:
-                throw new PumpBusinessException("INVALID_BILLING_MODE", "Invalid billing mode: " + request.getBillingMode());
+        if (request.getBillingMode() == com.reallink.pump.entities.BillingMode.BY_QUANTITY) {
+            // Customer specified quantity, calculate amount
+            quantity = request.getQuantity();
+            amount = quantity.multiply(request.getRate()).setScale(2, RoundingMode.HALF_UP);
+        } else {
+            // Customer specified amount, calculate quantity
+            amount = request.getRequestedAmount();
+            quantity = amount.divide(request.getRate(), 3, RoundingMode.HALF_UP);
         }
 
         bill.setQuantity(quantity);
@@ -270,22 +263,17 @@ public class SalesmanBillService {
         bill.setExtraImage(extraImageFile);
 
         // Calculate quantity and amount based on billing mode
-        BigDecimal quantity;
-        BigDecimal amount;
+        final BigDecimal quantity;
+        final BigDecimal amount;
 
-        switch (request.getBillingMode()) {
-            case BY_QUANTITY:
-                // Customer specified quantity, calculate amount
-                quantity = request.getQuantity();
-                amount = quantity.multiply(request.getRate()).setScale(2, RoundingMode.HALF_UP);
-                break;
-            case BY_AMOUNT:
-                // Customer specified amount, calculate quantity
-                amount = request.getRequestedAmount();
-                quantity = amount.divide(request.getRate(), 3, RoundingMode.HALF_UP);
-                break;
-            default:
-                throw new PumpBusinessException("INVALID_BILLING_MODE", "Invalid billing mode: " + request.getBillingMode());
+        if (request.getBillingMode() == com.reallink.pump.entities.BillingMode.BY_QUANTITY) {
+            // Customer specified quantity, calculate amount
+            quantity = request.getQuantity();
+            amount = quantity.multiply(request.getRate()).setScale(2, RoundingMode.HALF_UP);
+        } else {
+            // Customer specified amount, calculate quantity
+            amount = request.getRequestedAmount();
+            quantity = amount.divide(request.getRate(), 3, RoundingMode.HALF_UP);
         }
 
         bill.setQuantity(quantity);

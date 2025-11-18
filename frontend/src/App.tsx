@@ -64,6 +64,7 @@ import ProductSalesUnitChangeReportPage from "./pages/reports/ProductSalesUnitCh
 import FuelCreditSalesReportPage from "./pages/reports/FuelCreditSalesReportPage";
 import { UserAbsenceReportPage } from "./pages/reports/UserAbsenceReportPage";
 import ShiftAccountingSummaryReportPage from "./pages/reports/ShiftAccountingSummaryReportPage";
+import DipReadingReportPage from "./pages/reports/DipReadingReportPage";
 import { ExpenseHeadsPage } from "./pages/expense-heads/ExpenseHeadsPage";
 import { ExpensesPage } from "./pages/expenses/ExpensesPage";
 import ChangePasswordPage from "./pages/settings/ChangePasswordPage";
@@ -109,6 +110,11 @@ const allRoutes = [
   {
     path: "/reports/tank-levels",
     element: <TankLevelReportPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/reports/dip-readings",
+    element: <DipReadingReportPage />,
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {

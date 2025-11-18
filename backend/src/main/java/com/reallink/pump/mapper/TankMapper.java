@@ -65,7 +65,9 @@ public interface TankMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "version", ignore = true)
     @Mapping(target = "product", ignore = true)
+    @Mapping(target = "pumpMaster", ignore = true)
     @Mapping(target = "nozzles", ignore = true)
+    @Mapping(target = "transactions", ignore = true)
     void updateEntity(UpdateTankRequest request, @MappingTarget Tank entity);
 
     /**

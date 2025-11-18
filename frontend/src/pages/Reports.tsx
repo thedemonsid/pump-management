@@ -71,6 +71,13 @@ export default function Reports() {
             path="/reports/tank-levels"
           />
           <ReportCard
+            title="Dip Reading Report"
+            description="View tank dip readings with date filters and variance analysis"
+            icon={<Droplet className="h-8 w-8" />}
+            color="bg-blue-600"
+            path="/reports/dip-readings"
+          />
+          <ReportCard
             title="Expense Report"
             description="View and analyze expenses by head and date range"
             icon={<DollarSign className="h-8 w-8" />}
