@@ -16,33 +16,35 @@ This guide explains how to implement efficient date range filtering with backend
 
 ### 1. Frontend Setup
 
-#### Step 2: Create Date Helper Functions
+#### Step 1: Import the DateRangePicker Component
+
+The application provides a reusable `DateRangePicker` component located at `@/components/shared/DateRangePicker`. This component handles all the UI and validation logic for date range selection.
+
+#### Step 2: Import Date Helper Functions
+
+Use the provided date utility functions from `@/lib/utils/date`:
 
 ```typescript
-import { subDays } from "date-fns";
-
-// Helper function to get date from 7 days ago
-const getOneWeekAgo = () => {
-  return subDays(new Date(), 7);
-};
-
-// Helper function to get today's date
-const getToday = () => {
-  return new Date();
-};
+import { getOneWeekAgo, getToday, getStartOfMonth } from "@/lib/utils/date";
 ```
+
+Available helper functions:
+
+- `getOneWeekAgo()` - Returns date from 7 days ago
+- `getToday()` - Returns current date
+- `getStartOfMonth()` - Returns first day of current month
 
 #### Step 3: Set Up State Management
 
 ```typescript
 import { useState, useEffect } from "react";
+import { DateRangePicker } from "@/components/shared/DateRangePicker";
+import { getOneWeekAgo, getToday } from "@/lib/utils/date";
 
 export function YourPage() {
   // Date filter states - Initialize with default dates
   const [fromDate, setFromDate] = useState<Date | undefined>(getOneWeekAgo());
   const [toDate, setToDate] = useState<Date | undefined>(getToday());
-  const [isFromDateOpen, setIsFromDateOpen] = useState(false);
-  const [isToDateOpen, setIsToDateOpen] = useState(false);
 
   // Fetch data when dates change
   useEffect(() => {
@@ -53,97 +55,69 @@ export function YourPage() {
 }
 ```
 
-#### Step 4: Create Date Picker UI
+#### Step 4: Use the DateRangePicker Component
 
 ```tsx
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { DateRangePicker } from "@/components/shared/DateRangePicker";
 
-// From Date Picker
-<div className="flex-1 min-w-[200px]">
-  <label className="text-sm font-medium mb-2 block">From Date</label>
-  <Popover open={isFromDateOpen} onOpenChange={setIsFromDateOpen}>
-    <PopoverTrigger asChild>
-      <Button
-        variant="outline"
-        className={cn(
-          "w-full justify-start text-left font-normal",
-          !fromDate && "text-muted-foreground"
-        )}
-      >
-        <CalendarIcon className="mr-2 h-4 w-4" />
-        {fromDate ? format(fromDate, "PPP") : "Pick a date"}
-      </Button>
-    </PopoverTrigger>
-    <PopoverContent className="w-auto p-0" align="start">
-      <Calendar
-        mode="single"
-        selected={fromDate}
-        onSelect={(date) => {
-          setFromDate(date);
-          setIsFromDateOpen(false);
-        }}
-        disabled={(date) => date > new Date()} // Disable future dates
-        initialFocus
-      />
-    </PopoverContent>
-  </Popover>
-</div>
-
-// To Date Picker
-<div className="flex-1 min-w-[200px]">
-  <label className="text-sm font-medium mb-2 block">To Date</label>
-  <Popover open={isToDateOpen} onOpenChange={setIsToDateOpen}>
-    <PopoverTrigger asChild>
-      <Button
-        variant="outline"
-        className={cn(
-          "w-full justify-start text-left font-normal",
-          !toDate && "text-muted-foreground"
-        )}
-      >
-        <CalendarIcon className="mr-2 h-4 w-4" />
-        {toDate ? format(toDate, "PPP") : "Pick a date"}
-      </Button>
-    </PopoverTrigger>
-    <PopoverContent className="w-auto p-0" align="start">
-      <Calendar
-        mode="single"
-        selected={toDate}
-        onSelect={(date) => {
-          setToDate(date);
-          setIsToDateOpen(false);
-        }}
-        disabled={(date) => {
-          // Disable dates after today
-          if (date > new Date()) return true;
-          // Disable dates before fromDate if fromDate is set
-          if (fromDate && date < fromDate) return true;
-          return false;
-        }}
-        initialFocus
-      />
-    </PopoverContent>
-  </Popover>
-</div>
-
-// Reset Button
-<Button variant="outline" onClick={handleClearFilters}>
-  Reset to Default
-</Button>
+// In your JSX
+<DateRangePicker
+  fromDate={fromDate}
+  toDate={toDate}
+  onFromDateChange={setFromDate}
+  onToDateChange={setToDate}
+  fromLabel="From Date" // Optional, defaults to "From Date"
+  toLabel="To Date" // Optional, defaults to "To Date"
+  disabled={loading} // Optional, defaults to false
+/>;
 ```
 
-#### Step 5: Handle Filter Reset
+**DateRangePicker Props:**
 
-```typescript
+| Prop               | Type                                | Required | Default       | Description                     |
+| ------------------ | ----------------------------------- | -------- | ------------- | ------------------------------- |
+| `fromDate`         | `Date \| undefined`                 | Yes      | -             | Selected start date             |
+| `toDate`           | `Date \| undefined`                 | Yes      | -             | Selected end date               |
+| `onFromDateChange` | `(date: Date \| undefined) => void` | Yes      | -             | Callback when from date changes |
+| `onToDateChange`   | `(date: Date \| undefined) => void` | Yes      | -             | Callback when to date changes   |
+| `fromLabel`        | `string`                            | No       | `"From Date"` | Label for from date picker      |
+| `toLabel`          | `string`                            | No       | `"To Date"`   | Label for to date picker        |
+| `disabled`         | `boolean`                           | No       | `false`       | Disable both date pickers       |
+
+**Built-in Features:**
+
+- ✅ Calendar popover UI for both from/to dates
+- ✅ Automatic validation (to date can't be before from date)
+- ✅ Prevents future date selection
+- ✅ Auto-closes calendar on date selection
+- ✅ Responsive design with proper styling
+
+#### Step 5: Add Reset Button and Record Count
+
+```tsx
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+
 const handleClearFilters = () => {
   setFromDate(getOneWeekAgo());
   setToDate(getToday());
 };
+
+// Reset Button
+<Button variant="outline" onClick={handleClearFilters}>
+  Reset to Default
+</Button>;
+
+// Record Count Display
+{
+  (fromDate || toDate) && (
+    <div className="mt-4 text-sm text-muted-foreground">
+      Showing {data.length} records
+      {fromDate && ` from ${format(fromDate, "PPP")}`}
+      {toDate && ` to ${format(toDate, "PPP")}`}
+    </div>
+  );
+}
 ```
 
 ---
@@ -654,20 +628,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Loader2, Fuel, CalendarIcon } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { Loader2 } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
+import { DateRangePicker } from "@/components/shared/DateRangePicker";
 import { getFuelPurchaseColumns } from "./FuelPurchasesColumns";
-import { cn } from "@/lib/utils";
-import { format, subDays } from "date-fns";
-
-const getOneWeekAgo = () => subDays(new Date(), 7);
-const getToday = () => new Date();
+import { getOneWeekAgo, getToday } from "@/lib/utils/date";
+import { format } from "date-fns";
 
 export function FuelPurchasesPage() {
   const { fuelPurchases, loading, error, fetchFuelPurchases } =
@@ -675,8 +641,6 @@ export function FuelPurchasesPage() {
 
   const [fromDate, setFromDate] = useState<Date | undefined>(getOneWeekAgo());
   const [toDate, setToDate] = useState<Date | undefined>(getToday());
-  const [isFromDateOpen, setIsFromDateOpen] = useState(false);
-  const [isToDateOpen, setIsToDateOpen] = useState(false);
 
   // Fetch data when dates change
   useEffect(() => {
@@ -713,73 +677,14 @@ export function FuelPurchasesPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap items-end gap-4">
-            {/* From Date */}
-            <div className="flex-1 min-w-[200px]">
-              <label className="text-sm font-medium mb-2 block">
-                From Date
-              </label>
-              <Popover open={isFromDateOpen} onOpenChange={setIsFromDateOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !fromDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {fromDate ? format(fromDate, "PPP") : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={fromDate}
-                    onSelect={(date) => {
-                      setFromDate(date);
-                      setIsFromDateOpen(false);
-                    }}
-                    disabled={(date) => date > new Date()}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* To Date */}
-            <div className="flex-1 min-w-[200px]">
-              <label className="text-sm font-medium mb-2 block">To Date</label>
-              <Popover open={isToDateOpen} onOpenChange={setIsToDateOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !toDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {toDate ? format(toDate, "PPP") : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={toDate}
-                    onSelect={(date) => {
-                      setToDate(date);
-                      setIsToDateOpen(false);
-                    }}
-                    disabled={(date) => {
-                      if (date > new Date()) return true;
-                      if (fromDate && date < fromDate) return true;
-                      return false;
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+            {/* DateRangePicker Component */}
+            <DateRangePicker
+              fromDate={fromDate}
+              toDate={toDate}
+              onFromDateChange={setFromDate}
+              onToDateChange={setToDate}
+              disabled={loading}
+            />
 
             <Button variant="outline" onClick={handleClearFilters}>
               Reset to Default
@@ -822,6 +727,117 @@ export function FuelPurchasesPage() {
 
 ---
 
+## DateRangePicker Component API
+
+The `DateRangePicker` component is located at `@/components/shared/DateRangePicker` and provides a complete date range selection solution.
+
+### Props
+
+```typescript
+interface DateRangePickerProps {
+  fromDate: Date | undefined;
+  toDate: Date | undefined;
+  onFromDateChange: (date: Date | undefined) => void;
+  onToDateChange: (date: Date | undefined) => void;
+  fromLabel?: string;
+  toLabel?: string;
+  disabled?: boolean;
+}
+```
+
+### Features
+
+- ✅ **Visual Calendar UI**: Beautiful popover calendar instead of text inputs
+- ✅ **Automatic Validation**: To date cannot be before from date
+- ✅ **Future Date Prevention**: Disables dates after today
+- ✅ **Auto-Close**: Calendar closes automatically on date selection
+- ✅ **Responsive Design**: Works well on mobile and desktop
+- ✅ **Customizable Labels**: Optional custom labels for both pickers
+- ✅ **Disabled State**: Can be disabled during loading or other operations
+- ✅ **Accessible**: Proper ARIA labels and keyboard navigation
+
+### Usage Examples
+
+**Basic Usage:**
+
+```tsx
+<DateRangePicker
+  fromDate={fromDate}
+  toDate={toDate}
+  onFromDateChange={setFromDate}
+  onToDateChange={setToDate}
+/>
+```
+
+**With Custom Labels:**
+
+```tsx
+<DateRangePicker
+  fromDate={fromDate}
+  toDate={toDate}
+  onFromDateChange={setFromDate}
+  onToDateChange={setToDate}
+  fromLabel="Start Date*"
+  toLabel="End Date*"
+/>
+```
+
+**With Disabled State:**
+
+```tsx
+<DateRangePicker
+  fromDate={fromDate}
+  toDate={toDate}
+  onFromDateChange={setFromDate}
+  onToDateChange={setToDate}
+  disabled={isLoading}
+/>
+```
+
+### Layout Integration
+
+The component renders two date pickers side by side with flex layout. Each picker has:
+
+- Minimum width of 200px
+- Flex-grow of 1 for responsive sizing
+- Proper spacing and alignment
+
+**Recommended Grid Layout:**
+
+```tsx
+<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+  <DateRangePicker
+    fromDate={fromDate}
+    toDate={toDate}
+    onFromDateChange={setFromDate}
+    onToDateChange={setToDate}
+  />
+
+  {/* Other form fields */}
+  <div className="space-y-2">
+    <Label>Other Field</Label>
+    <Input />
+  </div>
+</div>
+```
+
+**Flex Layout:**
+
+```tsx
+<div className="flex flex-wrap items-end gap-4">
+  <DateRangePicker
+    fromDate={fromDate}
+    toDate={toDate}
+    onFromDateChange={setFromDate}
+    onToDateChange={setToDate}
+  />
+
+  <Button onClick={handleAction}>Submit</Button>
+</div>
+```
+
+---
+
 ## Troubleshooting
 
 ### Issue: Dates not filtering correctly
@@ -842,7 +858,7 @@ const getOneWeekAgo = () => subDays(new Date(), 7); // Instead of 30 days
 
 ### Issue: Calendar not closing on date select
 
-**Solution:** Call state setter in onSelect:
+**Solution:** This is handled automatically by the `DateRangePicker` component. If you're building a custom implementation, call the state setter in onSelect:
 
 ```typescript
 onSelect={(date) => {
@@ -853,11 +869,15 @@ onSelect={(date) => {
 
 ### Issue: Future dates selectable
 
-**Solution:** Add disabled prop to Calendar:
+**Solution:** The `DateRangePicker` component prevents future date selection automatically. If building custom, add disabled prop to Calendar:
 
 ```typescript
 disabled={(date) => date > new Date()}
 ```
+
+### Issue: To date can be before from date
+
+**Solution:** The `DateRangePicker` component handles this validation automatically. The to date picker disables all dates before the selected from date.
 
 ---
 
@@ -865,13 +885,27 @@ disabled={(date) => date > new Date()}
 
 ✅ **Key Takeaways:**
 
-1. Always filter data at the backend for performance
-2. Use sensible default date ranges (e.g., last 7 days)
-3. Create database indexes on date fields
-4. Provide clear UI feedback (loading states, record counts)
-5. Disable invalid date selections (future dates, before fromDate)
-6. Use DataTable component for consistent UX
-7. Format dates properly in API calls (ISO-8601)
-8. Allow users to reset filters easily
+1. **Use the DateRangePicker Component** - Import from `@/components/shared/DateRangePicker` for consistent UI
+2. **Use Date Helper Functions** - Import from `@/lib/utils/date` for default date values
+3. Always filter data at the backend for performance
+4. Use sensible default date ranges (e.g., last 7 days or start of month)
+5. Create database indexes on date fields
+6. Provide clear UI feedback (loading states, record counts)
+7. Use DataTable component for consistent table UX
+8. Format dates properly in API calls (ISO-8601: YYYY-MM-DD)
+9. Allow users to reset filters easily with a reset button
 
-By following this guide, you'll have efficient, user-friendly date filtering with powerful table functionality throughout your application!
+### Quick Start Checklist
+
+- [ ] Import `DateRangePicker` from `@/components/shared/DateRangePicker`
+- [ ] Import date helpers from `@/lib/utils/date`
+- [ ] Set up state with `useState` for fromDate and toDate
+- [ ] Initialize dates with helper functions (e.g., `getOneWeekAgo()`, `getToday()`)
+- [ ] Add `DateRangePicker` component to your JSX
+- [ ] Add reset button with `handleClearFilters` function
+- [ ] Show record count with date range information
+- [ ] Format dates as `YYYY-MM-DD` when sending to backend
+- [ ] Update backend to accept optional `fromDate` and `toDate` parameters
+- [ ] Add database indexes on date columns
+
+By following this guide and using the provided components, you'll have efficient, user-friendly date filtering with powerful table functionality throughout your application!

@@ -20,6 +20,8 @@ import { CustomerBillPaymentService } from "@/services/customer-bill-payment-ser
 import { SalesmanBillService, SalesmanBillPaymentService } from "@/services";
 import { pdf } from "@react-pdf/renderer";
 import { CustomerCreditPDF } from "@/components/pdf-reports";
+import { DateRangePicker } from "@/components/shared/DateRangePicker";
+import { getStartOfMonth, getToday } from "@/lib/utils/date";
 
 interface CustomerCredit {
   customerName: string;
@@ -38,15 +40,8 @@ export default function CustomerCreditReportPage() {
   const { computeCustomerSummaries } = useLedgerStore();
   const [isLoading, setIsLoading] = useState(false);
 
-  const [fromDate, setFromDate] = useState<string>(
-    format(
-      new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-      "yyyy-MM-dd"
-    )
-  );
-  const [toDate, setToDate] = useState<string>(
-    format(new Date(), "yyyy-MM-dd")
-  );
+  const [fromDate, setFromDate] = useState<Date | undefined>(getStartOfMonth());
+  const [toDate, setToDate] = useState<Date | undefined>(getToday());
   const [minCreditAmount, setMinCreditAmount] = useState<string>("");
   const [maxCreditAmount, setMaxCreditAmount] = useState<string>("");
   const [hasSearched, setHasSearched] = useState(false);
@@ -133,12 +128,14 @@ export default function CustomerCreditReportPage() {
   };
 
   const handleDownload = async () => {
+    if (!fromDate || !toDate) return;
+
     try {
       const blob = await pdf(
         <CustomerCreditPDF
           data={customerCredits}
-          fromDate={fromDate}
-          toDate={toDate}
+          fromDate={format(fromDate, "yyyy-MM-dd")}
+          toDate={format(toDate, "yyyy-MM-dd")}
         />
       ).toBlob();
 
@@ -166,12 +163,15 @@ export default function CustomerCreditReportPage() {
     return formatted;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-IN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
+  const formatDisplayDate = (date: Date) => {
+    return format(date, "PPP");
+  };
+
+  const handleClearFilters = () => {
+    setFromDate(getStartOfMonth());
+    setToDate(getToday());
+    setMinCreditAmount("");
+    setMaxCreditAmount("");
   };
 
   // Calculate totals
@@ -201,7 +201,7 @@ export default function CustomerCreditReportPage() {
   );
 
   return (
-    <div className="flex-1 space-y-6 p-8 pt-6">
+    <div className="flex-1 space-y-6 pt-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -218,40 +218,26 @@ export default function CustomerCreditReportPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-center text-xl">
-            {hasSearched
-              ? `GET Customer Credit REPORT For Date Between ${formatDate(
+            {hasSearched && fromDate && toDate
+              ? `GET Customer Credit REPORT For Date Between ${formatDisplayDate(
                   fromDate
-                )} to ${formatDate(toDate)}`
+                )} to ${formatDisplayDate(toDate)}`
               : "APPLY FILTER"}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-2">
-              <Label htmlFor="fromDate">From Date</Label>
-              <div className="relative">
-                <Input
-                  id="fromDate"
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                />
-              </div>
-            </div>
+          <div className="flex flex-wrap items-end gap-4">
+            <DateRangePicker
+              fromDate={fromDate}
+              toDate={toDate}
+              onFromDateChange={setFromDate}
+              onToDateChange={setToDate}
+              fromLabel="From Date"
+              toLabel="To Date"
+              disabled={isLoading}
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="toDate">To Date</Label>
-              <div className="relative">
-                <Input
-                  id="toDate"
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
+            <div className="space-y-2 flex-1 min-w-[200px]">
               <Label htmlFor="minCredit">Minimum Credit Amount</Label>
               <Input
                 id="minCredit"
@@ -262,7 +248,7 @@ export default function CustomerCreditReportPage() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 flex-1 min-w-[200px]">
               <Label htmlFor="maxCredit">Maximum Credit Amount</Label>
               <Input
                 id="maxCredit"
@@ -279,6 +265,13 @@ export default function CustomerCreditReportPage() {
               <Search className="mr-2 h-4 w-4" />
               {isLoading ? "Loading..." : "Get Report"}
             </Button>
+            <Button
+              variant="outline"
+              onClick={handleClearFilters}
+              disabled={isLoading}
+            >
+              Reset to Default
+            </Button>
             {hasSearched && (
               <Button variant="outline" onClick={handleDownload}>
                 <Download className="mr-2 h-4 w-4" />
@@ -286,6 +279,13 @@ export default function CustomerCreditReportPage() {
               </Button>
             )}
           </div>
+
+          {hasSearched && fromDate && toDate && (
+            <div className="mt-4 text-sm text-muted-foreground text-center">
+              Showing {customerCredits.length} customer records from{" "}
+              {formatDisplayDate(fromDate)} to {formatDisplayDate(toDate)}
+            </div>
+          )}
         </CardContent>
       </Card>
 

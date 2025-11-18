@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -24,21 +23,16 @@ import { useTankStore } from "@/store/tank-store";
 import { useTankLedgerStore } from "@/store/tank-ledger-store";
 import { pdf } from "@react-pdf/renderer";
 import { TankLevelPDF } from "@/components/pdf-reports";
+import { DateRangePicker } from "@/components/shared/DateRangePicker";
+import { getStartOfMonth, getToday } from "@/lib/utils/date";
 
 export default function TankLevelReportPage() {
   const { tanks, fetchTanks } = useTankStore();
   const { ledgerData, summary, loading, hasSearched, computeLedgerData } =
     useTankLedgerStore();
 
-  const [fromDate, setFromDate] = useState<string>(
-    format(
-      new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-      "yyyy-MM-dd"
-    )
-  );
-  const [toDate, setToDate] = useState<string>(
-    format(new Date(), "yyyy-MM-dd")
-  );
+  const [fromDate, setFromDate] = useState<Date | undefined>(getStartOfMonth());
+  const [toDate, setToDate] = useState<Date | undefined>(getToday());
   const [selectedTank, setSelectedTank] = useState<string>("");
 
   useEffect(() => {
@@ -56,18 +50,23 @@ export default function TankLevelReportPage() {
   const selectedTankData = tanks.find((tank) => tank.id === selectedTank);
 
   const fetchReport = () => {
-    if (!selectedTank || !selectedTankData) return;
+    if (!selectedTank || !selectedTankData || !fromDate || !toDate) return;
 
     computeLedgerData({
       tankId: selectedTank,
-      fromDate,
-      toDate,
+      fromDate: format(fromDate, "yyyy-MM-dd"),
+      toDate: format(toDate, "yyyy-MM-dd"),
       openingLevel: selectedTankData.openingLevel || 0,
     });
   };
 
+  const handleClearFilters = () => {
+    setFromDate(getStartOfMonth());
+    setToDate(getToday());
+  };
+
   const handleDownload = async () => {
-    if (!selectedTankData) return;
+    if (!selectedTankData || !fromDate || !toDate) return;
 
     try {
       const blob = await pdf(
@@ -76,8 +75,8 @@ export default function TankLevelReportPage() {
           tankCapacity={selectedTankData.capacity || 0}
           data={ledgerData}
           summary={summary}
-          fromDate={fromDate}
-          toDate={toDate}
+          fromDate={format(fromDate, "yyyy-MM-dd")}
+          toDate={format(toDate, "yyyy-MM-dd")}
         />
       ).toBlob();
 
@@ -110,8 +109,12 @@ export default function TankLevelReportPage() {
     });
   };
 
+  const formatDisplayDate = (date: Date) => {
+    return format(date, "PPP");
+  };
+
   return (
-    <div className="flex-1 space-y-6 p-8 pt-6">
+    <div className="flex-1 space-y-6 pt-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -128,40 +131,26 @@ export default function TankLevelReportPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-center text-xl">
-            {hasSearched
-              ? `Tank Level Report For Date Between ${formatDate(
+            {hasSearched && fromDate && toDate
+              ? `Tank Level Report For Date Between ${formatDisplayDate(
                   fromDate
-                )} to ${formatDate(toDate)}`
+                )} to ${formatDisplayDate(toDate)}`
               : "APPLY FILTER"}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="fromDate">From Date*</Label>
-              <div className="relative">
-                <Input
-                  id="fromDate"
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                />
-              </div>
-            </div>
+          <div className="flex flex-wrap items-end gap-4">
+            <DateRangePicker
+              fromDate={fromDate}
+              toDate={toDate}
+              onFromDateChange={setFromDate}
+              onToDateChange={setToDate}
+              fromLabel="From Date*"
+              toLabel="To Date*"
+              disabled={loading}
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="toDate">To Date*</Label>
-              <div className="relative">
-                <Input
-                  id="toDate"
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
+            <div className="space-y-2 flex-1 min-w-[200px]">
               <Label htmlFor="tank">Select Tank*</Label>
               <Select value={selectedTank} onValueChange={setSelectedTank}>
                 <SelectTrigger>
@@ -179,9 +168,19 @@ export default function TankLevelReportPage() {
           </div>
 
           <div className="flex justify-center gap-4 mt-6">
-            <Button onClick={fetchReport} disabled={loading || !selectedTank}>
+            <Button
+              onClick={fetchReport}
+              disabled={loading || !selectedTank || !fromDate || !toDate}
+            >
               <Search className="mr-2 h-4 w-4" />
               {loading ? "Loading..." : "Get Report"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleClearFilters}
+              disabled={loading}
+            >
+              Reset to Default
             </Button>
             {hasSearched && (
               <Button variant="outline" onClick={handleDownload}>
@@ -190,6 +189,13 @@ export default function TankLevelReportPage() {
               </Button>
             )}
           </div>
+
+          {hasSearched && fromDate && toDate && (
+            <div className="mt-4 text-sm text-muted-foreground text-center">
+              Showing records from {formatDisplayDate(fromDate)} to{" "}
+              {formatDisplayDate(toDate)}
+            </div>
+          )}
         </CardContent>
       </Card>
 

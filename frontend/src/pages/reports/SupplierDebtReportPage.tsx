@@ -11,8 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { DateRangePicker } from "@/components/shared/DateRangePicker";
 import { Download, Search } from "lucide-react";
 import { format } from "date-fns";
+import { getOneWeekAgo, getToday } from "@/lib/utils/date";
 import { useSupplierStore } from "@/store/supplier-store";
 import { useSupplierLedgerStore } from "@/store/supplier-ledger-store";
 import { PurchaseService } from "@/services/purchase-service";
@@ -35,15 +37,10 @@ export default function SupplierDebtReportPage() {
   const { computeSupplierSummaries } = useSupplierLedgerStore();
   const [isLoading, setIsLoading] = useState(false);
 
-  const [fromDate, setFromDate] = useState<string>(
-    format(
-      new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-      "yyyy-MM-dd"
-    )
-  );
-  const [toDate, setToDate] = useState<string>(
-    format(new Date(), "yyyy-MM-dd")
-  );
+  // Date filter states - Initialize with default dates
+  const [fromDate, setFromDate] = useState<Date | undefined>(getOneWeekAgo());
+  const [toDate, setToDate] = useState<Date | undefined>(getToday());
+
   const [minDebtAmount, setMinDebtAmount] = useState<string>("");
   const [maxDebtAmount, setMaxDebtAmount] = useState<string>("");
   const [hasSearched, setHasSearched] = useState(false);
@@ -109,6 +106,13 @@ export default function SupplierDebtReportPage() {
     }
   };
 
+  const handleClearFilters = () => {
+    setFromDate(getOneWeekAgo());
+    setToDate(getToday());
+    setMinDebtAmount("");
+    setMaxDebtAmount("");
+  };
+
   const handleDownload = async () => {
     try {
       // Need to add mobile field to match PDF interface
@@ -119,11 +123,15 @@ export default function SupplierDebtReportPage() {
             ?.contactNumber || "N/A",
       }));
 
+      // Format dates as strings for PDF
+      const formattedFromDate = fromDate ? format(fromDate, "yyyy-MM-dd") : "";
+      const formattedToDate = toDate ? format(toDate, "yyyy-MM-dd") : "";
+
       const blob = await pdf(
         <SupplierDebtPDF
           data={supplierDebtsWithMobile}
-          fromDate={fromDate}
-          toDate={toDate}
+          fromDate={formattedFromDate}
+          toDate={formattedToDate}
         />
       ).toBlob();
 
@@ -150,12 +158,8 @@ export default function SupplierDebtReportPage() {
     }).format(amount);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-IN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
+  const formatDateString = (date: Date) => {
+    return format(date, "dd/MM/yyyy");
   };
 
   // Calculate totals
@@ -194,38 +198,22 @@ export default function SupplierDebtReportPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-center text-xl">
-            {hasSearched
-              ? `GET Supplier Debt REPORT For Date Between ${formatDate(
+            {hasSearched && fromDate && toDate
+              ? `GET Supplier Debt REPORT For Date Between ${formatDateString(
                   fromDate
-                )} to ${formatDate(toDate)}`
+                )} to ${formatDateString(toDate)}`
               : "APPLY FILTER"}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-2">
-              <Label htmlFor="fromDate">From Date</Label>
-              <div className="relative">
-                <Input
-                  id="fromDate"
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="toDate">To Date</Label>
-              <div className="relative">
-                <Input
-                  id="toDate"
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                />
-              </div>
-            </div>
+            <DateRangePicker
+              fromDate={fromDate}
+              toDate={toDate}
+              onFromDateChange={setFromDate}
+              onToDateChange={setToDate}
+              disabled={isLoading}
+            />
 
             <div className="space-y-2">
               <Label htmlFor="minDebt">Minimum Debt Amount</Label>
@@ -255,6 +243,9 @@ export default function SupplierDebtReportPage() {
               <Search className="mr-2 h-4 w-4" />
               {isLoading ? "Loading..." : "Get Report"}
             </Button>
+            <Button variant="outline" onClick={handleClearFilters}>
+              Reset to Default
+            </Button>
             {hasSearched && (
               <Button variant="outline" onClick={handleDownload}>
                 <Download className="mr-2 h-4 w-4" />
@@ -262,6 +253,14 @@ export default function SupplierDebtReportPage() {
               </Button>
             )}
           </div>
+
+          {hasSearched && (fromDate || toDate) && (
+            <div className="mt-4 text-sm text-muted-foreground text-center">
+              Showing {supplierDebts.length} suppliers
+              {fromDate && ` from ${format(fromDate, "PPP")}`}
+              {toDate && ` to ${format(toDate, "PPP")}`}
+            </div>
+          )}
         </CardContent>
       </Card>
 
