@@ -251,10 +251,10 @@ export function AppSidebar({ role, pumpName }: AppSidebarProps) {
           </div>
           <div className="flex flex-col leading-tight group-data-[state=collapsed]:hidden">
             <span className="font-semibold text-sm tracking-tight group-hover:text-primary transition-colors">
-              Pump Manager
+              Easy Pump
             </span>
             <span className="text-[11px] text-muted-foreground">
-              Fuel Management System
+              Real Link Web Tech
             </span>
           </div>
         </NavLink>
@@ -316,7 +316,7 @@ export function AppSidebar({ role, pumpName }: AppSidebarProps) {
         )}
       </SidebarContent>
       <SidebarSeparator className="opacity-60 group-data-[state=collapsed]:hidden" />
-      <SidebarFooter className="px-4 py-3 group-data-[state=collapsed]:px-1 group-data-[state=collapsed]:py-2">
+      <SidebarFooter className="px-4 py-1 group-data-[state=collapsed]:px-1 group-data-[state=collapsed]:py-2">
         <div className="flex flex-col gap-3 group-data-[state=collapsed]:items-center w-full">
           {/* Full toggle row */}
           <div className="flex items-center justify-between w-full group-data-[state=collapsed]:hidden">

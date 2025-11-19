@@ -8,7 +8,7 @@ import { NozzleAssignmentService } from "@/services/nozzle-assignment-service";
 import { SalesmanShiftService } from "@/services/salesman-shift-service";
 import { SalesmanService } from "@/services/salesman-service";
 import { toast } from "sonner";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Nozzle, Salesman } from "@/types";
 
@@ -53,8 +53,9 @@ export function StartShiftForm({
     }
   }, [needsSalesmanSelector]);
 
-  // Fetch available nozzles on mount
+  // Fetch available nozzles on mount and clear error
   useEffect(() => {
+    setError(null);
     fetchAvailableNozzles();
   }, []);
 
@@ -100,7 +101,9 @@ export function StartShiftForm({
 
   const fetchAvailableNozzles = async () => {
     setIsLoadingNozzles(true);
+    setError(null);
     try {
+      // Fetch all nozzles
       const nozzles = await NozzleService.getAllForPump();
 
       // Get all open shifts to find which nozzles are currently assigned
@@ -109,39 +112,59 @@ export function StartShiftForm({
       // Collect all nozzle IDs that are assigned to open shifts
       const assignedNozzleIds = new Set<string>();
 
-      for (const shift of openShifts) {
-        try {
-          const assignments =
-            await NozzleAssignmentService.getAssignmentsForShift(shift.id);
-          // Add nozzle IDs from OPEN assignments
-          assignments
-            .filter((a) => a.status === "OPEN")
-            .forEach((a) => {
-              if (a.nozzleId) {
-                assignedNozzleIds.add(a.nozzleId);
-              }
-            });
-        } catch (err) {
-          console.error(
-            `Error fetching assignments for shift ${shift.id}:`,
-            err
-          );
-        }
-      }
+      // Fetch assignments for all open shifts in parallel
+      const assignmentPromises = openShifts.map((shift) =>
+        NozzleAssignmentService.getAssignmentsForShift(shift.id)
+          .then((assignments) => ({ shiftId: shift.id, assignments }))
+          .catch((err) => {
+            console.error(
+              `Error fetching assignments for shift ${shift.id}:`,
+              err
+            );
+            return { shiftId: shift.id, assignments: [] };
+          })
+      );
+
+      const allAssignments = await Promise.all(assignmentPromises);
+
+      // Add nozzle IDs from OPEN assignments
+      allAssignments.forEach(({ assignments }) => {
+        assignments
+          .filter((a) => a.status === "OPEN" && a.nozzleId)
+          .forEach((a) => {
+            assignedNozzleIds.add(a.nozzleId);
+          });
+      });
+
+      console.log("Assigned nozzle IDs:", Array.from(assignedNozzleIds));
 
       // Filter out nozzles that are assigned to open shifts
       const availableNozzlesData: NozzleOption[] = nozzles
-        .filter((nozzle) => nozzle.id && !assignedNozzleIds.has(nozzle.id))
+        .filter((nozzle) => {
+          const isAvailable = nozzle.id && !assignedNozzleIds.has(nozzle.id);
+          if (!isAvailable && nozzle.id) {
+            console.log(
+              `Filtering out nozzle: ${nozzle.nozzleName} (${nozzle.id})`
+            );
+          }
+          return isAvailable;
+        })
         .map((nozzle) => ({
           value: nozzle.id!,
           label: `${nozzle.nozzleName} - ${nozzle.productName}`,
           data: nozzle,
         }));
 
+      console.log(
+        `Total nozzles: ${nozzles.length}, Available: ${availableNozzlesData.length}, Assigned: ${assignedNozzleIds.size}`
+      );
+
       setAvailableNozzles(availableNozzlesData);
     } catch (err) {
-      toast.error("Failed to load available nozzles");
+      const errorMessage = "Failed to load available nozzles";
+      toast.error(errorMessage);
       console.error(err);
+      setError(errorMessage);
     } finally {
       setIsLoadingNozzles(false);
     }
@@ -272,9 +295,26 @@ export function StartShiftForm({
 
       {/* Nozzle Selection */}
       <div className="space-y-2">
-        <Label htmlFor="nozzles">
-          Select Nozzles <span className="text-red-500">*</span>
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="nozzles">
+            Select Nozzles <span className="text-red-500">*</span>
+          </Label>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={fetchAvailableNozzles}
+            disabled={isLoadingNozzles || isLoading}
+            className="h-8 gap-2"
+          >
+            <RefreshCw
+              className={`h-3.5 w-3.5 ${
+                isLoadingNozzles ? "animate-spin" : ""
+              }`}
+            />
+            Refresh
+          </Button>
+        </div>
         {isLoadingNozzles ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
