@@ -97,6 +97,7 @@ export function UserAbsencesPage() {
 
   // Other filters
   const [approvalFilter, setApprovalFilter] = useState<string>("all");
+  const [absenceTypeFilter, setAbsenceTypeFilter] = useState<string>("all");
   const [selectedUser, setSelectedUser] = useState<UserOption | null>(null);
   const [userOptions, setUserOptions] = useState<UserOption[]>([]);
 
@@ -176,6 +177,7 @@ export function UserAbsencesPage() {
   const clearFilters = () => {
     setSelectedDate(undefined);
     setApprovalFilter("all");
+    setAbsenceTypeFilter("all");
     setSelectedUser(null);
   };
 
@@ -223,6 +225,13 @@ export function UserAbsencesPage() {
   } else if (approvalFilter === "pending") {
     filteredAbsences = filteredAbsences.filter(
       (absence) => absence.isApproved === false
+    );
+  }
+
+  // Absence type filter
+  if (absenceTypeFilter !== "all") {
+    filteredAbsences = filteredAbsences.filter(
+      (absence) => absence.absenceType === absenceTypeFilter
     );
   }
 
@@ -280,7 +289,7 @@ export function UserAbsencesPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Single Date Picker */}
             <div className="space-y-2">
               <Label>Absence Date</Label>
@@ -355,6 +364,25 @@ export function UserAbsencesPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Absence Type Filter */}
+            <div className="space-y-2">
+              <Label htmlFor="absenceTypeFilter">Absence Type</Label>
+              <Select
+                value={absenceTypeFilter}
+                onValueChange={setAbsenceTypeFilter}
+              >
+                <SelectTrigger id="absenceTypeFilter">
+                  <SelectValue placeholder="All types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="FULL_DAY">Full Day</SelectItem>
+                  <SelectItem value="HALF_DAY">Half Day</SelectItem>
+                  <SelectItem value="OVERTIME">Overtime</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -397,6 +425,7 @@ export function UserAbsencesPage() {
                     <TableHead>Date</TableHead>
                     <TableHead>User</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead>Type</TableHead>
                     <TableHead>Reason</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Approved By</TableHead>
@@ -419,6 +448,20 @@ export function UserAbsencesPage() {
                       <TableCell>{absence.username}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{absence.userRole}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {absence.absenceType === "FULL_DAY" && (
+                          <Badge className="bg-blue-500">Full Day</Badge>
+                        )}
+                        {absence.absenceType === "HALF_DAY" && (
+                          <Badge className="bg-yellow-500">Half Day</Badge>
+                        )}
+                        {absence.absenceType === "OVERTIME" && (
+                          <Badge className="bg-green-500">Overtime</Badge>
+                        )}
+                        {!absence.absenceType && (
+                          <Badge variant="outline">Full Day</Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         {absence.reason ? (

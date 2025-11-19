@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import type { UserAbsence } from "@/types";
+import type { UserAbsence, AbsenceType } from "@/types";
 import { UserAbsenceService } from "@/services/user-absence-service";
 import { toast } from "sonner";
 
@@ -28,6 +28,7 @@ interface UserAbsenceState {
   createAbsence: (absence: {
     userId: string;
     absenceDate: string;
+    absenceType: AbsenceType;
     reason?: string;
     notes?: string;
     isApproved?: boolean;
@@ -36,6 +37,7 @@ interface UserAbsenceState {
     id: string,
     absence: {
       absenceDate?: string;
+      absenceType?: AbsenceType;
       reason?: string;
       notes?: string;
       isApproved?: boolean;

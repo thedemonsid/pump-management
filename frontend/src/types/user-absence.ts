@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+// Absence Type enum
+export enum AbsenceType {
+  FULL_DAY = "FULL_DAY",
+  HALF_DAY = "HALF_DAY",
+  OVERTIME = "OVERTIME",
+}
+
 // User Absence schemas
 export const UserAbsenceSchema = z.object({
   id: z.string().optional(),
@@ -8,6 +15,7 @@ export const UserAbsenceSchema = z.object({
   userRole: z.string().optional(),
   pumpMasterId: z.string(),
   absenceDate: z.string(), // ISO date string
+  absenceType: z.nativeEnum(AbsenceType).default(AbsenceType.FULL_DAY),
   reason: z
     .string()
     .max(500, "Reason must not exceed 500 characters")
@@ -35,6 +43,7 @@ export const CreateUserAbsenceSchema = UserAbsenceSchema.omit({
 
 export const UpdateUserAbsenceSchema = z.object({
   absenceDate: z.string().optional(),
+  absenceType: z.nativeEnum(AbsenceType).optional(),
   reason: z.string().max(500).optional(),
   notes: z.string().max(1000).optional(),
   isApproved: z.boolean().optional(),

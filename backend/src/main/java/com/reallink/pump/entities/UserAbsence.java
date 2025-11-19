@@ -2,8 +2,12 @@ package com.reallink.pump.entities;
 
 import java.time.LocalDate;
 
+import com.reallink.pump.enums.AbsenceType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Index;
@@ -42,6 +46,11 @@ public class UserAbsence extends BaseEntity {
     @NotNull(message = "Absence date is required")
     @Column(name = "absence_date", nullable = false)
     private LocalDate absenceDate;
+
+    @NotNull(message = "Absence type is required")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "absence_type", nullable = false, length = 20)
+    private AbsenceType absenceType = AbsenceType.FULL_DAY;
 
     @Size(max = 500, message = "Reason must not exceed 500 characters")
     @Column(name = "reason", length = 500)

@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useUserAbsenceStore } from "@/store/user-absence-store";
 import { useAuth } from "@/hooks/useAuth";
+import { AbsenceType } from "@/types/user-absence";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -13,6 +14,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, CalendarIcon } from "lucide-react";
@@ -30,6 +38,7 @@ import { cn } from "@/lib/utils";
 // Form validation schema
 const updateAbsenceSchema = z.object({
   absenceDate: z.string().min(1, "Absence date is required"),
+  absenceType: z.nativeEnum(AbsenceType),
   reason: z
     .string()
     .max(500, "Reason must not exceed 500 characters")
@@ -66,6 +75,7 @@ export function UpdateAbsenceForm({
     resolver: zodResolver(updateAbsenceSchema),
     defaultValues: {
       absenceDate: absence.absenceDate,
+      absenceType: absence.absenceType || AbsenceType.FULL_DAY,
       reason: absence.reason || "",
       notes: absence.notes || "",
       isApproved: absence.isApproved,
@@ -76,6 +86,7 @@ export function UpdateAbsenceForm({
     try {
       await editAbsence(absence.id!, {
         absenceDate: data.absenceDate,
+        absenceType: data.absenceType,
         reason: data.reason || undefined,
         notes: data.notes || undefined,
         isApproved: data.isApproved,
@@ -148,6 +159,35 @@ export function UpdateAbsenceForm({
                 </PopoverContent>
               </Popover>
               <FormDescription>Date when the user was absent</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Absence Type */}
+        <FormField
+          control={form.control}
+          name="absenceType"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Absence Type <span className="text-red-500">*</span>
+              </FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select absence type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value={AbsenceType.FULL_DAY}>Full Day</SelectItem>
+                  <SelectItem value={AbsenceType.HALF_DAY}>Half Day</SelectItem>
+                  <SelectItem value={AbsenceType.OVERTIME}>Overtime</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Select the type of absence or overtime
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

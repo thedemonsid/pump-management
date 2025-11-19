@@ -1,5 +1,5 @@
 import api from "./api";
-import type { UserAbsence } from "@/types";
+import type { UserAbsence, AbsenceType } from "@/types";
 
 export class UserAbsenceService {
   private static readonly BASE_PATH = "/api/v1/user-absences";
@@ -55,6 +55,7 @@ export class UserAbsenceService {
   static async create(absence: {
     userId: string;
     absenceDate: string;
+    absenceType: AbsenceType;
     reason?: string;
     notes?: string;
     isApproved?: boolean;
@@ -68,6 +69,7 @@ export class UserAbsenceService {
     id: string,
     absence: {
       absenceDate?: string;
+      absenceType?: AbsenceType;
       reason?: string;
       notes?: string;
       isApproved?: boolean;

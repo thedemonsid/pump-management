@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useUserAbsenceStore } from "@/store/user-absence-store";
+import { AbsenceType } from "@/types/user-absence";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -12,6 +13,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, CalendarIcon } from "lucide-react";
 import ReactSelect from "react-select";
@@ -31,6 +39,7 @@ import { cn } from "@/lib/utils";
 const createAbsenceSchema = z.object({
   userId: z.string().min(1, "Please select a user"),
   absenceDate: z.string().min(1, "Absence date is required"),
+  absenceType: z.nativeEnum(AbsenceType),
   reason: z
     .string()
     .max(500, "Reason must not exceed 500 characters")
@@ -69,6 +78,7 @@ export function CreateAbsenceForm({
     defaultValues: {
       userId: "",
       absenceDate: format(new Date(), "yyyy-MM-dd"), // Default to today
+      absenceType: AbsenceType.FULL_DAY,
       reason: "",
       notes: "",
     },
@@ -108,6 +118,7 @@ export function CreateAbsenceForm({
       await createAbsence({
         userId: data.userId,
         absenceDate: data.absenceDate,
+        absenceType: data.absenceType,
         reason: data.reason || undefined,
         notes: data.notes || undefined,
       });
@@ -205,6 +216,35 @@ export function CreateAbsenceForm({
                 </PopoverContent>
               </Popover>
               <FormDescription>Date when the user was absent</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Absence Type */}
+        <FormField
+          control={form.control}
+          name="absenceType"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Absence Type <span className="text-red-500">*</span>
+              </FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select absence type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value={AbsenceType.FULL_DAY}>Full Day</SelectItem>
+                  <SelectItem value={AbsenceType.HALF_DAY}>Half Day</SelectItem>
+                  <SelectItem value={AbsenceType.OVERTIME}>Overtime</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Select the type of absence or overtime
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

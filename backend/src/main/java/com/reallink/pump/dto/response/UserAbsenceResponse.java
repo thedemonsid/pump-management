@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.reallink.pump.enums.AbsenceType;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -28,6 +30,9 @@ public class UserAbsenceResponse {
 
     @Schema(description = "Date of absence")
     private LocalDate absenceDate;
+
+    @Schema(description = "Type of absence (FULL_DAY, HALF_DAY, or OVERTIME)")
+    private AbsenceType absenceType;
 
     @Schema(description = "Reason for absence")
     private String reason;
