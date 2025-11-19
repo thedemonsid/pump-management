@@ -1,4 +1,5 @@
 import api from "./api";
+import type { User } from "@/types";
 
 export interface ChangePasswordResponse {
   message: string;
@@ -13,6 +14,44 @@ export interface TokenUserInfo {
   pumpName: string;
   pumpId: number;
   pumpCode: string;
+}
+
+export class UserService {
+  private static readonly BASE_PATH = "/api/v1/users";
+
+  // Get user by ID
+  static async getById(id: string): Promise<User> {
+    const response = await api.get<User>(`${this.BASE_PATH}/${id}`);
+    return response.data;
+  }
+
+  // Get all users
+  static async getAll(): Promise<User[]> {
+    const response = await api.get<User[]>(this.BASE_PATH);
+    return response.data;
+  }
+
+  // Get users by pump master ID
+  static async getByPumpMasterId(pumpMasterId: string): Promise<User[]> {
+    const response = await api.get<User[]>(
+      `${this.BASE_PATH}/pump/${pumpMasterId}`
+    );
+    return response.data;
+  }
+
+  // Search users
+  static async search(params: {
+    username?: string;
+    mobileNumber?: string;
+    role?: string;
+    enabled?: boolean;
+    pumpMasterId?: string;
+  }): Promise<User[]> {
+    const response = await api.get<User[]>(`${this.BASE_PATH}/search`, {
+      params,
+    });
+    return response.data;
+  }
 }
 
 export const changePassword = async (

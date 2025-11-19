@@ -1,5 +1,7 @@
 package com.reallink.pump.dto.response;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -27,6 +29,12 @@ public class UserResponse {
 
     @Schema(description = "Whether the user is enabled", example = "true")
     private Boolean enabled;
+
+    @Schema(description = "Opening balance for the user", example = "0.00")
+    private BigDecimal openingBalance;
+
+    @Schema(description = "Opening balance date", example = "2023-01-01")
+    private LocalDate openingBalanceDate;
 
     @Schema(description = "Creation timestamp", example = "2023-10-01T12:00:00")
     private LocalDateTime createdAt;

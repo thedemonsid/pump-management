@@ -21,5 +21,9 @@ export { SupplierPaymentService } from "./supplier-payment-service";
 export { ExpenseHeadService } from "./expense-head-service";
 export { ExpenseService } from "./expense-service";
 export { ProfitReportService } from "./profit-report-service";
+export { UserService } from "./user-service";
+export { EmployeeSalaryConfigService } from "./employee-salary-config-service";
+export { CalculatedSalaryService } from "./calculated-salary-service";
+export { EmployeeSalaryPaymentService } from "./employee-salary-payment-service";
 
 export { default as api } from "./api";

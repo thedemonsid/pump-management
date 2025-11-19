@@ -80,6 +80,7 @@ import { ShiftAccountingPage } from "@/pages/shifts/ShiftAccountingPage";
 import { ShiftAccountingReportPage } from "@/pages/shifts/ShiftAccountingReportPage";
 import { ShiftDetailsPage } from "@/pages/shifts/ShiftDetailsPage";
 import { ShiftListPage } from "@/pages/shifts/ShiftListPage";
+import { EmployeeSalaryConfigPage } from "@/pages/employee-salary-config";
 
 const allRoutes = [
   {
@@ -260,6 +261,11 @@ const allRoutes = [
   {
     path: "/user-absences",
     element: <UserAbsencesPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/employee-salary-config",
+    element: <EmployeeSalaryConfigPage />,
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {

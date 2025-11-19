@@ -1,8 +1,11 @@
 package com.reallink.pump.dto.request;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -38,4 +41,13 @@ public class CreateUserRequest {
 
     @Schema(description = "Whether the user is enabled", example = "true", defaultValue = "true")
     private Boolean enabled = true;
+
+    @NotNull(message = "Opening balance is required")
+    @DecimalMin(value = "0.00", message = "Opening balance must be greater than or equal to 0.00")
+    @Schema(description = "Opening balance for the user", example = "0.00", required = true)
+    private BigDecimal openingBalance = BigDecimal.ZERO;
+
+    @NotNull(message = "Opening balance date is required")
+    @Schema(description = "Opening balance date", example = "2023-01-01", required = true)
+    private LocalDate openingBalanceDate;
 }

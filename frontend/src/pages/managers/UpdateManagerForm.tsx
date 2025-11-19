@@ -48,6 +48,10 @@ const updateManagerSchema = z.object({
     .optional()
     .or(z.literal("")),
   enabled: z.boolean(),
+  openingBalance: z
+    .number()
+    .min(0, "Opening balance must be greater than or equal to 0"),
+  openingBalanceDate: z.string().min(1, "Opening balance date is required"),
 });
 
 type UpdateManagerFormValues = z.infer<typeof updateManagerSchema>;
@@ -77,6 +81,9 @@ export function UpdateManagerForm({
       aadharNumber: manager.aadharNumber || "",
       panNumber: manager.panNumber || "",
       enabled: manager.enabled,
+      openingBalance: manager.openingBalance || 0,
+      openingBalanceDate:
+        manager.openingBalanceDate || new Date().toISOString().split("T")[0],
     },
   });
 
@@ -89,6 +96,8 @@ export function UpdateManagerForm({
         aadharNumber: string;
         panNumber: string;
         enabled: boolean;
+        openingBalance: number;
+        openingBalanceDate: string;
         password?: string;
       } = {
         username: data.username,
@@ -97,6 +106,8 @@ export function UpdateManagerForm({
         aadharNumber: data.aadharNumber || "",
         panNumber: data.panNumber || "",
         enabled: data.enabled,
+        openingBalance: data.openingBalance,
+        openingBalanceDate: data.openingBalanceDate,
       };
 
       // Only include password if user wants to change it
@@ -202,6 +213,52 @@ export function UpdateManagerForm({
                   <Input placeholder="ABCDE1234F" maxLength={10} {...field} />
                 </FormControl>
                 <FormDescription>Optional, 10 characters</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Opening Balance */}
+          <FormField
+            control={form.control}
+            name="openingBalance"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Opening Balance <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseFloat(value) || 0);
+                    }}
+                  />
+                </FormControl>
+                <FormDescription>Initial balance amount</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Opening Balance Date */}
+          <FormField
+            control={form.control}
+            name="openingBalanceDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Opening Balance Date <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormDescription>Date of opening balance</FormDescription>
                 <FormMessage />
               </FormItem>
             )}

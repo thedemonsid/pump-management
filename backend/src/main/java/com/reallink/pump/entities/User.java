@@ -1,5 +1,8 @@
 package com.reallink.pump.entities;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -9,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -66,6 +70,15 @@ public class User extends BaseEntity {
 
     @Column(name = "pan_number", length = 10)
     private String panNumber;
+
+    @NotNull(message = "Opening balance is required")
+    @DecimalMin(value = "0.00", message = "Opening balance must be greater than or equal to 0.00")
+    @Column(name = "opening_balance", nullable = false, precision = 15, scale = 2)
+    private BigDecimal openingBalance = BigDecimal.ZERO;
+
+    @NotNull(message = "Opening balance date is required")
+    @Column(name = "opening_balance_date", nullable = false)
+    private LocalDate openingBalanceDate = LocalDate.now();
 
     public User(String username, String password, String mobileNumber, Role role, PumpInfoMaster pumpMaster, String email, String aadharNumber, String panNumber) {
         this.username = username;

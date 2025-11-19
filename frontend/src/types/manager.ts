@@ -21,6 +21,10 @@ export const ManagerSchema = z.object({
     .max(10, "PAN number cannot exceed 10 characters")
     .optional(),
   enabled: z.boolean().default(true),
+  openingBalance: z
+    .number()
+    .min(0, "Opening balance must be greater than or equal to 0"),
+  openingBalanceDate: z.string(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
   version: z.number().optional(),

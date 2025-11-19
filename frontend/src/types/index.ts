@@ -20,6 +20,8 @@ export * from "./expense-head";
 export * from "./expense";
 export * from "./manager";
 export * from "./user-absence";
+export * from "./user";
+export * from "./employee-salary";
 
 // Explicitly re-export bill types from bill.ts to avoid ambiguity
 export type {
@@ -65,3 +67,4 @@ export * from "./supplier-payment";
 export * from "./ledger";
 export * from "./supplier-ledger";
 export * from "./profit-report";
+export * from "./employee-salary";

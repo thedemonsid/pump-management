@@ -1,6 +1,6 @@
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -8,31 +8,35 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Loader2 } from 'lucide-react';
-import { useSalesmanStore } from '@/store/salesman-store';
-import { z } from 'zod';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
+import { useSalesmanStore } from "@/store/salesman-store";
+import { z } from "zod";
 // Only use fields required by CreateSalesmanRequest DTO
 const CreateSalesmanSchema = z.object({
   username: z
     .string()
-    .min(3, 'Username is required')
-    .max(50, 'Username must be between 3 and 50 characters'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+    .min(3, "Username is required")
+    .max(50, "Username must be between 3 and 50 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
   mobileNumber: z
     .string()
-    .regex(/^\+?[1-9]\d{1,14}$/, 'Mobile number should be valid'),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+    .regex(/^\+?[1-9]\d{1,14}$/, "Mobile number should be valid"),
+  email: z.string().email("Invalid email address").optional().or(z.literal("")),
   aadharNumber: z
     .string()
-    .max(12, 'Aadhar number cannot exceed 12 characters')
+    .max(12, "Aadhar number cannot exceed 12 characters")
     .optional(),
   panNumber: z
     .string()
-    .max(10, 'PAN number cannot exceed 10 characters')
+    .max(10, "PAN number cannot exceed 10 characters")
     .optional(),
   enabled: z.boolean(),
+  openingBalance: z
+    .number()
+    .min(0, "Opening balance must be greater than or equal to 0"),
+  openingBalanceDate: z.string().min(1, "Opening balance date is required"),
 });
 type CreateSalesmanFormData = z.infer<typeof CreateSalesmanSchema>;
 
@@ -47,13 +51,15 @@ export function CreateSalesmanForm({
   const form = useForm<CreateSalesmanFormData>({
     resolver: zodResolver(CreateSalesmanSchema),
     defaultValues: {
-      username: '',
-      password: '',
-      mobileNumber: '',
-      email: '',
-      aadharNumber: '',
-      panNumber: '',
+      username: "",
+      password: "",
+      mobileNumber: "",
+      email: "",
+      aadharNumber: "",
+      panNumber: "",
       enabled: true,
+      openingBalance: 0,
+      openingBalanceDate: new Date().toISOString().split("T")[0],
     },
   });
   const { formState, handleSubmit, reset, control } = form;
@@ -62,7 +68,7 @@ export function CreateSalesmanForm({
   const onSubmit = async (data: CreateSalesmanFormData) => {
     const submitData = {
       ...data,
-      email: data.email && data.email.trim() !== '' ? data.email : undefined,
+      email: data.email && data.email.trim() !== "" ? data.email : undefined,
     };
     await createSalesman(submitData);
     reset();
@@ -164,6 +170,44 @@ export function CreateSalesmanForm({
                     placeholder="Enter PAN number"
                     {...field}
                   />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={control}
+            name="openingBalance"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Opening Balance *</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === "" ? 0 : parseFloat(value) || 0);
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={control}
+            name="openingBalanceDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Opening Balance Date *</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

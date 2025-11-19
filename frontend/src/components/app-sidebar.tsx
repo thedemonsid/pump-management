@@ -35,6 +35,7 @@ import {
   Wallet,
   KeyRound,
   Activity,
+  BadgeDollarSign,
 } from "lucide-react";
 
 const mainItems = [
@@ -129,6 +130,11 @@ const managementItems = [
     title: "Absences",
     url: "/user-absences",
     icon: CalendarX,
+  },
+  {
+    title: "Salary Config",
+    url: "/employee-salary-config",
+    icon: BadgeDollarSign,
   },
   {
     title: "Shifts",

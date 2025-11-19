@@ -1,6 +1,10 @@
 package com.reallink.pump.dto.request;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -37,4 +41,11 @@ public class UpdateManagerRequest {
 
     @Schema(description = "Whether the manager is enabled", example = "true")
     private Boolean enabled;
+
+    @DecimalMin(value = "0.00", message = "Opening balance must be greater than or equal to 0.00")
+    @Schema(description = "Opening balance for the manager", example = "0.00")
+    private BigDecimal openingBalance;
+
+    @Schema(description = "Opening balance date", example = "2023-01-01")
+    private LocalDate openingBalanceDate;
 }

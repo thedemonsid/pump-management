@@ -1,5 +1,7 @@
 package com.reallink.pump.dto.response;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -30,6 +32,12 @@ public class ManagerResponse {
 
     @Schema(description = "Whether the manager is enabled")
     private Boolean enabled;
+
+    @Schema(description = "Opening balance for the manager")
+    private BigDecimal openingBalance;
+
+    @Schema(description = "Opening balance date")
+    private LocalDate openingBalanceDate;
 
     @Schema(description = "ID of the pump master")
     private UUID pumpMasterId;
