@@ -77,7 +77,7 @@ interface UserOption {
 
 export function UserAbsencesPage() {
   const { user } = useAuth();
-  const { absences, loading, error, fetchAbsences, removeAbsence } =
+  const { absences, loading, error, fetchAbsencesByDateRange, removeAbsence } =
     useUserAbsenceStore();
 
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
@@ -108,10 +108,17 @@ export function UserAbsencesPage() {
 
   useEffect(() => {
     if (canManageAbsences) {
-      fetchAbsences();
       fetchUsers();
     }
-  }, [canManageAbsences, fetchAbsences]);
+  }, [canManageAbsences]);
+
+  // Fetch absences whenever the selected date changes
+  useEffect(() => {
+    if (canManageAbsences && selectedDate) {
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      fetchAbsencesByDateRange(dateStr, dateStr);
+    }
+  }, [canManageAbsences, selectedDate, fetchAbsencesByDateRange]);
 
   const fetchUsers = async () => {
     try {
@@ -161,12 +168,20 @@ export function UserAbsencesPage() {
   const handleSuccessEdit = () => {
     setEditingAbsence(null);
     setIsEditSheetOpen(false);
-    fetchAbsences();
+    // Refetch data for the selected date
+    if (selectedDate) {
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      fetchAbsencesByDateRange(dateStr, dateStr);
+    }
   };
 
   const handleSuccessCreate = () => {
     setIsCreateSheetOpen(false);
-    fetchAbsences();
+    // Refetch data for the selected date
+    if (selectedDate) {
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      fetchAbsencesByDateRange(dateStr, dateStr);
+    }
   };
 
   const handleEdit = (absence: UserAbsence) => {
@@ -175,7 +190,7 @@ export function UserAbsencesPage() {
   };
 
   const clearFilters = () => {
-    setSelectedDate(undefined);
+    setSelectedDate(new Date()); // Reset to today instead of undefined
     setApprovalFilter("all");
     setAbsenceTypeFilter("all");
     setSelectedUser(null);
@@ -206,16 +221,8 @@ export function UserAbsencesPage() {
     );
   }
 
-  // Apply filters
+  // Apply filters (date filter is already applied at backend level)
   let filteredAbsences = [...absences];
-
-  // Single date filter - show absences for a specific day
-  if (selectedDate) {
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    filteredAbsences = filteredAbsences.filter(
-      (absence) => absence.absenceDate === dateStr
-    );
-  }
 
   // Approval filter
   if (approvalFilter === "approved") {
