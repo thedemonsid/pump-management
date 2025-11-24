@@ -81,6 +81,8 @@ import { ShiftAccountingReportPage } from "@/pages/shifts/ShiftAccountingReportP
 import { ShiftDetailsPage } from "@/pages/shifts/ShiftDetailsPage";
 import { ShiftListPage } from "@/pages/shifts/ShiftListPage";
 import { EmployeeSalaryConfigPage } from "@/pages/employee-salary-config";
+import { CalculatedSalariesPage } from "@/pages/calculated-salaries";
+import { EmployeeSalaryPaymentsPage } from "@/pages/employee-salary-payments";
 
 const allRoutes = [
   {
@@ -269,6 +271,16 @@ const allRoutes = [
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {
+    path: "/calculated-salaries/:configId/:userId",
+    element: <CalculatedSalariesPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/employee-salary-payments/:userId",
+    element: <EmployeeSalaryPaymentsPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
     path: "/shifts",
     element: <ShiftListPage />,
     requiredRoles: ["ADMIN", "MANAGER", "SALESMAN"],
@@ -392,6 +404,9 @@ const headerMap: Record<string, string> = {
   report: "Report",
   payments: "Payments",
   accounting: "Accounting",
+  "employee-salary-config": "Employee Salary Config",
+  "calculated-salaries": "Calculated Salaries",
+  "employee-salary-payments": "Salary Payments",
 };
 
 export function MainHeader() {
@@ -410,6 +425,8 @@ export function MainHeader() {
     ];
 
     let currentPath = "";
+    let skipNextUuids = 0; // Track how many UUID segments to skip
+
     pathSegments.forEach((segment, index) => {
       currentPath += `/${segment}`;
       const isLast = index === pathSegments.length - 1;
@@ -420,9 +437,28 @@ export function MainHeader() {
           /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
         )
       ) {
+        const parentSegment = pathSegments[index - 1];
+
+        // Special handling for calculated-salaries route
+        if (parentSegment === "calculated-salaries") {
+          if (skipNextUuids === 0) {
+            // First UUID (configId) - skip and set counter
+            skipNextUuids = 2; // Skip both configId and userId
+          }
+          skipNextUuids--;
+
+          // On the last UUID, add "Details"
+          if (skipNextUuids === 0) {
+            breadcrumbs.push({
+              label: "Details",
+              path: null, // Always null for current page
+            });
+          }
+          return;
+        }
+
         // Determine more specific labels based on parent route
         let detailLabel = "Details";
-        const parentSegment = pathSegments[index - 1];
         if (parentSegment === "customers") {
           detailLabel = "Customer Details";
         } else if (parentSegment === "nozzles") {

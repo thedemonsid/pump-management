@@ -11,10 +11,11 @@ export type SalaryType = (typeof SalaryType)[keyof typeof SalaryType];
 
 export const PaymentMethod = {
   CASH: "CASH",
-  CHEQUE: "CHEQUE",
-  BANK_TRANSFER: "BANK_TRANSFER",
   UPI: "UPI",
-  CARD: "CARD",
+  RTGS: "RTGS",
+  NEFT: "NEFT",
+  IMPS: "IMPS",
+  CHEQUE: "CHEQUE",
 } as const;
 
 export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
@@ -188,7 +189,7 @@ export const EmployeeSalaryPaymentSchema = z.object({
   paymentDate: z
     .string()
     .refine((val) => !isNaN(Date.parse(val)), "Invalid date format"),
-  paymentMethod: z.enum(["CASH", "CHEQUE", "BANK_TRANSFER", "UPI", "CARD"]),
+  paymentMethod: z.enum(["CASH", "UPI", "RTGS", "NEFT", "IMPS", "CHEQUE"]),
   referenceNumber: z
     .string()
     .min(1, "Reference number is required")

@@ -8,22 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Plus,
-  Pencil,
-  Loader2,
-  Trash2,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Plus, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -33,42 +18,33 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DataTable } from "@/components/ui/data-table";
 import { CreateSalaryConfigForm } from "./CreateSalaryConfigForm";
 import { UpdateSalaryConfigForm } from "./UpdateSalaryConfigForm";
+import { getEmployeeSalaryConfigColumns } from "./EmployeeSalaryConfigColumns";
 import { EmployeeSalaryConfigService } from "@/services/employee-salary-config-service";
 import type { EmployeeSalaryConfig } from "@/types/employee-salary";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 export function EmployeeSalaryConfigPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [configs, setConfigs] = useState<EmployeeSalaryConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingConfig, setEditingConfig] =
     useState<EmployeeSalaryConfig | null>(null);
-  const [deletingConfig, setDeletingConfig] =
-    useState<EmployeeSalaryConfig | null>(null);
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "inactive"
-  >("all");
+  >("active");
 
   // Check if user has permission to manage salary configs
   const canManageConfigs = user?.role === "ADMIN" || user?.role === "MANAGER";
@@ -162,36 +138,6 @@ export function EmployeeSalaryConfigPage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!deletingConfig) return;
-
-    try {
-      await EmployeeSalaryConfigService.delete(deletingConfig.id!);
-      toast.success("Salary configuration deleted successfully.");
-      fetchConfigs();
-      setDeletingConfig(null);
-    } catch (error) {
-      console.error("Failed to delete config:", error);
-
-      const err = error as {
-        message?: string;
-      };
-
-      let errorMessage = "Failed to delete configuration. Please try again.";
-
-      if (err.message) {
-        const match = err.message.match(/^\d+:\s*(.+)$/);
-        if (match && match[1]) {
-          errorMessage = match[1];
-        } else {
-          errorMessage = err.message;
-        }
-      }
-
-      toast.error(errorMessage);
-    }
-  };
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -208,6 +154,23 @@ export function EmployeeSalaryConfigPage() {
     };
     return labels[type] || type;
   };
+
+  const handleViewSalaries = (config: EmployeeSalaryConfig) => {
+    navigate(`/calculated-salaries/${config.id}/${config.userId}`);
+  };
+
+  const handleViewPayments = (config: EmployeeSalaryConfig) => {
+    navigate(`/employee-salary-payments/${config.userId}`);
+  };
+
+  const columns = getEmployeeSalaryConfigColumns({
+    onEdit: handleEdit,
+    onDeactivate: handleDeactivate,
+    onViewSalaries: handleViewSalaries,
+    onViewPayments: handleViewPayments,
+    formatCurrency,
+    getSalaryTypeLabel,
+  });
 
   if (!canManageConfigs) {
     return (
@@ -312,98 +275,18 @@ export function EmployeeSalaryConfigPage() {
               </p>
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Salary Type</TableHead>
-                    <TableHead>Basic Amount</TableHead>
-                    <TableHead>Effective From</TableHead>
-                    <TableHead>Effective To</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Rates</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {configs.map((config) => (
-                    <TableRow key={config.id}>
-                      <TableCell className="font-medium">
-                        {config.username || "Unknown User"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {getSalaryTypeLabel(config.salaryType)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-semibold">
-                        {formatCurrency(config.basicSalaryAmount)}
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(config.effectiveFrom), "dd MMM yyyy")}
-                      </TableCell>
-                      <TableCell>
-                        {config.effectiveTo
-                          ? format(new Date(config.effectiveTo), "dd MMM yyyy")
-                          : "-"}
-                      </TableCell>
-                      <TableCell>
-                        {config.isActive ? (
-                          <Badge className="bg-green-500">
-                            <CheckCircle className="mr-1 h-3 w-3" />
-                            Active
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">
-                            <XCircle className="mr-1 h-3 w-3" />
-                            Inactive
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm space-y-1">
-                          <div>
-                            Half Day: {(config.halfDayRate * 100).toFixed(0)}%
-                          </div>
-                          <div>
-                            Overtime: {(config.overtimeRate * 100).toFixed(0)}%
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(config)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          {config.isActive && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeactivate(config)}
-                              title="Deactivate"
-                            >
-                              <XCircle className="h-4 w-4 text-orange-500" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setDeletingConfig(config)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <DataTable
+              columns={columns}
+              data={configs}
+              searchKey="username"
+              searchPlaceholder="Search by employee name..."
+              pageSize={10}
+              enableRowSelection={false}
+              enableColumnVisibility={true}
+              enablePagination={true}
+              enableSorting={true}
+              enableFiltering={true}
+            />
           )}
         </CardContent>
       </Card>
@@ -432,32 +315,6 @@ export function EmployeeSalaryConfigPage() {
           )}
         </DialogContent>
       </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={!!deletingConfig}
-        onOpenChange={() => setDeletingConfig(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the salary configuration for{" "}
-              <strong>{deletingConfig?.username}</strong>. This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-500 hover:bg-red-600"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
