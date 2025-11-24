@@ -30,6 +30,7 @@ public interface SalesmanBillPaymentMapper {
     @Mapping(target = "pumpMaster", ignore = true)
     @Mapping(target = "salesmanShift", ignore = true)
     @Mapping(target = "customer", ignore = true)
+    @Mapping(target = "salesmanBill", ignore = true)
     SalesmanBillPayment toEntity(CreateSalesmanBillPaymentRequest request);
 
     /**
@@ -41,6 +42,7 @@ public interface SalesmanBillPaymentMapper {
     @Mapping(target = "salesmanName", source = "salesmanShift.salesman.username")
     @Mapping(target = "customerId", source = "customer.id")
     @Mapping(target = "customerName", source = "customer.customerName")
+    @Mapping(target = "salesmanBillId", source = "salesmanBill.id")
     @Mapping(target = "paymentDate", source = "paymentDate", qualifiedByName = "toIST")
     @Mapping(target = "createdAt", source = "createdAt", qualifiedByName = "toIST")
     @Mapping(target = "updatedAt", source = "updatedAt", qualifiedByName = "toIST")

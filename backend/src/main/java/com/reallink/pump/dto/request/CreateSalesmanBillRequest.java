@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import com.reallink.pump.entities.BillingMode;
+import com.reallink.pump.entities.PaymentType;
 import com.reallink.pump.entities.RateType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -61,6 +62,12 @@ public class CreateSalesmanBillRequest {
     @Schema(description = "Billing mode - BY_QUANTITY when customer specifies liters, BY_AMOUNT when customer specifies rupees",
             example = "BY_QUANTITY", required = true)
     private BillingMode billingMode;
+
+    @Schema(description = "Payment type - CASH or CREDIT. Defaults to CREDIT if not specified", example = "CREDIT")
+    private PaymentType paymentType = PaymentType.CREDIT;
+
+    @Schema(description = "Cash payment details - required when paymentType is CASH")
+    private CashPaymentRequest cashPayment;
 
     @DecimalMin(value = "0.0", inclusive = false, message = "Quantity must be positive")
     @Digits(integer = 10, fraction = 3, message = "Quantity must have at most 10 digits and 3 decimal places")

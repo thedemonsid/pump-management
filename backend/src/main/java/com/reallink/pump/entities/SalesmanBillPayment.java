@@ -44,6 +44,10 @@ public class SalesmanBillPayment extends BaseEntity {
     @JoinColumn(name = "customer_id", nullable = false, foreignKey = @ForeignKey(name = "fk_salesman_bill_payment_customer"))
     private Customer customer;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "salesman_bill_id", foreignKey = @ForeignKey(name = "fk_salesman_bill_payment_bill"))
+    private SalesmanBill salesmanBill;
+
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0.00")
     @Column(name = "amount", nullable = false, precision = 15, scale = 2)

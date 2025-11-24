@@ -29,6 +29,9 @@ public class CreateSalesmanBillPaymentRequest {
     @Schema(description = "Customer ID making the payment", example = "123e4567-e89b-12d3-a456-426614174000", required = true)
     private UUID customerId;
 
+    @Schema(description = "Salesman Bill ID if this payment is linked to a specific bill", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID salesmanBillId;
+
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0.00")
     @Schema(description = "Payment amount", example = "5000.00", required = true)

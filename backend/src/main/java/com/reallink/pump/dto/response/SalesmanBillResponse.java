@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.reallink.pump.entities.PaymentType;
 import com.reallink.pump.entities.RateType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -49,6 +50,9 @@ public class SalesmanBillResponse {
 
     @Schema(description = "Rate type", example = "INCLUDING_GST")
     private RateType rateType;
+
+    @Schema(description = "Payment type - CASH or CREDIT", example = "CREDIT")
+    private PaymentType paymentType;
 
     @Schema(description = "Fuel quantity", example = "50.00")
     private BigDecimal quantity;

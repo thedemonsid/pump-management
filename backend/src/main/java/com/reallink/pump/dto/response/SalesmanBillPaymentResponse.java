@@ -34,6 +34,9 @@ public class SalesmanBillPaymentResponse {
     @Schema(description = "Customer Name", example = "ABC Transport")
     private String customerName;
 
+    @Schema(description = "Salesman Bill ID if this payment is linked to a specific bill", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID salesmanBillId;
+
     @Schema(description = "Payment amount", example = "5000.00")
     private BigDecimal amount;
 

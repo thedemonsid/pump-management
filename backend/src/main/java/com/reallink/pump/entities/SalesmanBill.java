@@ -77,6 +77,11 @@ public class SalesmanBill extends BaseEntity {
     @Column(name = "billing_mode", nullable = false)
     private BillingMode billingMode;
 
+    @NotNull(message = "Payment type is required")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_type", nullable = false)
+    private PaymentType paymentType = PaymentType.CREDIT;
+
     @NotBlank(message = "Vehicle number is required")
     @Size(max = 20, message = "Vehicle number cannot exceed 20 characters")
     @Column(name = "vehicle_no", nullable = false, length = 20)

@@ -21,6 +21,7 @@ import com.reallink.pump.entities.Product;
 import com.reallink.pump.entities.ProductType;
 import com.reallink.pump.entities.PumpInfoMaster;
 import com.reallink.pump.entities.SalesmanBill;
+import com.reallink.pump.entities.SalesmanBillPayment;
 import com.reallink.pump.entities.SalesmanShift;
 import com.reallink.pump.exception.PumpBusinessException;
 import com.reallink.pump.mapper.SalesmanBillMapper;
@@ -29,6 +30,7 @@ import com.reallink.pump.repositories.ProductRepository;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
 import com.reallink.pump.repositories.SalesmanBillRepository;
 import com.reallink.pump.repositories.SalesmanShiftRepository;
+import com.reallink.pump.repositories.SalesmanBillPaymentRepository;
 import com.reallink.pump.security.SecurityHelper;
 
 import jakarta.validation.Valid;
@@ -46,6 +48,7 @@ public class SalesmanBillService {
     private final ProductRepository productRepository;
     private final PumpInfoMasterRepository pumpInfoMasterRepository;
     private final SalesmanShiftRepository salesmanShiftRepository;
+    private final SalesmanBillPaymentRepository salesmanBillPaymentRepository;
     private final SalesmanBillMapper mapper;
     private final FileStorageService fileStorageService;
     private final SecurityHelper securityHelper;
@@ -79,6 +82,54 @@ public class SalesmanBillService {
         }
     }
 
+    /**
+     * Validates payment type and cash payment details
+     */
+    private void validatePaymentRequest(CreateSalesmanBillRequest request) {
+        // If payment type is CASH, cash payment details are required
+        if (request.getPaymentType() == com.reallink.pump.entities.PaymentType.CASH) {
+            if (request.getCashPayment() == null) {
+                throw new PumpBusinessException("CASH_PAYMENT_REQUIRED",
+                        "Cash payment details are required when payment type is CASH");
+            }
+
+            // Calculate expected bill amount
+            BigDecimal expectedAmount;
+            if (request.getBillingMode() == com.reallink.pump.entities.BillingMode.BY_QUANTITY) {
+                expectedAmount = request.getQuantity().multiply(request.getRate()).setScale(2, RoundingMode.HALF_UP);
+            } else {
+                expectedAmount = request.getRequestedAmount();
+            }
+
+            // Validate payment amount matches bill amount
+            if (request.getCashPayment().getAmount().compareTo(expectedAmount) != 0) {
+                throw new PumpBusinessException("PAYMENT_AMOUNT_MISMATCH",
+                        "Cash payment amount (" + request.getCashPayment().getAmount()
+                        + ") must match the bill amount (" + expectedAmount + ")");
+            }
+        }
+    }
+
+    /**
+     * Creates a cash payment record linked to the bill
+     */
+    private void createCashPayment(SalesmanBill bill, com.reallink.pump.dto.request.CashPaymentRequest cashPaymentRequest,
+            PumpInfoMaster pumpMaster, Customer customer, SalesmanShift salesmanShift) {
+        SalesmanBillPayment payment = new SalesmanBillPayment();
+        payment.setPumpMaster(pumpMaster);
+        payment.setSalesmanShift(salesmanShift);
+        payment.setCustomer(customer);
+        payment.setSalesmanBill(bill);
+        payment.setAmount(cashPaymentRequest.getAmount());
+        payment.setPaymentDate(cashPaymentRequest.getPaymentDate());
+        payment.setPaymentMethod(cashPaymentRequest.getPaymentMethod());
+        payment.setReferenceNumber(cashPaymentRequest.getReferenceNumber());
+        payment.setNotes(cashPaymentRequest.getNotes());
+        payment.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
+
+        salesmanBillPaymentRepository.save(payment);
+    }
+
     public List<SalesmanBillResponse> getAll() {
         return repository.findAll().stream()
                 .map(mapper::toResponse)
@@ -97,6 +148,9 @@ public class SalesmanBillService {
     public SalesmanBillResponse create(@Valid CreateSalesmanBillRequest request) {
         // Validate billing mode and corresponding fields
         validateBillingRequest(request);
+
+        // Validate payment type and cash payment details
+        validatePaymentRequest(request);
 
         // Validate pump master exists
         PumpInfoMaster pumpMaster = pumpInfoMasterRepository.findById(request.getPumpMasterId()).orElse(null);
@@ -168,8 +222,13 @@ public class SalesmanBillService {
         bill.setAmount(amount);
         bill.setNetAmount(amount); // No tax, no discount
 
-        // Save bill
+        // Save bill first
         SalesmanBill savedBill = repository.save(bill);
+
+        // If payment type is CASH, create the payment record
+        if (request.getPaymentType() == com.reallink.pump.entities.PaymentType.CASH && request.getCashPayment() != null) {
+            createCashPayment(savedBill, request.getCashPayment(), pumpMaster, customer, salesmanShift);
+        }
 
         return mapper.toResponse(savedBill);
     }
@@ -184,6 +243,9 @@ public class SalesmanBillService {
 
         // Validate billing mode and corresponding fields
         validateBillingRequest(request);
+
+        // Validate payment type and cash payment details
+        validatePaymentRequest(request);
 
         // Validate pump master exists
         PumpInfoMaster pumpMaster = pumpInfoMasterRepository.findById(request.getPumpMasterId()).orElse(null);
@@ -280,8 +342,13 @@ public class SalesmanBillService {
         bill.setAmount(amount);
         bill.setNetAmount(amount); // No tax, no discount
 
-        // Save bill
+        // Save bill first
         SalesmanBill savedBill = repository.save(bill);
+
+        // If payment type is CASH, create the payment record
+        if (request.getPaymentType() == com.reallink.pump.entities.PaymentType.CASH && request.getCashPayment() != null) {
+            createCashPayment(savedBill, request.getCashPayment(), pumpMaster, customer, salesmanShift);
+        }
 
         return mapper.toResponse(savedBill);
     }

@@ -19,6 +19,8 @@ export interface SalesmanBillPaymentResponse {
   customerId: string;
   /** Customer name */
   customerName?: string;
+  /** Salesman Bill ID if this payment is linked to a specific bill */
+  salesmanBillId?: string;
   /** Payment amount */
   amount: number;
   /** Payment date and time */
@@ -45,6 +47,8 @@ export interface CreateSalesmanBillPaymentRequest {
   salesmanShiftId: string;
   /** Customer ID */
   customerId: string;
+  /** Salesman Bill ID if this payment is linked to a specific bill */
+  salesmanBillId?: string;
   /** Payment amount */
   amount: number;
   /** Payment date and time */

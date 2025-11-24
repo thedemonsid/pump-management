@@ -87,6 +87,7 @@ export function ShiftBillsPage() {
   const [billingMode, setBillingMode] = useState<"BY_QUANTITY" | "BY_AMOUNT">(
     "BY_QUANTITY"
   );
+  const [paymentType, setPaymentType] = useState<"CASH" | "CREDIT">("CREDIT");
   const [selectedCustomer, setSelectedCustomer] = useState<Option | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Option | null>(null);
   const [quantity, setQuantity] = useState<string>("");
@@ -94,6 +95,15 @@ export function ShiftBillsPage() {
   const [rate, setRate] = useState<string>("");
   const [vehicleNo, setVehicleNo] = useState<string>("NA");
   const [driverName, setDriverName] = useState<string>("NA");
+
+  // Cash payment fields
+  const [cashPaymentMethod, setCashPaymentMethod] = useState<Option>({
+    value: "CASH",
+    label: "Cash",
+  });
+  const [cashReferenceNumber, setCashReferenceNumber] = useState<string>("");
+  const [cashNotes, setCashNotes] = useState<string>("");
+
   const [meterImage, setMeterImage] = useState<File | null>(null);
   const [vehicleImage, setVehicleImage] = useState<File | null>(null);
   const [extraImage, setExtraImage] = useState<File | null>(null);
@@ -131,6 +141,7 @@ export function ShiftBillsPage() {
 
   const resetForm = () => {
     setBillingMode("BY_QUANTITY");
+    setPaymentType("CREDIT");
     setSelectedCustomer(null);
     setSelectedProduct(null);
     setQuantity("");
@@ -138,6 +149,9 @@ export function ShiftBillsPage() {
     setRate("");
     setVehicleNo("NA");
     setDriverName("NA");
+    setCashPaymentMethod({ value: "CASH", label: "Cash" });
+    setCashReferenceNumber("");
+    setCashNotes("");
     setMeterImage(null);
     setVehicleImage(null);
     setExtraImage(null);
@@ -194,9 +208,23 @@ export function ShiftBillsPage() {
       return;
     }
 
+    // Validate cash payment if payment type is CASH
+    if (paymentType === "CASH") {
+      if (!cashReferenceNumber || cashReferenceNumber.trim() === "") {
+        setError("Please enter a reference number for cash payment");
+        return;
+      }
+    }
+
     setIsCreatingBill(true);
 
     try {
+      // Calculate bill amount
+      const billAmount =
+        billingMode === "BY_QUANTITY"
+          ? parseFloat(quantity) * parseFloat(rate)
+          : parseFloat(requestedAmount);
+
       const billData: CreateSalesmanBillRequest = {
         pumpMasterId: user?.pumpMasterId || "",
         salesmanShiftId: shiftId!,
@@ -205,6 +233,7 @@ export function ShiftBillsPage() {
         billNo: Date.now(), // Generate bill number (backend should handle this)
         billDate: new Date().toISOString().split("T")[0],
         billingMode: billingMode,
+        paymentType: paymentType,
         quantity:
           billingMode === "BY_QUANTITY" ? parseFloat(quantity) : undefined,
         requestedAmount:
@@ -214,6 +243,23 @@ export function ShiftBillsPage() {
         vehicleNo: vehicleNo.trim(),
         driverName: driverName.trim(),
       };
+
+      // Add cash payment details if payment type is CASH
+      if (paymentType === "CASH") {
+        billData.cashPayment = {
+          amount: billAmount,
+          paymentDate: new Date().toISOString(),
+          paymentMethod: cashPaymentMethod.value as
+            | "CASH"
+            | "UPI"
+            | "RTGS"
+            | "NEFT"
+            | "IMPS"
+            | "CHEQUE",
+          referenceNumber: cashReferenceNumber.trim(),
+          notes: cashNotes.trim() || undefined,
+        };
+      }
 
       await SalesmanBillService.create(billData, {
         meterImage: meterImage || undefined,
@@ -286,8 +332,16 @@ export function ShiftBillsPage() {
     .filter((p) => {
       // If no nozzle assignments, allow all products (backward compatibility)
       if (allowedProductNames.size === 0) return true;
-      // Otherwise, only show products that match assigned nozzles
-      return allowedProductNames.has(p.productName.toLowerCase());
+
+      // Always allow GENERAL products
+      if (p.productType === "GENERAL") return true;
+
+      // For FUEL products, only show those assigned to the salesman's nozzles
+      if (p.productType === "FUEL") {
+        return allowedProductNames.has(p.productName.toLowerCase());
+      }
+
+      return false;
     })
     .map((p) => ({
       value: p.id!,
@@ -408,6 +462,7 @@ export function ShiftBillsPage() {
                     <TableHead>Date</TableHead>
                     <TableHead>Customer</TableHead>
                     <TableHead>Product</TableHead>
+                    <TableHead>Payment</TableHead>
                     <TableHead className="text-right">Qty (L)</TableHead>
                     <TableHead className="text-right">Rate</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
@@ -429,6 +484,17 @@ export function ShiftBillsPage() {
                       </TableCell>
                       <TableCell>{bill.customerName}</TableCell>
                       <TableCell>{bill.productName}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            bill.paymentType === "CASH"
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
+                          {bill.paymentType}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-right font-mono">
                         {bill.quantity.toFixed(3)}
                       </TableCell>
@@ -642,6 +708,38 @@ export function ShiftBillsPage() {
               </p>
             </div>
 
+            {/* Payment Type Toggle */}
+            <div className="space-y-3 pt-2 border-t">
+              <Label className="text-base">
+                Payment Type <span className="text-red-500">*</span>
+              </Label>
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant={paymentType === "CREDIT" ? "default" : "outline"}
+                  onClick={() => setPaymentType("CREDIT")}
+                  disabled={isCreatingBill}
+                  className="flex-1"
+                >
+                  Credit
+                </Button>
+                <Button
+                  type="button"
+                  variant={paymentType === "CASH" ? "default" : "outline"}
+                  onClick={() => setPaymentType("CASH")}
+                  disabled={isCreatingBill}
+                  className="flex-1"
+                >
+                  Cash
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {paymentType === "CREDIT"
+                  ? "Bill will be recorded as credit - payment can be collected later"
+                  : "Payment must be collected immediately with the bill"}
+              </p>
+            </div>
+
             {/* Rate */}
             <div className="space-y-2">
               <Label htmlFor="rate">
@@ -760,6 +858,101 @@ export function ShiftBillsPage() {
                 required
               />
             </div>
+
+            {/* Cash Payment Details - Only show when payment type is CASH */}
+            {paymentType === "CASH" && (
+              <div className="space-y-4 pt-4 border-t border-primary/20 bg-primary/5 p-4 rounded-lg">
+                <div>
+                  <h3 className="text-sm font-semibold text-primary">
+                    Cash Payment Details
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Payment will be recorded with the bill
+                  </p>
+                </div>
+
+                {/* Payment Method */}
+                <div className="space-y-2">
+                  <Label>
+                    Payment Method <span className="text-red-500">*</span>
+                  </Label>
+                  <ReactSelect
+                    options={[
+                      { value: "CASH", label: "Cash" },
+                      { value: "UPI", label: "UPI" },
+                      { value: "RTGS", label: "RTGS" },
+                      { value: "NEFT", label: "NEFT" },
+                      { value: "IMPS", label: "IMPS" },
+                      { value: "CHEQUE", label: "Cheque" },
+                    ]}
+                    value={cashPaymentMethod}
+                    onChange={(option) =>
+                      setCashPaymentMethod(
+                        option || { value: "CASH", label: "Cash" }
+                      )
+                    }
+                    isDisabled={isCreatingBill}
+                    className="text-base"
+                    styles={{
+                      control: (base) => ({
+                        ...base,
+                        minHeight: "40px",
+                        fontSize: "16px",
+                      }),
+                    }}
+                  />
+                </div>
+
+                {/* Reference Number */}
+                <div className="space-y-2">
+                  <Label htmlFor="cashReferenceNumber">
+                    Reference Number <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="cashReferenceNumber"
+                    type="text"
+                    placeholder="Transaction ID, Receipt No., etc."
+                    value={cashReferenceNumber}
+                    onChange={(e) => setCashReferenceNumber(e.target.value)}
+                    disabled={isCreatingBill}
+                    className="text-base"
+                    required
+                  />
+                </div>
+
+                {/* Notes */}
+                <div className="space-y-2">
+                  <Label htmlFor="cashNotes">Notes</Label>
+                  <Input
+                    id="cashNotes"
+                    type="text"
+                    placeholder="Optional payment notes..."
+                    value={cashNotes}
+                    onChange={(e) => setCashNotes(e.target.value)}
+                    disabled={isCreatingBill}
+                    className="text-base"
+                  />
+                </div>
+
+                {/* Payment Amount Display */}
+                {((billingMode === "BY_QUANTITY" && quantity && rate) ||
+                  (billingMode === "BY_AMOUNT" && requestedAmount)) && (
+                  <div className="p-3 rounded-md bg-green-50 border border-green-200">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-green-900">
+                        Payment Amount:
+                      </span>
+                      <span className="text-lg font-bold text-green-700">
+                        ₹
+                        {billingMode === "BY_QUANTITY"
+                          ? (parseFloat(quantity) * parseFloat(rate)).toFixed(2)
+                          : parseFloat(requestedAmount).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Image Uploads */}
             <div className="space-y-4 pt-4 border-t">

@@ -14,6 +14,7 @@ import com.reallink.pump.dto.request.UpdateSalesmanBillPaymentRequest;
 import com.reallink.pump.dto.response.SalesmanBillPaymentResponse;
 import com.reallink.pump.entities.Customer;
 import com.reallink.pump.entities.PumpInfoMaster;
+import com.reallink.pump.entities.SalesmanBill;
 import com.reallink.pump.entities.SalesmanBillPayment;
 import com.reallink.pump.entities.SalesmanShift;
 import com.reallink.pump.exception.PumpBusinessException;
@@ -21,6 +22,7 @@ import com.reallink.pump.mapper.SalesmanBillPaymentMapper;
 import com.reallink.pump.repositories.CustomerRepository;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
 import com.reallink.pump.repositories.SalesmanBillPaymentRepository;
+import com.reallink.pump.repositories.SalesmanBillRepository;
 import com.reallink.pump.repositories.SalesmanShiftRepository;
 
 import jakarta.validation.Valid;
@@ -37,6 +39,7 @@ public class SalesmanBillPaymentService {
     private final SalesmanShiftRepository salesmanShiftRepository;
     private final CustomerRepository customerRepository;
     private final PumpInfoMasterRepository pumpInfoMasterRepository;
+    private final SalesmanBillRepository salesmanBillRepository;
     private final SalesmanBillPaymentMapper mapper;
 
     public List<SalesmanBillPaymentResponse> getAll() {
@@ -83,11 +86,22 @@ public class SalesmanBillPaymentService {
                     "Customer with ID " + request.getCustomerId() + " does not exist");
         }
 
+        // Validate salesman bill if provided
+        SalesmanBill salesmanBill = null;
+        if (request.getSalesmanBillId() != null) {
+            salesmanBill = salesmanBillRepository.findById(request.getSalesmanBillId()).orElse(null);
+            if (salesmanBill == null) {
+                throw new PumpBusinessException("INVALID_SALESMAN_BILL",
+                        "Salesman bill with ID " + request.getSalesmanBillId() + " does not exist");
+            }
+        }
+
         // Create payment entity
         SalesmanBillPayment payment = mapper.toEntity(request);
         payment.setPumpMaster(pumpMaster);
         payment.setSalesmanShift(salesmanShift);
         payment.setCustomer(customer);
+        payment.setSalesmanBill(salesmanBill);
 
         // Save payment
         SalesmanBillPayment savedPayment = repository.save(payment);

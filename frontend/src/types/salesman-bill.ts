@@ -4,6 +4,20 @@
  */
 
 export type BillingMode = "BY_QUANTITY" | "BY_AMOUNT";
+export type PaymentType = "CASH" | "CREDIT";
+
+export interface CashPaymentRequest {
+  /** Payment amount */
+  amount: number;
+  /** Payment date and time */
+  paymentDate: string;
+  /** Payment method */
+  paymentMethod: "CASH" | "UPI" | "RTGS" | "NEFT" | "IMPS" | "CHEQUE";
+  /** Payment reference number */
+  referenceNumber: string;
+  /** Additional notes */
+  notes?: string;
+}
 
 export interface SalesmanBillResponse {
   /** Unique identifier */
@@ -32,6 +46,8 @@ export interface SalesmanBillResponse {
   rateType: "EXCLUDING_GST" | "INCLUDING_GST";
   /** Billing mode - how the bill was created */
   billingMode: BillingMode;
+  /** Payment type - CASH or CREDIT */
+  paymentType: PaymentType;
   /** Quantity in liters */
   quantity: number;
   /** Rate per liter */
@@ -73,6 +89,10 @@ export interface CreateSalesmanBillRequest {
   rateType: "EXCLUDING_GST" | "INCLUDING_GST";
   /** Billing mode - BY_QUANTITY when customer specifies liters, BY_AMOUNT when customer specifies rupees */
   billingMode: BillingMode;
+  /** Payment type - CASH or CREDIT, defaults to CREDIT */
+  paymentType?: PaymentType;
+  /** Cash payment details - required when paymentType is CASH */
+  cashPayment?: CashPaymentRequest;
   /** Quantity in liters - required when billingMode is BY_QUANTITY, calculated when BY_AMOUNT */
   quantity?: number;
   /** Rate per liter */
