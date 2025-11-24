@@ -14,6 +14,7 @@ import {
   Eye,
   Lock,
   AlertCircle,
+  FlaskConical,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useShiftStore } from "@/store/shifts/shift-store";
@@ -112,6 +113,20 @@ export function ShiftActionsCard({
                 <div className="font-semibold">Add Expense</div>
                 <div className="text-xs text-muted-foreground">
                   Record expense
+                </div>
+              </div>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="h-auto flex-col items-start p-4 gap-2"
+              onClick={() => navigate(`/shifts/${shiftId}?tab=tests`)}
+            >
+              <FlaskConical className="h-5 w-5 text-purple-600" />
+              <div className="text-left">
+                <div className="font-semibold">Test Nozzle</div>
+                <div className="text-xs text-muted-foreground">
+                  Record test reading
                 </div>
               </div>
             </Button>
