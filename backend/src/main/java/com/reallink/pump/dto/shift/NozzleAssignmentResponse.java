@@ -34,6 +34,10 @@ public class NozzleAssignmentResponse {
     private BigDecimal totalAmount;
     private String status;
 
+    // Test information
+    private BigDecimal totalTestQuantity;
+    private Integer testCount;
+
     // Product info (from nozzle's tank's product)
     private String productName;
     private BigDecimal productRate;
@@ -59,7 +63,9 @@ public class NozzleAssignmentResponse {
                 .closingBalance(assignment.getClosingBalance())
                 .dispensedAmount(assignment.getDispensedAmount())
                 .totalAmount(assignment.getTotalAmount())
-                .status(assignment.getStatus() != null ? assignment.getStatus().name() : null);
+                .status(assignment.getStatus() != null ? assignment.getStatus().name() : null)
+                .totalTestQuantity(assignment.calculateTotalTestQuantity())
+                .testCount(assignment.getNozzleTests() != null ? assignment.getNozzleTests().size() : 0);
 
         // Add product info if available
         if (assignment.getNozzle() != null && assignment.getNozzle().getTank() != null

@@ -165,6 +165,7 @@ export function NozzleAssignmentsTable({
               <TableHead className="text-right">Opening (L)</TableHead>
               <TableHead className="text-right">Closing (L)</TableHead>
               <TableHead className="text-right">Dispensed (L)</TableHead>
+              <TableHead className="text-right">Tests (L)</TableHead>
               <TableHead className="text-right">Amount (₹)</TableHead>
               <TableHead className="text-center">Action</TableHead>
             </TableRow>
@@ -193,6 +194,21 @@ export function NozzleAssignmentsTable({
                 </TableCell>
                 <TableCell className="text-right font-mono">
                   {assignment.dispensedAmount?.toFixed(3) || "-"}
+                </TableCell>
+                <TableCell className="text-right">
+                  {assignment.testCount > 0 ? (
+                    <div className="flex flex-col items-end">
+                      <span className="font-mono text-sm">
+                        {assignment.totalTestQuantity.toFixed(3)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        ({assignment.testCount} test
+                        {assignment.testCount !== 1 ? "s" : ""})
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  )}
                 </TableCell>
                 <TableCell className="text-right font-mono">
                   {assignment.totalAmount?.toFixed(2) || "-"}

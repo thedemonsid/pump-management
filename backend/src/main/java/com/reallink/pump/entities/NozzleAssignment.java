@@ -3,7 +3,10 @@ package com.reallink.pump.entities;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,6 +16,7 @@ import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -97,6 +101,13 @@ public class NozzleAssignment extends BaseEntity {
     @Column(name = "total_amount", precision = 17, scale = 2)
     private BigDecimal totalAmount;
 
+    /**
+     * Nozzle tests performed during this assignment. Test quantities should be
+     * subtracted from dispensed amount for accurate sales calculation.
+     */
+    @OneToMany(mappedBy = "nozzleAssignment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<NozzleTest> nozzleTests = new ArrayList<>();
+
     // Business methods
     public NozzleAssignment(SalesmanShift salesmanShift, Nozzle nozzle, User salesman,
             PumpInfoMaster pumpMaster, LocalDateTime startTime, BigDecimal openingBalance) {
@@ -154,6 +165,11 @@ public class NozzleAssignment extends BaseEntity {
         }
 
         BigDecimal dispensed = closingBalance.subtract(openingBalance);
+
+        // Subtract test quantities - they were dispensed but returned to tank
+        BigDecimal testQuantity = calculateTotalTestQuantity();
+        BigDecimal actualDispensed = dispensed.subtract(testQuantity);
+
         BigDecimal price = BigDecimal.ZERO;
 
         // Get price from nozzle's tank's product
@@ -161,7 +177,7 @@ public class NozzleAssignment extends BaseEntity {
             price = nozzle.getTank().getProduct().getSalesRate();
         }
 
-        return dispensed.multiply(price != null ? price : BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
+        return actualDispensed.multiply(price != null ? price : BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
     }
 
     public BigDecimal getTotalAmount() {
@@ -174,5 +190,17 @@ public class NozzleAssignment extends BaseEntity {
     public void updateCalculatedFields() {
         this.dispensedAmount = calculateDispensedAmount();
         this.totalAmount = calculateTotalAmount();
+    }
+
+    /**
+     * Calculate total test quantity for this assignment.
+     */
+    public BigDecimal calculateTotalTestQuantity() {
+        if (nozzleTests == null || nozzleTests.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        return nozzleTests.stream()
+                .map(NozzleTest::getTestQuantity)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

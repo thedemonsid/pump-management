@@ -117,6 +117,12 @@ public class SalesmanShift extends BaseEntity {
     @OneToOne(mappedBy = "salesmanShift", cascade = CascadeType.ALL, orphanRemoval = true)
     private SalesmanShiftAccounting accounting;
 
+    /**
+     * Nozzle tests performed during this shift.
+     */
+    @OneToMany(mappedBy = "salesmanShift", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<NozzleTest> nozzleTests = new ArrayList<>();
+
     // Business methods
     public SalesmanShift(User salesman, PumpInfoMaster pumpMaster, LocalDateTime startDatetime, BigDecimal openingCash) {
         this.salesman = salesman;
@@ -218,6 +224,19 @@ public class SalesmanShift extends BaseEntity {
         }
         return expenses.stream()
                 .map(Expense::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Calculates total test quantity for this shift across all nozzle
+     * assignments.
+     */
+    public BigDecimal calculateTotalTestQuantity() {
+        if (nozzleTests == null || nozzleTests.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        return nozzleTests.stream()
+                .map(NozzleTest::getTestQuantity)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

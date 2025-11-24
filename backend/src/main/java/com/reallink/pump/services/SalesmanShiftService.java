@@ -12,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
 
 import com.reallink.pump.entities.Nozzle;
 import com.reallink.pump.entities.NozzleAssignment;
+import com.reallink.pump.entities.NozzleTest;
 import com.reallink.pump.entities.PumpInfoMaster;
 import com.reallink.pump.entities.SalesmanShift;
 import com.reallink.pump.entities.Tank;
@@ -19,6 +20,7 @@ import com.reallink.pump.entities.TankTransaction;
 import com.reallink.pump.entities.User;
 import com.reallink.pump.repositories.NozzleAssignmentRepository;
 import com.reallink.pump.repositories.NozzleRepository;
+import com.reallink.pump.repositories.NozzleTestRepository;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
 import com.reallink.pump.repositories.SalesmanShiftRepository;
 import com.reallink.pump.repositories.TankTransactionRepository;
@@ -43,6 +45,7 @@ public class SalesmanShiftService {
 
     private final SalesmanShiftRepository salesmanShiftRepository;
     private final NozzleAssignmentRepository nozzleAssignmentRepository;
+    private final NozzleTestRepository nozzleTestRepository;
     private final NozzleRepository nozzleRepository;
     private final UserRepository userRepository;
     private final PumpInfoMasterRepository pumpInfoMasterRepository;
@@ -380,5 +383,136 @@ public class SalesmanShiftService {
 
         log.info("Created tank transaction for {} liters dispensed from tank {}",
                 dispensedAmount, tank.getTankName());
+    }
+
+    // ============================================
+    // Nozzle Test Management
+    // ============================================
+    /**
+     * Register a nozzle test for a shift. Tests are when salesmen dispense fuel
+     * to verify nozzle accuracy and return it to tank.
+     */
+    @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SALESMAN')")
+    public NozzleTest registerNozzleTest(UUID shiftId, UUID nozzleId, LocalDateTime testDatetime,
+            BigDecimal testQuantity, String remarks) {
+
+        // Fetch and validate shift
+        SalesmanShift shift = salesmanShiftRepository.findById(shiftId)
+                .orElseThrow(() -> new EntityNotFoundException("Shift not found with id: " + shiftId));
+
+        // Security check for salesmen
+        if (securityHelper.isSalesman()) {
+            if (!shift.getSalesman().getId().equals(securityHelper.getCurrentUserId())) {
+                throw new SecurityException("Salesmen can only register tests for their own shifts");
+            }
+        }
+
+        // Validate shift is open
+        if (!shift.isOpen()) {
+            throw new IllegalStateException("Cannot register test for a closed shift");
+        }
+
+        // Fetch and validate nozzle
+        Nozzle nozzle = nozzleRepository.findById(nozzleId)
+                .orElseThrow(() -> new EntityNotFoundException("Nozzle not found with id: " + nozzleId));
+
+        // Find the nozzle assignment for this shift and nozzle
+        NozzleAssignment assignment = nozzleAssignmentRepository
+                .findBySalesmanShiftIdAndNozzleId(shiftId, nozzleId)
+                .orElseThrow(() -> new IllegalStateException(
+                "Nozzle " + nozzle.getNozzleName() + " is not assigned to this shift"));
+
+        // Validate assignment is open
+        if (!assignment.isOpen()) {
+            throw new IllegalStateException("Cannot register test for a closed nozzle assignment");
+        }
+
+        // Create test entity
+        NozzleTest test = new NozzleTest();
+        test.setPumpMaster(shift.getPumpMaster());
+        test.setSalesmanShift(shift);
+        test.setNozzleAssignment(assignment);
+        test.setTestDatetime(testDatetime);
+        test.setTestQuantity(testQuantity);
+        test.setRemarks(remarks);
+
+        NozzleTest savedTest = nozzleTestRepository.save(test);
+
+        log.info("Registered nozzle test: {} liters for nozzle {} in shift {}",
+                testQuantity, nozzle.getNozzleName(), shiftId);
+
+        return savedTest;
+    }
+
+    /**
+     * Get all nozzle tests for a specific shift.
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SALESMAN')")
+    public List<NozzleTest> getNozzleTestsForShift(UUID shiftId) {
+        // Fetch shift to validate it exists
+        SalesmanShift shift = salesmanShiftRepository.findById(shiftId)
+                .orElseThrow(() -> new EntityNotFoundException("Shift not found with id: " + shiftId));
+
+        // Security check for salesmen
+        if (securityHelper.isSalesman()) {
+            if (!shift.getSalesman().getId().equals(securityHelper.getCurrentUserId())) {
+                throw new SecurityException("Salesmen can only view tests for their own shifts");
+            }
+        }
+
+        return nozzleTestRepository.findBySalesmanShiftIdOrderByTestDatetimeDesc(shiftId);
+    }
+
+    /**
+     * Get all nozzle tests for a specific nozzle assignment.
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SALESMAN')")
+    public List<NozzleTest> getNozzleTestsForAssignment(UUID assignmentId) {
+        NozzleAssignment assignment = nozzleAssignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Nozzle assignment not found with id: " + assignmentId));
+
+        // Security check for salesmen
+        if (securityHelper.isSalesman()) {
+            if (!assignment.getSalesman().getId().equals(securityHelper.getCurrentUserId())) {
+                throw new SecurityException("Salesmen can only view tests for their own assignments");
+            }
+        }
+
+        return nozzleTestRepository.findByNozzleAssignmentIdOrderByTestDatetimeDesc(assignmentId);
+    }
+
+    /**
+     * Calculate total test quantity for a specific nozzle assignment.
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SALESMAN')")
+    public BigDecimal getTotalTestQuantityForAssignment(UUID assignmentId) {
+        return nozzleTestRepository.sumTestQuantityByNozzleAssignment(assignmentId);
+    }
+
+    /**
+     * Calculate total test quantity for a specific shift.
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SALESMAN')")
+    public BigDecimal getTotalTestQuantityForShift(UUID shiftId) {
+        return nozzleTestRepository.sumTestQuantityByShift(shiftId);
+    }
+
+    /**
+     * Delete a nozzle test. Only admin and manager can delete tests.
+     */
+    @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public void deleteNozzleTest(UUID testId) {
+        NozzleTest test = nozzleTestRepository.findById(testId)
+                .orElseThrow(() -> new EntityNotFoundException("Nozzle test not found with id: " + testId));
+
+        // Don't allow deletion if shift is closed and accounting is done
+        if (test.getSalesmanShift().isClosed() && test.getSalesmanShift().getIsAccountingDone()) {
+            throw new IllegalStateException("Cannot delete test from a shift with completed accounting");
+        }
+
+        nozzleTestRepository.delete(test);
+        log.info("Deleted nozzle test {} from shift {}", testId, test.getSalesmanShift().getId());
     }
 }

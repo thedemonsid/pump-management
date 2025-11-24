@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,12 +21,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.reallink.pump.dto.shift.AddNozzleRequest;
 import com.reallink.pump.dto.shift.CloseNozzleRequest;
+import com.reallink.pump.dto.shift.CreateNozzleTestRequest;
 import com.reallink.pump.dto.shift.CreateShiftAccountingRequest;
 import com.reallink.pump.dto.shift.NozzleAssignmentResponse;
+import com.reallink.pump.dto.shift.NozzleTestResponse;
 import com.reallink.pump.dto.shift.ShiftDetailsResponse;
 import com.reallink.pump.dto.shift.ShiftResponse;
 import com.reallink.pump.dto.shift.StartShiftRequest;
 import com.reallink.pump.entities.NozzleAssignment;
+import com.reallink.pump.entities.NozzleTest;
 import com.reallink.pump.entities.SalesmanShift;
 import com.reallink.pump.entities.SalesmanShiftAccounting;
 import com.reallink.pump.services.SalesmanShiftAccountingService;
@@ -285,5 +289,86 @@ public class SalesmanShiftController {
         SalesmanShiftAccounting accounting = accountingService.updateAccounting(id, request);
 
         return ResponseEntity.ok(accounting);
+    }
+
+    // ============================================
+    // Nozzle Test Management Endpoints
+    // ============================================
+    /**
+     * Register a nozzle test for a shift. POST
+     * /api/v1/salesman-shifts/{shiftId}/nozzle-tests
+     */
+    @PostMapping("/{shiftId}/nozzle-tests")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SALESMAN')")
+    public ResponseEntity<NozzleTestResponse> registerNozzleTest(
+            @PathVariable UUID shiftId,
+            @Valid @RequestBody CreateNozzleTestRequest request) {
+
+        log.info("Registering nozzle test for shift: {}, nozzle: {}", shiftId, request.getNozzleId());
+
+        NozzleTest test = salesmanShiftService.registerNozzleTest(
+                shiftId,
+                request.getNozzleId(),
+                request.getTestDatetime(),
+                request.getTestQuantity(),
+                request.getRemarks()
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(NozzleTestResponse.from(test));
+    }
+
+    /**
+     * Get all nozzle tests for a shift. GET
+     * /api/v1/salesman-shifts/{shiftId}/nozzle-tests
+     */
+    @GetMapping("/{shiftId}/nozzle-tests")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SALESMAN')")
+    public ResponseEntity<List<NozzleTestResponse>> getNozzleTestsForShift(@PathVariable UUID shiftId) {
+
+        log.info("Fetching nozzle tests for shift: {}", shiftId);
+
+        List<NozzleTest> tests = salesmanShiftService.getNozzleTestsForShift(shiftId);
+        List<NozzleTestResponse> response = tests.stream()
+                .map(NozzleTestResponse::from)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get nozzle tests for a specific nozzle assignment. GET
+     * /api/v1/salesman-shifts/{shiftId}/nozzles/{assignmentId}/tests
+     */
+    @GetMapping("/{shiftId}/nozzles/{assignmentId}/tests")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SALESMAN')")
+    public ResponseEntity<List<NozzleTestResponse>> getNozzleTestsForAssignment(
+            @PathVariable UUID shiftId,
+            @PathVariable UUID assignmentId) {
+
+        log.info("Fetching nozzle tests for assignment: {}", assignmentId);
+
+        List<NozzleTest> tests = salesmanShiftService.getNozzleTestsForAssignment(assignmentId);
+        List<NozzleTestResponse> response = tests.stream()
+                .map(NozzleTestResponse::from)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Delete a nozzle test (Admin/Manager only). DELETE
+     * /api/v1/salesman-shifts/{shiftId}/nozzle-tests/{testId}
+     */
+    @DeleteMapping("/{shiftId}/nozzle-tests/{testId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<Void> deleteNozzleTest(
+            @PathVariable UUID shiftId,
+            @PathVariable UUID testId) {
+
+        log.info("Deleting nozzle test: {} from shift: {}", testId, shiftId);
+
+        salesmanShiftService.deleteNozzleTest(testId);
+
+        return ResponseEntity.noContent().build();
     }
 }

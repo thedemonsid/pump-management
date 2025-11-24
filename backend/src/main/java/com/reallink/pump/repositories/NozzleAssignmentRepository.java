@@ -23,6 +23,11 @@ public interface NozzleAssignmentRepository extends JpaRepository<NozzleAssignme
     List<NozzleAssignment> findBySalesmanShiftIdOrderByStartTimeDesc(UUID shiftId);
 
     /**
+     * Find a nozzle assignment for a specific shift and nozzle.
+     */
+    Optional<NozzleAssignment> findBySalesmanShiftIdAndNozzleId(UUID shiftId, UUID nozzleId);
+
+    /**
      * Find an open assignment for a specific nozzle. Used to check if a nozzle
      * is currently assigned to any shift.
      */

@@ -38,6 +38,9 @@ export const NozzleAssignmentResponseSchema = z.object({
   dispensedAmount: z.number().optional(),
   totalAmount: z.number().optional(),
   status: AssignmentStatusSchema,
+  // Test information
+  totalTestQuantity: z.number().default(0),
+  testCount: z.number().default(0),
   // Product info
   productName: z.string().optional(),
   productRate: z.number().optional(),
@@ -227,6 +230,44 @@ export const ShiftAccountingResponseSchema = z.object({
 
 export type ShiftAccountingResponse = z.infer<
   typeof ShiftAccountingResponseSchema
+>;
+
+/**
+ * Nozzle Test Response - Test reading for a nozzle
+ * Matches backend NozzleTestResponse
+ */
+export const NozzleTestResponseSchema = z.object({
+  id: z.string(),
+  shiftId: z.string(),
+  nozzleAssignmentId: z.string(),
+  nozzleId: z.string(),
+  nozzleName: z.string(),
+  salesmanId: z.string(),
+  salesmanUsername: z.string(),
+  testDatetime: z.string(), // ISO datetime
+  testQuantity: z.number(),
+  remarks: z.string().optional(),
+  createdAt: z.string(), // ISO datetime
+  // Product info
+  productName: z.string().optional(),
+  productRate: z.number().optional(),
+});
+
+export type NozzleTestResponse = z.infer<typeof NozzleTestResponseSchema>;
+
+/**
+ * Create Nozzle Test Request
+ * Matches backend CreateNozzleTestRequest
+ */
+export const CreateNozzleTestRequestSchema = z.object({
+  nozzleId: z.string(),
+  testQuantity: z.number().min(0.001, "Test quantity must be at least 0.001"),
+  testDatetime: z.string(), // ISO datetime
+  remarks: z.string().max(500).optional(),
+});
+
+export type CreateNozzleTestRequest = z.infer<
+  typeof CreateNozzleTestRequestSchema
 >;
 
 // ============================================================================

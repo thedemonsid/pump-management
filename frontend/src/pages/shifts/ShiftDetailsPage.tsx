@@ -35,6 +35,7 @@ import { SalesmanBillService } from "@/services/salesman-bill-service";
 import { SalesmanBillPaymentService } from "@/services/salesman-bill-payment-service";
 import { SalesmanShiftAccountingService } from "@/services/salesman-shift-accounting-service";
 import { ExpenseService } from "@/services/expense-service";
+import { NozzleTestService } from "@/services/nozzle-test-service";
 import { toast } from "sonner";
 import {
   Loader2,
@@ -49,6 +50,7 @@ import {
   Edit,
   Lock,
   Receipt,
+  Beaker,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -60,7 +62,10 @@ import type {
   SalesmanShiftAccountingResponse,
   CloseNozzleRequest,
   ExpenseResponse,
+  NozzleTestResponse,
 } from "@/types";
+import { RegisterNozzleTestSheet } from "@/components/shifts/RegisterNozzleTestSheet";
+import { NozzleTestsList } from "@/components/shifts/NozzleTestsList";
 
 export function ShiftDetailsPage() {
   const { shiftId } = useParams<{ shiftId: string }>();
@@ -76,9 +81,11 @@ export function ShiftDetailsPage() {
   const [expenses, setExpenses] = useState<ExpenseResponse[]>([]);
   const [accounting, setAccounting] =
     useState<SalesmanShiftAccountingResponse | null>(null);
+  const [tests, setTests] = useState<NozzleTestResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [showRegisterTestSheet, setShowRegisterTestSheet] = useState(false);
 
   // Nozzle closing state
   const [selectedNozzle, setSelectedNozzle] =
@@ -159,19 +166,27 @@ export function ShiftDetailsPage() {
 
       setIsLoading(true);
       try {
-        const [, nozzlesData, billsData, paymentsData, expensesData] =
-          await Promise.all([
-            fetchShiftById(shiftId),
-            NozzleAssignmentService.getAssignmentsForShift(shiftId),
-            SalesmanBillService.getByShift(shiftId),
-            SalesmanBillPaymentService.getByShiftId(shiftId),
-            ExpenseService.getBySalesmanShiftId(shiftId),
-          ]);
+        const [
+          ,
+          nozzlesData,
+          billsData,
+          paymentsData,
+          expensesData,
+          testsData,
+        ] = await Promise.all([
+          fetchShiftById(shiftId),
+          NozzleAssignmentService.getAssignmentsForShift(shiftId),
+          SalesmanBillService.getByShift(shiftId),
+          SalesmanBillPaymentService.getByShiftId(shiftId),
+          ExpenseService.getBySalesmanShiftId(shiftId),
+          NozzleTestService.getTestsForShift(shiftId),
+        ]);
 
         setNozzleAssignments(nozzlesData);
         setBills(billsData);
         setPayments(paymentsData);
         setExpenses(expensesData);
+        setTests(testsData);
 
         // Try to fetch accounting (may not exist)
         try {
@@ -401,10 +416,14 @@ export function ShiftDetailsPage() {
 
       {/* Tabbed Content */}
       <Tabs defaultValue="nozzles" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="nozzles">
             <Fuel className={`h-4 w-4 ${!isMobile && "mr-2"}`} />
             {!isMobile && "Nozzles"}
+          </TabsTrigger>
+          <TabsTrigger value="tests">
+            <Beaker className={`h-4 w-4 ${!isMobile && "mr-2"}`} />
+            {!isMobile && "Tests"}
           </TabsTrigger>
           <TabsTrigger value="bills">
             <FileText className={`h-4 w-4 ${!isMobile && "mr-2"}`} />
@@ -518,6 +537,47 @@ export function ShiftDetailsPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Tests Tab */}
+        <TabsContent value="tests" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Nozzle Tests</CardTitle>
+                  <CardDescription>
+                    Test readings during this shift
+                  </CardDescription>
+                </div>
+                {isShiftOpen && (
+                  <Button
+                    onClick={() => setShowRegisterTestSheet(true)}
+                    size="sm"
+                  >
+                    <Beaker className="h-4 w-4 mr-2" />
+                    Register Test
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+          </Card>
+
+          <NozzleTestsList
+            shiftId={shiftId!}
+            tests={tests}
+            onTestDeleted={async () => {
+              const testsData = await NozzleTestService.getTestsForShift(
+                shiftId!
+              );
+              setTests(testsData);
+              // Refresh nozzle assignments to update test counts
+              const nozzlesData =
+                await NozzleAssignmentService.getAssignmentsForShift(shiftId!);
+              setNozzleAssignments(nozzlesData);
+            }}
+            isShiftOpen={isShiftOpen}
+          />
         </TabsContent>
 
         {/* Bills Tab */}
@@ -1049,6 +1109,22 @@ export function ShiftDetailsPage() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      {/* Register Nozzle Test Sheet */}
+      <RegisterNozzleTestSheet
+        open={showRegisterTestSheet}
+        onOpenChange={setShowRegisterTestSheet}
+        shiftId={shiftId!}
+        nozzles={nozzleAssignments}
+        onSuccess={async () => {
+          const testsData = await NozzleTestService.getTestsForShift(shiftId!);
+          setTests(testsData);
+          // Refresh nozzle assignments to update test counts
+          const nozzlesData =
+            await NozzleAssignmentService.getAssignmentsForShift(shiftId!);
+          setNozzleAssignments(nozzlesData);
+        }}
+      />
     </div>
   );
 }
