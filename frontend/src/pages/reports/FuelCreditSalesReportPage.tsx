@@ -54,9 +54,11 @@ export default function FuelCreditSalesReportPage() {
         fromDateStr,
         toDateStr
       );
-      setBills(data);
-      if (data.length > 0) {
-        toast.success(`Found ${data.length} credit sales bills`);
+      // Filter to only show CREDIT payment type bills
+      const creditBills = data.filter((bill) => bill.paymentType === "CREDIT");
+      setBills(creditBills);
+      if (creditBills.length > 0) {
+        toast.success(`Found ${creditBills.length} credit sales bills`);
       }
     } catch (error) {
       console.error("Error fetching fuel credit sales report:", error);

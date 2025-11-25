@@ -91,9 +91,11 @@ public class SalesmanShift extends BaseEntity {
 
     /**
      * Credit bills (fuel sold on credit) issued during this shift. Bills are
-     * associated with the shift, not individual nozzles.
+     * associated with the shift, not individual nozzles. Only includes bills
+     * with paymentType = CREDIT.
      */
     @OneToMany(mappedBy = "salesmanShift", cascade = CascadeType.ALL, orphanRemoval = true)
+    @org.hibernate.annotations.SQLRestriction("payment_type = 'CREDIT'")
     private List<SalesmanBill> creditBills = new ArrayList<>();
 
     /**

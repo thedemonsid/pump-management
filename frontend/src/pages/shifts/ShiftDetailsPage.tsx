@@ -77,6 +77,8 @@ export function ShiftDetailsPage() {
     NozzleAssignmentResponse[]
   >([]);
   const [bills, setBills] = useState<SalesmanBillResponse[]>([]);
+  // Filter to show only credit bills
+  const creditBills = bills.filter((bill) => bill.paymentType === "CREDIT");
   const [payments, setPayments] = useState<SalesmanBillPaymentResponse[]>([]);
   const [expenses, setExpenses] = useState<ExpenseResponse[]>([]);
   const [accounting, setAccounting] =
@@ -319,8 +321,8 @@ export function ShiftDetailsPage() {
               </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Total Bills</p>
-              <p className="text-lg font-semibold">{bills.length}</p>
+              <p className="text-sm text-muted-foreground">Credit Bills</p>
+              <p className="text-lg font-semibold">{creditBills.length}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total Payments</p>
@@ -374,7 +376,7 @@ export function ShiftDetailsPage() {
               ₹{totalBillsAmount.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {bills.length} credit bills
+              {creditBills.length} credit bills
             </p>
           </CardContent>
         </Card>
@@ -602,9 +604,9 @@ export function ShiftDetailsPage() {
               </div>
             </CardHeader>
             <CardContent>
-              {bills.length === 0 ? (
+              {creditBills.length === 0 ? (
                 <p className="text-center py-8 text-muted-foreground">
-                  No bills created during this shift
+                  No credit bills created during this shift
                 </p>
               ) : (
                 <div className="rounded-md border">
@@ -620,7 +622,7 @@ export function ShiftDetailsPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {bills.map((bill) => (
+                      {creditBills.map((bill) => (
                         <TableRow key={bill.id}>
                           <TableCell>
                             {format(new Date(bill.billDate), "PP")}

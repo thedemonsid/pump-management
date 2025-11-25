@@ -146,8 +146,10 @@ export function ShiftAccountingPage() {
 
   const calculateCredit = (): number => {
     if (accounting) return accounting.credit;
-    // Bills are credit sales - shown for info but not added to cash received
-    return bills.reduce((sum, bill) => sum + bill.amount, 0);
+    // Only credit bills (paymentType = CREDIT) are credit sales
+    return bills
+      .filter((bill) => bill.paymentType === "CREDIT")
+      .reduce((sum, bill) => sum + bill.amount, 0);
   };
 
   const calculateExpenses = (): number => {

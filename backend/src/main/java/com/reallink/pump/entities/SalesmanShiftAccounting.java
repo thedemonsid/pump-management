@@ -2,6 +2,7 @@ package com.reallink.pump.entities;
 
 import java.math.BigDecimal;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -168,4 +169,13 @@ public class SalesmanShiftAccounting extends BaseEntity {
     @Min(value = 0, message = "Number of 1 coins cannot be negative")
     @Column(name = "coins_1")
     private Integer coins1 = 0;
+
+    /**
+     * Optional reference to an advance salary payment created from the balance
+     * amount. This is created when balance amount >= 50 and is automatically
+     * managed by the system.
+     */
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "advance_payment_id", foreignKey = @ForeignKey(name = "fk_shift_accounting_advance_payment"))
+    private EmployeeSalaryPayment advancePayment;
 }

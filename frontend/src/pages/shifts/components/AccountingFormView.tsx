@@ -89,70 +89,75 @@ export function AccountingFormView({
         </div>
         <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
           {/* Salesman Bills - Credit Sales (Display Only) */}
-          {bills.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold mb-3">
-                Salesman Bills (All Products)
-              </h3>
-              <div className="rounded-md border">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b bg-muted/50">
-                        <th className="text-left p-2 sm:p-3 font-medium">
-                          Bill No
-                        </th>
-                        <th className="text-left p-2 sm:p-3 font-medium">
-                          Product
-                        </th>
-                        <th className="text-right p-2 sm:p-3 font-medium">
-                          Quantity
-                        </th>
-                        <th className="text-right p-2 sm:p-3 font-medium">
-                          Rate (₹)
-                        </th>
-                        <th className="text-right p-2 sm:p-3 font-medium">
-                          Amount (₹)
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {bills.map((bill) => (
-                        <tr key={bill.id} className="border-b">
-                          <td className="p-2 sm:p-3 font-mono">
-                            {bill.billNo}
-                          </td>
-                          <td className="p-2 sm:p-3">
-                            {bill.productName || "Unknown Product"}
-                          </td>
-                          <td className="text-right p-2 sm:p-3 font-mono">
-                            {bill.quantity.toFixed(2)}
-                          </td>
-                          <td className="text-right p-2 sm:p-3 font-mono">
-                            ₹{bill.rate.toFixed(2)}
-                          </td>
-                          <td className="text-right p-2 sm:p-3 font-mono">
-                            ₹{bill.amount.toFixed(2)}
-                          </td>
-                        </tr>
-                      ))}
-                      <tr className="bg-muted/30 font-semibold">
-                        <td colSpan={4} className="p-2 sm:p-3">
-                          Total Bills Sales
-                        </td>
-                        <td className="text-right p-2 sm:p-3 font-mono">
-                          ₹
-                          {bills
-                            .reduce((sum, bill) => sum + bill.amount, 0)
-                            .toFixed(2)}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+          {bills.length > 0 &&
+            (() => {
+              // Group bills by product
+              const productTotals = bills.reduce((acc, bill) => {
+                const productName = bill.productName || "Unknown Product";
+                if (!acc[productName]) {
+                  acc[productName] = {
+                    quantity: 0,
+                    amount: 0,
+                  };
+                }
+                acc[productName].quantity += bill.quantity;
+                acc[productName].amount += bill.amount;
+                return acc;
+              }, {} as Record<string, { quantity: number; amount: number }>);
+
+              return (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">
+                    Salesman Bills (All Products)
+                  </h3>
+                  <div className="rounded-md border">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b bg-muted/50">
+                            <th className="text-left p-2 sm:p-3 font-medium">
+                              Product
+                            </th>
+                            <th className="text-right p-2 sm:p-3 font-medium">
+                              Quantity
+                            </th>
+                            <th className="text-right p-2 sm:p-3 font-medium">
+                              Amount (₹)
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Object.entries(productTotals).map(
+                            ([productName, totals]) => (
+                              <tr key={productName} className="border-b">
+                                <td className="p-2 sm:p-3">{productName}</td>
+                                <td className="text-right p-2 sm:p-3 font-mono">
+                                  {totals.quantity.toFixed(2)}
+                                </td>
+                                <td className="text-right p-2 sm:p-3 font-mono">
+                                  ₹{totals.amount.toFixed(2)}
+                                </td>
+                              </tr>
+                            )
+                          )}
+                          <tr className="bg-muted/30 font-semibold">
+                            <td colSpan={2} className="p-2 sm:p-3">
+                              Total Bills Sales
+                            </td>
+                            <td className="text-right p-2 sm:p-3 font-mono">
+                              ₹
+                              {bills
+                                .reduce((sum, bill) => sum + bill.amount, 0)
+                                .toFixed(2)}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+              );
+            })()}
 
           {/* Fuel Sales Summary */}
           <div>
