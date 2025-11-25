@@ -135,6 +135,7 @@ export function ShiftAccountingPage() {
   // Calculate live values from shift data
   const calculateFuelSales = (): number => {
     if (accounting) return accounting.fuelSales;
+    // Only nozzle sales (FUEL products from nozzle readings)
     return nozzles.reduce((sum, nozzle) => sum + (nozzle.totalAmount || 0), 0);
   };
 
@@ -145,6 +146,7 @@ export function ShiftAccountingPage() {
 
   const calculateCredit = (): number => {
     if (accounting) return accounting.credit;
+    // Bills are credit sales - shown for info but not added to cash received
     return bills.reduce((sum, bill) => sum + bill.amount, 0);
   };
 
@@ -154,6 +156,8 @@ export function ShiftAccountingPage() {
   };
 
   const calculateSystemReceivedAmount = (): number => {
+    // System received = Fuel Sales (nozzles) + Customer Receipts (payments)
+    // Bills are credit sales, NOT included in system received amount
     return calculateFuelSales() + calculateCustomerReceipt();
   };
 
@@ -241,6 +245,38 @@ export function ShiftAccountingPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!shiftId) return;
+
+    setIsSaving(true);
+    try {
+      await SalesmanShiftAccountingService.delete(shiftId);
+      setAccounting(null);
+      setUpiReceived("0");
+      setCardReceived("0");
+      setFleetCardReceived("0");
+      setDenominations({
+        notes500: 0,
+        notes200: 0,
+        notes100: 0,
+        notes50: 0,
+        notes20: 0,
+        notes10: 0,
+        coins5: 0,
+        coins2: 0,
+        coins1: 0,
+      });
+      toast.success("Accounting deleted successfully!");
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Failed to delete accounting";
+      toast.error(errorMessage);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -272,6 +308,7 @@ export function ShiftAccountingPage() {
         isEditing={isEditing}
         isAdminOrManager={isAdminOrManager}
         onEdit={() => setIsEditing(true)}
+        onDelete={handleDelete}
       />
 
       {/* Shift Info */}
@@ -282,6 +319,7 @@ export function ShiftAccountingPage() {
         <AccountingSummaryView
           accounting={accounting}
           nozzles={nozzles}
+          bills={bills}
           onViewDenominations={() => setShowDenominationsSheet(true)}
         />
       )}
@@ -291,6 +329,7 @@ export function ShiftAccountingPage() {
         <AccountingFormView
           shift={currentShift}
           nozzles={nozzles}
+          bills={bills}
           hasAccounting={!!accounting}
           isEditing={isEditing}
           isSaving={isSaving}

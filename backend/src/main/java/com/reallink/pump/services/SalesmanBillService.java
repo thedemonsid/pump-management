@@ -261,16 +261,16 @@ public class SalesmanBillService {
                     "Customer with ID " + request.getCustomerId() + " does not exist");
         }
 
-        // Validate product exists and is FUEL type
+        // Validate product exists
         Product product = productRepository.findById(request.getProductId()).orElse(null);
         if (product == null) {
             throw new PumpBusinessException("INVALID_PRODUCT",
                     "Product with ID " + request.getProductId() + " does not exist");
         }
-        if (product.getProductType() != ProductType.FUEL) {
-            throw new PumpBusinessException("INVALID_PRODUCT_TYPE",
-                    "Salesman bills can only contain FUEL products. Product " + product.getProductName() + " is of type " + product.getProductType());
-        }
+        // if (product.getProductType() != ProductType.FUEL) {
+        //     throw new PumpBusinessException("INVALID_PRODUCT_TYPE",
+        //             "Salesman bills can only contain FUEL products. Product " + product.getProductName() + " is of type " + product.getProductType());
+        // }
 
         // Validate salesman shift exists
         SalesmanShift salesmanShift = salesmanShiftRepository.findById(request.getSalesmanShiftId()).orElse(null);

@@ -49,9 +49,9 @@ export const SalesmanShiftAccountingService = {
   },
 
   /**
-   * Delete accounting
+   * Delete accounting by shift ID
    */
-  async delete(id: string): Promise<void> {
-    await api.delete(`${BASE_URL}/${id}`);
+  async delete(shiftId: string): Promise<void> {
+    await api.delete(`${BASE_URL}/shift/${shiftId}`);
   },
 };

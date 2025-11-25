@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import type {
   SalesmanShiftAccountingResponse,
   NozzleAssignmentResponse,
+  SalesmanBillResponse,
 } from "@/types";
 import { FuelSalesTable } from "./FuelSalesTable";
 import { NonCashSalesTable } from "./NonCashSalesTable";
@@ -11,12 +12,14 @@ import { ReconciliationSummary } from "./ReconciliationSummary";
 interface AccountingSummaryViewProps {
   accounting: SalesmanShiftAccountingResponse;
   nozzles: NozzleAssignmentResponse[];
+  bills: SalesmanBillResponse[];
   onViewDenominations: () => void;
 }
 
 export function AccountingSummaryView({
   accounting,
   nozzles,
+  bills,
   onViewDenominations,
 }: AccountingSummaryViewProps) {
   const actualCash = accounting.cashInHand;
@@ -41,6 +44,70 @@ export function AccountingSummaryView({
         </p>
       </div>
       <div className="p-1 sm:p-6 space-y-4 sm:space-y-6">
+        {/* Salesman Bills - Credit Sales (Display Only) */}
+        {bills.length > 0 && (
+          <div>
+            <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
+              Salesman Bills (All Products)
+            </h3>
+            <div className="rounded-md border">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left p-2 sm:p-3 font-medium">
+                        Bill No
+                      </th>
+                      <th className="text-left p-2 sm:p-3 font-medium">
+                        Product
+                      </th>
+                      <th className="text-right p-2 sm:p-3 font-medium">
+                        Quantity
+                      </th>
+                      <th className="text-right p-2 sm:p-3 font-medium">
+                        Rate (₹)
+                      </th>
+                      <th className="text-right p-2 sm:p-3 font-medium">
+                        Amount (₹)
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bills.map((bill) => (
+                      <tr key={bill.id} className="border-b">
+                        <td className="p-2 sm:p-3 font-mono">{bill.billNo}</td>
+                        <td className="p-2 sm:p-3">
+                          {bill.productName || "Unknown Product"}
+                        </td>
+                        <td className="text-right p-2 sm:p-3 font-mono">
+                          {bill.quantity.toFixed(2)}
+                        </td>
+                        <td className="text-right p-2 sm:p-3 font-mono">
+                          ₹{bill.rate.toFixed(2)}
+                        </td>
+                        <td className="text-right p-2 sm:p-3 font-mono">
+                          ₹{bill.amount.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="bg-muted/30 font-semibold">
+                      <td colSpan={4} className="p-2 sm:p-3">
+                        Total Bills Sales
+                      </td>
+                      <td className="text-right p-2 sm:p-3 font-mono">
+                        ₹
+                        {bills
+                          .reduce((sum, bill) => sum + bill.amount, 0)
+                          .toFixed(2)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Fuel Sales Summary */}
         <div>
           <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">

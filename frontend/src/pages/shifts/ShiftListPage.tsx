@@ -137,7 +137,6 @@ export function ShiftListPage() {
   const handleShiftCreated = () => {
     setIsStartShiftOpen(false);
     loadShifts(); // Reload the shifts list
-    toast.success("Shift started successfully!");
   };
 
   return (

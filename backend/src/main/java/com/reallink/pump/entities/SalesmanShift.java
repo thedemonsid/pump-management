@@ -156,6 +156,10 @@ public class SalesmanShift extends BaseEntity {
         this.isAccountingDone = true;
     }
 
+    public void revertAccountingDone() {
+        this.isAccountingDone = false;
+    }
+
     /**
      * Checks if all nozzles assigned to this shift have been closed.
      */

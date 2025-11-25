@@ -35,7 +35,8 @@ export function CreateCalculatedSalaryForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<CreateCalculatedSalary>({
-    resolver: zodResolver(CreateCalculatedSalarySchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(CreateCalculatedSalarySchema) as any,
     defaultValues: {
       userId: "",
       pumpMasterId: user?.pumpMasterId || "",
@@ -86,13 +87,7 @@ export function CreateCalculatedSalaryForm({
     const workingDays =
       totalDays - fullDayAbsences - halfDayAbsences * 0.5 + overtimeDays;
     form.setValue("workingDays", Math.max(0, workingDays));
-  }, [
-    form,
-    fullDayAbsences,
-    halfDayAbsences,
-    overtimeDays,
-    form.watch("totalDays"),
-  ]);
+  }, [form, fullDayAbsences, halfDayAbsences, overtimeDays]);
 
   // Calculate gross and net salary
   useEffect(() => {

@@ -203,6 +203,32 @@ public class SalesmanShiftAccountingService {
     }
 
     /**
+     * Delete accounting for a shift. Only MANAGER and ADMIN can delete.
+     */
+    @Transactional
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public void deleteAccounting(UUID shiftId) {
+        SalesmanShiftAccounting accounting = accountingRepository.findBySalesmanShiftId(shiftId)
+                .orElseThrow(() -> new EntityNotFoundException("Accounting not found for this shift"));
+
+        SalesmanShift shift = accounting.getSalesmanShift();
+
+        // Clear the bidirectional relationship first
+        shift.setAccounting(null);
+
+        // Revert shift accounting status
+        shift.revertAccountingDone();
+
+        // Save shift to update the relationship and status
+        salesmanShiftRepository.save(shift);
+
+        // Now delete the accounting record (orphan removal will handle this, but we do it explicitly)
+        accountingRepository.delete(accounting);
+
+        log.info("Deleted accounting for shift {} by {}", shiftId, securityHelper.getCurrentUsername());
+    }
+
+    /**
      * Calculate total cash from denomination counts.
      */
     private BigDecimal calculateCashFromDenominations(CreateShiftAccountingRequest request) {

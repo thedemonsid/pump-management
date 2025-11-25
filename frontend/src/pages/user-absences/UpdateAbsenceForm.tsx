@@ -38,7 +38,7 @@ import { cn } from "@/lib/utils";
 // Form validation schema
 const updateAbsenceSchema = z.object({
   absenceDate: z.string().min(1, "Absence date is required"),
-  absenceType: z.nativeEnum(AbsenceType),
+  absenceType: z.enum(AbsenceType),
   reason: z
     .string()
     .max(500, "Reason must not exceed 500 characters")

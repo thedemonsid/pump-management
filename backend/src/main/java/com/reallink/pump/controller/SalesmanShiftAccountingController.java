@@ -57,4 +57,14 @@ public class SalesmanShiftAccountingController {
         SalesmanShiftAccounting accounting = service.updateAccounting(shiftId, request);
         return ResponseEntity.ok(mapper.toResponse(accounting));
     }
+
+    /**
+     * Delete accounting
+     */
+    @DeleteMapping("/shift/{shiftId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<Void> delete(@PathVariable UUID shiftId) {
+        service.deleteAccounting(shiftId);
+        return ResponseEntity.noContent().build();
+    }
 }
