@@ -326,7 +326,20 @@ export function EmployeeSalaryLedgerPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="text-center p-4 border rounded-lg bg-purple-50 dark:bg-purple-950">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">
+                    Opening Balance
+                  </p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {formatCurrency(summary.openingBalance)}
+                  </p>
+                  {summary.openingBalanceDate && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      As of {formatDate(summary.openingBalanceDate)}
+                    </p>
+                  )}
+                </div>
                 <div className="text-center p-4 border rounded-lg bg-green-50 dark:bg-green-950">
                   <p className="text-sm font-medium text-muted-foreground mb-2">
                     Total Salaries

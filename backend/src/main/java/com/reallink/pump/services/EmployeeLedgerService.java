@@ -17,8 +17,10 @@ import com.reallink.pump.dto.response.EmployeeLedgerResponse;
 import com.reallink.pump.dto.response.EmployeeLedgerSummaryResponse;
 import com.reallink.pump.entities.CalculatedSalary;
 import com.reallink.pump.entities.EmployeeSalaryPayment;
+import com.reallink.pump.entities.User;
 import com.reallink.pump.repositories.CalculatedSalaryRepository;
 import com.reallink.pump.repositories.EmployeeSalaryPaymentRepository;
+import com.reallink.pump.repositories.UserRepository;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class EmployeeLedgerService {
 
     private final CalculatedSalaryRepository calculatedSalaryRepository;
     private final EmployeeSalaryPaymentRepository employeeSalaryPaymentRepository;
+    private final UserRepository userRepository;
 
     /**
      * Get employee ledger data with date range filtering
@@ -40,11 +43,18 @@ public class EmployeeLedgerService {
             @NotNull LocalDate fromDate,
             @NotNull LocalDate toDate) {
 
+        // Fetch user to get opening balance
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found with id: " + userId);
+        }
+
         // Calculate the date one day before fromDate for "before" calculations
         LocalDate beforeDate = fromDate.minusDays(1);
 
-        // Get opening balance (always 0 for employees)
-        BigDecimal openingBalance = BigDecimal.ZERO;
+        // Get opening balance from user entity
+        BigDecimal openingBalance = user.getOpeningBalance();
+        LocalDate openingBalanceDate = user.getOpeningBalanceDate();
 
         // Get data before the date range
         BigDecimal totalSalariesBefore = getTotalSalariesUntilDate(userId, beforeDate);
@@ -75,6 +85,7 @@ public class EmployeeLedgerService {
         // Build summary
         EmployeeLedgerSummaryResponse summary = EmployeeLedgerSummaryResponse.builder()
                 .openingBalance(openingBalance)
+                .openingBalanceDate(openingBalanceDate)
                 .totalSalariesBefore(totalSalariesBefore)
                 .totalPaymentsBefore(totalPaymentsBefore)
                 .balanceBefore(balanceBefore)
@@ -95,9 +106,15 @@ public class EmployeeLedgerService {
      * Get current balance for an employee as of a specific date
      */
     public BigDecimal getCurrentBalance(@NotNull UUID userId, @NotNull LocalDate asOfDate) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found with id: " + userId);
+        }
+
+        BigDecimal openingBalance = user.getOpeningBalance();
         BigDecimal totalSalaries = getTotalSalariesUntilDate(userId, asOfDate);
         BigDecimal totalPayments = getTotalPaymentsUntilDate(userId, asOfDate);
-        return totalSalaries.subtract(totalPayments);
+        return openingBalance.add(totalSalaries).subtract(totalPayments);
     }
 
     /**

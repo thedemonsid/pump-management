@@ -1,6 +1,7 @@
 package com.reallink.pump.dto.response;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +14,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class EmployeeLedgerSummaryResponse {
 
-    private BigDecimal openingBalance; // Always 0 for employees (no opening balance)
+    private BigDecimal openingBalance; // Opening balance from User entity (balance before they started using software)
+    private LocalDate openingBalanceDate; // Date when opening balance was set
 
     // Before the selected date range
     private BigDecimal totalSalariesBefore;

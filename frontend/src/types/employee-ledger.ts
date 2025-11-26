@@ -22,6 +22,7 @@ export type EmployeeLedgerEntry = z.infer<typeof EmployeeLedgerEntrySchema>;
 // Employee Ledger Summary
 export const EmployeeLedgerSummarySchema = z.object({
   openingBalance: z.number(),
+  openingBalanceDate: z.string().optional(),
   totalSalariesBefore: z.number().min(0),
   totalPaymentsBefore: z.number().min(0),
   balanceBefore: z.number(),

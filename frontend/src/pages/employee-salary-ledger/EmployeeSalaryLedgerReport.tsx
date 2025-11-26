@@ -152,7 +152,18 @@ export function EmployeeSalaryLedgerReport() {
         {/* Summary Before Range */}
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-3">Opening Balance</h2>
-          <div className="grid grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-4 gap-4 text-sm">
+            <div className="p-3 bg-purple-50 rounded">
+              <div className="font-medium text-gray-600">Opening Balance</div>
+              <div className="text-lg font-bold text-purple-700">
+                {formatCurrency(summary.openingBalance)}
+              </div>
+              {summary.openingBalanceDate && (
+                <div className="text-xs text-gray-500 mt-1">
+                  As of {formatDate(summary.openingBalanceDate)}
+                </div>
+              )}
+            </div>
             <div className="p-3 bg-green-50 rounded">
               <div className="font-medium text-gray-600">Total Salaries</div>
               <div className="text-lg font-bold text-green-700">
