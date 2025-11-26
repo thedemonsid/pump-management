@@ -31,4 +31,6 @@ public interface TankTransactionRepository extends JpaRepository<TankTransaction
     @Query("SELECT COALESCE(SUM(CASE WHEN t.transactionType = com.reallink.pump.entities.TankTransaction.TransactionType.ADDITION THEN t.volume ELSE -t.volume END), 0) "
             + "FROM TankTransaction t WHERE t.tank.id = :tankId AND DATE(t.transactionDate) = :date")
     BigDecimal getDailyNetByTankIdAndDate(@Param("tankId") UUID tankId, @Param("date") LocalDate date);
+
+    List<TankTransaction> findByNozzleTest(com.reallink.pump.entities.NozzleTest nozzleTest);
 }

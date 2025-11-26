@@ -383,6 +383,26 @@ public class SalesmanShiftService {
 
         log.info("Created tank transaction for {} liters dispensed from tank {}",
                 dispensedAmount, tank.getTankName());
+
+        // Create ADDITION transactions for each nozzle test to return test fuel to tank
+        List<NozzleTest> tests = nozzleTestRepository.findByNozzleAssignmentIdOrderByTestDatetimeDesc(assignment.getId());
+        for (NozzleTest test : tests) {
+            TankTransaction testTransaction = new TankTransaction();
+            testTransaction.setTank(tank);
+            testTransaction.setTransactionType(TankTransaction.TransactionType.ADDITION);
+            testTransaction.setVolume(test.getTestQuantity());
+            testTransaction.setTransactionDate(assignment.getEndTime());
+            testTransaction.setDescription(String.format("Test fuel returned from nozzle %s - Test ID: %s",
+                    assignment.getNozzle().getNozzleName(),
+                    test.getId()));
+            testTransaction.setNozzleTest(test);
+            testTransaction.setEntryBy(securityHelper.getCurrentUsername());
+
+            tankTransactionRepository.save(testTransaction);
+
+            log.info("Created tank transaction for {} liters test fuel returned to tank {}",
+                    test.getTestQuantity(), tank.getTankName());
+        }
     }
 
     // ============================================
@@ -510,6 +530,13 @@ public class SalesmanShiftService {
         // Don't allow deletion if shift is closed and accounting is done
         if (test.getSalesmanShift().isClosed() && test.getSalesmanShift().getIsAccountingDone()) {
             throw new IllegalStateException("Cannot delete test from a shift with completed accounting");
+        }
+
+        // Delete associated tank transaction if it exists (only if nozzle was already closed)
+        List<TankTransaction> transactions = tankTransactionRepository.findByNozzleTest(test);
+        if (!transactions.isEmpty()) {
+            tankTransactionRepository.deleteAll(transactions);
+            log.info("Deleted {} tank transaction(s) associated with nozzle test {}", transactions.size(), testId);
         }
 
         nozzleTestRepository.delete(test);

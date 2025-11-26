@@ -121,6 +121,28 @@ public class TankTransactionService {
         dailyTankLevelRepository.save(dailyLevel);
     }
 
+    @Transactional
+    public TankTransactionResponse createAdditionTransactionForNozzleTest(
+            @NotNull UUID tankId,
+            @Valid CreateTankTransactionRequest request,
+            com.reallink.pump.entities.NozzleTest nozzleTest) {
+        Tank tank = tankRepository.findById(tankId).orElse(null);
+        if (tank == null) {
+            throw new PumpBusinessException("TANK_NOT_FOUND", "Tank with ID " + tankId + " not found");
+        }
+        TankTransaction transaction = mapper.toEntity(request);
+        transaction.setTank(tank);
+        transaction.setTransactionType(TransactionType.ADDITION);
+        transaction.setNozzleTest(nozzleTest);
+        transaction.setEntryBy(SecurityContextHolder.getContext().getAuthentication().getName());
+        if (transaction.getTransactionDate() == null) {
+            transaction.setTransactionDate(LocalDateTime.now());
+        }
+        TankTransaction saved = transactionRepository.save(transaction);
+        updateDailyTankLevel(saved);
+        return mapper.toResponse(saved);
+    }
+
     public BigDecimal getOpeningLevel(UUID tankId, LocalDate date) {
         Tank tank = tankRepository.findById(tankId).orElse(null);
         if (tank == null) {
