@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Loader2, Trash2, Edit } from "lucide-react";
+import { Plus, Loader2, Trash2, Edit, BookOpen } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -221,12 +221,21 @@ export function EmployeeSalaryPaymentsPage() {
             Role: {employee?.role} | Total Payments: {payments.length}
           </p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => navigate("/employee-salary-config")}
-        >
-          Back to Config
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/employee-salary-ledger/${userId}`)}
+          >
+            <BookOpen className="h-4 w-4 mr-2" />
+            View Ledger
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/employee-salary-config")}
+          >
+            Back to Config
+          </Button>
+        </div>
       </div>
 
       {/* Balance Summary Card */}

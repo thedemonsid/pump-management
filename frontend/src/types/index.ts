@@ -22,6 +22,7 @@ export * from "./manager";
 export * from "./user-absence";
 export * from "./user";
 export * from "./employee-salary";
+export * from "./employee-ledger";
 
 // Explicitly re-export bill types from bill.ts to avoid ambiguity
 export type {

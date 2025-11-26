@@ -83,6 +83,10 @@ import { ShiftListPage } from "@/pages/shifts/ShiftListPage";
 import { EmployeeSalaryConfigPage } from "@/pages/employee-salary-config";
 import { CalculatedSalariesPage } from "@/pages/calculated-salaries";
 import { EmployeeSalaryPaymentsPage } from "@/pages/employee-salary-payments";
+import {
+  EmployeeSalaryLedgerPage,
+  EmployeeSalaryLedgerReport,
+} from "@/pages/employee-salary-ledger";
 
 const allRoutes = [
   {
@@ -278,6 +282,16 @@ const allRoutes = [
   {
     path: "/employee-salary-payments/:userId",
     element: <EmployeeSalaryPaymentsPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/employee-salary-ledger/:userId",
+    element: <EmployeeSalaryLedgerPage />,
+    requiredRoles: ["ADMIN", "MANAGER"],
+  },
+  {
+    path: "/employee-salary-ledger/:userId/report",
+    element: <EmployeeSalaryLedgerReport />,
     requiredRoles: ["ADMIN", "MANAGER"],
   },
   {

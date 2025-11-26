@@ -48,6 +48,26 @@ public interface CalculatedSalaryRepository extends JpaRepository<CalculatedSala
             @Param("pumpMasterId") UUID pumpMasterId
     );
 
+    @Query("SELECT cs FROM CalculatedSalary cs "
+            + "WHERE cs.user.id = :userId "
+            + "AND cs.calculationDate >= :fromDate "
+            + "AND cs.calculationDate <= :toDate "
+            + "ORDER BY cs.calculationDate ASC")
+    List<CalculatedSalary> findByUserIdAndDateRange(
+            @Param("userId") UUID userId,
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate
+    );
+
+    @Query("SELECT cs FROM CalculatedSalary cs "
+            + "WHERE cs.user.id = :userId "
+            + "AND cs.calculationDate <= :untilDate "
+            + "ORDER BY cs.calculationDate ASC")
+    List<CalculatedSalary> findByUserIdUntilDate(
+            @Param("userId") UUID userId,
+            @Param("untilDate") LocalDate untilDate
+    );
+
     @Query("SELECT COALESCE(SUM(cs.netSalary), 0) FROM CalculatedSalary cs "
             + "WHERE cs.user.id = :userId AND cs.pumpMaster.id = :pumpMasterId")
     BigDecimal getTotalSalaryByUserIdAndPumpMasterId(

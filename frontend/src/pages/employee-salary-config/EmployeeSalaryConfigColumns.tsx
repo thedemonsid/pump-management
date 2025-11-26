@@ -9,6 +9,7 @@ import {
   CheckCircle,
   FileSpreadsheet,
   Wallet,
+  BookOpen,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -17,6 +18,7 @@ interface ColumnsProps {
   onDeactivate: (config: EmployeeSalaryConfig) => void;
   onViewSalaries: (config: EmployeeSalaryConfig) => void;
   onViewPayments: (config: EmployeeSalaryConfig) => void;
+  onViewLedger: (config: EmployeeSalaryConfig) => void;
   formatCurrency: (amount: number) => string;
   getSalaryTypeLabel: (type: string) => string;
 }
@@ -26,6 +28,7 @@ export const getEmployeeSalaryConfigColumns = ({
   onDeactivate,
   onViewSalaries,
   onViewPayments,
+  onViewLedger,
   formatCurrency,
   getSalaryTypeLabel,
 }: ColumnsProps): ColumnDef<EmployeeSalaryConfig>[] => [
@@ -153,6 +156,14 @@ export const getEmployeeSalaryConfigColumns = ({
       const config = row.original;
       return (
         <div className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onViewLedger(config)}
+            title="View Salary Ledger"
+          >
+            <BookOpen className="h-4 w-4 text-blue-600" />
+          </Button>
           <Button
             variant="ghost"
             size="sm"

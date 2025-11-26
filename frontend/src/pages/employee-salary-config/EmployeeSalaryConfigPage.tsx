@@ -163,11 +163,16 @@ export function EmployeeSalaryConfigPage() {
     navigate(`/employee-salary-payments/${config.userId}`);
   };
 
+  const handleViewLedger = (config: EmployeeSalaryConfig) => {
+    navigate(`/employee-salary-ledger/${config.userId}`);
+  };
+
   const columns = getEmployeeSalaryConfigColumns({
     onEdit: handleEdit,
     onDeactivate: handleDeactivate,
     onViewSalaries: handleViewSalaries,
     onViewPayments: handleViewPayments,
+    onViewLedger: handleViewLedger,
     formatCurrency,
     getSalaryTypeLabel,
   });

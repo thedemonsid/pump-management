@@ -67,4 +67,24 @@ public interface EmployeeSalaryPaymentRepository extends JpaRepository<EmployeeS
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
+
+    // Ledger-specific queries
+    @Query("SELECT esp FROM EmployeeSalaryPayment esp "
+            + "WHERE esp.user.id = :userId "
+            + "AND esp.paymentDate < :beforeDate "
+            + "ORDER BY esp.paymentDate ASC")
+    List<EmployeeSalaryPayment> findByUserIdAndPaymentDateBefore(
+            @Param("userId") UUID userId,
+            @Param("beforeDate") LocalDateTime beforeDate
+    );
+
+    @Query("SELECT esp FROM EmployeeSalaryPayment esp "
+            + "WHERE esp.user.id = :userId "
+            + "AND esp.paymentDate BETWEEN :fromDate AND :toDate "
+            + "ORDER BY esp.paymentDate ASC")
+    List<EmployeeSalaryPayment> findByUserIdAndPaymentDateBetween(
+            @Param("userId") UUID userId,
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate
+    );
 }
