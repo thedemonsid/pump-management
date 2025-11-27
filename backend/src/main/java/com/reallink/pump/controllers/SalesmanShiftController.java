@@ -243,6 +243,21 @@ public class SalesmanShiftController {
         return ResponseEntity.ok(NozzleAssignmentResponse.from(assignment));
     }
 
+    /**
+     * Get all nozzle IDs that are currently assigned (status = OPEN) to any
+     * shift. This is optimized for checking nozzle availability when starting a
+     * new shift. GET /api/v1/salesman-shifts/assigned-nozzles
+     */
+    @GetMapping("/assigned-nozzles")
+    @PreAuthorize("hasAnyRole('SALESMAN', 'MANAGER', 'ADMIN')")
+    public ResponseEntity<List<UUID>> getAssignedNozzleIds() {
+        log.info("Fetching all assigned nozzle IDs");
+
+        List<UUID> assignedNozzleIds = salesmanShiftService.getAllAssignedNozzleIds();
+
+        return ResponseEntity.ok(assignedNozzleIds);
+    }
+
     // ==================== Accounting Endpoints ====================
     /**
      * Create accounting for a shift. POST

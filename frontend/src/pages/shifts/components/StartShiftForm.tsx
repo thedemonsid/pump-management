@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import ReactSelect from "react-select";
 import { NozzleService } from "@/services/nozzle-service";
@@ -34,7 +33,7 @@ export function StartShiftForm({
   onSuccess,
   onCancel,
 }: StartShiftFormProps) {
-  const [openingCash, setOpeningCash] = useState<string>("");
+  const [openingCash] = useState<string>("0");
   const [selectedSalesman, setSelectedSalesman] =
     useState<SalesmanOption | null>(null);
   const [salesmen, setSalesmen] = useState<SalesmanOption[]>([]);
@@ -106,45 +105,22 @@ export function StartShiftForm({
       // Fetch all nozzles
       const nozzles = await NozzleService.getAllForPump();
 
-      // Get all open shifts to find which nozzles are currently assigned
-      const openShifts = await SalesmanShiftService.getAll({ status: "OPEN" });
-
-      // Collect all nozzle IDs that are assigned to open shifts
-      const assignedNozzleIds = new Set<string>();
-
-      // Fetch assignments for all open shifts in parallel
-      const assignmentPromises = openShifts.map((shift) =>
-        NozzleAssignmentService.getAssignmentsForShift(shift.id)
-          .then((assignments) => ({ shiftId: shift.id, assignments }))
-          .catch((err) => {
-            console.error(
-              `Error fetching assignments for shift ${shift.id}:`,
-              err
-            );
-            return { shiftId: shift.id, assignments: [] };
-          })
+      // Get all assigned nozzle IDs in a single optimized API call
+      const assignedNozzleIds = new Set(
+        await NozzleAssignmentService.getAssignedNozzleIds()
       );
 
-      const allAssignments = await Promise.all(assignmentPromises);
-
-      // Add nozzle IDs from OPEN assignments
-      allAssignments.forEach(({ assignments }) => {
-        assignments
-          .filter((a) => a.status === "OPEN" && a.nozzleId)
-          .forEach((a) => {
-            assignedNozzleIds.add(a.nozzleId);
-          });
-      });
-
-      console.log("Assigned nozzle IDs:", Array.from(assignedNozzleIds));
+      console.log("Total assigned nozzle IDs:", Array.from(assignedNozzleIds));
 
       // Filter out nozzles that are assigned to open shifts
       const availableNozzlesData: NozzleOption[] = nozzles
         .filter((nozzle) => {
           const isAvailable = nozzle.id && !assignedNozzleIds.has(nozzle.id);
-          if (!isAvailable && nozzle.id) {
+          if (nozzle.id) {
             console.log(
-              `Filtering out nozzle: ${nozzle.nozzleName} (${nozzle.id})`
+              `Nozzle: ${nozzle.nozzleName} (${nozzle.id}) - ${
+                isAvailable ? "AVAILABLE" : "ASSIGNED"
+              }`
             );
           }
           return isAvailable;
@@ -182,11 +158,6 @@ export function StartShiftForm({
     // Check if there's already an error (like active shift detected)
     if (error) {
       toast.error(error);
-      return;
-    }
-
-    if (!openingCash || parseFloat(openingCash) < 0) {
-      setError("Please enter a valid opening cash amount");
       return;
     }
 
@@ -272,26 +243,6 @@ export function StartShiftForm({
           )}
         </div>
       )}
-
-      {/* Opening Cash */}
-      <div className="space-y-2">
-        <Label htmlFor="openingCash">
-          Opening Cash <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id="openingCash"
-          type="number"
-          step="0.01"
-          placeholder="0.00"
-          value={openingCash}
-          onChange={(e) => setOpeningCash(e.target.value)}
-          disabled={isLoading}
-          className="text-base"
-        />
-        <p className="text-sm text-muted-foreground">
-          Amount of cash given at the start of shift
-        </p>
-      </div>
 
       {/* Nozzle Selection */}
       <div className="space-y-2">

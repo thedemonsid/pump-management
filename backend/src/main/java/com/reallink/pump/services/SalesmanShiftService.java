@@ -542,4 +542,15 @@ public class SalesmanShiftService {
         nozzleTestRepository.delete(test);
         log.info("Deleted nozzle test {} from shift {}", testId, test.getSalesmanShift().getId());
     }
+
+    /**
+     * Get all nozzle IDs that are currently assigned (status = OPEN) to any
+     * shift. This is optimized for checking nozzle availability when starting a
+     * new shift.
+     */
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SALESMAN')")
+    public List<UUID> getAllAssignedNozzleIds() {
+        UUID pumpMasterId = securityHelper.getCurrentPumpMasterId();
+        return nozzleAssignmentRepository.findAllAssignedNozzleIds(pumpMasterId);
+    }
 }

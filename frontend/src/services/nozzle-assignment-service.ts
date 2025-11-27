@@ -50,4 +50,15 @@ export class NozzleAssignmentService {
     );
     return response.data;
   }
+
+  /**
+   * Get all nozzle IDs that are currently assigned (status = OPEN) to any shift.
+   * This is optimized for checking nozzle availability.
+   */
+  static async getAssignedNozzleIds(): Promise<string[]> {
+    const response = await api.get<string[]>(
+      `${this.BASE_SHIFT_PATH}/assigned-nozzles`
+    );
+    return response.data;
+  }
 }

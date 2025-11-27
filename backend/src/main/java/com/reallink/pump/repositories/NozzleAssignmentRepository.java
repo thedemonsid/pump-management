@@ -87,4 +87,13 @@ public interface NozzleAssignmentRepository extends JpaRepository<NozzleAssignme
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
+
+    /**
+     * Find all distinct nozzle IDs that are currently assigned (status = OPEN)
+     * to any shift for a specific pump master. This is optimized for checking
+     * nozzle availability.
+     */
+    @Query("SELECT DISTINCT na.nozzle.id FROM NozzleAssignment na "
+            + "WHERE na.pumpMaster.id = :pumpMasterId AND na.status = 'OPEN'")
+    List<UUID> findAllAssignedNozzleIds(@Param("pumpMasterId") UUID pumpMasterId);
 }
