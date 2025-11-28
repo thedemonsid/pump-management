@@ -75,4 +75,6 @@ public interface SalesmanBillPaymentRepository extends JpaRepository<SalesmanBil
             + "WHERE sbp.salesmanShift.id = :shiftId "
             + "ORDER BY sbp.paymentDate DESC")
     List<SalesmanBillPayment> findBySalesmanShiftIdOrderByPaymentDateDesc(@Param("shiftId") UUID shiftId);
+
+    void deleteBySalesmanBill_Id(UUID salesmanBillId);
 }

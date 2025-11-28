@@ -95,36 +95,43 @@ interface DecodedToken {
 const CompanyInfo = () => (
   <div className="space-y-4 p-1">
     <div className="flex items-center gap-2 text-primary">
-      <Fuel className="h-5 w-5" />
-      <h3 className="font-semibold">FuelTech Solutions</h3>
+      <Building2 className="h-5 w-5" />
+      <h3 className="font-semibold">Real Link Web Tech</h3>
     </div>
 
     <div className="space-y-3 text-sm text-muted-foreground">
       <div className="flex items-center gap-2">
         <Building2 className="h-4 w-4" />
-        <span>Leading Fuel Management Systems</span>
+        <span>Web & Software Solutions</span>
       </div>
 
       <div className="flex items-center gap-2">
         <Mail className="h-4 w-4" />
-        <span>support@fueltech.com</span>
+        <span>info@reallinkwebtech.com</span>
       </div>
 
       <div className="flex items-center gap-2">
         <Phone className="h-4 w-4" />
-        <span>+1 (555) 123-4567</span>
+        <span>Contact your administrator</span>
       </div>
 
       <div className="flex items-center gap-2">
         <Globe className="h-4 w-4" />
-        <span>www.fueltech.com</span>
+        <a
+          href="https://reallinkwebtech.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-primary transition-colors"
+        >
+          reallinkwebtech.com
+        </a>
       </div>
     </div>
 
     <Separator />
 
     <p className="text-xs text-muted-foreground">
-      Trusted by over 10,000+ fuel stations worldwide since 2015
+      Your trusted partner for innovative web and software solutions
     </p>
   </div>
 );
@@ -374,7 +381,7 @@ export function LoginPage() {
 
         {/* Footer */}
         <div className="text-center text-xs text-muted-foreground">
-          <p>© 2024 FuelTech Solutions. All rights reserved.</p>
+          <p>© 2025 Real Link Web Tech</p>
         </div>
       </div>
     </div>

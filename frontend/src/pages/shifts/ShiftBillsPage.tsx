@@ -85,9 +85,9 @@ export function ShiftBillsPage() {
 
   // Form state
   const [billingMode, setBillingMode] = useState<"BY_QUANTITY" | "BY_AMOUNT">(
-    "BY_QUANTITY"
+    "BY_AMOUNT"
   );
-  const [paymentType, setPaymentType] = useState<"CASH" | "CREDIT">("CREDIT");
+  const [paymentType, setPaymentType] = useState<"CASH" | "CREDIT">("CASH");
   const [selectedCustomer, setSelectedCustomer] = useState<Option | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Option | null>(null);
   const [quantity, setQuantity] = useState<string>("");
@@ -101,7 +101,7 @@ export function ShiftBillsPage() {
     value: "CASH",
     label: "Cash",
   });
-  const [cashReferenceNumber, setCashReferenceNumber] = useState<string>("");
+  const [cashReferenceNumber, setCashReferenceNumber] = useState<string>("NA");
   const [cashNotes, setCashNotes] = useState<string>("");
 
   const [meterImage, setMeterImage] = useState<File | null>(null);
@@ -140,8 +140,8 @@ export function ShiftBillsPage() {
   }, [shiftId, fetchShiftById]);
 
   const resetForm = () => {
-    setBillingMode("BY_QUANTITY");
-    setPaymentType("CREDIT");
+    setBillingMode("BY_AMOUNT");
+    setPaymentType("CASH");
     setSelectedCustomer(null);
     setSelectedProduct(null);
     setQuantity("");
@@ -150,7 +150,7 @@ export function ShiftBillsPage() {
     setVehicleNo("NA");
     setDriverName("NA");
     setCashPaymentMethod({ value: "CASH", label: "Cash" });
-    setCashReferenceNumber("");
+    setCashReferenceNumber("NA");
     setCashNotes("");
     setMeterImage(null);
     setVehicleImage(null);

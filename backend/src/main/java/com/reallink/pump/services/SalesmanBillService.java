@@ -429,6 +429,7 @@ public class SalesmanBillService {
         if (!repository.existsById(id)) {
             throw new PumpBusinessException("SALESMAN_BILL_NOT_FOUND", "Salesman bill with ID " + id + " not found");
         }
+        salesmanBillPaymentRepository.deleteBySalesmanBill_Id(id);
         repository.deleteById(id);
     }
 

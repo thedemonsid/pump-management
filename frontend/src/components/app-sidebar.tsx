@@ -257,10 +257,10 @@ export function AppSidebar({ role, pumpName }: AppSidebarProps) {
           </div>
           <div className="flex flex-col leading-tight group-data-[state=collapsed]:hidden">
             <span className="font-semibold text-sm tracking-tight group-hover:text-primary transition-colors">
-              Easy Pump
+              {pumpName || "Main Pump Station"}
             </span>
             <span className="text-[11px] text-muted-foreground">
-              Real Link Web Tech
+              Pump Station
             </span>
           </div>
         </NavLink>
@@ -336,9 +336,11 @@ export function AppSidebar({ role, pumpName }: AppSidebarProps) {
             <ThemeToggle compact />
           </div>
           <div className="rounded-md border bg-background/50 backdrop-blur-sm p-3 flex flex-col gap-1 shadow-xs w-full group-data-[state=collapsed]:hidden">
-            <div className="text-xs text-muted-foreground/80">Pump Station</div>
-            <div className="text-sm font-medium">
-              {pumpName || "Main Pump Station"}
+            <div className="text-sm font-semibold tracking-tight">
+              Easy Pump
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              Real Link Web Tech
             </div>
           </div>
           <div className="text-[10px] text-muted-foreground/70 tracking-wide group-data-[state=collapsed]:hidden">
