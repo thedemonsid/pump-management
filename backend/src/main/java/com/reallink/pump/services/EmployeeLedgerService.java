@@ -231,9 +231,8 @@ public class EmployeeLedgerService {
 
     private String formatPaymentDescription(EmployeeSalaryPayment payment) {
         String method = payment.getPaymentMethod().name();
-        String ref = payment.getReferenceNumber();
         String notes = payment.getNotes() != null ? " - " + payment.getNotes() : "";
-        return String.format("Payment via %s (Ref: %s)%s", method, ref, notes);
+        return String.format("Payment via %s%s", method, notes);
     }
 
     // Helper class to combine salaries and payments for sorting

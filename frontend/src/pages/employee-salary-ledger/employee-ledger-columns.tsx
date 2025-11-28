@@ -1,8 +1,46 @@
 "use client";
 
+import { useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { EmployeeLedgerEntry } from "@/types/employee-ledger";
 import { Badge } from "@/components/ui/badge";
+
+const MAX_DESCRIPTION_LENGTH = 120;
+
+const DescriptionCell = ({ entry }: { entry: EmployeeLedgerEntry }) => {
+  const [expanded, setExpanded] = useState(false);
+  const shouldTruncate = entry.description.length > MAX_DESCRIPTION_LENGTH;
+  const displayText =
+    expanded || !shouldTruncate
+      ? entry.description
+      : `${entry.description.slice(0, MAX_DESCRIPTION_LENGTH).trimEnd()}…`;
+  const hidePaymentMeta = entry.referenceType === "PAYMENT";
+
+  return (
+    <div className="max-w-md space-y-1">
+      <p className="text-sm break-words whitespace-pre-wrap">{displayText}</p>
+      {shouldTruncate && (
+        <button
+          type="button"
+          onClick={() => setExpanded((prev) => !prev)}
+          className="text-xs text-primary hover:underline focus:outline-none"
+        >
+          {expanded ? "Show less" : "Show more"}
+        </button>
+      )}
+      {entry.paymentMethod && !hidePaymentMeta && (
+        <p className="text-xs text-muted-foreground">
+          Method: {entry.paymentMethod}
+        </p>
+      )}
+      {entry.referenceNumber && !hidePaymentMeta && (
+        <p className="text-xs text-muted-foreground">
+          Ref: {entry.referenceNumber}
+        </p>
+      )}
+    </div>
+  );
+};
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("en-IN", {
@@ -61,21 +99,7 @@ export const employeeLedgerColumns: ColumnDef<EmployeeLedgerEntry>[] = [
     header: "Description",
     cell: ({ row }) => {
       const entry = row.original;
-      return (
-        <div className="max-w-md">
-          <p className="text-sm">{entry.description}</p>
-          {entry.paymentMethod && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Method: {entry.paymentMethod}
-            </p>
-          )}
-          {entry.referenceNumber && (
-            <p className="text-xs text-muted-foreground">
-              Ref: {entry.referenceNumber}
-            </p>
-          )}
-        </div>
-      );
+      return <DescriptionCell entry={entry} />;
     },
   },
   {
