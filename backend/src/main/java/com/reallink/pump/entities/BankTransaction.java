@@ -68,6 +68,15 @@ public class BankTransaction extends BaseEntity {
     @OneToOne(mappedBy = "bankTransaction", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Expense expense;
 
+    /**
+     * Optional reference to shift accounting - used for cash distribution from
+     * shift. When shift accounting distributes cash to bank accounts,
+     * transactions are linked here.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shift_accounting_id", foreignKey = @jakarta.persistence.ForeignKey(name = "fk_transaction_shift_accounting"))
+    private SalesmanShiftAccounting shiftAccounting;
+
     public enum TransactionType {
         CREDIT, DEBIT
     }

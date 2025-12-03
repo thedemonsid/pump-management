@@ -54,6 +54,9 @@ export type {
   SalesmanShiftAccountingResponse,
   CreateSalesmanShiftAccountingRequest,
   UpdateSalesmanShiftAccountingRequest,
+  DistributionItem,
+  CashDistributionRequest,
+  CashDistributionResponse,
 } from "./salesman-shift-accounting";
 
 // Explicitly re-export customer bill payment types from customer-bill-payment.ts

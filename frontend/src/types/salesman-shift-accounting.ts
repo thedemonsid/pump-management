@@ -113,3 +113,47 @@ export interface UpdateSalesmanShiftAccountingRequest {
   /** Number of 1 rupee coins */
   coins1?: number;
 }
+
+// ==================== CASH DISTRIBUTION TYPES ====================
+
+/**
+ * Single distribution item for a bank account
+ */
+export interface DistributionItem {
+  /** Bank account ID */
+  bankAccountId: string;
+  /** Amount to distribute */
+  amount: number;
+}
+
+/**
+ * Request DTO for distributing cash from shift accounting to bank accounts
+ */
+export interface CashDistributionRequest {
+  /** List of distributions */
+  distributions: DistributionItem[];
+}
+
+/**
+ * Response DTO for cash distribution transaction
+ */
+export interface CashDistributionResponse {
+  /** Transaction ID */
+  id: string;
+  /** Bank account ID */
+  bankAccountId: string;
+  /** Bank account holder name */
+  bankAccountName: string;
+  /** Bank name */
+  bankName: string;
+  /** Account number */
+  accountNumber: string;
+  /** Distributed amount */
+  amount: number;
+  /** Transaction date */
+  transactionDate: string;
+  /** Entry by user */
+  entryBy: string;
+  /** Creation timestamp */
+  createdAt: string;
+}

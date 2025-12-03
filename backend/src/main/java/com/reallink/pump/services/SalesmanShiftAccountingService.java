@@ -2,14 +2,18 @@ package com.reallink.pump.services;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import com.reallink.pump.dto.shift.CashDistributionRequest;
+import com.reallink.pump.dto.shift.CashDistributionResponse;
 import com.reallink.pump.dto.shift.CreateShiftAccountingRequest;
 import com.reallink.pump.entities.BankAccount;
 import com.reallink.pump.entities.BankTransaction;
@@ -19,6 +23,7 @@ import com.reallink.pump.entities.SalesmanShift;
 import com.reallink.pump.entities.SalesmanShiftAccounting;
 import com.reallink.pump.exception.PumpBusinessException;
 import com.reallink.pump.repositories.BankAccountRepository;
+import com.reallink.pump.repositories.BankTransactionRepository;
 import com.reallink.pump.repositories.SalesmanShiftAccountingRepository;
 import com.reallink.pump.repositories.SalesmanShiftRepository;
 import com.reallink.pump.security.SecurityHelper;
@@ -40,6 +45,7 @@ public class SalesmanShiftAccountingService {
     private final SalesmanShiftRepository salesmanShiftRepository;
     private final SalesmanShiftAccountingRepository accountingRepository;
     private final BankAccountRepository bankAccountRepository;
+    private final BankTransactionRepository bankTransactionRepository;
     private final SecurityHelper securityHelper;
 
     private static final BigDecimal ADVANCE_PAYMENT_THRESHOLD = new BigDecimal("50.00");
@@ -267,6 +273,10 @@ public class SalesmanShiftAccountingService {
 
         SalesmanShift shift = accounting.getSalesmanShift();
 
+        // Delete all cash distribution transactions linked to this accounting
+        bankTransactionRepository.deleteByShiftAccountingId(accounting.getId());
+        log.info("Deleted cash distribution transactions for shift accounting {}", accounting.getId());
+
         // Clear the bidirectional relationship first
         shift.setAccounting(null);
 
@@ -280,6 +290,123 @@ public class SalesmanShiftAccountingService {
         accountingRepository.delete(accounting);
 
         log.info("Deleted accounting for shift {} by {}", shiftId, securityHelper.getCurrentUsername());
+    }
+
+    // ==================== CASH DISTRIBUTION METHODS ====================
+    /**
+     * Distribute cash from shift accounting to bank accounts. Only MANAGER and
+     * ADMIN can distribute cash.
+     */
+    @Transactional
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public List<CashDistributionResponse> distributeCash(UUID shiftId, CashDistributionRequest request) {
+        SalesmanShiftAccounting accounting = accountingRepository.findBySalesmanShiftId(shiftId)
+                .orElseThrow(() -> new EntityNotFoundException("Accounting not found for this shift"));
+
+        SalesmanShift shift = accounting.getSalesmanShift();
+        String currentUser = securityHelper.getCurrentUsername();
+
+        List<BankTransaction> transactions = new ArrayList<>();
+
+        for (CashDistributionRequest.DistributionItem item : request.getDistributions()) {
+            BankAccount bankAccount = bankAccountRepository.findById(item.getBankAccountId())
+                    .orElseThrow(() -> new EntityNotFoundException("Bank account not found: " + item.getBankAccountId()));
+
+            // Create bank transaction for cash distribution (CREDIT to bank)
+            BankTransaction transaction = new BankTransaction();
+            transaction.setBankAccount(bankAccount);
+            transaction.setAmount(item.getAmount());
+            transaction.setTransactionType(BankTransaction.TransactionType.CREDIT);
+            transaction.setDescription("Cash deposit from shift " + shift.getId() + " - " + shift.getSalesman().getUsername());
+            transaction.setTransactionDate(LocalDateTime.now());
+            transaction.setPaymentMethod(PaymentMethod.CASH);
+            transaction.setShiftAccounting(accounting);
+            transaction.setEntryBy(currentUser);
+
+            transactions.add(bankTransactionRepository.save(transaction));
+        }
+
+        log.info("Distributed cash from shift {} to {} bank accounts by {}",
+                shiftId, transactions.size(), currentUser);
+
+        return transactions.stream()
+                .map(this::mapToDistributionResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get all cash distributions for a shift accounting.
+     */
+    @PreAuthorize("hasAnyRole('SALESMAN', 'MANAGER', 'ADMIN')")
+    public List<CashDistributionResponse> getCashDistributions(UUID shiftId) {
+        SalesmanShiftAccounting accounting = accountingRepository.findBySalesmanShiftId(shiftId)
+                .orElseThrow(() -> new EntityNotFoundException("Accounting not found for this shift"));
+
+        List<BankTransaction> transactions = bankTransactionRepository
+                .findByShiftAccountingIdOrderByCreatedAtDesc(accounting.getId());
+
+        return transactions.stream()
+                .map(this::mapToDistributionResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get total distributed amount for a shift accounting.
+     */
+    @PreAuthorize("hasAnyRole('SALESMAN', 'MANAGER', 'ADMIN')")
+    public BigDecimal getTotalDistributed(UUID shiftId) {
+        SalesmanShiftAccounting accounting = accountingRepository.findBySalesmanShiftId(shiftId)
+                .orElseThrow(() -> new EntityNotFoundException("Accounting not found for this shift"));
+
+        return bankTransactionRepository.getTotalDistributedByShiftAccountingId(accounting.getId());
+    }
+
+    /**
+     * Delete all cash distributions for a shift accounting. Only MANAGER and
+     * ADMIN can delete distributions.
+     */
+    @Transactional
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public void deleteCashDistributions(UUID shiftId) {
+        SalesmanShiftAccounting accounting = accountingRepository.findBySalesmanShiftId(shiftId)
+                .orElseThrow(() -> new EntityNotFoundException("Accounting not found for this shift"));
+
+        bankTransactionRepository.deleteByShiftAccountingId(accounting.getId());
+
+        log.info("Deleted all cash distributions for shift {} by {}", shiftId, securityHelper.getCurrentUsername());
+    }
+
+    /**
+     * Delete a single cash distribution transaction. Only MANAGER and ADMIN can
+     * delete.
+     */
+    @Transactional
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public void deleteCashDistribution(UUID transactionId) {
+        BankTransaction transaction = bankTransactionRepository.findById(transactionId)
+                .orElseThrow(() -> new EntityNotFoundException("Transaction not found: " + transactionId));
+
+        if (transaction.getShiftAccounting() == null) {
+            throw new PumpBusinessException("NOT_DISTRIBUTION", "This transaction is not a cash distribution");
+        }
+
+        bankTransactionRepository.delete(transaction);
+
+        log.info("Deleted cash distribution transaction {} by {}", transactionId, securityHelper.getCurrentUsername());
+    }
+
+    private CashDistributionResponse mapToDistributionResponse(BankTransaction transaction) {
+        CashDistributionResponse response = new CashDistributionResponse();
+        response.setId(transaction.getId());
+        response.setBankAccountId(transaction.getBankAccount().getId());
+        response.setBankAccountName(transaction.getBankAccount().getAccountHolderName());
+        response.setBankName(transaction.getBankAccount().getBank());
+        response.setAccountNumber(transaction.getBankAccount().getAccountNumber());
+        response.setAmount(transaction.getAmount());
+        response.setTransactionDate(transaction.getTransactionDate());
+        response.setEntryBy(transaction.getEntryBy());
+        response.setCreatedAt(transaction.getCreatedAt());
+        return response;
     }
 
     /**

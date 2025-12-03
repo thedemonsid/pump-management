@@ -27,6 +27,7 @@ import { CashDenominationsSheet } from "./components/CashDenominationsSheet";
 import { AccountingHeader } from "./components/AccountingHeader";
 import { AccountingSummaryView } from "./components/AccountingSummaryView";
 import { AccountingFormView } from "./components/AccountingFormView";
+import { CashDistributionSection } from "./components/CashDistributionSection";
 
 export function ShiftAccountingPage() {
   const { shiftId } = useParams<{ shiftId: string }>();
@@ -323,6 +324,18 @@ export function ShiftAccountingPage() {
           nozzles={nozzles}
           bills={bills}
           onViewDenominations={() => setShowDenominationsSheet(true)}
+        />
+      )}
+
+      {/* Cash Distribution Section - shown after accounting is done */}
+      {accounting && !isEditing && (
+        <CashDistributionSection
+          shiftId={shiftId!}
+          cashInHand={accounting.cashInHand}
+          upiReceived={accounting.upiReceived}
+          cardReceived={accounting.cardReceived}
+          customerReceipt={accounting.customerReceipt}
+          isAdminOrManager={isAdminOrManager}
         />
       )}
 
