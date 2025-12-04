@@ -2,6 +2,7 @@ package com.reallink.pump.services;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -249,6 +250,8 @@ public class EmployeeSalaryPaymentService {
         repository.delete(payment); // Bank transaction will be deleted via cascade
     }
 
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
+
     private BankTransaction createBankTransaction(
             CreateEmployeeSalaryPaymentRequest request,
             BankAccount bankAccount,
@@ -259,11 +262,12 @@ public class EmployeeSalaryPaymentService {
         transaction.setAmount(request.getAmount());
         transaction.setTransactionType(BankTransaction.TransactionType.DEBIT);
 
-        String salaryIdStr = calculatedSalary != null
-                ? calculatedSalary.getId().toString()
+        // Use human-readable salary period instead of UUID
+        String salaryPeriod = calculatedSalary != null
+                ? calculatedSalary.getFromDate().format(DATE_FORMATTER) + " to " + calculatedSalary.getToDate().format(DATE_FORMATTER)
                 : "Advance Payment";
-        String salaryType = calculatedSalary != null ? "Calculated Salary" : "Advance";
-        transaction.setDescription("Salary Payment to " + user.getUsername() + " for " + salaryType + " #" + salaryIdStr + " - " + request.getReferenceNumber());
+        String salaryType = calculatedSalary != null ? "Salary" : "Advance";
+        transaction.setDescription(salaryType + " Payment to " + user.getUsername() + " (" + salaryPeriod + ") - " + request.getReferenceNumber());
         transaction.setTransactionDate(request.getPaymentDate());
         transaction.setPaymentMethod(PaymentMethod.valueOf(request.getPaymentMethod().name()));
         return transaction;
@@ -284,11 +288,12 @@ public class EmployeeSalaryPaymentService {
             transaction.setTransactionDate(request.getPaymentDate());
         }
         if (request.getReferenceNumber() != null) {
-            String salaryIdStr = calculatedSalary != null
-                    ? calculatedSalary.getId().toString()
+            // Use human-readable salary period instead of UUID
+            String salaryPeriod = calculatedSalary != null
+                    ? calculatedSalary.getFromDate().format(DATE_FORMATTER) + " to " + calculatedSalary.getToDate().format(DATE_FORMATTER)
                     : "Advance Payment";
-            String salaryType = calculatedSalary != null ? "Calculated Salary" : "Advance";
-            transaction.setDescription("Salary Payment to " + user.getUsername() + " for " + salaryType + " #" + salaryIdStr + " - " + request.getReferenceNumber());
+            String salaryType = calculatedSalary != null ? "Salary" : "Advance";
+            transaction.setDescription(salaryType + " Payment to " + user.getUsername() + " (" + salaryPeriod + ") - " + request.getReferenceNumber());
         }
     }
 }

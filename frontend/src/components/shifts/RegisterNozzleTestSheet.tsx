@@ -173,7 +173,7 @@ export function RegisterNozzleTestSheet({
                       {...field}
                       type="number"
                       step="0.001"
-                      min="0.001"
+                      min="0"
                       placeholder="e.g., 5.000"
                       disabled={isSubmitting}
                     />

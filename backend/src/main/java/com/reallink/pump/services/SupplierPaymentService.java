@@ -239,9 +239,12 @@ public class SupplierPaymentService {
         transaction.setBankAccount(bankAccount);
         transaction.setAmount(request.getAmount());
         transaction.setTransactionType(BankTransaction.TransactionType.DEBIT);
-        String purchaseIdStr = purchase != null ? purchase.getId().toString() : (fuelPurchase != null ? fuelPurchase.getId().toString() : "General Payment");
-        String purchaseType = purchase != null ? "Purchase" : (fuelPurchase != null ? "Fuel Purchase" : "General");
-        transaction.setDescription("Payment to Supplier for " + purchaseType + " #" + purchaseIdStr + " - " + request.getReferenceNumber());
+        // Use human-readable purchase ID or invoice number instead of UUID
+        String purchaseRef = purchase != null
+                ? "#" + purchase.getPurchaseId()
+                : (fuelPurchase != null ? "Invoice: " + fuelPurchase.getInvoiceNumber() : "General Payment");
+        String purchaseType = purchase != null ? "Purchase" : (fuelPurchase != null ? "Fuel Purchase" : "");
+        transaction.setDescription("Payment to Supplier - " + purchaseType + " " + purchaseRef + " - " + request.getReferenceNumber());
         transaction.setTransactionDate(request.getPaymentDate());
         transaction.setPaymentMethod(PaymentMethod.valueOf(request.getPaymentMethod().name()));
         return transaction;
@@ -258,9 +261,12 @@ public class SupplierPaymentService {
             transaction.setTransactionDate(request.getPaymentDate());
         }
         if (request.getReferenceNumber() != null) {
-            String purchaseIdStr = purchase != null ? purchase.getId().toString() : (fuelPurchase != null ? fuelPurchase.getId().toString() : "General Payment");
-            String purchaseType = purchase != null ? "Purchase" : (fuelPurchase != null ? "Fuel Purchase" : "General");
-            transaction.setDescription("Payment to Supplier for " + purchaseType + " #" + purchaseIdStr + " - " + request.getReferenceNumber());
+            // Use human-readable purchase ID or invoice number instead of UUID
+            String purchaseRef = purchase != null
+                    ? "#" + purchase.getPurchaseId()
+                    : (fuelPurchase != null ? "Invoice: " + fuelPurchase.getInvoiceNumber() : "General Payment");
+            String purchaseType = purchase != null ? "Purchase" : (fuelPurchase != null ? "Fuel Purchase" : "");
+            transaction.setDescription("Payment to Supplier - " + purchaseType + " " + purchaseRef + " - " + request.getReferenceNumber());
         }
     }
 }

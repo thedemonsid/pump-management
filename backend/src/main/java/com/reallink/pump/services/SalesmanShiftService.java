@@ -2,6 +2,7 @@ package com.reallink.pump.services;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -391,16 +392,25 @@ public class SalesmanShiftService {
                 dispensedAmount, tank.getTankName());
 
         // Create ADDITION transactions for each nozzle test to return test fuel to tank
+        DateTimeFormatter dtFormatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm");
         List<NozzleTest> tests = nozzleTestRepository.findByNozzleAssignmentIdOrderByTestDatetimeDesc(assignment.getId());
         for (NozzleTest test : tests) {
+            // Skip tests with zero or negative quantity - no fuel to return
+            if (test.getTestQuantity() == null || test.getTestQuantity().compareTo(BigDecimal.ZERO) <= 0) {
+                log.debug("Skipping tank transaction for zero-quantity nozzle test from nozzle {}",
+                        assignment.getNozzle().getNozzleName());
+                continue;
+            }
+
             TankTransaction testTransaction = new TankTransaction();
             testTransaction.setTank(tank);
             testTransaction.setTransactionType(TankTransaction.TransactionType.ADDITION);
             testTransaction.setVolume(test.getTestQuantity());
             testTransaction.setTransactionDate(assignment.getEndTime());
-            testTransaction.setDescription(String.format("Test fuel returned from nozzle %s - Test ID: %s",
+            testTransaction.setDescription(String.format("Test fuel returned (%s L) from nozzle %s - %s",
+                    test.getTestQuantity(),
                     assignment.getNozzle().getNozzleName(),
-                    test.getId()));
+                    test.getTestDatetime().format(dtFormatter)));
             testTransaction.setNozzleTest(test);
             testTransaction.setEntryBy(securityHelper.getCurrentUsername());
 

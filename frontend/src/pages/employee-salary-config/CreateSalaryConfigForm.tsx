@@ -91,7 +91,11 @@ const selectStyles = {
     backgroundColor: "#ffffff",
     border: "1px solid #e5e7eb",
   }),
-  menuPortal: (base: CSSObjectWithLabel) => ({ ...base, zIndex: 9999 }),
+  menuPortal: (base: CSSObjectWithLabel) => ({
+    ...base,
+    zIndex: 9999,
+    pointerEvents: "auto" as const,
+  }),
 };
 
 export function CreateSalaryConfigForm({
@@ -287,6 +291,7 @@ export function CreateSalaryConfigForm({
                       onChange={(option) => field.onChange(option?.value || "")}
                       placeholder="Select salary type"
                       styles={selectStyles}
+                      menuPortalTarget={document.body}
                     />
                     <FormDescription>
                       Choose how frequently the salary is calculated

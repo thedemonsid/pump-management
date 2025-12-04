@@ -1,9 +1,10 @@
 -- Migration to add nozzle_test_id column to tank transaction table
 -- This allows linking tank transactions to nozzle tests for fuel returned to tank
+-- Database: MySQL 8
 
 -- Add nozzle_test_id column
 ALTER TABLE pump_tank_transaction_master
-ADD COLUMN nozzle_test_id UUID;
+ADD COLUMN nozzle_test_id BINARY(16) NULL;
 
 -- Add foreign key constraint
 ALTER TABLE pump_tank_transaction_master
@@ -14,7 +15,3 @@ ON DELETE CASCADE;
 -- Add index for better query performance
 CREATE INDEX idx_tank_transaction_nozzle_test 
 ON pump_tank_transaction_master(nozzle_test_id);
-
--- Add comment to document the column purpose
-COMMENT ON COLUMN pump_tank_transaction_master.nozzle_test_id IS 
-'References the nozzle test for which this transaction was created (when fuel is returned to tank after testing)';

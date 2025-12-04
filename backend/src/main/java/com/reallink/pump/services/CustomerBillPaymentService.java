@@ -144,7 +144,7 @@ public class CustomerBillPaymentService {
         }
 
         // Create bank transaction
-        BankTransaction bankTransaction = createBankTransaction(request, bankAccount);
+        BankTransaction bankTransaction = createBankTransaction(request, bankAccount, bill);
 
         // Create payment entity
         CustomerBillPayment payment = mapper.toEntity(request);
@@ -213,7 +213,7 @@ public class CustomerBillPaymentService {
 
         // Update bank transaction if amount or payment method changed
         if (request.getAmount() != null || request.getPaymentMethod() != null) {
-            updateBankTransaction(existingPayment.getBankTransaction(), request);
+            updateBankTransaction(existingPayment.getBankTransaction(), request, existingPayment.getBill());
         }
 
         CustomerBillPayment savedPayment = repository.save(existingPayment);
@@ -229,19 +229,20 @@ public class CustomerBillPaymentService {
         repository.delete(payment); // Bank transaction will be deleted via cascade
     }
 
-    private BankTransaction createBankTransaction(CreateCustomerBillPaymentRequest request, BankAccount bankAccount) {
+    private BankTransaction createBankTransaction(CreateCustomerBillPaymentRequest request, BankAccount bankAccount, Bill bill) {
         BankTransaction transaction = new BankTransaction();
         transaction.setBankAccount(bankAccount);
         transaction.setAmount(request.getAmount());
         transaction.setTransactionType(BankTransaction.TransactionType.CREDIT);
-        String billIdStr = request.getBillId() != null ? request.getBillId().toString() : "General Payment";
-        transaction.setDescription("Payment for Bill #" + billIdStr + " - " + request.getReferenceNumber());
+        // Use bill number instead of UUID for human-readable description
+        String billRef = bill != null ? "#" + bill.getBillNo() : "General Payment";
+        transaction.setDescription("Payment for Bill " + billRef + " - " + request.getReferenceNumber());
         transaction.setTransactionDate(request.getPaymentDate());
         transaction.setPaymentMethod(PaymentMethod.valueOf(request.getPaymentMethod().name()));
         return transaction;
     }
 
-    private void updateBankTransaction(BankTransaction transaction, UpdateCustomerBillPaymentRequest request) {
+    private void updateBankTransaction(BankTransaction transaction, UpdateCustomerBillPaymentRequest request, Bill bill) {
         if (request.getAmount() != null) {
             transaction.setAmount(request.getAmount());
         }
@@ -252,8 +253,9 @@ public class CustomerBillPaymentService {
             transaction.setTransactionDate(request.getPaymentDate());
         }
         if (request.getReferenceNumber() != null) {
-            String billIdStr = request.getBillId() != null ? request.getBillId().toString() : "General Payment";
-            transaction.setDescription("Payment for Bill #" + billIdStr + " - " + request.getReferenceNumber());
+            // Use bill number instead of UUID for human-readable description
+            String billRef = bill != null ? "#" + bill.getBillNo() : "General Payment";
+            transaction.setDescription("Payment for Bill " + billRef + " - " + request.getReferenceNumber());
         }
     }
 }

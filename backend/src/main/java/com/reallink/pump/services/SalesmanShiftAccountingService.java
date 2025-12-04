@@ -314,11 +314,12 @@ public class SalesmanShiftAccountingService {
                     .orElseThrow(() -> new EntityNotFoundException("Bank account not found: " + item.getBankAccountId()));
 
             // Create bank transaction for cash distribution (CREDIT to bank)
+            String shiftInfo = shift.getSalesman().getUsername() + " - " + shift.getStartDatetime().format(SHIFT_DATE_FORMATTER);
             BankTransaction transaction = new BankTransaction();
             transaction.setBankAccount(bankAccount);
             transaction.setAmount(item.getAmount());
             transaction.setTransactionType(BankTransaction.TransactionType.CREDIT);
-            transaction.setDescription("Cash deposit from shift " + shift.getId() + " - " + shift.getSalesman().getUsername());
+            transaction.setDescription("Cash deposit from shift (" + shiftInfo + ")");
             transaction.setTransactionDate(LocalDateTime.now());
             transaction.setPaymentMethod(PaymentMethod.CASH);
             transaction.setShiftAccounting(accounting);
