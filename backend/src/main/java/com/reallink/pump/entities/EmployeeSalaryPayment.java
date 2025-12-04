@@ -83,8 +83,13 @@ public class EmployeeSalaryPayment extends BaseEntity {
     @Column(name = "notes", length = 500)
     private String notes;
 
-    @NotNull(message = "Bank transaction is required")
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true, optional = false)
-    @JoinColumn(name = "bank_transaction_id", nullable = false, foreignKey = @ForeignKey(name = "fk_salary_payment_bank_transaction"))
+    /**
+     * Bank transaction associated with this payment. This is optional - for
+     * advance payments from shift accounting (cash shortages), no bank
+     * transaction is created since it's just a record that money will be
+     * deducted from salary later, not an actual bank debit.
+     */
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true, optional = true)
+    @JoinColumn(name = "bank_transaction_id", nullable = true, foreignKey = @ForeignKey(name = "fk_salary_payment_bank_transaction"))
     private BankTransaction bankTransaction;
 }

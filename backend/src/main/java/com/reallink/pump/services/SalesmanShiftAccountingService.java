@@ -2,6 +2,7 @@ package com.reallink.pump.services;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -49,6 +50,7 @@ public class SalesmanShiftAccountingService {
     private final SecurityHelper securityHelper;
 
     private static final BigDecimal ADVANCE_PAYMENT_THRESHOLD = new BigDecimal("50.00");
+    private static final DateTimeFormatter SHIFT_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm");
 
     /**
      * Create accounting record for a shift. Only MANAGER and ADMIN can create
@@ -237,9 +239,8 @@ public class SalesmanShiftAccountingService {
                 EmployeeSalaryPayment existingPayment = accounting.getAdvancePayment();
                 existingPayment.setAmount(advanceAmount);
                 existingPayment.setPaymentDate(LocalDateTime.now());
-                existingPayment.getBankTransaction().setAmount(advanceAmount);
-                existingPayment.getBankTransaction().setTransactionDate(LocalDateTime.now());
-                existingPayment.setNotes("Advance deduction for cash shortage of ₹" + advanceAmount + " from shift accounting");
+                String shiftInfo = shift.getSalesman().getUsername() + " - " + shift.getStartDatetime().format(SHIFT_DATE_FORMATTER);
+                existingPayment.setNotes("Cash shortage of ₹" + advanceAmount + " from shift (" + shiftInfo + "). Will be deducted from salary.");
 
                 log.info("Updated advance payment from {} to {} for shift {}", oldBalance.abs(), advanceAmount, shiftId);
             } else {
@@ -428,9 +429,15 @@ public class SalesmanShiftAccountingService {
      * Create an advance salary payment from shift balance amount. Only for
      * negative balance (cash shortage) - creates advance as positive amount
      * which will be deducted from future salary.
+     *
+     * NOTE: This does NOT create a bank transaction because: 1. The cash
+     * shortage is not an actual bank debit - the money was never in the bank 2.
+     * This is just a record that the salesman owes money, which will be
+     * deducted from their salary 3. The actual bank transaction will happen
+     * when salary is paid (reduced amount)
      */
     private EmployeeSalaryPayment createAdvancePayment(SalesmanShift shift, BigDecimal balanceAmount) {
-        // Get the first available bank account for the pump
+        // Get the first available bank account for the pump (needed for the payment record)
         List<BankAccount> bankAccounts = bankAccountRepository.findByPumpMaster_Id(shift.getPumpMaster().getId());
         if (bankAccounts.isEmpty()) {
             throw new PumpBusinessException("NO_BANK_ACCOUNT",
@@ -442,20 +449,14 @@ public class SalesmanShiftAccountingService {
         // This represents cash shortage that will be deducted from salary
         BigDecimal advanceAmount = balanceAmount.abs();
 
-        // Cash shortage - salesman owes money
-        String description = "Advance Deduction for Cash Shortage of " + shift.getSalesman().getUsername()
-                + " - Shift ID: " + shift.getId();
+        // Format shift date for human-readable reference
+        String shiftDate = shift.getStartDatetime().format(SHIFT_DATE_FORMATTER);
+        String salesmanName = shift.getSalesman().getUsername();
 
-        // Create bank transaction for the advance payment
-        BankTransaction transaction = new BankTransaction();
-        transaction.setBankAccount(bankAccount);
-        transaction.setAmount(advanceAmount);
-        transaction.setTransactionType(BankTransaction.TransactionType.DEBIT);
-        transaction.setDescription(description);
-        transaction.setTransactionDate(LocalDateTime.now());
-        transaction.setPaymentMethod(PaymentMethod.CASH);
-
-        // Create advance salary payment
+        // Create advance salary payment WITHOUT bank transaction
+        // The bank transaction is not created because:
+        // - Cash shortage means money was not deposited, not that money was taken from bank
+        // - This is just a tracking record for salary deduction
         EmployeeSalaryPayment payment = new EmployeeSalaryPayment();
         payment.setUser(shift.getSalesman());
         payment.setPumpMaster(shift.getPumpMaster());
@@ -464,9 +465,12 @@ public class SalesmanShiftAccountingService {
         payment.setAmount(advanceAmount); // Always positive
         payment.setPaymentDate(LocalDateTime.now());
         payment.setPaymentMethod(PaymentMethod.CASH);
-        payment.setReferenceNumber("SHIFT-BALANCE-" + shift.getId());
-        payment.setNotes("Advance deduction for cash shortage of ₹" + advanceAmount + " from shift accounting");
-        payment.setBankTransaction(transaction);
+        // Use salesman name and shift date for human-readable reference (max 50 chars)
+        String referenceNumber = "ADV-" + salesmanName.substring(0, Math.min(salesmanName.length(), 15)) + "-" + shift.getStartDatetime().format(DateTimeFormatter.ofPattern("ddMMyy-HHmm"));
+        payment.setReferenceNumber(referenceNumber);
+        payment.setNotes("Cash shortage of ₹" + advanceAmount + " from shift (" + salesmanName + " - " + shiftDate + "). Will be deducted from salary.");
+        // No bank transaction - this is just a tracking record, not an actual bank debit
+        payment.setBankTransaction(null);
 
         return payment;
     }
