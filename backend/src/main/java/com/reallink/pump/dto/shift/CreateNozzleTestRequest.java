@@ -26,7 +26,7 @@ public class CreateNozzleTestRequest {
     private UUID nozzleId;
 
     @NotNull(message = "Test quantity is required")
-    @DecimalMin(value = "0.001", message = "Test quantity must be at least 0.001")
+    @DecimalMin(value = "0.0", message = "Test quantity cannot be negative")
     @Digits(integer = 12, fraction = 3, message = "Test quantity must have at most 12 digits and 3 decimal places")
     private BigDecimal testQuantity;
 

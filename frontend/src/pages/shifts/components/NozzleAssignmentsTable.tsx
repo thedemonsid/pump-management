@@ -107,6 +107,14 @@ export function NozzleAssignmentsTable({
       return;
     }
 
+    // Check for at least one nozzle test
+    if (!selectedAssignment.testCount || selectedAssignment.testCount < 1) {
+      setError(
+        "At least one nozzle test is required before closing. Please add a test (it can be zero quantity)."
+      );
+      return;
+    }
+
     setIsClosing(true);
 
     try {
@@ -124,9 +132,14 @@ export function NozzleAssignmentsTable({
       fetchAssignments();
       onNozzleClosed?.();
     } catch (err: unknown) {
-      const errorMessage =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Failed to close nozzle";
+      // Handle errors - API interceptor throws Error with format "status: message"
+      let errorMessage = "Failed to close nozzle";
+
+      if (err instanceof Error) {
+        // Remove the status code prefix if present (e.g., "400: message" -> "message")
+        errorMessage = err.message.replace(/^\d+:\s*/, "");
+      }
+
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {

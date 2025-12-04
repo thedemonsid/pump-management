@@ -261,7 +261,7 @@ export type NozzleTestResponse = z.infer<typeof NozzleTestResponseSchema>;
  */
 export const CreateNozzleTestRequestSchema = z.object({
   nozzleId: z.string(),
-  testQuantity: z.number().min(0.001, "Test quantity must be at least 0.001"),
+  testQuantity: z.number().min(0, "Test quantity cannot be negative"),
   testDatetime: z.string(), // ISO datetime
   remarks: z.string().max(500).optional(),
 });

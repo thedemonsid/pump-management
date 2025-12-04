@@ -150,7 +150,9 @@ export function ShiftDetailsPage() {
       setSelectedNozzle(null);
       setClosingBalance("");
     } catch (err) {
-      toast.error("Failed to close nozzle");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to close nozzle"
+      );
       console.error(err);
     } finally {
       setIsClosingNozzle(false);

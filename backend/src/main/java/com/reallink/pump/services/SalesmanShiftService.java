@@ -172,6 +172,12 @@ public class SalesmanShiftService {
             throw new IllegalStateException("Nozzle assignment is already closed");
         }
 
+        // Verify at least one test exists for this nozzle assignment
+        if (!nozzleTestRepository.existsByNozzleAssignmentId(assignmentId)) {
+            throw new IllegalStateException(
+                    "Cannot close nozzle assignment. At least one nozzle test (which can be zero) is required before closing.");
+        }
+
         // Close the assignment
         assignment.closeAssignment(LocalDateTime.now(), closingBalance);
 
