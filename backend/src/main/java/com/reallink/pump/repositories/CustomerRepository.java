@@ -22,6 +22,10 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID> {
 
     boolean existsByCustomerNameAndPumpMaster_IdAndIdNot(String customerName, UUID pumpMasterId, UUID id);
 
+    boolean existsByPhoneNumberAndPumpMaster_Id(String phoneNumber, UUID pumpMasterId);
+
+    boolean existsByPhoneNumberAndPumpMaster_IdAndIdNot(String phoneNumber, UUID pumpMasterId, UUID id);
+
     List<Customer> findByCustomerNameContainingIgnoreCase(String customerName);
 
     @Query("SELECT c FROM Customer c WHERE "

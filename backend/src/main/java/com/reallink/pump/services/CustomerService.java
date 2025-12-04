@@ -82,12 +82,21 @@ public class CustomerService {
                 .toList();
     }
 
+    private static final String UNKNOWN_PHONE_NUMBER = "9999999999";
+
     @Transactional
     public CustomerResponse create(@Valid CreateCustomerRequest request) {
         // Check for duplicate customer name
         if (repository.existsByCustomerNameAndPumpMaster_Id(request.getCustomerName(), request.getPumpMasterId())) {
             throw new PumpBusinessException("DUPLICATE_CUSTOMER",
                     "Customer with name '" + request.getCustomerName() + "' already exists for this pump master");
+        }
+        // Check for duplicate phone number (skip if it's the unknown phone number)
+        if (request.getPhoneNumber() != null
+                && !UNKNOWN_PHONE_NUMBER.equals(request.getPhoneNumber())
+                && repository.existsByPhoneNumberAndPumpMaster_Id(request.getPhoneNumber(), request.getPumpMasterId())) {
+            throw new PumpBusinessException("DUPLICATE_PHONE_NUMBER",
+                    "Customer with phone number '" + request.getPhoneNumber() + "' already exists for this pump master");
         }
         // Fetch the PumpInfoMaster entity using pumpMasterId from the request
         PumpInfoMaster pumpMaster = pumpInfoMasterRepository.findById(request.getPumpMasterId()).orElse(null);
@@ -115,6 +124,16 @@ public class CustomerService {
                         existingCustomer.getPumpMaster().getId(), id)) {
             throw new PumpBusinessException("DUPLICATE_CUSTOMER",
                     "Customer with name '" + request.getCustomerName() + "' already exists for this pump master");
+        }
+
+        // Check for duplicate phone number if phone number is being updated (skip if it's the unknown phone number)
+        if (request.getPhoneNumber() != null
+                && !UNKNOWN_PHONE_NUMBER.equals(request.getPhoneNumber())
+                && !request.getPhoneNumber().equals(existingCustomer.getPhoneNumber())
+                && repository.existsByPhoneNumberAndPumpMaster_IdAndIdNot(request.getPhoneNumber(),
+                        existingCustomer.getPumpMaster().getId(), id)) {
+            throw new PumpBusinessException("DUPLICATE_PHONE_NUMBER",
+                    "Customer with phone number '" + request.getPhoneNumber() + "' already exists for this pump master");
         }
 
         mapper.updateEntityFromRequest(request, existingCustomer);

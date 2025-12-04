@@ -22,6 +22,10 @@ public interface SupplierRepository extends JpaRepository<Supplier, UUID> {
 
     boolean existsBySupplierNameAndPumpMaster_IdAndIdNot(String supplierName, UUID pumpMasterId, UUID id);
 
+    boolean existsByContactNumberAndPumpMaster_Id(String contactNumber, UUID pumpMasterId);
+
+    boolean existsByContactNumberAndPumpMaster_IdAndIdNot(String contactNumber, UUID pumpMasterId, UUID id);
+
     List<Supplier> findBySupplierNameContainingIgnoreCase(String supplierName);
 
     List<Supplier> findByContactPersonNameContainingIgnoreCase(String contactPersonName);
