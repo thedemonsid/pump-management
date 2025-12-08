@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import com.reallink.pump.entities.PaymentMethod;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -37,5 +39,8 @@ public class CashDistributionRequest {
         @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
         @Digits(integer = 15, fraction = 2, message = "Amount must have at most 15 digits and 2 decimal places")
         private BigDecimal amount;
+
+        @NotNull(message = "Payment method is required")
+        private PaymentMethod paymentMethod;
     }
 }

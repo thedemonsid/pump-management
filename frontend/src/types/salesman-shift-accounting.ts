@@ -124,6 +124,8 @@ export interface DistributionItem {
   bankAccountId: string;
   /** Amount to distribute */
   amount: number;
+  /** Payment method (CASH, UPI, RTGS, NEFT, IMPS, CHEQUE, CARD) */
+  paymentMethod: "CASH" | "UPI" | "RTGS" | "NEFT" | "IMPS" | "CHEQUE" | "CARD";
 }
 
 /**
@@ -150,6 +152,8 @@ export interface CashDistributionResponse {
   accountNumber: string;
   /** Distributed amount */
   amount: number;
+  /** Payment method (CASH, UPI, RTGS, NEFT, IMPS, CHEQUE, CARD) */
+  paymentMethod: "CASH" | "UPI" | "RTGS" | "NEFT" | "IMPS" | "CHEQUE" | "CARD";
   /** Transaction date */
   transactionDate: string;
   /** Entry by user */

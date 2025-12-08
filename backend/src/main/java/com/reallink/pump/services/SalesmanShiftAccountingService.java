@@ -319,9 +319,9 @@ public class SalesmanShiftAccountingService {
             transaction.setBankAccount(bankAccount);
             transaction.setAmount(item.getAmount());
             transaction.setTransactionType(BankTransaction.TransactionType.CREDIT);
-            transaction.setDescription("Cash deposit from shift (" + shiftInfo + ")");
+            transaction.setDescription("Money deposit from shift (" + shiftInfo + ")");
             transaction.setTransactionDate(LocalDateTime.now());
-            transaction.setPaymentMethod(PaymentMethod.CASH);
+            transaction.setPaymentMethod(item.getPaymentMethod());
             transaction.setShiftAccounting(accounting);
             transaction.setEntryBy(currentUser);
 
@@ -405,6 +405,7 @@ public class SalesmanShiftAccountingService {
         response.setBankName(transaction.getBankAccount().getBank());
         response.setAccountNumber(transaction.getBankAccount().getAccountNumber());
         response.setAmount(transaction.getAmount());
+        response.setPaymentMethod(transaction.getPaymentMethod());
         response.setTransactionDate(transaction.getTransactionDate());
         response.setEntryBy(transaction.getEntryBy());
         response.setCreatedAt(transaction.getCreatedAt());

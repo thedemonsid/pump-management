@@ -6,7 +6,8 @@ import { defineConfig } from "vite";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: "./",
+  // Use root-relative asset URLs so deep-link refreshes (e.g. /shifts/123) can load built files
+  base: "/",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

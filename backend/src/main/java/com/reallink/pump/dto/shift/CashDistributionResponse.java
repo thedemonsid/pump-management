@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.reallink.pump.entities.PaymentMethod;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,6 +24,7 @@ public class CashDistributionResponse {
     private String bankName;
     private String accountNumber;
     private BigDecimal amount;
+    private PaymentMethod paymentMethod;
     private LocalDateTime transactionDate;
     private String entryBy;
     private LocalDateTime createdAt;

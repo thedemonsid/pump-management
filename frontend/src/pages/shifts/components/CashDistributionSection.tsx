@@ -19,9 +19,9 @@ import type { BankAccount } from "@/types";
 import type { CashDistributionResponse } from "@/types/salesman-shift-accounting";
 
 interface DistributionEntry {
-  id: string;
   bankAccountId: string;
   amount: string;
+  paymentMethod: "CASH" | "UPI" | "RTGS" | "NEFT" | "IMPS" | "CHEQUE" | "CARD";
 }
 
 interface CashDistributionSectionProps {
@@ -89,26 +89,26 @@ export function CashDistributionSection({
     setEntries([
       ...entries,
       {
-        id: crypto.randomUUID(),
         bankAccountId: "",
         amount: "",
+        paymentMethod: "CASH",
       },
     ]);
   };
 
   // Remove an entry
-  const removeEntry = (id: string) => {
-    setEntries(entries.filter((e) => e.id !== id));
+  const removeEntry = (index: number) => {
+    setEntries(entries.filter((_, i) => i !== index));
   };
 
   // Update entry
   const updateEntry = (
-    id: string,
-    field: "bankAccountId" | "amount",
+    index: number,
+    field: "bankAccountId" | "amount" | "paymentMethod",
     value: string
   ) => {
     setEntries(
-      entries.map((e) => (e.id === id ? { ...e, [field]: value } : e))
+      entries.map((e, i) => (i === index ? { ...e, [field]: value } : e))
     );
   };
 
@@ -132,6 +132,7 @@ export function CashDistributionSection({
         distributions: validEntries.map((e) => ({
           bankAccountId: e.bankAccountId,
           amount: parseFloat(e.amount),
+          paymentMethod: e.paymentMethod,
         })),
       };
 
@@ -282,9 +283,14 @@ export function CashDistributionSection({
                   className="flex items-center justify-between p-2 sm:p-3 bg-muted/50 rounded-lg"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">
-                      {dist.bankName} - {dist.bankAccountName}
-                    </p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-medium text-sm truncate">
+                        {dist.bankName} - {dist.bankAccountName}
+                      </p>
+                      <span className="text-xs font-semibold bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 px-2 py-0.5 rounded-full whitespace-nowrap">
+                        {dist.paymentMethod}
+                      </span>
+                    </div>
                     <p className="text-xs text-muted-foreground truncate">
                       {dist.accountNumber}
                     </p>
@@ -315,16 +321,19 @@ export function CashDistributionSection({
           <div className="space-y-3 pt-2 border-t">
             <Label className="text-sm font-medium">Add New Distribution</Label>
 
-            {entries.map((entry) => (
+            {entries.map((entry, index) => (
               <div
-                key={entry.id}
-                className="flex flex-col sm:flex-row gap-2 p-2 bg-muted/30 rounded-lg"
+                key={index}
+                className="flex flex-col gap-2 p-2 bg-muted/30 rounded-lg"
               >
                 <div className="flex-1">
+                  <Label className="text-xs text-muted-foreground mb-1 block">
+                    Bank Account
+                  </Label>
                   <Select
                     value={entry.bankAccountId}
                     onValueChange={(value) =>
-                      updateEntry(entry.id, "bankAccountId", value)
+                      updateEntry(index, "bankAccountId", value)
                     }
                   >
                     <SelectTrigger className="w-full">
@@ -340,26 +349,57 @@ export function CashDistributionSection({
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    placeholder="Amount"
-                    value={entry.amount}
-                    onChange={(e) =>
-                      updateEntry(entry.id, "amount", e.target.value)
-                    }
-                    className="w-32"
-                    min="0"
-                    step="0.01"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => removeEntry(entry.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">
+                      Payment Method
+                    </Label>
+                    <Select
+                      value={entry.paymentMethod}
+                      onValueChange={(value) =>
+                        updateEntry(index, "paymentMethod", value)
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select method" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CASH">Cash</SelectItem>
+                        <SelectItem value="UPI">UPI</SelectItem>
+                        <SelectItem value="NEFT">NEFT</SelectItem>
+                        <SelectItem value="RTGS">RTGS</SelectItem>
+                        <SelectItem value="IMPS">IMPS</SelectItem>
+                        <SelectItem value="CARD">CARD</SelectItem>
+                        <SelectItem value="CHEQUE">Cheque</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">
+                      Amount
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        placeholder="Amount"
+                        value={entry.amount}
+                        onChange={(e) =>
+                          updateEntry(index, "amount", e.target.value)
+                        }
+                        className="flex-1"
+                        min="0"
+                        step="0.01"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => removeEntry(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
