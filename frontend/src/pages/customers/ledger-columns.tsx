@@ -18,14 +18,31 @@ export const ledgerColumns: ColumnDef<LedgerEntry>[] = [
       const entry = row.original;
       const getTypeInfo = () => {
         if (entry.type === "payment") {
-          return { label: "Payment", color: "text-purple-700 bg-purple-50" };
+          return {
+            label: "Payment Only",
+            color: "text-purple-700 bg-purple-50",
+          };
         } else if (entry.action === "Salesman Bill") {
+          // Check if salesman bill has payment
+          if (entry.amountPaid > 0) {
+            return {
+              label: "Salesman Bill + Payment",
+              color: "text-emerald-700 bg-emerald-50",
+            };
+          }
           return {
             label: "Salesman Bill",
             color: "text-green-700 bg-green-50",
           };
         } else if (entry.action === "Bill") {
-          return { label: "Bill", color: "text-blue-700 bg-blue-50" };
+          // Check if bill has payment
+          if (entry.amountPaid > 0) {
+            return {
+              label: "Bill + Payment",
+              color: "text-cyan-700 bg-cyan-50",
+            };
+          }
+          return { label: "Bill Only", color: "text-blue-700 bg-blue-50" };
         }
         return { label: "Other", color: "text-gray-700 bg-gray-50" };
       };
@@ -33,7 +50,7 @@ export const ledgerColumns: ColumnDef<LedgerEntry>[] = [
       const typeInfo = getTypeInfo();
       return (
         <div
-          className={`font-medium text-xs px-2 py-1 rounded-md inline-block ${typeInfo.color}`}
+          className={`font-medium text-xs px-2 py-1 rounded-md inline-block whitespace-nowrap ${typeInfo.color}`}
         >
           {typeInfo.label}
         </div>
@@ -95,11 +112,21 @@ export const ledgerColumns: ColumnDef<LedgerEntry>[] = [
         }).format(amount);
       };
 
-      return (
-        <div className="text-right font-medium">
-          {entry.billAmount > 0 ? formatCurrency(entry.billAmount) : "-"}
-        </div>
-      );
+      // Show bill amount for bills, and emphasize if it has payment
+      if (entry.type === "bill" && entry.billAmount > 0) {
+        return (
+          <div className="text-right space-y-1">
+            <div className="font-medium text-blue-600">
+              {formatCurrency(entry.billAmount)}
+            </div>
+            {entry.amountPaid > 0 && (
+              <div className="text-xs text-muted-foreground">(Total Bill)</div>
+            )}
+          </div>
+        );
+      }
+
+      return <div className="text-right text-muted-foreground">-</div>;
     },
   },
   {
@@ -124,13 +151,28 @@ export const ledgerColumns: ColumnDef<LedgerEntry>[] = [
         });
       };
 
-      return (
-        <div className="text-right font-medium">
-          {entry.amountPaid > 0 ? (
+      // Show payment details with tooltip
+      if (entry.amountPaid > 0) {
+        const isConnectedPayment =
+          entry.type === "bill" &&
+          entry.billDetails?.payments &&
+          entry.billDetails.payments.length > 0;
+
+        return (
+          <div className="text-right space-y-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="cursor-help">
-                  {formatCurrency(entry.amountPaid)}
+                  <div
+                    className={`font-medium ${
+                      isConnectedPayment ? "text-green-600" : "text-purple-600"
+                    }`}
+                  >
+                    {formatCurrency(entry.amountPaid)}
+                  </div>
+                  {isConnectedPayment && (
+                    <div className="text-xs text-green-600">✓ With Bill</div>
+                  )}
                 </span>
               </TooltipTrigger>
               <TooltipContent>
@@ -139,7 +181,7 @@ export const ledgerColumns: ColumnDef<LedgerEntry>[] = [
                   {entry.type === "bill" && entry.billDetails?.payments ? (
                     <div className="mt-1 space-y-1">
                       {entry.billDetails.payments.map((p, idx) => (
-                        <div key={idx}>
+                        <div key={idx} className="border-t pt-1 mt-1">
                           <div>Amount: {formatCurrency(p.amount)}</div>
                           <div>Method: {p.paymentMethod}</div>
                           <div>Date: {formatDate(p.paymentDate)}</div>
@@ -167,11 +209,11 @@ export const ledgerColumns: ColumnDef<LedgerEntry>[] = [
                 </div>
               </TooltipContent>
             </Tooltip>
-          ) : (
-            "-"
-          )}
-        </div>
-      );
+          </div>
+        );
+      }
+
+      return <div className="text-right text-muted-foreground">-</div>;
     },
   },
   {

@@ -7,8 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -25,6 +23,9 @@ import { useProductStore } from "@/store/product-store";
 import { DataTable } from "@/components/ui/data-table";
 import { ledgerColumns } from "./ledger-columns";
 import type { LedgerEntry, LedgerSummary } from "@/types/ledger";
+import { DateRangePicker } from "@/components/shared/DateRangePicker";
+import { getStartOfMonth, getToday } from "@/lib/utils/date";
+import { format } from "date-fns";
 
 export function CustomerLedgerPage() {
   const { id } = useParams<{ id: string }>();
@@ -52,8 +53,8 @@ export function CustomerLedgerPage() {
   } = useLedgerStore();
   const { products, fetchProducts } = useProductStore();
 
-  const [fromDate, setFromDate] = useState("2020-04-01");
-  const [toDate, setToDate] = useState(new Date().toISOString().split("T")[0]);
+  const [fromDate, setFromDate] = useState<Date | undefined>(getStartOfMonth());
+  const [toDate, setToDate] = useState<Date | undefined>(getToday());
 
   const customer = customers.find((c) => c.id === id);
 
@@ -96,14 +97,19 @@ export function CustomerLedgerPage() {
   }, [products.length, fetchProducts]);
 
   const handleFetchLedger = () => {
-    if (!id) return;
+    if (!id || !fromDate || !toDate) return;
     computeLedgerData({
       customerId: id,
-      fromDate,
-      toDate,
+      fromDate: fromDate.toISOString().split("T")[0],
+      toDate: toDate.toISOString().split("T")[0],
       openingBalance: customer?.openingBalance || 0,
       pumpMasterId: customer?.pumpMasterId,
     });
+  };
+
+  const handleClearFilters = () => {
+    setFromDate(getStartOfMonth());
+    setToDate(getToday());
   };
 
   if (!customer) {
@@ -128,13 +134,13 @@ export function CustomerLedgerPage() {
     }).format(amount);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-IN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
+  // const formatDate = (dateString: string) => {
+  //   return new Date(dateString).toLocaleDateString("en-IN", {
+  //     year: "numeric",
+  //     month: "2-digit",
+  //     day: "2-digit",
+  //   });
+  // };
 
   // Use summary values directly from store (calculations are done in store)
   const totalBillsTillDate = summary.totalBillsTillDate;
@@ -172,32 +178,28 @@ export function CustomerLedgerPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="from-date" className="text-sm font-medium">
-                From Date
-              </Label>
-              <Input
-                id="from-date"
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="to-date" className="text-sm font-medium">
-                To Date
-              </Label>
-              <Input
-                id="to-date"
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="w-full"
-              />
-            </div>
+          <div className="flex flex-wrap items-end gap-4">
+            <DateRangePicker
+              fromDate={fromDate}
+              toDate={toDate}
+              onFromDateChange={setFromDate}
+              onToDateChange={setToDate}
+              disabled={loading}
+            />
+
+            <Button variant="outline" onClick={handleClearFilters}>
+              Reset to Default
+            </Button>
           </div>
+
+          {(fromDate || toDate) && (
+            <div className="mt-4 text-sm text-muted-foreground">
+              Showing ledger entries
+              {fromDate && ` from ${format(fromDate, "PPP")}`}
+              {toDate && ` to ${format(toDate, "PPP")}`}
+            </div>
+          )}
+
           <div className="mt-6 flex justify-center gap-4">
             <Button
               onClick={handleFetchLedger}
@@ -217,11 +219,13 @@ export function CustomerLedgerPage() {
                 </>
               )}
             </Button>
-            {hasSearched && (
+            {hasSearched && fromDate && toDate && (
               <Button
                 onClick={() =>
                   navigate(
-                    `/customers/${id}/ledger/report?fromDate=${fromDate}&toDate=${toDate}`
+                    `/customers/${id}/ledger/report?fromDate=${
+                      fromDate.toISOString().split("T")[0]
+                    }&toDate=${toDate.toISOString().split("T")[0]}`
                   )
                 }
                 variant="outline"
@@ -239,12 +243,51 @@ export function CustomerLedgerPage() {
       {/* Show content only after search */}
       {hasSearched && (
         <>
+          {/* Opening Balance Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Account Information</CardTitle>
+              <CardDescription>
+                Opening balance and account details
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="text-center p-4 border rounded-lg">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">
+                    Opening Balance
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {formatCurrency(customer?.openingBalance || 0)}
+                  </p>
+                </div>
+                <div className="text-center p-4 border rounded-lg">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">
+                    Credit Limit
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {formatCurrency(customer?.creditLimit || 0)}
+                  </p>
+                </div>
+                <div className="text-center p-4 border rounded-lg">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">
+                    Updated By
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    System
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Pre-Date Summary */}
           <Card>
             <CardHeader>
               <CardTitle>Summary Before Selected Date Range</CardTitle>
               <CardDescription>
-                Financial summary before {formatDate(fromDate)}
+                Financial summary before{" "}
+                {fromDate ? format(fromDate, "PPP") : "selected date"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -284,44 +327,6 @@ export function CustomerLedgerPage() {
             </CardContent>
           </Card>
 
-          {/* Opening Balance Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Information</CardTitle>
-              <CardDescription>
-                Opening balance and account details
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center p-4 border rounded-lg">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">
-                    Opening Balance
-                  </p>
-                  <p className="text-xl font-semibold text-foreground">
-                    {formatCurrency(customer?.openingBalance || 0)}
-                  </p>
-                </div>
-                <div className="text-center p-4 border rounded-lg">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">
-                    Credit Limit
-                  </p>
-                  <p className="text-xl font-semibold text-foreground">
-                    {formatCurrency(customer?.creditLimit || 0)}
-                  </p>
-                </div>
-                <div className="text-center p-4 border rounded-lg">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">
-                    Updated By
-                  </p>
-                  <p className="text-xl font-semibold text-foreground">
-                    System
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Ledger Table */}
           <Card>
             <CardHeader>
@@ -330,8 +335,10 @@ export function CustomerLedgerPage() {
                 Ledger Entries
               </CardTitle>
               <CardDescription>
-                Transaction history for the selected date range (
-                {formatDate(fromDate)} to {formatDate(toDate)})
+                Transaction history for the selected date range
+                {fromDate &&
+                  toDate &&
+                  ` (${format(fromDate, "PPP")} to ${format(toDate, "PPP")})`}
               </CardDescription>
             </CardHeader>
             <CardContent>
