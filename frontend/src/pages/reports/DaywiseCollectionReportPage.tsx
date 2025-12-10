@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -15,6 +13,8 @@ import { Download, Search } from "lucide-react";
 import { format } from "date-fns";
 import { CustomerBillPaymentService } from "@/services/customer-bill-payment-service";
 import { SalesmanBillPaymentService } from "@/services/salesman-bill-payment-service";
+import { DateRangePicker } from "@/components/shared/DateRangePicker";
+import { getOneWeekAgo, getToday } from "@/lib/utils/date";
 import { pdf } from "@react-pdf/renderer";
 import { DaywiseCollectionPDF } from "@/components/pdf-reports";
 import type {
@@ -32,12 +32,8 @@ interface CollectionData {
 
 export default function DaywiseCollectionReportPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [fromDate, setFromDate] = useState<string>(
-    format(new Date(), "yyyy-MM-dd")
-  );
-  const [toDate, setToDate] = useState<string>(
-    format(new Date(), "yyyy-MM-dd")
-  );
+  const [fromDate, setFromDate] = useState<Date | undefined>(getOneWeekAgo());
+  const [toDate, setToDate] = useState<Date | undefined>(getToday());
   const [hasSearched, setHasSearched] = useState(false);
   const [collectionData, setCollectionData] = useState<CollectionData>({
     customerPayments: [],
@@ -48,14 +44,20 @@ export default function DaywiseCollectionReportPage() {
   });
 
   const fetchReport = async () => {
+    if (!fromDate || !toDate) return;
+
     setIsLoading(true);
     setHasSearched(true);
 
     try {
+      // Format dates as YYYY-MM-DD for API
+      const fromDateStr = format(fromDate, "yyyy-MM-dd");
+      const toDateStr = format(toDate, "yyyy-MM-dd");
+
       // Fetch all payment data for the selected date range using optimized endpoints
       const [customerPayments, salesmanPayments] = await Promise.all([
-        CustomerBillPaymentService.getByDateRange(fromDate, toDate),
-        SalesmanBillPaymentService.getByDateRange(fromDate, toDate),
+        CustomerBillPaymentService.getByDateRange(fromDateStr, toDateStr),
+        SalesmanBillPaymentService.getByDateRange(fromDateStr, toDateStr),
       ]);
 
       // Calculate totals
@@ -88,25 +90,35 @@ export default function DaywiseCollectionReportPage() {
   };
 
   const handleDownload = async () => {
+    if (!fromDate || !toDate) return;
+
     try {
+      const fromDateStr = format(fromDate, "yyyy-MM-dd");
+      const toDateStr = format(toDate, "yyyy-MM-dd");
+
       const blob = await pdf(
         <DaywiseCollectionPDF
           data={collectionData}
-          selectedDate={fromDate}
-          fromDate={fromDate}
-          toDate={toDate}
+          selectedDate={fromDateStr}
+          fromDate={fromDateStr}
+          toDate={toDateStr}
         />
       ).toBlob();
 
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `daywise-collection-report-${fromDate}-to-${toDate}.pdf`;
+      link.download = `daywise-collection-report-${fromDateStr}-to-${toDateStr}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error generating PDF:", error);
     }
+  };
+
+  const handleClearFilters = () => {
+    setFromDate(getOneWeekAgo());
+    setToDate(getToday());
   };
 
   const formatCurrency = (amount: number) => {
@@ -118,13 +130,6 @@ export default function DaywiseCollectionReportPage() {
     }).format(amount);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-IN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
     const dateStr = date.toLocaleDateString("en-IN", {
@@ -140,7 +145,7 @@ export default function DaywiseCollectionReportPage() {
   };
 
   return (
-    <div className="flex-1 space-y-6 p-8 pt-6">
+    <div className="flex-1 space-y-6 pt-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -153,48 +158,45 @@ export default function DaywiseCollectionReportPage() {
         </div>
       </div>
 
-      {/* Filter */}
+      {/* Filters */}
       <Card>
         <CardHeader>
           <CardTitle className="text-center text-xl">
-            {hasSearched
-              ? `Collection Report for ${formatDate(fromDate)}${
-                  fromDate !== toDate ? ` to ${formatDate(toDate)}` : ""
-                }`
-              : "SELECT DATE RANGE"}
+            {hasSearched && fromDate && toDate
+              ? `GET Daywise Collection REPORT For Date Between ${format(
+                  fromDate,
+                  "PPP"
+                )} to ${format(toDate, "PPP")}`
+              : "APPLY FILTER"}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-center items-end gap-4">
-            <div className="space-y-2 w-64">
-              <Label htmlFor="fromDate">From Date</Label>
-              <div className="relative">
-                <Input
-                  id="fromDate"
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                  max={toDate}
-                />
-              </div>
-            </div>
+          <div className="flex flex-wrap items-end gap-4">
+            <DateRangePicker
+              fromDate={fromDate}
+              toDate={toDate}
+              onFromDateChange={setFromDate}
+              onToDateChange={setToDate}
+              fromLabel="From Date"
+              toLabel="To Date"
+              disabled={isLoading}
+            />
+          </div>
 
-            <div className="space-y-2 w-64">
-              <Label htmlFor="toDate">To Date</Label>
-              <div className="relative">
-                <Input
-                  id="toDate"
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                  min={fromDate}
-                />
-              </div>
-            </div>
-
-            <Button onClick={fetchReport} disabled={isLoading}>
+          <div className="flex justify-center gap-4 mt-6">
+            <Button
+              onClick={fetchReport}
+              disabled={!fromDate || !toDate || isLoading}
+            >
               <Search className="mr-2 h-4 w-4" />
               {isLoading ? "Loading..." : "Get Report"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleClearFilters}
+              disabled={isLoading}
+            >
+              Reset to Default
             </Button>
             {hasSearched && (
               <Button variant="outline" onClick={handleDownload}>
@@ -203,6 +205,15 @@ export default function DaywiseCollectionReportPage() {
               </Button>
             )}
           </div>
+
+          {hasSearched && fromDate && toDate && (
+            <div className="mt-4 text-sm text-muted-foreground text-center">
+              Showing{" "}
+              {collectionData.customerPayments.length +
+                collectionData.salesmanPayments.length}{" "}
+              payments from {format(fromDate, "PPP")} to {format(toDate, "PPP")}
+            </div>
+          )}
         </CardContent>
       </Card>
 

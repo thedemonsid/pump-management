@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -21,7 +22,7 @@ import { SalesmanBillService, SalesmanBillPaymentService } from "@/services";
 import { pdf } from "@react-pdf/renderer";
 import { CustomerCreditPDF } from "@/components/pdf-reports";
 import { DateRangePicker } from "@/components/shared/DateRangePicker";
-import { getStartOfMonth, getToday } from "@/lib/utils/date";
+import { getToday, getStartOfLastFinancialYear } from "@/lib/utils/date";
 
 interface CustomerCredit {
   customerName: string;
@@ -40,10 +41,13 @@ export default function CustomerCreditReportPage() {
   const { computeCustomerSummaries } = useLedgerStore();
   const [isLoading, setIsLoading] = useState(false);
 
-  const [fromDate, setFromDate] = useState<Date | undefined>(getStartOfMonth());
+  const [fromDate, setFromDate] = useState<Date | undefined>(
+    getStartOfLastFinancialYear()
+  );
   const [toDate, setToDate] = useState<Date | undefined>(getToday());
   const [minCreditAmount, setMinCreditAmount] = useState<string>("");
   const [maxCreditAmount, setMaxCreditAmount] = useState<string>("");
+  const [hideZeroCredit, setHideZeroCredit] = useState<boolean>(true);
   const [hasSearched, setHasSearched] = useState(false);
   const [customerCredits, setCustomerCredits] = useState<CustomerCredit[]>([]);
 
@@ -168,34 +172,40 @@ export default function CustomerCreditReportPage() {
   };
 
   const handleClearFilters = () => {
-    setFromDate(getStartOfMonth());
+    setFromDate(getStartOfLastFinancialYear());
     setToDate(getToday());
     setMinCreditAmount("");
     setMaxCreditAmount("");
+    setHideZeroCredit(true);
   };
 
-  // Calculate totals
-  const totalOpeningBalance = customerCredits.reduce(
+  // Apply display filter for zero credit customers
+  const displayedCustomers = hideZeroCredit
+    ? customerCredits.filter((c) => c.creditAmount !== 0)
+    : customerCredits;
+
+  // Calculate totals based on displayed customers
+  const totalOpeningBalance = displayedCustomers.reduce(
     (sum, c) => sum + c.openingBalance,
     0
   );
-  const totalBillAmount = customerCredits.reduce(
+  const totalBillAmount = displayedCustomers.reduce(
     (sum, c) => sum + c.billAmount,
     0
   );
-  const totalPaidAmount = customerCredits.reduce(
+  const totalPaidAmount = displayedCustomers.reduce(
     (sum, c) => sum + c.paidAmount,
     0
   );
-  const totalSalesmanBillAmount = customerCredits.reduce(
+  const totalSalesmanBillAmount = displayedCustomers.reduce(
     (sum, c) => sum + c.salesmanBillAmount,
     0
   );
-  const totalSalesmanPaidAmount = customerCredits.reduce(
+  const totalSalesmanPaidAmount = displayedCustomers.reduce(
     (sum, c) => sum + c.salesmanPaidAmount,
     0
   );
-  const totalCreditAmount = customerCredits.reduce(
+  const totalCreditAmount = displayedCustomers.reduce(
     (sum, c) => sum + c.creditAmount,
     0
   );
@@ -282,7 +292,7 @@ export default function CustomerCreditReportPage() {
 
           {hasSearched && fromDate && toDate && (
             <div className="mt-4 text-sm text-muted-foreground text-center">
-              Showing {customerCredits.length} customer records from{" "}
+              Showing {displayedCustomers.length} customer records from{" "}
               {formatDisplayDate(fromDate)} to {formatDisplayDate(toDate)}
             </div>
           )}
@@ -293,9 +303,21 @@ export default function CustomerCreditReportPage() {
       {hasSearched && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-center text-xl">
-              Customer Credit Report
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-center text-xl flex-1">
+                Customer Credit Report
+              </CardTitle>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="hideZeroCredit"
+                  checked={hideZeroCredit}
+                  onCheckedChange={setHideZeroCredit}
+                />
+                <Label htmlFor="hideZeroCredit" className="cursor-pointer">
+                  Hide customers with zero credit
+                </Label>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="border rounded-lg overflow-hidden">
@@ -327,7 +349,7 @@ export default function CustomerCreditReportPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {customerCredits.length === 0 ? (
+                  {displayedCustomers.length === 0 ? (
                     <TableRow>
                       <TableCell
                         colSpan={10}
@@ -337,7 +359,7 @@ export default function CustomerCreditReportPage() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    customerCredits.map((customer, index) => (
+                    displayedCustomers.map((customer, index) => (
                       <TableRow key={index} className="hover:bg-muted/50">
                         <TableCell>{index + 1}</TableCell>
                         <TableCell className="font-medium">
@@ -366,7 +388,7 @@ export default function CustomerCreditReportPage() {
                       </TableRow>
                     ))
                   )}
-                  {customerCredits.length > 0 && (
+                  {displayedCustomers.length > 0 && (
                     <TableRow className="bg-muted/50 font-bold">
                       <TableCell colSpan={4} className="text-right">
                         Total:

@@ -334,7 +334,6 @@ export function ShiftAccountingPage() {
           cashInHand={accounting.cashInHand}
           upiReceived={accounting.upiReceived}
           cardReceived={accounting.cardReceived}
-          customerReceipt={accounting.customerReceipt}
           isAdminOrManager={isAdminOrManager}
         />
       )}

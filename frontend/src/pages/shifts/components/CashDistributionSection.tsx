@@ -29,7 +29,6 @@ interface CashDistributionSectionProps {
   cashInHand: number;
   upiReceived: number;
   cardReceived: number;
-  customerReceipt: number;
   isAdminOrManager: boolean;
   onDistributionChange?: () => void;
 }
@@ -39,7 +38,6 @@ export function CashDistributionSection({
   cashInHand,
   upiReceived,
   cardReceived,
-  customerReceipt,
   isAdminOrManager,
   onDistributionChange,
 }: CashDistributionSectionProps) {
@@ -74,9 +72,8 @@ export function CashDistributionSection({
     loadData();
   }, [shiftId]);
 
-  // Calculate totals - total to deposit includes cash, UPI, card, and customer receipts
-  const totalToDeposit =
-    cashInHand + upiReceived + cardReceived + customerReceipt;
+  // Calculate totals - total to deposit includes cash, UPI, and card
+  const totalToDeposit = cashInHand + upiReceived + cardReceived;
   const totalDistributed = distributions.reduce((sum, d) => sum + d.amount, 0);
   const totalPending = entries.reduce(
     (sum, e) => sum + (parseFloat(e.amount) || 0),
@@ -218,7 +215,7 @@ export function CashDistributionSection({
           <p className="text-sm font-medium text-muted-foreground">
             Amounts to Deposit
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Cash:</span>
               <span className="font-mono">₹{cashInHand.toFixed(2)}</span>
@@ -230,10 +227,6 @@ export function CashDistributionSection({
             <div className="flex justify-between">
               <span className="text-muted-foreground">Card:</span>
               <span className="font-mono">₹{cardReceived.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Receipts:</span>
-              <span className="font-mono">₹{customerReceipt.toFixed(2)}</span>
             </div>
           </div>
         </div>

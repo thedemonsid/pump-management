@@ -48,3 +48,21 @@ export function getStartOfMonth(): Date {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), 1);
 }
+
+/**
+ * Get start of current financial year (April 1st of current FY)
+ * Financial year in India runs from April 1st to March 31st
+ * @returns Date object for April 1st of the current financial year
+ */
+export function getStartOfLastFinancialYear(): Date {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth(); // 0-indexed (0 = January, 3 = April)
+
+  // If current month is before April (Jan-Mar), current FY started last year
+  // If current month is April or after, current FY started this year
+  const currentFYYear = currentMonth < 3 ? currentYear - 1 : currentYear;
+
+  // Return April 1st of current financial year
+  return new Date(currentFYYear, 3, 1); // Month 3 = April (0-indexed)
+}

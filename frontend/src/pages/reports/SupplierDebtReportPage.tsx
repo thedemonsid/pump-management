@@ -14,7 +14,7 @@ import {
 import { DateRangePicker } from "@/components/shared/DateRangePicker";
 import { Download, Search } from "lucide-react";
 import { format } from "date-fns";
-import { getOneWeekAgo, getToday } from "@/lib/utils/date";
+import { getToday, getStartOfLastFinancialYear } from "@/lib/utils/date";
 import { useSupplierStore } from "@/store/supplier-store";
 import { useSupplierLedgerStore } from "@/store/supplier-ledger-store";
 import { PurchaseService } from "@/services/purchase-service";
@@ -38,7 +38,9 @@ export default function SupplierDebtReportPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Date filter states - Initialize with default dates
-  const [fromDate, setFromDate] = useState<Date | undefined>(getOneWeekAgo());
+  const [fromDate, setFromDate] = useState<Date | undefined>(
+    getStartOfLastFinancialYear()
+  );
   const [toDate, setToDate] = useState<Date | undefined>(getToday());
 
   const [minDebtAmount, setMinDebtAmount] = useState<string>("");
@@ -107,7 +109,7 @@ export default function SupplierDebtReportPage() {
   };
 
   const handleClearFilters = () => {
-    setFromDate(getOneWeekAgo());
+    setFromDate(getStartOfLastFinancialYear());
     setToDate(getToday());
     setMinDebtAmount("");
     setMaxDebtAmount("");
@@ -352,20 +354,12 @@ export default function SupplierDebtReportPage() {
 
             {/* Summary Cards */}
             {supplierDebts.length > 0 && (
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="p-4 border rounded-lg">
                   <p className="text-sm text-muted-foreground">
                     Total Suppliers
                   </p>
                   <p className="text-2xl font-bold">{supplierDebts.length}</p>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    Total Opening Balance
-                  </p>
-                  <p className="text-2xl font-bold text-purple-600">
-                    {formatCurrency(totalOpeningBalance)}
-                  </p>
                 </div>
                 <div className="p-4 border rounded-lg">
                   <p className="text-sm text-muted-foreground">
