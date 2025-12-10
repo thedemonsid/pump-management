@@ -29,7 +29,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Loader2,
@@ -318,34 +317,27 @@ export function CustomerDetailPage() {
               <BookOpen className="h-4 w-4 mr-2" />
               Ledger
             </Button>
-            <Dialog
-              open={isCreatePaymentDialogOpen}
-              onOpenChange={setIsCreatePaymentDialogOpen}
+            <Button
+              size="sm"
+              onClick={() => setIsCreatePaymentDialogOpen(true)}
             >
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Payment
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Create Customer Payment</DialogTitle>
-                  <DialogDescription>
-                    Record a new payment from this customer
-                  </DialogDescription>
-                </DialogHeader>
-                <CreateCustomerBillPaymentForm
-                  customerId={customer.id!}
-                  pumpMasterId={customer.pumpMasterId!}
-                  onSuccess={() => {
-                    setIsCreatePaymentDialogOpen(false);
-                    // Refresh payments data
-                    fetchPaymentsByCustomerId(customer.id!);
-                  }}
-                />
-              </DialogContent>
-            </Dialog>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Payment
+            </Button>
+
+            {/* Create Payment Sheet */}
+            <CreateCustomerBillPaymentForm
+              customerId={customer.id!}
+              pumpMasterId={customer.pumpMasterId!}
+              open={isCreatePaymentDialogOpen}
+              onOpenChange={(open) => {
+                setIsCreatePaymentDialogOpen(open);
+                if (!open) {
+                  // Refresh payments data
+                  fetchPaymentsByCustomerId(customer.id!);
+                }
+              }}
+            />
 
             {/* Edit Payment Dialog */}
             <Dialog
