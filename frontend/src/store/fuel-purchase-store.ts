@@ -21,7 +21,14 @@ interface FuelPurchaseState {
   setError: (error: string | null) => void;
 
   fetchFuelPurchases: (fromDate?: Date, toDate?: Date) => Promise<void>;
-  fetchFuelPurchasesByPumpMasterId: (pumpMasterId: string) => Promise<void>;
+  fetchFuelPurchasesByPumpMasterId: (
+    pumpMasterId: string,
+    limit?: number
+  ) => Promise<void>;
+  fetchFuelPurchasesBySupplierId: (
+    supplierId: string,
+    limit?: number
+  ) => Promise<void>;
   createFuelPurchase: (fuelPurchase: CreateFuelPurchase) => Promise<void>;
   editFuelPurchase: (
     id: string,
@@ -96,6 +103,26 @@ export const useFuelPurchaseStore = create<FuelPurchaseState>()(
             error instanceof Error
               ? error.message
               : "Failed to fetch fuel purchases by pump master";
+          set({ error: errorMessage, loading: false });
+        }
+      },
+
+      fetchFuelPurchasesBySupplierId: async (
+        supplierId: string,
+        limit?: number
+      ) => {
+        set({ loading: true, error: null });
+        try {
+          const fuelPurchases = await FuelPurchaseService.getBySupplierId(
+            supplierId,
+            limit
+          );
+          set({ fuelPurchases, loading: false });
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Failed to fetch fuel purchases by supplier";
           set({ error: errorMessage, loading: false });
         }
       },

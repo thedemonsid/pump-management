@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.reallink.pump.dto.request.CreateSupplierPaymentRequest;
@@ -59,6 +60,16 @@ public class SupplierPaymentController {
     public ResponseEntity<List<SupplierPaymentResponse>> getByPumpMasterId(@PathVariable @NotNull UUID pumpMasterId) {
         List<SupplierPaymentResponse> payments = service.getByPumpMasterId(pumpMasterId);
         return ResponseEntity.ok(payments);
+    }
+
+    @GetMapping("/supplier/{supplierId}")
+    public ResponseEntity<List<SupplierPaymentResponse>> getBySupplierId(
+            @PathVariable @NotNull UUID supplierId,
+            @RequestParam(required = false) Integer limit) {
+        if (limit != null) {
+            return ResponseEntity.ok(service.getBySupplierId(supplierId, limit));
+        }
+        return ResponseEntity.ok(service.getBySupplierId(supplierId));
     }
 
     @GetMapping("/purchase/{purchaseId}")

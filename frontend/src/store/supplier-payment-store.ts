@@ -18,7 +18,7 @@ interface SupplierPaymentState {
   addPayment: (payment: SupplierPaymentResponse) => void;
   updatePayment: (
     id: string,
-    payment: Partial<SupplierPaymentResponse>,
+    payment: Partial<SupplierPaymentResponse>
   ) => void;
   deletePayment: (id: string) => void;
   setLoading: (loading: boolean) => void;
@@ -31,6 +31,7 @@ interface SupplierPaymentState {
   fetchPaymentsBySupplierId: (
     supplierId: string,
     pumpMasterId?: string,
+    limit?: number
   ) => Promise<void>;
   fetchPaymentsByPurchaseId: (purchaseId: string) => Promise<void>;
   fetchPaymentsByFuelPurchaseId: (fuelPurchaseId: string) => Promise<void>;
@@ -38,7 +39,7 @@ interface SupplierPaymentState {
   createPayment: (payment: CreateSupplierPaymentRequest) => Promise<void>;
   editPayment: (
     id: string,
-    payment: UpdateSupplierPaymentRequest,
+    payment: UpdateSupplierPaymentRequest
   ) => Promise<void>;
   removePayment: (id: string) => Promise<void>;
 }
@@ -61,7 +62,7 @@ export const useSupplierPaymentStore = create<SupplierPaymentState>()(
       updatePayment: (id, paymentUpdate) => {
         set((state) => ({
           payments: state.payments.map((payment) =>
-            payment.id === id ? { ...payment, ...paymentUpdate } : payment,
+            payment.id === id ? { ...payment, ...paymentUpdate } : payment
           ),
         }));
       },
@@ -105,8 +106,9 @@ export const useSupplierPaymentStore = create<SupplierPaymentState>()(
       fetchPaymentsByPumpMasterId: async (pumpMasterId: string) => {
         set({ loading: true, error: null });
         try {
-          const payments =
-            await SupplierPaymentService.getByPumpMasterId(pumpMasterId);
+          const payments = await SupplierPaymentService.getByPumpMasterId(
+            pumpMasterId
+          );
           set({ payments, loading: false });
         } catch (error) {
           const errorMessage =
@@ -117,38 +119,13 @@ export const useSupplierPaymentStore = create<SupplierPaymentState>()(
         }
       },
 
-      fetchPaymentsBySupplierId: async (
-        supplierId: string,
-        pumpMasterId?: string,
-      ) => {
-        if (!pumpMasterId) {
-          // Fallback to getting all payments if no pump master ID provided
-          set({ loading: true, error: null });
-          try {
-            const payments = await SupplierPaymentService.getAll();
-            const supplierPayments = payments.filter(
-              (payment: SupplierPaymentResponse) =>
-                payment.supplierId === supplierId,
-            );
-            set({ payments: supplierPayments, loading: false });
-          } catch (error) {
-            const errorMessage =
-              error instanceof Error
-                ? error.message
-                : "Failed to fetch payments by supplier";
-            set({ error: errorMessage, loading: false });
-          }
-          return;
-        }
-
+      fetchPaymentsBySupplierId: async (supplierId: string, limit?: number) => {
         set({ loading: true, error: null });
         try {
-          // Get all payments for the pump master, then filter by supplier
-          const allPayments =
-            await SupplierPaymentService.getByPumpMasterId(pumpMasterId);
-          const supplierPayments = allPayments.filter(
-            (payment: SupplierPaymentResponse) =>
-              payment.supplierId === supplierId,
+          // Use the new backend endpoint that filters by supplier ID efficiently
+          const supplierPayments = await SupplierPaymentService.getBySupplierId(
+            supplierId,
+            limit
           );
           set({ payments: supplierPayments, loading: false });
         } catch (error) {
@@ -163,8 +140,9 @@ export const useSupplierPaymentStore = create<SupplierPaymentState>()(
       fetchPaymentsByPurchaseId: async (purchaseId: string) => {
         set({ loading: true, error: null });
         try {
-          const payments =
-            await SupplierPaymentService.getByPurchaseId(purchaseId);
+          const payments = await SupplierPaymentService.getByPurchaseId(
+            purchaseId
+          );
           set({ payments, loading: false });
         } catch (error) {
           const errorMessage =
@@ -178,8 +156,9 @@ export const useSupplierPaymentStore = create<SupplierPaymentState>()(
       fetchPaymentsByFuelPurchaseId: async (fuelPurchaseId: string) => {
         set({ loading: true, error: null });
         try {
-          const payments =
-            await SupplierPaymentService.getByFuelPurchaseId(fuelPurchaseId);
+          const payments = await SupplierPaymentService.getByFuelPurchaseId(
+            fuelPurchaseId
+          );
           set({ payments, loading: false });
         } catch (error) {
           const errorMessage =
@@ -195,7 +174,7 @@ export const useSupplierPaymentStore = create<SupplierPaymentState>()(
         try {
           const payments =
             await SupplierPaymentService.getGeneralPaymentsByPumpMasterId(
-              pumpMasterId,
+              pumpMasterId
             );
           set({ payments, loading: false });
         } catch (error) {
@@ -231,12 +210,12 @@ export const useSupplierPaymentStore = create<SupplierPaymentState>()(
         try {
           const updatedPayment = await SupplierPaymentService.update(
             id,
-            paymentUpdate,
+            paymentUpdate
           );
 
           set((state) => ({
             payments: state.payments.map((payment) =>
-              payment.id === id ? updatedPayment : payment,
+              payment.id === id ? updatedPayment : payment
             ),
             loading: false,
           }));
@@ -271,6 +250,6 @@ export const useSupplierPaymentStore = create<SupplierPaymentState>()(
     }),
     {
       name: "supplier-payment-store",
-    },
-  ),
+    }
+  )
 );

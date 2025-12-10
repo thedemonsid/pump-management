@@ -35,6 +35,18 @@ export class FuelPurchaseService {
     return response.data;
   }
 
+  // Get fuel purchases by supplier ID with optional limit
+  static async getBySupplierId(
+    supplierId: string,
+    limit?: number
+  ): Promise<FuelPurchase[]> {
+    const queryParams = limit ? `?limit=${limit}` : "";
+    const response = await api.get<FuelPurchase[]>(
+      `${this.BASE_PATH}/supplier/${supplierId}${queryParams}`
+    );
+    return response.data;
+  }
+
   // Get fuel purchase by sequential fuel purchase ID within a pump master
   static async getByPumpMasterIdAndFuelPurchaseId(
     fuelPurchaseId: number

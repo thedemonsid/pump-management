@@ -1,18 +1,17 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/ui/data-table';
-import { columns } from './ledger-columns';
-import { Separator } from '@/components/ui/separator';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
+import { columns } from "./ledger-columns";
+import { Separator } from "@/components/ui/separator";
+import { DateRangePicker } from "@/components/shared/DateRangePicker";
 import {
   Loader2,
   Building2,
@@ -20,9 +19,11 @@ import {
   CreditCard,
   Search,
   FileText,
-} from 'lucide-react';
-import { useSupplierStore } from '@/store/supplier-store';
-import { useSupplierLedgerStore } from '@/store/supplier-ledger-store';
+} from "lucide-react";
+import { useSupplierStore } from "@/store/supplier-store";
+import { useSupplierLedgerStore } from "@/store/supplier-ledger-store";
+import { getStartOfMonth, getToday } from "@/lib/utils/date";
+import { format } from "date-fns";
 
 export function SupplierLedgerPage() {
   const { id } = useParams<{ id: string }>();
@@ -32,8 +33,8 @@ export function SupplierLedgerPage() {
   const { ledgerData, summary, loading, hasSearched, computeLedgerData } =
     useSupplierLedgerStore();
 
-  const [fromDate, setFromDate] = useState('2020-04-01');
-  const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+  const [fromDate, setFromDate] = useState<Date | undefined>(getStartOfMonth());
+  const [toDate, setToDate] = useState<Date | undefined>(getToday());
 
   const supplier = suppliers.find((s) => s.id === id);
 
@@ -44,13 +45,18 @@ export function SupplierLedgerPage() {
   }, [suppliers.length, fetchSuppliers]);
 
   const handleFetchLedger = () => {
-    if (!id) return;
+    if (!id || !fromDate || !toDate) return;
     computeLedgerData({
       supplierId: id,
-      fromDate,
-      toDate,
+      fromDate: fromDate.toISOString().split("T")[0],
+      toDate: toDate.toISOString().split("T")[0],
       openingBalance: supplier?.openingBalance || 0,
     });
+  };
+
+  const handleClearFilters = () => {
+    setFromDate(getStartOfMonth());
+    setToDate(getToday());
   };
 
   if (!supplier) {
@@ -67,19 +73,19 @@ export function SupplierLedgerPage() {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
   };
 
@@ -119,36 +125,35 @@ export function SupplierLedgerPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="from-date" className="text-sm font-medium">
-                From Date
-              </Label>
-              <Input
-                id="from-date"
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="to-date" className="text-sm font-medium">
-                To Date
-              </Label>
-              <Input
-                id="to-date"
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="w-full"
-              />
-            </div>
+          <div className="flex flex-wrap items-end gap-4">
+            <DateRangePicker
+              fromDate={fromDate}
+              toDate={toDate}
+              onFromDateChange={setFromDate}
+              onToDateChange={setToDate}
+              disabled={loading}
+            />
+            <Button
+              variant="outline"
+              onClick={handleClearFilters}
+              disabled={loading}
+            >
+              Reset to Default
+            </Button>
           </div>
+
+          {(fromDate || toDate) && (
+            <div className="mt-4 text-sm text-muted-foreground">
+              Showing ledger
+              {fromDate && ` from ${format(fromDate, "PPP")}`}
+              {toDate && ` to ${format(toDate, "PPP")}`}
+            </div>
+          )}
+
           <div className="mt-6 flex justify-center gap-4">
             <Button
               onClick={handleFetchLedger}
-              disabled={loading}
+              disabled={loading || !fromDate || !toDate}
               size="lg"
               className="min-w-[200px]"
             >
@@ -164,11 +169,13 @@ export function SupplierLedgerPage() {
                 </>
               )}
             </Button>
-            {hasSearched && (
+            {hasSearched && fromDate && toDate && (
               <Button
                 onClick={() =>
                   navigate(
-                    `/suppliers/${id}/ledger/report?fromDate=${fromDate}&toDate=${toDate}`
+                    `/suppliers/${id}/ledger/report?fromDate=${
+                      fromDate.toISOString().split("T")[0]
+                    }&toDate=${toDate.toISOString().split("T")[0]}`
                   )
                 }
                 variant="outline"
@@ -191,7 +198,8 @@ export function SupplierLedgerPage() {
             <CardHeader>
               <CardTitle>Summary Before Selected Date Range</CardTitle>
               <CardDescription>
-                Financial summary before {formatDate(fromDate)}
+                Financial summary before{" "}
+                {fromDate ? format(fromDate, "PPP") : "selected date"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -219,12 +227,12 @@ export function SupplierLedgerPage() {
                   <p
                     className={`text-2xl font-bold ${
                       summary.totalDebtBefore >= 0
-                        ? 'text-red-600'
-                        : 'text-green-600'
+                        ? "text-red-600"
+                        : "text-green-600"
                     }`}
                   >
                     {formatCurrency(Math.abs(summary.totalDebtBefore))}
-                    {summary.totalDebtBefore < 0 && ' (Advance)'}
+                    {summary.totalDebtBefore < 0 && " (Advance)"}
                   </p>
                 </div>
               </div>
@@ -256,7 +264,7 @@ export function SupplierLedgerPage() {
                   <p className="text-xl font-semibold text-foreground">
                     {supplier?.openingBalanceDate
                       ? formatDate(supplier.openingBalanceDate)
-                      : 'Not specified'}
+                      : "Not specified"}
                   </p>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
@@ -341,13 +349,13 @@ export function SupplierLedgerPage() {
                   </p>
                   <p
                     className={`text-xl font-bold ${
-                      totalDebtTillDate >= 0 ? 'text-red-700' : 'text-green-700'
+                      totalDebtTillDate >= 0 ? "text-red-700" : "text-green-700"
                     }`}
                   >
                     {formatCurrency(Math.abs(totalDebtTillDate))}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {totalDebtTillDate < 0 ? 'Advance Payment' : 'Amount Due'}
+                    {totalDebtTillDate < 0 ? "Advance Payment" : "Amount Due"}
                   </p>
                 </div>
                 <div className="text-center p-4 border rounded-lg">

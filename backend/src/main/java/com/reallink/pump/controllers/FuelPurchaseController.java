@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.reallink.pump.dto.request.CreateFuelPurchaseRequest;
@@ -51,9 +52,9 @@ public class FuelPurchaseController {
     @Operation(summary = "Get fuel purchases by pump master ID with optional date range filter")
     public ResponseEntity<List<FuelPurchaseResponse>> getFuelPurchasesByPumpMasterId(
             HttpServletRequest request,
-            @org.springframework.web.bind.annotation.RequestParam(required = false)
+            @RequestParam(required = false)
             @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate fromDate,
-            @org.springframework.web.bind.annotation.RequestParam(required = false)
+            @RequestParam(required = false)
             @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate toDate) {
         UUID pumpMasterId = extractPumpMasterId(request);
 
@@ -64,6 +65,17 @@ public class FuelPurchaseController {
 
         // Otherwise, return all records
         return ResponseEntity.ok(service.getByPumpMasterId(pumpMasterId));
+    }
+
+    @GetMapping("/supplier/{supplierId}")
+    @Operation(summary = "Get fuel purchases by supplier ID with optional limit")
+    public ResponseEntity<List<FuelPurchaseResponse>> getFuelPurchasesBySupplierId(
+            @PathVariable UUID supplierId,
+            @RequestParam(required = false) Integer limit) {
+        if (limit != null) {
+            return ResponseEntity.ok(service.getBySupplierId(supplierId, limit));
+        }
+        return ResponseEntity.ok(service.getBySupplierId(supplierId));
     }
 
     @GetMapping("/fuel-purchase/{fuelPurchaseId}")

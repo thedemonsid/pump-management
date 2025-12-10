@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,6 +18,9 @@ public interface SupplierPaymentRepository extends JpaRepository<SupplierPayment
     List<SupplierPayment> findByPumpMasterIdOrderByPaymentDateDesc(UUID pumpMasterId);
 
     List<SupplierPayment> findByPumpMaster_Id(UUID pumpMasterId);
+
+    @Query("SELECT sp FROM SupplierPayment sp WHERE sp.supplier.id = :supplierId ORDER BY sp.paymentDate DESC")
+    List<SupplierPayment> findTopNBySupplierIdOrderByPaymentDateDesc(@Param("supplierId") UUID supplierId, Pageable pageable);
 
     List<SupplierPayment> findByPurchase_Id(UUID purchaseId);
 

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -79,6 +80,21 @@ public class PurchaseService {
         return repository.findByPumpMaster_Id(pumpMasterId).stream()
                 .map(mapper::toResponse)
                 .toList();
+    }
+
+    public List<PurchaseResponse> getBySupplierId(@NotNull UUID supplierId) {
+        return repository.findTopNBySupplierIdOrderByPurchaseDateDesc(supplierId, PageRequest.of(0, Integer.MAX_VALUE)).stream()
+                .map(mapper::toResponse)
+                .toList();
+    }
+
+    public List<PurchaseResponse> getBySupplierId(@NotNull UUID supplierId, Integer limit) {
+        if (limit != null && limit > 0) {
+            return repository.findTopNBySupplierIdOrderByPurchaseDateDesc(supplierId, PageRequest.of(0, limit)).stream()
+                    .map(mapper::toResponse)
+                    .toList();
+        }
+        return getBySupplierId(supplierId);
     }
 
     public List<PurchaseResponse> getByPumpMasterIdAndDateRange(

@@ -61,12 +61,12 @@ export function SupplierDetailPage() {
   const {
     purchases,
     loading: purchasesLoading,
-    fetchPurchasesByPumpMasterId,
+    fetchPurchasesBySupplierId,
   } = usePurchaseStore();
   const {
     fuelPurchases,
     loading: fuelPurchasesLoading,
-    fetchFuelPurchasesByPumpMasterId,
+    fetchFuelPurchasesBySupplierId,
   } = useFuelPurchaseStore();
 
   const [activeTab, setActiveTab] = useState("payments");
@@ -79,6 +79,12 @@ export function SupplierDetailPage() {
     null
   );
 
+  // Pagination states
+  const [showAllPayments, setShowAllPayments] = useState(false);
+  const [showAllPurchases, setShowAllPurchases] = useState(false);
+  const [showAllFuelPurchases, setShowAllFuelPurchases] = useState(false);
+  const INITIAL_LIMIT = 20;
+
   const supplier = suppliers.find((s) => s.id === id);
 
   useEffect(() => {
@@ -89,16 +95,25 @@ export function SupplierDetailPage() {
 
   useEffect(() => {
     if (id && supplier?.pumpMasterId) {
-      fetchPaymentsBySupplierId(id, supplier.pumpMasterId);
-      fetchPurchasesByPumpMasterId(supplier.pumpMasterId);
-      fetchFuelPurchasesByPumpMasterId(supplier.pumpMasterId);
+      const paymentLimit = showAllPayments ? undefined : INITIAL_LIMIT;
+      const purchaseLimit = showAllPurchases ? undefined : INITIAL_LIMIT;
+      const fuelPurchaseLimit = showAllFuelPurchases
+        ? undefined
+        : INITIAL_LIMIT;
+
+      fetchPaymentsBySupplierId(id, supplier.pumpMasterId, paymentLimit);
+      fetchPurchasesBySupplierId(id, purchaseLimit);
+      fetchFuelPurchasesBySupplierId(id, fuelPurchaseLimit);
     }
   }, [
     id,
     supplier?.pumpMasterId,
+    showAllPayments,
+    showAllPurchases,
+    showAllFuelPurchases,
     fetchPaymentsBySupplierId,
-    fetchPurchasesByPumpMasterId,
-    fetchFuelPurchasesByPumpMasterId,
+    fetchPurchasesBySupplierId,
+    fetchFuelPurchasesBySupplierId,
   ]);
 
   const handleDeletePayment = async () => {
@@ -144,21 +159,25 @@ export function SupplierDetailPage() {
     0
   );
 
-  // Filter purchases and fuel purchases by supplier ID
-  const supplierPurchases = purchases.filter(
-    (purchase) => purchase.supplierId === id
-  );
-  const supplierFuelPurchases = fuelPurchases.filter(
-    (fuelPurchase) => fuelPurchase.supplierId === id
-  );
+  // Data is already filtered by supplier ID from backend
+  const allSupplierPurchases = purchases;
+  const allSupplierFuelPurchases = fuelPurchases;
+
+  // Apply pagination limits
+  const supplierPurchases = showAllPurchases
+    ? allSupplierPurchases
+    : allSupplierPurchases.slice(0, INITIAL_LIMIT);
+  const supplierFuelPurchases = showAllFuelPurchases
+    ? allSupplierFuelPurchases
+    : allSupplierFuelPurchases.slice(0, INITIAL_LIMIT);
 
   // Calculate total purchases amount (using netAmount for new purchase structure)
   const totalPurchasesAmount =
-    supplierPurchases.reduce(
+    allSupplierPurchases.reduce(
       (sum, purchase) => sum + (purchase.netAmount || 0),
       0
     ) +
-    supplierFuelPurchases.reduce(
+    allSupplierFuelPurchases.reduce(
       (sum, fuelPurchase) => sum + fuelPurchase.amount,
       0
     );
@@ -451,7 +470,27 @@ export function SupplierDetailPage() {
         <TabsContent value="payments" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Payment History</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Payment History</CardTitle>
+                {!showAllPayments && payments.length >= INITIAL_LIMIT && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllPayments(true)}
+                  >
+                    View All ({payments.length}+)
+                  </Button>
+                )}
+                {showAllPayments && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllPayments(false)}
+                  >
+                    Show Recent ({INITIAL_LIMIT})
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {paymentsLoading ? (
@@ -548,7 +587,28 @@ export function SupplierDetailPage() {
         <TabsContent value="purchases" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Purchase History</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Purchase History</CardTitle>
+                {!showAllPurchases &&
+                  allSupplierPurchases.length > INITIAL_LIMIT && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAllPurchases(true)}
+                    >
+                      View All ({allSupplierPurchases.length})
+                    </Button>
+                  )}
+                {showAllPurchases && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllPurchases(false)}
+                  >
+                    Show Recent ({INITIAL_LIMIT})
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {purchasesLoading ? (
@@ -626,7 +686,28 @@ export function SupplierDetailPage() {
         <TabsContent value="fuel-purchases" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Fuel Purchase History</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Fuel Purchase History</CardTitle>
+                {!showAllFuelPurchases &&
+                  allSupplierFuelPurchases.length > INITIAL_LIMIT && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAllFuelPurchases(true)}
+                    >
+                      View All ({allSupplierFuelPurchases.length})
+                    </Button>
+                  )}
+                {showAllFuelPurchases && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllFuelPurchases(false)}
+                  >
+                    Show Recent ({INITIAL_LIMIT})
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {fuelPurchasesLoading ? (

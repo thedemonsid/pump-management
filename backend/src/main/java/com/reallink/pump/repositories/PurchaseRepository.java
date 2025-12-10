@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -26,6 +27,9 @@ public interface PurchaseRepository extends JpaRepository<Purchase, UUID> {
 
     @Query("SELECT COALESCE(MAX(p.purchaseId), 0) FROM Purchase p WHERE p.pumpMaster.id = :pumpMasterId")
     Long findMaxPurchaseIdByPumpMasterId(@Param("pumpMasterId") UUID pumpMasterId);
+
+    @Query("SELECT p FROM Purchase p WHERE p.supplier.id = :supplierId ORDER BY p.purchaseDate DESC")
+    List<Purchase> findTopNBySupplierIdOrderByPurchaseDateDesc(@Param("supplierId") UUID supplierId, Pageable pageable);
 
     /**
      * Find purchases by pump master ID and date range (optimized with indexed

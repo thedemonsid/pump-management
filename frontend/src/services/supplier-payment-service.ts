@@ -1,9 +1,9 @@
-import api from './api';
+import api from "./api";
 import type {
   SupplierPaymentResponse,
   CreateSupplierPaymentRequest,
   UpdateSupplierPaymentRequest,
-} from '@/types';
+} from "@/types";
 
 // Pagination interfaces
 interface Pageable {
@@ -23,7 +23,7 @@ interface Page<T> {
 }
 
 export class SupplierPaymentService {
-  private static readonly BASE_PATH = '/api/supplier-payments';
+  private static readonly BASE_PATH = "/api/supplier-payments";
 
   // Get all supplier payments
   static async getAll(): Promise<SupplierPaymentResponse[]> {
@@ -37,10 +37,10 @@ export class SupplierPaymentService {
   ): Promise<Page<SupplierPaymentResponse>> {
     const queryParams = new URLSearchParams();
     if (pageable.page !== undefined)
-      queryParams.append('page', pageable.page.toString());
+      queryParams.append("page", pageable.page.toString());
     if (pageable.size !== undefined)
-      queryParams.append('size', pageable.size.toString());
-    if (pageable.sort) queryParams.append('sort', pageable.sort);
+      queryParams.append("size", pageable.size.toString());
+    if (pageable.sort) queryParams.append("sort", pageable.sort);
 
     const response = await api.get<Page<SupplierPaymentResponse>>(
       `${this.BASE_PATH}/paginated?${queryParams}`
@@ -62,6 +62,18 @@ export class SupplierPaymentService {
   ): Promise<SupplierPaymentResponse[]> {
     const response = await api.get<SupplierPaymentResponse[]>(
       `${this.BASE_PATH}/pump-master/${pumpMasterId}`
+    );
+    return response.data;
+  }
+
+  // Get supplier payments by supplier ID with optional limit
+  static async getBySupplierId(
+    supplierId: string,
+    limit?: number
+  ): Promise<SupplierPaymentResponse[]> {
+    const queryParams = limit ? `?limit=${limit}` : "";
+    const response = await api.get<SupplierPaymentResponse[]>(
+      `${this.BASE_PATH}/supplier/${supplierId}${queryParams}`
     );
     return response.data;
   }

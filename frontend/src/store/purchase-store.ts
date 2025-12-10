@@ -19,7 +19,14 @@ interface PurchaseState {
 
   // API methods
   fetchPurchases: (fromDate?: Date, toDate?: Date) => Promise<void>;
-  fetchPurchasesByPumpMasterId: (pumpMasterId: string) => Promise<void>;
+  fetchPurchasesByPumpMasterId: (
+    pumpMasterId: string,
+    limit?: number
+  ) => Promise<void>;
+  fetchPurchasesBySupplierId: (
+    supplierId: string,
+    limit?: number
+  ) => Promise<void>;
   createPurchase: (purchase: CreatePurchase) => Promise<void>;
   editPurchase: (id: string, purchase: UpdatePurchase) => Promise<void>;
   removePurchase: (id: string) => Promise<void>;
@@ -88,6 +95,26 @@ export const usePurchaseStore = create<PurchaseState>()(
             error instanceof Error
               ? error.message
               : "Failed to fetch purchases by pump master";
+          set({ error: errorMessage, loading: false });
+        }
+      },
+
+      fetchPurchasesBySupplierId: async (
+        supplierId: string,
+        limit?: number
+      ) => {
+        set({ loading: true, error: null });
+        try {
+          const purchases = await PurchaseService.getBySupplierId(
+            supplierId,
+            limit
+          );
+          set({ purchases, loading: false });
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Failed to fetch purchases by supplier";
           set({ error: errorMessage, loading: false });
         }
       },

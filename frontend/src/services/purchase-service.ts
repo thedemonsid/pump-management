@@ -39,6 +39,18 @@ export class PurchaseService {
     return response.data;
   }
 
+  // Get purchases by supplier ID with optional limit
+  static async getBySupplierId(
+    supplierId: string,
+    limit?: number
+  ): Promise<Purchase[]> {
+    const queryParams = limit ? `?limit=${limit}` : "";
+    const response = await api.get<Purchase[]>(
+      `${this.BASE_PATH}/supplier/${supplierId}${queryParams}`
+    );
+    return response.data;
+  }
+
   // Get purchase by sequential purchase ID within a pump master
   static async getByPumpMasterIdAndPurchaseId(
     pumpMasterId: string,

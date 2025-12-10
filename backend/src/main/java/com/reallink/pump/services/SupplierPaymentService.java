@@ -3,6 +3,7 @@ package com.reallink.pump.services;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,6 +71,21 @@ public class SupplierPaymentService {
         return repository.findByPumpMasterIdOrderByPaymentDateDesc(pumpMasterId).stream()
                 .map(mapper::toResponse)
                 .toList();
+    }
+
+    public List<SupplierPaymentResponse> getBySupplierId(@NotNull UUID supplierId) {
+        return repository.findTopNBySupplierIdOrderByPaymentDateDesc(supplierId, PageRequest.of(0, Integer.MAX_VALUE)).stream()
+                .map(mapper::toResponse)
+                .toList();
+    }
+
+    public List<SupplierPaymentResponse> getBySupplierId(@NotNull UUID supplierId, Integer limit) {
+        if (limit != null && limit > 0) {
+            return repository.findTopNBySupplierIdOrderByPaymentDateDesc(supplierId, PageRequest.of(0, limit)).stream()
+                    .map(mapper::toResponse)
+                    .toList();
+        }
+        return getBySupplierId(supplierId);
     }
 
     public List<SupplierPaymentResponse> getByPurchaseId(@NotNull UUID purchaseId) {

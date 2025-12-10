@@ -77,6 +77,17 @@ public class PurchaseController {
         return ResponseEntity.ok(service.getByPumpMasterId(pumpMasterId));
     }
 
+    @GetMapping("/supplier/{supplierId}")
+    @Operation(summary = "Get purchases by supplier ID with optional limit")
+    public ResponseEntity<List<PurchaseResponse>> getPurchasesBySupplierId(
+            @PathVariable UUID supplierId,
+            @RequestParam(required = false) Integer limit) {
+        if (limit != null) {
+            return ResponseEntity.ok(service.getBySupplierId(supplierId, limit));
+        }
+        return ResponseEntity.ok(service.getBySupplierId(supplierId));
+    }
+
     @GetMapping("/pump/{pumpMasterId}/purchase/{purchaseId}")
     @Operation(summary = "Get purchase by purchase ID and pump master ID")
     public ResponseEntity<PurchaseResponse> getPurchaseByPurchaseIdAndPumpMasterId(
