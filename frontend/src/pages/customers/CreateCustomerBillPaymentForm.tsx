@@ -181,7 +181,7 @@ export function CreateCustomerBillPaymentForm({
                   name="bankAccountId"
                   rules={{ required: "Bank Account is required" }}
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="col-span-2">
                       <FormLabel>Bank Account *</FormLabel>
                       <ReactSelect
                         options={bankAccounts.map((account) => ({
