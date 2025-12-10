@@ -22,7 +22,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { CreateSupplierPaymentForm } from "./CreateSupplierPaymentForm";
 import { UpdateSupplierPaymentForm } from "./UpdateSupplierPaymentForm";
@@ -345,37 +344,30 @@ export function SupplierDetailPage() {
               <BookOpen className="h-4 w-4 mr-2" />
               Ledger
             </Button>
-            <Dialog
-              open={isCreatePaymentDialogOpen}
-              onOpenChange={setIsCreatePaymentDialogOpen}
+            <Button
+              size="sm"
+              onClick={() => setIsCreatePaymentDialogOpen(true)}
             >
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Payment
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Create Supplier Payment</DialogTitle>
-                  <DialogDescription>
-                    Record a new payment to this supplier
-                  </DialogDescription>
-                </DialogHeader>
-                <CreateSupplierPaymentForm
-                  supplierId={supplier.id!}
-                  pumpMasterId={supplier.pumpMasterId!}
-                  onSuccess={() => {
-                    setIsCreatePaymentDialogOpen(false);
-                    // Refresh payments data
-                    fetchPaymentsBySupplierId(
-                      supplier.id!,
-                      supplier.pumpMasterId!
-                    );
-                  }}
-                />
-              </DialogContent>
-            </Dialog>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Payment
+            </Button>
+
+            {/* Create Payment Sheet */}
+            <CreateSupplierPaymentForm
+              supplierId={supplier.id!}
+              pumpMasterId={supplier.pumpMasterId!}
+              open={isCreatePaymentDialogOpen}
+              onOpenChange={(open) => {
+                setIsCreatePaymentDialogOpen(open);
+                if (!open) {
+                  // Refresh payments data
+                  fetchPaymentsBySupplierId(
+                    supplier.id!,
+                    supplier.pumpMasterId!
+                  );
+                }
+              }}
+            />
 
             {/* Edit Payment Dialog */}
             <Dialog
