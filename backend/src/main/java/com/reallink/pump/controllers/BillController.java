@@ -72,7 +72,12 @@ public class BillController {
     // Get Bills by Customer ID
     @GetMapping("/customer/{customerId}")
     @Operation(summary = "Get bills by customer ID")
-    public ResponseEntity<List<BillResponse>> getBillsByCustomerId(@PathVariable UUID customerId) {
+    public ResponseEntity<List<BillResponse>> getBillsByCustomerId(
+            @PathVariable UUID customerId,
+            @RequestParam(required = false) Integer limit) {
+        if (limit != null) {
+            return ResponseEntity.ok(service.getByCustomerId(customerId, limit));
+        }
         return ResponseEntity.ok(service.getByCustomerId(customerId));
     }
 

@@ -1,12 +1,12 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import type {
   SalesmanBillResponse,
   CreateSalesmanBillRequest,
   UpdateSalesmanBillRequest,
-} from '@/types';
-import { SalesmanBillService } from '@/services';
-import { toast } from 'sonner';
+} from "@/types";
+import { SalesmanBillService } from "@/services";
+import { toast } from "sonner";
 
 interface SalesmanBillState {
   bills: SalesmanBillResponse[];
@@ -29,7 +29,7 @@ interface SalesmanBillState {
   fetchBills: () => Promise<void>;
   fetchBillById: (id: string) => Promise<SalesmanBillResponse>;
   fetchBillsByPumpMaster: () => Promise<void>;
-  fetchBillsByCustomerId: (customerId: string) => Promise<void>;
+  fetchBillsByCustomerId: (customerId: string, limit?: number) => Promise<void>;
   fetchBillsByDateRange: (startDate: string, endDate: string) => Promise<void>;
   getNextBillNo: () => Promise<number>;
   createBill: (
@@ -90,7 +90,7 @@ export const useSalesmanBillStore = create<SalesmanBillState>()(
           set({ bills, loading: false });
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to fetch bills';
+            error instanceof Error ? error.message : "Failed to fetch bills";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -105,7 +105,7 @@ export const useSalesmanBillStore = create<SalesmanBillState>()(
           return bill;
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to fetch bill';
+            error instanceof Error ? error.message : "Failed to fetch bill";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -119,25 +119,26 @@ export const useSalesmanBillStore = create<SalesmanBillState>()(
           set({ bills, loading: false });
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to fetch bills';
+            error instanceof Error ? error.message : "Failed to fetch bills";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
         }
       },
 
-      fetchBillsByCustomerId: async (customerId: string) => {
+      fetchBillsByCustomerId: async (customerId: string, limit?: number) => {
         set({ loading: true, error: null });
         try {
           const customerBills = await SalesmanBillService.getByCustomer(
-            customerId
+            customerId,
+            limit
           );
           set({ customerBills, loading: false });
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to fetch customer bills';
+              : "Failed to fetch customer bills";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -156,7 +157,7 @@ export const useSalesmanBillStore = create<SalesmanBillState>()(
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to fetch bills by date range';
+              : "Failed to fetch bills by date range";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -172,7 +173,7 @@ export const useSalesmanBillStore = create<SalesmanBillState>()(
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to get next bill number';
+              : "Failed to get next bill number";
           toast.error(errorMessage);
           throw error;
         }
@@ -184,11 +185,11 @@ export const useSalesmanBillStore = create<SalesmanBillState>()(
           const newBill = await SalesmanBillService.create(bill);
           get().addBill(newBill);
           set({ loading: false });
-          toast.success('Bill created successfully');
+          toast.success("Bill created successfully");
           return newBill;
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to create bill';
+            error instanceof Error ? error.message : "Failed to create bill";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -201,11 +202,11 @@ export const useSalesmanBillStore = create<SalesmanBillState>()(
           const updatedBill = await SalesmanBillService.update(id, bill);
           get().updateBillInStore(id, updatedBill);
           set({ loading: false });
-          toast.success('Bill updated successfully');
+          toast.success("Bill updated successfully");
           return updatedBill;
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to update bill';
+            error instanceof Error ? error.message : "Failed to update bill";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -218,10 +219,10 @@ export const useSalesmanBillStore = create<SalesmanBillState>()(
           await SalesmanBillService.delete(id);
           get().deleteBill(id);
           set({ loading: false });
-          toast.success('Bill deleted successfully');
+          toast.success("Bill deleted successfully");
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to delete bill';
+            error instanceof Error ? error.message : "Failed to delete bill";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -229,7 +230,7 @@ export const useSalesmanBillStore = create<SalesmanBillState>()(
       },
     }),
     {
-      name: 'salesman-bill-store',
+      name: "salesman-bill-store",
     }
   )
 );

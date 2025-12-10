@@ -37,10 +37,15 @@ export class CustomerBillPaymentService {
   // Get payments by customer ID
   static async getByCustomerId(
     customerId: string,
-    pumpMasterId?: string
+    pumpMasterId?: string,
+    limit?: number
   ): Promise<CustomerBillPaymentResponse[]> {
-    const url = pumpMasterId
-      ? `${this.BASE_PATH}/customer/${customerId}?pumpMasterId=${pumpMasterId}`
+    const params = new URLSearchParams();
+    if (pumpMasterId) params.append("pumpMasterId", pumpMasterId);
+    if (limit) params.append("limit", limit.toString());
+    const queryString = params.toString();
+    const url = queryString
+      ? `${this.BASE_PATH}/customer/${customerId}?${queryString}`
       : `${this.BASE_PATH}/customer/${customerId}`;
     const response = await api.get<CustomerBillPaymentResponse[]>(url);
     return response.data;

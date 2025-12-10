@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,6 +20,9 @@ public interface CustomerBillPaymentRepository extends JpaRepository<CustomerBil
     List<CustomerBillPayment> findByBill_Id(UUID billId);
 
     List<CustomerBillPayment> findByCustomer_Id(UUID customerId);
+
+    @Query("SELECT p FROM CustomerBillPayment p WHERE p.customer.id = :customerId ORDER BY p.paymentDate DESC")
+    List<CustomerBillPayment> findTopNByCustomerIdOrderByPaymentDateDesc(@Param("customerId") UUID customerId, Pageable pageable);
 
     List<CustomerBillPayment> findByBankAccount_Id(UUID bankAccountId);
 

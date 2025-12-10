@@ -97,6 +97,13 @@ export function CustomerDetailPage() {
   >(null);
   const [isPaymentsDialogOpen, setIsPaymentsDialogOpen] = useState(false);
 
+  // Pagination states
+  const [showAllBills, setShowAllBills] = useState(false);
+  const [showAllSalesmanBills, setShowAllSalesmanBills] = useState(false);
+  const [showAllPayments, setShowAllPayments] = useState(false);
+  const [showAllSalesmanPayments, setShowAllSalesmanPayments] = useState(false);
+  const INITIAL_LIMIT = 20;
+
   const customer = customers.find((c) => c.id === id);
 
   useEffect(() => {
@@ -107,13 +114,30 @@ export function CustomerDetailPage() {
 
   useEffect(() => {
     if (id) {
-      fetchBillsByCustomerId(id);
-      fetchPaymentsByCustomerId(id, customer?.pumpMasterId);
-      fetchSalesmanBillsByCustomerId(id);
-      fetchSalesmanBillPaymentsByCustomerId(id);
+      const billLimit = showAllBills ? undefined : INITIAL_LIMIT;
+      const paymentLimit = showAllPayments ? undefined : INITIAL_LIMIT;
+      const salesmanBillLimit = showAllSalesmanBills
+        ? undefined
+        : INITIAL_LIMIT;
+      const salesmanPaymentLimit = showAllSalesmanPayments
+        ? undefined
+        : INITIAL_LIMIT;
+
+      fetchBillsByCustomerId(id, billLimit);
+      fetchPaymentsByCustomerId(id, customer?.pumpMasterId, paymentLimit);
+      fetchSalesmanBillsByCustomerId(id, salesmanBillLimit);
+      fetchSalesmanBillPaymentsByCustomerId(
+        id,
+        undefined,
+        salesmanPaymentLimit
+      );
     }
   }, [
     id,
+    showAllBills,
+    showAllPayments,
+    showAllSalesmanBills,
+    showAllSalesmanPayments,
     fetchBillsByCustomerId,
     fetchPaymentsByCustomerId,
     fetchSalesmanBillsByCustomerId,
@@ -437,7 +461,27 @@ export function CustomerDetailPage() {
         <TabsContent value="bills" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Purchase History</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Purchase History</CardTitle>
+                {!showAllBills && bills.length >= INITIAL_LIMIT && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllBills(true)}
+                  >
+                    View All ({bills.length}+)
+                  </Button>
+                )}
+                {showAllBills && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllBills(false)}
+                  >
+                    Show Recent ({INITIAL_LIMIT})
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {billsLoading ? (
@@ -491,10 +535,34 @@ export function CustomerDetailPage() {
         <TabsContent value="salesman-bills" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Salesman Bills</CardTitle>
-              <CardDescription>
-                Credit bills created by salesmen during fuel dispensing shifts
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">Salesman Bills</CardTitle>
+                  <CardDescription>
+                    Credit bills created by salesmen during fuel dispensing
+                    shifts
+                  </CardDescription>
+                </div>
+                {!showAllSalesmanBills &&
+                  salesmanBills.length >= INITIAL_LIMIT && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAllSalesmanBills(true)}
+                    >
+                      View All ({salesmanBills.length}+)
+                    </Button>
+                  )}
+                {showAllSalesmanBills && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllSalesmanBills(false)}
+                  >
+                    Show Recent ({INITIAL_LIMIT})
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {salesmanBillsLoading ? (
@@ -566,7 +634,27 @@ export function CustomerDetailPage() {
         <TabsContent value="payments" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Payment History</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Payment History</CardTitle>
+                {!showAllPayments && payments.length >= INITIAL_LIMIT && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllPayments(true)}
+                  >
+                    View All ({payments.length}+)
+                  </Button>
+                )}
+                {showAllPayments && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllPayments(false)}
+                  >
+                    Show Recent ({INITIAL_LIMIT})
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {paymentsLoading ? (
@@ -654,12 +742,36 @@ export function CustomerDetailPage() {
         <TabsContent value="salesman-payments" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">
-                Salesman Bill Payment History
-              </CardTitle>
-              <CardDescription>
-                Payments made for salesman bills during fuel dispensing shifts
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">
+                    Salesman Bill Payment History
+                  </CardTitle>
+                  <CardDescription>
+                    Payments made for salesman bills during fuel dispensing
+                    shifts
+                  </CardDescription>
+                </div>
+                {!showAllSalesmanPayments &&
+                  salesmanBillPayments.length >= INITIAL_LIMIT && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAllSalesmanPayments(true)}
+                    >
+                      View All ({salesmanBillPayments.length}+)
+                    </Button>
+                  )}
+                {showAllSalesmanPayments && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllSalesmanPayments(false)}
+                  >
+                    Show Recent ({INITIAL_LIMIT})
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {salesmanBillPaymentsLoading ? (

@@ -1,14 +1,14 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import type {
   BillResponse,
   CreateBillRequest,
   UpdateBillRequest,
   BillItemResponse,
   CreateBillItemRequest,
-} from '@/types';
-import { BillService } from '@/services';
-import { toast } from 'sonner';
+} from "@/types";
+import { BillService } from "@/services";
+import { toast } from "sonner";
 
 interface BillState {
   bills: BillResponse[];
@@ -43,7 +43,7 @@ interface BillState {
   fetchBills: () => Promise<void>;
   fetchBillById: (id: string) => Promise<BillResponse>;
   fetchBillsByPumpMasterId: () => Promise<void>;
-  fetchBillsByCustomerId: (customerId: string) => Promise<void>;
+  fetchBillsByCustomerId: (customerId: string, limit?: number) => Promise<void>;
   fetchBillsByDateRange: () => Promise<void>;
   getNextBillNo: () => Promise<number>;
   createBill: (bill: CreateBillRequest) => Promise<void>;
@@ -70,16 +70,16 @@ export const useBillStore = create<BillState>()(
       startDate: (() => {
         const date = new Date();
         date.setMonth(date.getMonth() - 1);
-        return date.toISOString().split('T')[0];
+        return date.toISOString().split("T")[0];
       })(),
-      endDate: new Date().toISOString().split('T')[0],
-      selectedCustomerId: 'all-customers',
+      endDate: new Date().toISOString().split("T")[0],
+      selectedCustomerId: "all-customers",
       billsPageStartDate: (() => {
         const date = new Date();
         date.setMonth(date.getMonth() - 1);
-        return date.toISOString().split('T')[0];
+        return date.toISOString().split("T")[0];
       })(),
-      billsPageEndDate: new Date().toISOString().split('T')[0],
+      billsPageEndDate: new Date().toISOString().split("T")[0],
 
       setBills: (bills) => set({ bills }),
 
@@ -119,7 +119,7 @@ export const useBillStore = create<BillState>()(
       getFilteredDateRangeBills: () => {
         const state = get();
         return state.selectedCustomerId &&
-          state.selectedCustomerId !== 'all-customers'
+          state.selectedCustomerId !== "all-customers"
           ? state.dateRangeBills.filter(
               (bill) => bill.customerId === state.selectedCustomerId
             )
@@ -131,11 +131,11 @@ export const useBillStore = create<BillState>()(
         set({ loading: true, error: null });
         try {
           const bills = await BillService.getAll();
-          console.log('Bills : ', bills);
+          console.log("Bills : ", bills);
           set({ bills, loading: false });
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to fetch bills';
+            error instanceof Error ? error.message : "Failed to fetch bills";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
         }
@@ -149,7 +149,7 @@ export const useBillStore = create<BillState>()(
           return bill;
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to fetch bill';
+            error instanceof Error ? error.message : "Failed to fetch bill";
           set({ error: errorMessage, loading: false });
           throw error;
         }
@@ -164,22 +164,22 @@ export const useBillStore = create<BillState>()(
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to fetch bills by pump master';
+              : "Failed to fetch bills by pump master";
           set({ error: errorMessage, loading: false });
         }
       },
 
-      fetchBillsByCustomerId: async (customerId: string) => {
+      fetchBillsByCustomerId: async (customerId: string, limit?: number) => {
         set({ loading: true, error: null });
         try {
-          const bills = await BillService.getByCustomerId(customerId);
-          console.log('Customer Bills : ', bills);
+          const bills = await BillService.getByCustomerId(customerId, limit);
+          console.log("Customer Bills : ", bills);
           set({ bills, loading: false });
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to fetch bills by customer';
+              : "Failed to fetch bills by customer";
           set({ error: errorMessage, loading: false });
         }
       },
@@ -197,7 +197,7 @@ export const useBillStore = create<BillState>()(
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to fetch bills by date range';
+              : "Failed to fetch bills by date range";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
         }
@@ -212,7 +212,7 @@ export const useBillStore = create<BillState>()(
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to get next bill number';
+              : "Failed to get next bill number";
           set({ error: errorMessage });
           throw error;
         }
@@ -227,10 +227,10 @@ export const useBillStore = create<BillState>()(
             bills: [...state.bills, newBill],
             loading: false,
           }));
-          toast.success('Bill created successfully');
+          toast.success("Bill created successfully");
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to create bill';
+            error instanceof Error ? error.message : "Failed to create bill";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -248,10 +248,10 @@ export const useBillStore = create<BillState>()(
             ),
             loading: false,
           }));
-          toast.success('Bill updated successfully');
+          toast.success("Bill updated successfully");
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to update bill';
+            error instanceof Error ? error.message : "Failed to update bill";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -267,10 +267,10 @@ export const useBillStore = create<BillState>()(
             bills: state.bills.filter((bill) => bill.id !== id),
             loading: false,
           }));
-          toast.success('Bill deleted successfully');
+          toast.success("Bill deleted successfully");
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to delete bill';
+            error instanceof Error ? error.message : "Failed to delete bill";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -284,12 +284,12 @@ export const useBillStore = create<BillState>()(
           // Note: This might require updating the bill in the store
           // For now, we'll just show success
           set({ loading: false });
-          toast.success('Bill item deleted successfully');
+          toast.success("Bill item deleted successfully");
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to delete bill item';
+              : "Failed to delete bill item";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -315,13 +315,13 @@ export const useBillStore = create<BillState>()(
             ),
             loading: false,
           }));
-          toast.success('Bill item created successfully');
+          toast.success("Bill item created successfully");
           return newBillItem;
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to create bill item';
+              : "Failed to create bill item";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -348,13 +348,13 @@ export const useBillStore = create<BillState>()(
             })),
             loading: false,
           }));
-          toast.success('Bill item updated successfully');
+          toast.success("Bill item updated successfully");
           return updatedBillItem;
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to update bill item';
+              : "Failed to update bill item";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -362,7 +362,7 @@ export const useBillStore = create<BillState>()(
       },
     }),
     {
-      name: 'bill-store',
+      name: "bill-store",
     }
   )
 );

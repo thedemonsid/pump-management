@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,6 +22,9 @@ public interface BillRepository extends JpaRepository<Bill, UUID> {
     List<Bill> findByPumpMaster_Id(UUID pumpMasterId);
 
     List<Bill> findByCustomer_Id(UUID customerId);
+
+    @Query("SELECT b FROM Bill b WHERE b.customer.id = :customerId ORDER BY b.billDate DESC, b.createdAt DESC")
+    List<Bill> findTopNByCustomerIdOrderByBillDateDesc(@Param("customerId") UUID customerId, Pageable pageable);
 
     List<Bill> findByBillDateBetween(LocalDate startDate, LocalDate endDate);
 

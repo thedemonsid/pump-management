@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -162,6 +163,15 @@ public class SalesmanBillPaymentService {
         return repository.findByCustomer_Id(customerId).stream()
                 .map(mapper::toResponse)
                 .toList();
+    }
+
+    public List<SalesmanBillPaymentResponse> getByCustomerId(@NotNull UUID customerId, Integer limit) {
+        if (limit != null && limit > 0) {
+            return repository.findTopNByCustomerIdOrderByPaymentDateDesc(customerId, PageRequest.of(0, limit)).stream()
+                    .map(mapper::toResponse)
+                    .toList();
+        }
+        return getByCustomerId(customerId);
     }
 
     public List<SalesmanBillPaymentResponse> getByDateRange(@NotNull LocalDate fromDate, @NotNull LocalDate toDate) {

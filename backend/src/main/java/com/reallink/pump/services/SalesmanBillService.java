@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,9 +29,9 @@ import com.reallink.pump.mapper.SalesmanBillMapper;
 import com.reallink.pump.repositories.CustomerRepository;
 import com.reallink.pump.repositories.ProductRepository;
 import com.reallink.pump.repositories.PumpInfoMasterRepository;
+import com.reallink.pump.repositories.SalesmanBillPaymentRepository;
 import com.reallink.pump.repositories.SalesmanBillRepository;
 import com.reallink.pump.repositories.SalesmanShiftRepository;
-import com.reallink.pump.repositories.SalesmanBillPaymentRepository;
 import com.reallink.pump.security.SecurityHelper;
 
 import jakarta.validation.Valid;
@@ -454,6 +455,15 @@ public class SalesmanBillService {
         return repository.findByCustomer_Id(customerId).stream()
                 .map(mapper::toResponse)
                 .toList();
+    }
+
+    public List<SalesmanBillResponse> getByCustomerId(@NotNull UUID customerId, Integer limit) {
+        if (limit != null && limit > 0) {
+            return repository.findTopNByCustomerIdOrderByBillDateDesc(customerId, PageRequest.of(0, limit)).stream()
+                    .map(mapper::toResponse)
+                    .toList();
+        }
+        return getByCustomerId(customerId);
     }
 
     public List<SalesmanBillResponse> getBySalesmanShiftId(@NotNull UUID salesmanShiftId) {

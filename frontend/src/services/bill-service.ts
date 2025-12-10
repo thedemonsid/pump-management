@@ -1,14 +1,14 @@
-import api from './api';
+import api from "./api";
 import type {
   CreateBillRequest,
   UpdateBillRequest,
   BillResponse,
   BillItemResponse,
   CreateBillItemRequest,
-} from '@/types';
+} from "@/types";
 
 export class BillService {
-  private static readonly BASE_PATH = '/api/v1/bills';
+  private static readonly BASE_PATH = "/api/v1/bills";
 
   // Get all bills
   static async getAll(): Promise<BillResponse[]> {
@@ -40,10 +40,14 @@ export class BillService {
   }
 
   // Get bills by customer ID
-  static async getByCustomerId(customerId: string): Promise<BillResponse[]> {
-    const response = await api.get<BillResponse[]>(
-      `${this.BASE_PATH}/customer/${customerId}`
-    );
+  static async getByCustomerId(
+    customerId: string,
+    limit?: number
+  ): Promise<BillResponse[]> {
+    const url = limit
+      ? `${this.BASE_PATH}/customer/${customerId}?limit=${limit}`
+      : `${this.BASE_PATH}/customer/${customerId}`;
+    const response = await api.get<BillResponse[]>(url);
     return response.data;
   }
 

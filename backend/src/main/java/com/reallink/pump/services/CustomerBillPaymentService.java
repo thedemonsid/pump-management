@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,6 +56,15 @@ public class CustomerBillPaymentService {
         return repository.findByCustomer_Id(customerId).stream()
                 .map(mapper::toResponse)
                 .toList();
+    }
+
+    public List<CustomerBillPaymentResponse> getAllByCustomerId(@NotNull UUID customerId, Integer limit) {
+        if (limit != null && limit > 0) {
+            return repository.findTopNByCustomerIdOrderByPaymentDateDesc(customerId, PageRequest.of(0, limit)).stream()
+                    .map(mapper::toResponse)
+                    .toList();
+        }
+        return getAllByCustomerId(customerId);
     }
 
     public CustomerBillPaymentResponse getById(@NotNull UUID id) {

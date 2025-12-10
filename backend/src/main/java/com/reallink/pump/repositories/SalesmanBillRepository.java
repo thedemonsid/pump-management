@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,6 +26,9 @@ public interface SalesmanBillRepository extends JpaRepository<SalesmanBill, UUID
     List<SalesmanBill> findByPumpMasterIdAndBillDateBetweenOrderByBillDateDesc(UUID pumpMasterId, LocalDate startDate, LocalDate endDate);
 
     List<SalesmanBill> findByCustomer_Id(UUID customerId);
+
+    @Query("SELECT b FROM SalesmanBill b WHERE b.customer.id = :customerId ORDER BY b.billDate DESC")
+    List<SalesmanBill> findTopNByCustomerIdOrderByBillDateDesc(@Param("customerId") UUID customerId, Pageable pageable);
 
     /**
      * Find all bills for a specific salesman shift.

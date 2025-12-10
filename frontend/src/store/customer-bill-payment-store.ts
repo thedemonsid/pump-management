@@ -1,12 +1,12 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import type {
   CustomerBillPaymentResponse,
   CreateCustomerBillPaymentRequest,
   UpdateCustomerBillPaymentRequest,
-} from '@/types';
-import { CustomerBillPaymentService } from '@/services';
-import { toast } from 'sonner';
+} from "@/types";
+import { CustomerBillPaymentService } from "@/services";
+import { toast } from "sonner";
 
 interface CustomerBillPaymentState {
   payments: CustomerBillPaymentResponse[];
@@ -30,7 +30,8 @@ interface CustomerBillPaymentState {
   fetchPaymentsByPumpMasterId: (pumpMasterId: string) => Promise<void>;
   fetchPaymentsByCustomerId: (
     customerId: string,
-    pumpMasterId?: string
+    pumpMasterId?: string,
+    limit?: number
   ) => Promise<void>;
   fetchPaymentsByBillId: (billId: string) => Promise<void>;
   createPayment: (payment: CreateCustomerBillPaymentRequest) => Promise<void>;
@@ -82,7 +83,7 @@ export const useCustomerBillPaymentStore = create<CustomerBillPaymentState>()(
           set({ payments, loading: false });
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to fetch payments';
+            error instanceof Error ? error.message : "Failed to fetch payments";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
         }
@@ -96,7 +97,7 @@ export const useCustomerBillPaymentStore = create<CustomerBillPaymentState>()(
           return payment;
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to fetch payment';
+            error instanceof Error ? error.message : "Failed to fetch payment";
           set({ error: errorMessage, loading: false });
           throw error;
         }
@@ -113,28 +114,30 @@ export const useCustomerBillPaymentStore = create<CustomerBillPaymentState>()(
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to fetch payments by pump master';
+              : "Failed to fetch payments by pump master";
           set({ error: errorMessage, loading: false });
         }
       },
 
       fetchPaymentsByCustomerId: async (
         customerId: string,
-        pumpMasterId?: string
+        pumpMasterId?: string,
+        limit?: number
       ) => {
         set({ loading: true, error: null });
         try {
           const customerPayments =
             await CustomerBillPaymentService.getByCustomerId(
               customerId,
-              pumpMasterId
+              pumpMasterId,
+              limit
             );
           set({ payments: customerPayments, loading: false });
         } catch (error) {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to fetch payments by customer';
+              : "Failed to fetch payments by customer";
           set({ error: errorMessage, loading: false });
         }
       },
@@ -148,7 +151,7 @@ export const useCustomerBillPaymentStore = create<CustomerBillPaymentState>()(
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to fetch payments by bill';
+              : "Failed to fetch payments by bill";
           set({ error: errorMessage, loading: false });
         }
       },
@@ -162,10 +165,10 @@ export const useCustomerBillPaymentStore = create<CustomerBillPaymentState>()(
             payments: [...state.payments, newPayment],
             loading: false,
           }));
-          toast.success('Payment created successfully');
+          toast.success("Payment created successfully");
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to create payment';
+            error instanceof Error ? error.message : "Failed to create payment";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -186,10 +189,10 @@ export const useCustomerBillPaymentStore = create<CustomerBillPaymentState>()(
             ),
             loading: false,
           }));
-          toast.success('Payment updated successfully');
+          toast.success("Payment updated successfully");
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to update payment';
+            error instanceof Error ? error.message : "Failed to update payment";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -205,10 +208,10 @@ export const useCustomerBillPaymentStore = create<CustomerBillPaymentState>()(
             payments: state.payments.filter((payment) => payment.id !== id),
             loading: false,
           }));
-          toast.success('Payment deleted successfully');
+          toast.success("Payment deleted successfully");
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Failed to delete payment';
+            error instanceof Error ? error.message : "Failed to delete payment";
           set({ error: errorMessage, loading: false });
           toast.error(errorMessage);
           throw error;
@@ -216,7 +219,7 @@ export const useCustomerBillPaymentStore = create<CustomerBillPaymentState>()(
       },
     }),
     {
-      name: 'customer-bill-payment-store',
+      name: "customer-bill-payment-store",
     }
   )
 );

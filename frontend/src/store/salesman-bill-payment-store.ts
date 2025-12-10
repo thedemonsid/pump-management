@@ -34,7 +34,8 @@ interface SalesmanBillPaymentState {
   fetchPaymentsByShiftId: (salesmanShiftId: string) => Promise<void>;
   fetchPaymentsByCustomerId: (
     customerId: string,
-    pumpMasterId?: string
+    pumpMasterId?: string,
+    limit?: number
   ) => Promise<void>;
   getTotalByShiftId: (salesmanShiftId: string) => Promise<number>;
   createPayment: (
@@ -152,14 +153,16 @@ export const useSalesmanBillPaymentStore = create<SalesmanBillPaymentState>()(
 
       fetchPaymentsByCustomerId: async (
         customerId: string,
-        pumpMasterId?: string
+        pumpMasterId?: string,
+        limit?: number
       ) => {
         set({ loading: true, error: null });
         try {
           const customerPayments =
             await SalesmanBillPaymentService.getByCustomerId(
               customerId,
-              pumpMasterId
+              pumpMasterId,
+              limit
             );
           set({ customerPayments, loading: false });
         } catch (error) {

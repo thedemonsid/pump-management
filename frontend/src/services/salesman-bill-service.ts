@@ -51,11 +51,13 @@ export class SalesmanBillService {
 
   // Get bills by customer ID
   static async getByCustomer(
-    customerId: string
+    customerId: string,
+    limit?: number
   ): Promise<SalesmanBillResponse[]> {
-    const response = await api.get<SalesmanBillResponse[]>(
-      `${this.BASE_PATH}/customer/${customerId}`
-    );
+    const url = limit
+      ? `${this.BASE_PATH}/customer/${customerId}?limit=${limit}`
+      : `${this.BASE_PATH}/customer/${customerId}`;
+    const response = await api.get<SalesmanBillResponse[]>(url);
     return response.data;
   }
 

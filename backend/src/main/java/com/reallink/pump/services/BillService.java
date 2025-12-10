@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -384,6 +385,15 @@ public class BillService {
         return repository.findByCustomer_Id(customerId).stream()
                 .map(mapper::toResponse)
                 .toList();
+    }
+
+    public List<BillResponse> getByCustomerId(@NotNull UUID customerId, Integer limit) {
+        if (limit != null && limit > 0) {
+            return repository.findTopNByCustomerIdOrderByBillDateDesc(customerId, PageRequest.of(0, limit)).stream()
+                    .map(mapper::toResponse)
+                    .toList();
+        }
+        return getByCustomerId(customerId);
     }
 
     private void createPaymentForBill(Bill bill, CreateCustomerBillPaymentRequest request) {

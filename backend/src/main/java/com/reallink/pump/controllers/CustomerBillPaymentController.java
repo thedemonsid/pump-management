@@ -1,8 +1,8 @@
 package com.reallink.pump.controllers;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-import java.time.LocalDate;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -44,7 +44,12 @@ public class CustomerBillPaymentController {
     @GetMapping("/customer/{customerId}")
 
     @Operation(summary = "Get all customer bill payments by customerId", description = "Retrieve all customer bill payments")
-    public ResponseEntity<List<CustomerBillPaymentResponse>> getAllPaymentsByCustomerId(@PathVariable UUID customerId) {
+    public ResponseEntity<List<CustomerBillPaymentResponse>> getAllPaymentsByCustomerId(
+            @PathVariable UUID customerId,
+            @RequestParam(required = false) Integer limit) {
+        if (limit != null) {
+            return ResponseEntity.ok(service.getAllByCustomerId(customerId, limit));
+        }
         return ResponseEntity.ok(service.getAllByCustomerId(customerId));
     }
 

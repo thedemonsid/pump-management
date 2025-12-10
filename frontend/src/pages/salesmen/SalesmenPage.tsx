@@ -10,14 +10,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Plus, Pencil, Loader2 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -27,6 +19,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { DataTable } from "@/components/ui/data-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import { CreateSalesmanForm } from "./CreateSalesmanForm";
 import { UpdateSalesmanForm } from "./UpdateSalesmanForm";
 import type { Salesman } from "@/types";
@@ -54,6 +48,60 @@ export function SalesmenPage() {
   const handleCloseEditDialog = () => {
     setEditingSalesman(null);
   };
+
+  // Define columns for DataTable
+  const columns: ColumnDef<Salesman>[] = [
+    {
+      accessorKey: "username",
+      header: "Username",
+      cell: ({ row }) => (
+        <div className="font-medium">{row.getValue("username")}</div>
+      ),
+    },
+    {
+      accessorKey: "mobileNumber",
+      header: "Mobile Number",
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+      cell: ({ row }) => row.getValue("email") || "-",
+    },
+    {
+      accessorKey: "aadharNumber",
+      header: "Aadhar Number",
+      cell: ({ row }) => row.getValue("aadharNumber") || "-",
+    },
+    {
+      accessorKey: "panNumber",
+      header: "PAN Number",
+      cell: ({ row }) => row.getValue("panNumber") || "-",
+    },
+    {
+      accessorKey: "enabled",
+      header: "Status",
+      cell: ({ row }) => (
+        <Badge variant={row.getValue("enabled") ? "default" : "secondary"}>
+          {row.getValue("enabled") ? "Enabled" : "Disabled"}
+        </Badge>
+      ),
+    },
+    {
+      id: "actions",
+      header: () => <div className="text-right">Actions</div>,
+      cell: ({ row }) => (
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleEdit(row.original)}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   if (!canManageSalesmen) {
     return (
@@ -131,50 +179,18 @@ export function SalesmenPage() {
               No salesmen found. Create your first salesman to get started.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Username</TableHead>
-                  <TableHead>Mobile Number</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Aadhar Number</TableHead>
-                  <TableHead>PAN Number</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {salesmen.map((salesman) => (
-                  <TableRow key={salesman.id}>
-                    <TableCell className="font-medium">
-                      {salesman.username}
-                    </TableCell>
-                    <TableCell>{salesman.mobileNumber}</TableCell>
-                    <TableCell>{salesman.email || "-"}</TableCell>
-                    <TableCell>{salesman.aadharNumber || "-"}</TableCell>
-                    <TableCell>{salesman.panNumber || "-"}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={salesman.enabled ? "default" : "secondary"}
-                      >
-                        {salesman.enabled ? "Enabled" : "Disabled"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(salesman)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={columns}
+              data={salesmen}
+              searchKey="username"
+              searchPlaceholder="Search by username..."
+              pageSize={10}
+              enableRowSelection={false}
+              enableColumnVisibility={true}
+              enablePagination={true}
+              enableSorting={true}
+              enableFiltering={true}
+            />
           )}
         </CardContent>
       </Card>

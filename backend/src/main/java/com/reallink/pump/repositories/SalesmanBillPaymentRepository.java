@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -49,6 +50,14 @@ public interface SalesmanBillPaymentRepository extends JpaRepository<SalesmanBil
             + "LEFT JOIN FETCH ss.salesman "
             + "WHERE sbp.customer.id = :customerId")
     List<SalesmanBillPayment> findByCustomer_Id(@Param("customerId") UUID customerId);
+
+    @Query("SELECT sbp FROM SalesmanBillPayment sbp "
+            + "LEFT JOIN FETCH sbp.customer "
+            + "LEFT JOIN FETCH sbp.salesmanShift ss "
+            + "LEFT JOIN FETCH ss.salesman "
+            + "WHERE sbp.customer.id = :customerId "
+            + "ORDER BY sbp.paymentDate DESC")
+    List<SalesmanBillPayment> findTopNByCustomerIdOrderByPaymentDateDesc(@Param("customerId") UUID customerId, Pageable pageable);
 
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
             + "LEFT JOIN FETCH sbp.customer "
