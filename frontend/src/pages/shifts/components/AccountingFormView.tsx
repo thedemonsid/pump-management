@@ -226,6 +226,7 @@ export function AccountingFormView({
           cashInHand={actualCash}
           upiReceived={parseFloat(upiReceived || "0")}
           cardReceived={parseFloat(cardReceived || "0")}
+          fleetCardReceived={parseFloat(fleetCardReceived || "0")}
           distributions={preDistributions}
           onDistributionsChange={onPreDistributionsChange}
         />

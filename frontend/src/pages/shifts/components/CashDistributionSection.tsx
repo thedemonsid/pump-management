@@ -21,7 +21,15 @@ import type { CashDistributionResponse } from "@/types/salesman-shift-accounting
 interface DistributionEntry {
   bankAccountId: string;
   amount: string;
-  paymentMethod: "CASH" | "UPI" | "RTGS" | "NEFT" | "IMPS" | "CHEQUE" | "CARD";
+  paymentMethod:
+    | "CASH"
+    | "UPI"
+    | "RTGS"
+    | "NEFT"
+    | "IMPS"
+    | "CHEQUE"
+    | "CARD"
+    | "FLEET_CARD";
 }
 
 interface CashDistributionSectionProps {
@@ -29,6 +37,7 @@ interface CashDistributionSectionProps {
   cashInHand: number;
   upiReceived: number;
   cardReceived: number;
+  fleetCardReceived: number;
   isAdminOrManager: boolean;
   onDistributionChange?: () => void;
 }
@@ -38,6 +47,7 @@ export function CashDistributionSection({
   cashInHand,
   upiReceived,
   cardReceived,
+  fleetCardReceived,
   isAdminOrManager,
   onDistributionChange,
 }: CashDistributionSectionProps) {
@@ -72,8 +82,9 @@ export function CashDistributionSection({
     loadData();
   }, [shiftId]);
 
-  // Calculate totals - total to deposit includes cash, UPI, and card
-  const totalToDeposit = cashInHand + upiReceived + cardReceived;
+  // Calculate totals - total to deposit includes cash, UPI, card, and fleet card
+  const totalToDeposit =
+    cashInHand + upiReceived + cardReceived + fleetCardReceived;
   const totalDistributed = distributions.reduce((sum, d) => sum + d.amount, 0);
   const totalPending = entries.reduce(
     (sum, e) => sum + (parseFloat(e.amount) || 0),
@@ -215,7 +226,7 @@ export function CashDistributionSection({
           <p className="text-sm font-medium text-muted-foreground">
             Amounts to Deposit
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Cash:</span>
               <span className="font-mono">₹{cashInHand.toFixed(2)}</span>
@@ -227,6 +238,10 @@ export function CashDistributionSection({
             <div className="flex justify-between">
               <span className="text-muted-foreground">Card:</span>
               <span className="font-mono">₹{cardReceived.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Fleet Card:</span>
+              <span className="font-mono">₹{fleetCardReceived.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -358,6 +373,7 @@ export function CashDistributionSection({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="CASH">Cash</SelectItem>
+                        <SelectItem value="FLEET_CARD">FLEET_CARD</SelectItem>
                         <SelectItem value="UPI">UPI</SelectItem>
                         <SelectItem value="NEFT">NEFT</SelectItem>
                         <SelectItem value="RTGS">RTGS</SelectItem>

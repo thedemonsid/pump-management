@@ -18,13 +18,22 @@ import type { BankAccount } from "@/types";
 export interface PreDistributionEntry {
   bankAccountId: string;
   amount: string;
-  paymentMethod: "CASH" | "UPI" | "RTGS" | "NEFT" | "IMPS" | "CHEQUE" | "CARD";
+  paymentMethod:
+    | "CASH"
+    | "UPI"
+    | "RTGS"
+    | "NEFT"
+    | "IMPS"
+    | "CHEQUE"
+    | "CARD"
+    | "FLEET_CARD";
 }
 
 interface PreAccountingCashDistributionProps {
   cashInHand: number;
   upiReceived: number;
   cardReceived: number;
+  fleetCardReceived: number;
   distributions: PreDistributionEntry[];
   onDistributionsChange: (distributions: PreDistributionEntry[]) => void;
 }
@@ -33,6 +42,7 @@ export function PreAccountingCashDistribution({
   cashInHand,
   upiReceived,
   cardReceived,
+  fleetCardReceived,
   distributions,
   onDistributionsChange,
 }: PreAccountingCashDistributionProps) {
@@ -59,7 +69,8 @@ export function PreAccountingCashDistribution({
   }, []);
 
   // Calculate totals
-  const totalToDeposit = cashInHand + upiReceived + cardReceived;
+  const totalToDeposit =
+    cashInHand + upiReceived + cardReceived + fleetCardReceived;
   const totalPending = distributions.reduce(
     (sum, e) => sum + (parseFloat(e.amount) || 0),
     0
@@ -122,7 +133,7 @@ export function PreAccountingCashDistribution({
           <p className="text-sm font-medium text-muted-foreground">
             Amounts Available to Deposit
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Cash:</span>
               <span className="font-mono">₹{cashInHand.toFixed(2)}</span>
@@ -134,6 +145,10 @@ export function PreAccountingCashDistribution({
             <div className="flex justify-between">
               <span className="text-muted-foreground">Card:</span>
               <span className="font-mono">₹{cardReceived.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Fleet Card:</span>
+              <span className="font-mono">₹{fleetCardReceived.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -219,6 +234,7 @@ export function PreAccountingCashDistribution({
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="CASH">Cash</SelectItem>
+                          <SelectItem value="FLEET_CARD">FLEET_CARD</SelectItem>
                           <SelectItem value="UPI">UPI</SelectItem>
                           <SelectItem value="NEFT">NEFT</SelectItem>
                           <SelectItem value="RTGS">RTGS</SelectItem>

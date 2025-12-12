@@ -125,7 +125,15 @@ export interface DistributionItem {
   /** Amount to distribute */
   amount: number;
   /** Payment method (CASH, UPI, RTGS, NEFT, IMPS, CHEQUE, CARD) */
-  paymentMethod: "CASH" | "UPI" | "RTGS" | "NEFT" | "IMPS" | "CHEQUE" | "CARD";
+  paymentMethod:
+    | "CASH"
+    | "UPI"
+    | "RTGS"
+    | "NEFT"
+    | "IMPS"
+    | "CHEQUE"
+    | "CARD"
+    | "FLEET_CARD";
 }
 
 /**
@@ -153,7 +161,15 @@ export interface CashDistributionResponse {
   /** Distributed amount */
   amount: number;
   /** Payment method (CASH, UPI, RTGS, NEFT, IMPS, CHEQUE, CARD) */
-  paymentMethod: "CASH" | "UPI" | "RTGS" | "NEFT" | "IMPS" | "CHEQUE" | "CARD";
+  paymentMethod:
+    | "CASH"
+    | "UPI"
+    | "RTGS"
+    | "NEFT"
+    | "IMPS"
+    | "CHEQUE"
+    | "CARD"
+    | "FLEET_CARD";
   /** Transaction date */
   transactionDate: string;
   /** Entry by user */
