@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -45,7 +44,6 @@ public class CreateBankAccountRequest {
     private String branch;
 
     @NotNull(message = "Opening balance is required")
-    @DecimalMin(value = "0.00", message = "Opening balance must be greater than or equal to 0.00")
     @Schema(description = "Opening balance", example = "10000.00")
     private BigDecimal openingBalance;
 

@@ -22,6 +22,7 @@ import type {
 } from "@/types";
 import type { DenominationCounts } from "./components/CashDenominationsSheet";
 import { DENOMINATIONS } from "./components/CashDenominationsSheet";
+import type { PreDistributionEntry } from "./components/PreAccountingCashDistribution";
 import { ShiftInfoCard } from "./components/ShiftInfoCard";
 import { CashDenominationsSheet } from "./components/CashDenominationsSheet";
 import { AccountingHeader } from "./components/AccountingHeader";
@@ -46,6 +47,9 @@ export function ShiftAccountingPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDenominationsSheet, setShowDenominationsSheet] = useState(false);
+  const [preDistributions, setPreDistributions] = useState<
+    PreDistributionEntry[]
+  >([]);
 
   // Form state
   const [upiReceived, setUpiReceived] = useState<string>("0");
@@ -236,6 +240,35 @@ export function ShiftAccountingPage() {
         );
         setAccounting(created);
         toast.success("Accounting created successfully!");
+
+        // Create bank transactions from pre-distributions if any
+        const validDistributions = preDistributions.filter(
+          (d) => d.bankAccountId && parseFloat(d.amount) > 0
+        );
+
+        if (validDistributions.length > 0) {
+          try {
+            const distributionRequest = {
+              distributions: validDistributions.map((d) => ({
+                bankAccountId: d.bankAccountId,
+                amount: parseFloat(d.amount),
+                paymentMethod: d.paymentMethod,
+              })),
+            };
+
+            await SalesmanShiftAccountingService.distributeCash(
+              shiftId!,
+              distributionRequest
+            );
+            toast.success("Bank distributions created successfully!");
+            setPreDistributions([]);
+          } catch (distErr) {
+            console.error("Failed to create distributions:", distErr);
+            toast.warning(
+              "Accounting created but some distributions failed. You can add them manually."
+            );
+          }
+        }
       }
     } catch (err: unknown) {
       const errorMessage =
@@ -269,6 +302,7 @@ export function ShiftAccountingPage() {
         coins2: 0,
         coins1: 0,
       });
+      setPreDistributions([]);
       toast.success("Accounting deleted successfully!");
     } catch (err: unknown) {
       const errorMessage =
@@ -359,10 +393,12 @@ export function ShiftAccountingPage() {
           actualCash={actualCash}
           expectedCash={expectedCash}
           balance={balance}
+          preDistributions={preDistributions}
           onUpiChange={setUpiReceived}
           onCardChange={setCardReceived}
           onFleetCardChange={setFleetCardReceived}
           onOpenDenominations={() => setShowDenominationsSheet(true)}
+          onPreDistributionsChange={setPreDistributions}
           onSubmit={handleSave}
           onCancel={() => {
             setIsEditing(false);

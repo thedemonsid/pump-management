@@ -1,6 +1,7 @@
 package com.reallink.pump.services;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ import com.reallink.pump.dto.shift.CashDistributionResponse;
 import com.reallink.pump.dto.shift.CreateShiftAccountingRequest;
 import com.reallink.pump.entities.BankAccount;
 import com.reallink.pump.entities.BankTransaction;
+import com.reallink.pump.entities.DailyClosingBalance;
 import com.reallink.pump.entities.EmployeeSalaryPayment;
 import com.reallink.pump.entities.PaymentMethod;
 import com.reallink.pump.entities.SalesmanShift;
@@ -25,6 +27,7 @@ import com.reallink.pump.entities.SalesmanShiftAccounting;
 import com.reallink.pump.exception.PumpBusinessException;
 import com.reallink.pump.repositories.BankAccountRepository;
 import com.reallink.pump.repositories.BankTransactionRepository;
+import com.reallink.pump.repositories.DailyClosingBalanceRepository;
 import com.reallink.pump.repositories.SalesmanShiftAccountingRepository;
 import com.reallink.pump.repositories.SalesmanShiftRepository;
 import com.reallink.pump.security.SecurityHelper;
@@ -47,6 +50,7 @@ public class SalesmanShiftAccountingService {
     private final SalesmanShiftAccountingRepository accountingRepository;
     private final BankAccountRepository bankAccountRepository;
     private final BankTransactionRepository bankTransactionRepository;
+    private final DailyClosingBalanceRepository dailyClosingBalanceRepository;
     private final SecurityHelper securityHelper;
 
     private static final BigDecimal ADVANCE_PAYMENT_THRESHOLD = new BigDecimal("50.00");
@@ -325,7 +329,9 @@ public class SalesmanShiftAccountingService {
             transaction.setShiftAccounting(accounting);
             transaction.setEntryBy(currentUser);
 
-            transactions.add(bankTransactionRepository.save(transaction));
+            BankTransaction savedTransaction = bankTransactionRepository.save(transaction);
+            updateDailyClosingBalance(savedTransaction);
+            transactions.add(savedTransaction);
         }
 
         log.info("Distributed cash from shift {} to {} bank accounts by {}",
@@ -373,7 +379,23 @@ public class SalesmanShiftAccountingService {
         SalesmanShiftAccounting accounting = accountingRepository.findBySalesmanShiftId(shiftId)
                 .orElseThrow(() -> new EntityNotFoundException("Accounting not found for this shift"));
 
+        // Get all transactions before deleting to recalculate daily closing balances
+        List<BankTransaction> transactionsToDelete = bankTransactionRepository
+                .findByShiftAccountingIdOrderByCreatedAtDesc(accounting.getId());
+
         bankTransactionRepository.deleteByShiftAccountingId(accounting.getId());
+
+        // Recalculate daily closing balance for each affected bank account and date
+        transactionsToDelete.stream()
+                .collect(Collectors.groupingBy(
+                        t -> new Object[]{t.getBankAccount().getId(), t.getTransactionDate().toLocalDate()}
+                ))
+                .keySet()
+                .forEach(key -> {
+                    UUID bankAccountId = (UUID) ((Object[]) key)[0];
+                    LocalDate date = (LocalDate) ((Object[]) key)[1];
+                    recalculateDailyClosingBalance(bankAccountId, date);
+                });
 
         log.info("Deleted all cash distributions for shift {} by {}", shiftId, securityHelper.getCurrentUsername());
     }
@@ -388,11 +410,18 @@ public class SalesmanShiftAccountingService {
         BankTransaction transaction = bankTransactionRepository.findById(transactionId)
                 .orElseThrow(() -> new EntityNotFoundException("Transaction not found: " + transactionId));
 
+        // Store info for recalculation before deletion
+        UUID bankAccountId = transaction.getBankAccount().getId();
+        LocalDate transactionDate = transaction.getTransactionDate().toLocalDate();
+
         if (transaction.getShiftAccounting() == null) {
             throw new PumpBusinessException("NOT_DISTRIBUTION", "This transaction is not a cash distribution");
         }
 
         bankTransactionRepository.delete(transaction);
+
+        // Recalculate daily closing balance for the affected date
+        recalculateDailyClosingBalance(bankAccountId, transactionDate);
 
         log.info("Deleted cash distribution transaction {} by {}", transactionId, securityHelper.getCurrentUsername());
     }
@@ -475,5 +504,62 @@ public class SalesmanShiftAccountingService {
         payment.setBankTransaction(null);
 
         return payment;
+    }
+
+    /**
+     * Update daily closing balance for a bank transaction. This method is
+     * called after creating a new transaction.
+     */
+    private void updateDailyClosingBalance(BankTransaction transaction) {
+        LocalDate date = transaction.getTransactionDate().toLocalDate();
+        UUID bankAccountId = transaction.getBankAccount().getId();
+
+        BigDecimal dailyNet = bankTransactionRepository.getDailyNetByBankAccountIdAndDate(bankAccountId, date);
+        DailyClosingBalance dailyBalance = dailyClosingBalanceRepository
+                .findByBankAccount_IdAndDate(bankAccountId, date)
+                .orElse(new DailyClosingBalance());
+
+        dailyBalance.setBankAccount(transaction.getBankAccount());
+        dailyBalance.setDate(date);
+        dailyBalance.setDailyNet(dailyNet);
+
+        dailyClosingBalanceRepository.save(dailyBalance);
+
+        log.debug("Updated daily closing balance for bank account {} on {}: {}",
+                bankAccountId, date, dailyNet);
+    }
+
+    /**
+     * Recalculate daily closing balance for a specific bank account and date.
+     * This method is called after deleting transactions to ensure data
+     * consistency.
+     */
+    private void recalculateDailyClosingBalance(UUID bankAccountId, LocalDate date) {
+        BigDecimal dailyNet = bankTransactionRepository.getDailyNetByBankAccountIdAndDate(bankAccountId, date);
+
+        if (dailyNet.compareTo(BigDecimal.ZERO) == 0) {
+            // If no transactions exist for this date, delete the daily closing balance record
+            dailyClosingBalanceRepository.findByBankAccount_IdAndDate(bankAccountId, date)
+                    .ifPresent(dailyClosingBalanceRepository::delete);
+            log.debug("Deleted daily closing balance for bank account {} on {} (no transactions)",
+                    bankAccountId, date);
+        } else {
+            // Update the daily closing balance
+            DailyClosingBalance dailyBalance = dailyClosingBalanceRepository
+                    .findByBankAccount_IdAndDate(bankAccountId, date)
+                    .orElseGet(() -> {
+                        DailyClosingBalance newBalance = new DailyClosingBalance();
+                        newBalance.setBankAccount(bankAccountRepository.findById(bankAccountId)
+                                .orElseThrow(() -> new EntityNotFoundException("Bank account not found")));
+                        newBalance.setDate(date);
+                        return newBalance;
+                    });
+
+            dailyBalance.setDailyNet(dailyNet);
+            dailyClosingBalanceRepository.save(dailyBalance);
+
+            log.debug("Recalculated daily closing balance for bank account {} on {}: {}",
+                    bankAccountId, date, dailyNet);
+        }
     }
 }

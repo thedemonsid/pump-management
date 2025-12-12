@@ -16,3 +16,5 @@ export { NozzleAssignmentsTable } from "./NozzleAssignmentsTable";
 export { ShiftActionsCard } from "./ShiftActionsCard";
 export { StartShiftForm } from "./StartShiftForm";
 export { CashDistributionSection } from "./CashDistributionSection";
+export { PreAccountingCashDistribution } from "./PreAccountingCashDistribution";
+export type { PreDistributionEntry } from "./PreAccountingCashDistribution";

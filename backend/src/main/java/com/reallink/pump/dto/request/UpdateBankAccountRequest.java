@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -32,7 +31,6 @@ public class UpdateBankAccountRequest {
     @Schema(description = "Branch name", example = "Main Branch")
     private String branch;
 
-    @DecimalMin(value = "0.00", message = "Opening balance must be greater than or equal to 0.00")
     @Schema(description = "Opening balance", example = "10000.00")
     private BigDecimal openingBalance;
 

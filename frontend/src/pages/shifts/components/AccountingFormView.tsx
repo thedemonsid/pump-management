@@ -11,6 +11,8 @@ import { NonCashSalesTable } from "./NonCashSalesTable";
 import { CashSummaryRow } from "./CashSummaryRow";
 import { ReconciliationSummary } from "./ReconciliationSummary";
 import { AccountingFormActions } from "./AccountingFormActions";
+import { PreAccountingCashDistribution } from "./PreAccountingCashDistribution";
+import type { PreDistributionEntry } from "./PreAccountingCashDistribution";
 
 interface AccountingFormViewProps {
   shift: ShiftResponse;
@@ -32,11 +34,13 @@ interface AccountingFormViewProps {
   actualCash: number;
   expectedCash: number;
   balance: number;
+  preDistributions: PreDistributionEntry[];
   // Handlers
   onUpiChange: (value: string) => void;
   onCardChange: (value: string) => void;
   onFleetCardChange: (value: string) => void;
   onOpenDenominations: () => void;
+  onPreDistributionsChange: (distributions: PreDistributionEntry[]) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
 }
@@ -60,10 +64,12 @@ export function AccountingFormView({
   actualCash,
   expectedCash,
   balance,
+  preDistributions,
   onUpiChange,
   onCardChange,
   onFleetCardChange,
   onOpenDenominations,
+  onPreDistributionsChange,
   onSubmit,
   onCancel,
 }: AccountingFormViewProps) {
@@ -213,6 +219,17 @@ export function AccountingFormView({
           />
         </div>
       </div>
+
+      {/* Pre-Accounting Cash Distribution - only when creating new accounting */}
+      {!hasAccounting && (
+        <PreAccountingCashDistribution
+          cashInHand={actualCash}
+          upiReceived={parseFloat(upiReceived || "0")}
+          cardReceived={parseFloat(cardReceived || "0")}
+          distributions={preDistributions}
+          onDistributionsChange={onPreDistributionsChange}
+        />
+      )}
 
       {/* Actions */}
       <AccountingFormActions
