@@ -12,7 +12,15 @@ export interface CashPaymentRequest {
   /** Payment date and time */
   paymentDate: string;
   /** Payment method */
-  paymentMethod: "CASH" | "UPI" | "RTGS" | "NEFT" | "IMPS" | "CHEQUE";
+  paymentMethod:
+    | "CASH"
+    | "UPI"
+    | "RTGS"
+    | "NEFT"
+    | "IMPS"
+    | "CHEQUE"
+    | "CARD"
+    | "FLEET_CARD";
   /** Payment reference number */
   referenceNumber: string;
   /** Additional notes */

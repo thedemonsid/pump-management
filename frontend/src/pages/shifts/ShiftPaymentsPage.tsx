@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useShiftStore } from "@/store/shifts/shift-store";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,16 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -33,14 +43,7 @@ import ReactSelect from "react-select";
 import { SalesmanBillPaymentService } from "@/services/salesman-bill-payment-service";
 import { CustomerService } from "@/services/customer-service";
 import { toast } from "sonner";
-import {
-  Loader2,
-  Plus,
-  ArrowLeft,
-  AlertCircle,
-  Wallet,
-  Trash2,
-} from "lucide-react";
+import { Loader2, Plus, AlertCircle, Wallet, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import type {
   SalesmanBillPaymentResponse,
@@ -55,7 +58,6 @@ interface Option {
 
 export function ShiftPaymentsPage() {
   const { shiftId } = useParams<{ shiftId: string }>();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { currentShift, fetchShiftById } = useShiftStore();
 
@@ -64,6 +66,12 @@ export function ShiftPaymentsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [paymentToDelete, setPaymentToDelete] = useState<{
+    id: string;
+    customerName: string | undefined;
+    amount: number;
+  } | null>(null);
 
   // Check if user is admin or manager
   const isAdminOrManager = user?.role === "ADMIN" || user?.role === "MANAGER";
@@ -110,7 +118,7 @@ export function ShiftPaymentsPage() {
     setSelectedCustomer(null);
     setAmount("");
     setPaymentMethod({ value: "CASH", label: "Cash" });
-    setReferenceNumber("");
+    setReferenceNumber("NA");
     setNotes("");
     setError(null);
   };
@@ -144,8 +152,8 @@ export function ShiftPaymentsPage() {
         amount: parseFloat(amount),
         paymentDate: new Date().toISOString(),
         paymentMethod: paymentMethod.value as PaymentMethod,
-        referenceNumber: referenceNumber || "",
-        notes: notes || undefined,
+        referenceNumber: referenceNumber.trim() || "NA",
+        notes: notes.trim() || undefined,
       });
 
       toast.success("Payment recorded successfully!");
@@ -171,8 +179,6 @@ export function ShiftPaymentsPage() {
   };
 
   const handleDeletePayment = async (paymentId: string) => {
-    if (!confirm("Are you sure you want to delete this payment?")) return;
-
     try {
       await SalesmanBillPaymentService.delete(paymentId);
       toast.success("Payment deleted successfully!");
@@ -187,7 +193,19 @@ export function ShiftPaymentsPage() {
     } catch (err) {
       toast.error("Failed to delete payment");
       console.error(err);
+    } finally {
+      setDeleteDialogOpen(false);
+      setPaymentToDelete(null);
     }
+  };
+
+  const openDeleteDialog = (payment: SalesmanBillPaymentResponse) => {
+    setPaymentToDelete({
+      id: payment.id,
+      customerName: payment.customerName,
+      amount: payment.amount,
+    });
+    setDeleteDialogOpen(true);
   };
 
   const customerOptions: Option[] = customers.map((c) => ({
@@ -197,10 +215,13 @@ export function ShiftPaymentsPage() {
 
   const paymentMethodOptions: Option[] = [
     { value: "CASH", label: "Cash" },
-    { value: "CARD", label: "Card" },
     { value: "UPI", label: "UPI" },
-    { value: "BANK_TRANSFER", label: "Bank Transfer" },
+    { value: "RTGS", label: "RTGS" },
+    { value: "NEFT", label: "NEFT" },
+    { value: "IMPS", label: "IMPS" },
     { value: "CHEQUE", label: "Cheque" },
+    { value: "CARD", label: "Card" },
+    { value: "FLEET_CARD", label: "Fleet Card" },
   ];
 
   const totalPayments = payments.reduce(
@@ -234,13 +255,6 @@ export function ShiftPaymentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(`/shifts/${shiftId}`)}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
           <div>
             <h1 className="text-2xl font-bold">Shift Payments</h1>
             <p className="text-sm text-muted-foreground">
@@ -356,7 +370,7 @@ export function ShiftPaymentsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDeletePayment(payment.id)}
+                            onClick={() => openDeleteDialog(payment)}
                           >
                             <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>
@@ -513,6 +527,46 @@ export function ShiftPaymentsPage() {
           </form>
         </SheetContent>
       </Sheet>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Payment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this payment? This action cannot
+              be undone.
+              {paymentToDelete && (
+                <div className="mt-4 p-4 bg-muted rounded-lg space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Customer:</span>
+                    <span className="font-medium">
+                      {paymentToDelete.customerName}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Amount:</span>
+                    <span className="font-medium font-mono">
+                      ₹{paymentToDelete.amount.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                paymentToDelete && handleDeletePayment(paymentToDelete.id)
+              }
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Payment
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

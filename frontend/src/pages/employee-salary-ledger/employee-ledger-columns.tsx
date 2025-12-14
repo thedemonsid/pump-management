@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 
 const MAX_DESCRIPTION_LENGTH = 120;
 
+// eslint-disable-next-line react-refresh/only-export-components
 const DescriptionCell = ({ entry }: { entry: EmployeeLedgerEntry }) => {
   const [expanded, setExpanded] = useState(false);
   const shouldTruncate = entry.description.length > MAX_DESCRIPTION_LENGTH;

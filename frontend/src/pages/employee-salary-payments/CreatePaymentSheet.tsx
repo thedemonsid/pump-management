@@ -328,6 +328,8 @@ export function CreatePaymentSheet({
                       <SelectItem value="NEFT">NEFT</SelectItem>
                       <SelectItem value="IMPS">IMPS</SelectItem>
                       <SelectItem value="CHEQUE">Cheque</SelectItem>
+                      <SelectItem value="CARD">Card</SelectItem>
+                      <SelectItem value="FLEET_CARD">Fleet Card</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormDescription>The method used for payment</FormDescription>
