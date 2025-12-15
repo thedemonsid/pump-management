@@ -11,7 +11,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -67,7 +66,6 @@ public class Customer extends BaseEntity {
     private Double creditLimit;
 
     @NotNull(message = "Opening balance is required")
-    @DecimalMin(value = "0.00", message = "Opening balance must be greater than or equal to 0.00")
     @Column(name = "opening_balance", nullable = false, precision = 15, scale = 2)
     private BigDecimal openingBalance = BigDecimal.ZERO;
 

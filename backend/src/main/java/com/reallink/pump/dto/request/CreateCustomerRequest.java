@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -52,7 +51,6 @@ public class CreateCustomerRequest {
     private Double creditLimit;
 
     @NotNull(message = "Opening balance is required")
-    @DecimalMin(value = "0.00", message = "Opening balance must be greater than or equal to 0.00")
     @Schema(description = "Opening Balance", example = "10000.00")
     private BigDecimal openingBalance;
 

@@ -53,7 +53,7 @@ export const CreateCustomerSchema = CustomerSchema.omit({
   updatedAt: true,
   version: true,
 }).extend({
-  openingBalance: z.number().min(0, "Opening balance must be >= 0"),
+  openingBalance: z.number(),
   openingBalanceDate: z
     .string()
     .refine((val) => val && !isNaN(Date.parse(val)), "Invalid date format"),
