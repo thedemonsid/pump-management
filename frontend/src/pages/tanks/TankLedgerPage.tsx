@@ -1,16 +1,14 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -18,9 +16,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { DataTable } from '@/components/ui/data-table';
-import { tankLedgerColumns } from './tank-ledger-columns';
+} from "@/components/ui/dialog";
+import { DataTable } from "@/components/ui/data-table";
+import { tankLedgerColumns } from "./tank-ledger-columns";
 import {
   Loader2,
   Fuel,
@@ -29,18 +27,21 @@ import {
   FileText,
   Plus,
   Minus,
-} from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
-import { useTankStore, formatOpeningLevelDate } from '@/store/tank-store';
-import { useTankLedgerStore } from '@/store/tank-ledger-store';
-import { TankTransactionService } from '@/services/tank-transaction-service';
-import { TankTransactionForm } from '@/components/tanks/tank-transaction-form';
+} from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { useTankStore, formatOpeningLevelDate } from "@/store/tank-store";
+import { useTankLedgerStore } from "@/store/tank-ledger-store";
+import { TankTransactionService } from "@/services/tank-transaction-service";
+import { TankTransactionForm } from "@/components/tanks/tank-transaction-form";
 import {
   CreateTankTransactionSchema,
   type CreateTankTransaction,
-} from '@/types';
+} from "@/types";
+import { DateRangePicker } from "@/components/shared/DateRangePicker";
+import { getOneWeekAgo, getToday } from "@/lib/utils/date";
+import { format } from "date-fns";
 
 export function TankLedgerPage() {
   const { id } = useParams<{ id: string }>();
@@ -50,8 +51,8 @@ export function TankLedgerPage() {
   const { ledgerData, summary, loading, hasSearched, computeLedgerData } =
     useTankLedgerStore();
 
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+  const [fromDate, setFromDate] = useState<Date | undefined>(getOneWeekAgo());
+  const [toDate, setToDate] = useState<Date | undefined>(getToday());
   const [isAdditionDialogOpen, setIsAdditionDialogOpen] = useState(false);
   const [isRemovalDialogOpen, setIsRemovalDialogOpen] = useState(false);
 
@@ -59,11 +60,11 @@ export function TankLedgerPage() {
     resolver: zodResolver(CreateTankTransactionSchema),
     defaultValues: {
       volume: 0,
-      transactionType: 'ADDITION',
-      description: '',
+      transactionType: "ADDITION",
+      description: "",
       transactionDate: new Date().toISOString().slice(0, 16),
-      supplierName: '',
-      invoiceNumber: '',
+      supplierName: "",
+      invoiceNumber: "",
     },
   });
 
@@ -71,8 +72,8 @@ export function TankLedgerPage() {
     resolver: zodResolver(CreateTankTransactionSchema),
     defaultValues: {
       volume: 0,
-      transactionType: 'REMOVAL',
-      description: '',
+      transactionType: "REMOVAL",
+      description: "",
       transactionDate: new Date().toISOString().slice(0, 16),
     },
   });
@@ -83,14 +84,14 @@ export function TankLedgerPage() {
       await TankTransactionService.createAddition(id, data);
       setIsAdditionDialogOpen(false);
       additionForm.reset();
-      toast.success('Fuel addition recorded successfully');
+      toast.success("Fuel addition recorded successfully");
       // Refresh ledger data if it's already been searched
       if (hasSearched) {
         handleFetchLedger();
       }
     } catch (error) {
-      console.error('Failed to create addition transaction:', error);
-      toast.error('Failed to record fuel addition');
+      console.error("Failed to create addition transaction:", error);
+      toast.error("Failed to record fuel addition");
     }
   };
 
@@ -100,14 +101,14 @@ export function TankLedgerPage() {
       await TankTransactionService.createRemoval(id, data);
       setIsRemovalDialogOpen(false);
       removalForm.reset();
-      toast.success('Fuel removal recorded successfully');
+      toast.success("Fuel removal recorded successfully");
       // Refresh ledger data if it's already been searched
       if (hasSearched) {
         handleFetchLedger();
       }
     } catch (error) {
-      console.error('Failed to create removal transaction:', error);
-      toast.error('Failed to record fuel removal');
+      console.error("Failed to create removal transaction:", error);
+      toast.error("Failed to record fuel removal");
     }
   };
 
@@ -123,19 +124,24 @@ export function TankLedgerPage() {
     if (tank?.openingLevelDate) {
       const openingDate = formatOpeningLevelDate(tank.openingLevelDate);
       if (openingDate) {
-        setFromDate(openingDate);
+        setFromDate(new Date(openingDate));
       }
     }
   }, [tank?.openingLevelDate]);
 
   const handleFetchLedger = () => {
-    if (!id || !fromDate) return;
+    if (!id || !fromDate || !toDate) return;
     computeLedgerData({
       tankId: id,
-      fromDate,
-      toDate,
+      fromDate: fromDate.toISOString().split("T")[0],
+      toDate: toDate.toISOString().split("T")[0],
       openingLevel: tank?.openingLevel || 0,
     });
+  };
+
+  const handleClearFilters = () => {
+    setFromDate(getOneWeekAgo());
+    setToDate(getToday());
   };
 
   if (!tank) {
@@ -150,17 +156,17 @@ export function TankLedgerPage() {
   }
 
   const formatVolume = (volume: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'decimal',
+    return new Intl.NumberFormat("en-IN", {
+      style: "decimal",
       maximumFractionDigits: 2,
     }).format(volume);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
   };
 
@@ -174,7 +180,7 @@ export function TankLedgerPage() {
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Tank Ledger</h1>
               <p className="text-lg text-muted-foreground">
-                {tank.tankName} - {tank.product?.productName || 'No Product'}
+                {tank.tankName} - {tank.product?.productName || "No Product"}
               </p>
             </div>
           </div>
@@ -248,32 +254,27 @@ export function TankLedgerPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="from-date" className="text-sm font-medium">
-                From Date
-              </Label>
-              <Input
-                id="from-date"
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="to-date" className="text-sm font-medium">
-                To Date
-              </Label>
-              <Input
-                id="to-date"
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="w-full"
-              />
-            </div>
+          <div className="flex flex-wrap items-end gap-4">
+            <DateRangePicker
+              fromDate={fromDate}
+              toDate={toDate}
+              onFromDateChange={setFromDate}
+              onToDateChange={setToDate}
+              disabled={loading}
+            />
+            <Button variant="outline" onClick={handleClearFilters}>
+              Reset to Default
+            </Button>
           </div>
+
+          {(fromDate || toDate) && (
+            <div className="mt-4 text-sm text-muted-foreground">
+              Showing {ledgerData.length} records
+              {fromDate && ` from ${format(fromDate, "PPP")}`}
+              {toDate && ` to ${format(toDate, "PPP")}`}
+            </div>
+          )}
+
           <div className="mt-6 flex justify-center gap-4">
             <Button
               onClick={handleFetchLedger}
@@ -293,11 +294,13 @@ export function TankLedgerPage() {
                 </>
               )}
             </Button>
-            {hasSearched && (
+            {hasSearched && fromDate && toDate && (
               <Button
                 onClick={() =>
                   navigate(
-                    `/tanks/${id}/ledger/report?fromDate=${fromDate}&toDate=${toDate}`
+                    `/tanks/${id}/ledger/report?fromDate=${
+                      fromDate.toISOString().split("T")[0]
+                    }&toDate=${toDate.toISOString().split("T")[0]}`
                   )
                 }
                 variant="outline"
@@ -338,7 +341,7 @@ export function TankLedgerPage() {
                     Opening Level
                   </p>
                   <p className="text-xl font-semibold text-foreground">
-                    {tank.openingLevel ? formatVolume(tank.openingLevel) : '0'}{' '}
+                    {tank.openingLevel ? formatVolume(tank.openingLevel) : "0"}{" "}
                     L
                   </p>
                 </div>
@@ -349,7 +352,7 @@ export function TankLedgerPage() {
                   <p className="text-xl font-semibold text-foreground">
                     {tank.openingLevelDate
                       ? formatDate(tank.openingLevelDate)
-                      : 'Not specified'}
+                      : "Not specified"}
                   </p>
                 </div>
               </div>
@@ -361,7 +364,8 @@ export function TankLedgerPage() {
             <CardHeader>
               <CardTitle>Summary Before Selected Date Range</CardTitle>
               <CardDescription>
-                Fuel volume summary before {formatDate(fromDate)}
+                Fuel volume summary before{" "}
+                {fromDate ? format(fromDate, "PPP") : "selected date"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -389,13 +393,13 @@ export function TankLedgerPage() {
                   <p
                     className={`text-2xl font-bold ${
                       summary.levelBefore - summary.openingLevel >= 0
-                        ? 'text-green-600'
-                        : 'text-red-600'
+                        ? "text-green-600"
+                        : "text-red-600"
                     }`}
                   >
                     {formatVolume(
                       Math.abs(summary.levelBefore - summary.openingLevel)
-                    )}{' '}
+                    )}{" "}
                     L
                   </p>
                 </div>

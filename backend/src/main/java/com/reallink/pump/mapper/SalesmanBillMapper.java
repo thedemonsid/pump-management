@@ -42,6 +42,7 @@ public interface SalesmanBillMapper {
     @Mapping(target = "productId", source = "product.id")
     @Mapping(target = "productName", source = "product.productName")
     @Mapping(target = "salesmanShiftId", source = "salesmanShift.id")
+    @Mapping(target = "salesmanUsername", source = "salesmanShift.salesman.username")
     @Mapping(target = "meterImageId", source = "meterImage.id")
     @Mapping(target = "vehicleImageId", source = "vehicleImage.id")
     @Mapping(target = "extraImageId", source = "extraImage.id")

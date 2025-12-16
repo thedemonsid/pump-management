@@ -1,22 +1,22 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { toast } from 'sonner';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import { toast } from "sonner";
 import type {
   CustomerBillPaymentResponse,
   Customer,
   BillResponse,
-} from '@/types';
-import { BillService } from '@/services/bill-service';
-import { CustomerBillPaymentService } from '@/services/customer-bill-payment-service';
-import { SalesmanBillService } from '@/services/salesman-bill-service';
-import { SalesmanBillPaymentService } from '@/services/salesman-bill-payment-service';
+} from "@/types";
+import { BillService } from "@/services/bill-service";
+import { CustomerBillPaymentService } from "@/services/customer-bill-payment-service";
+import { SalesmanBillService } from "@/services/salesman-bill-service";
+import { SalesmanBillPaymentService } from "@/services/salesman-bill-payment-service";
 import type {
   LedgerEntry,
   LedgerSummary,
   LedgerState,
   ComputeLedgerParams,
   CustomerSummary,
-} from '@/types/ledger';
+} from "@/types/ledger";
 
 interface LedgerStore extends LedgerState {
   // Actions
@@ -161,15 +161,15 @@ export const useLedgerStore = create<LedgerStore>()(
 
             ledgerEntries.push({
               date: bill.billDate,
-              action: 'Bill',
+              action: "Bill",
               invoiceNo: bill.billNo.toString(),
               billAmount: bill.netAmount,
               amountPaid: totalPaymentAmount,
               balanceAmount: 0, // Will be calculated later
               debtAmount: 0, // Will be calculated later
-              entryBy: 'System',
-              comments: `Bill - ${bill.customerName || 'Customer'}`,
-              type: 'bill',
+              entryBy: "System",
+              comments: `Bill - ${bill.customerName || "Customer"}`,
+              type: "bill",
               billDetails: bill,
             });
           });
@@ -183,25 +183,25 @@ export const useLedgerStore = create<LedgerStore>()(
           salesmanBillsInRange.forEach((bill) => {
             ledgerEntries.push({
               date: bill.billDate,
-              action: 'Salesman Bill',
+              action: "Salesman Bill",
               invoiceNo: bill.billNo.toString(),
               billAmount: bill.amount,
               amountPaid: 0, // Salesman bills don't have integrated payments in this context
               balanceAmount: 0, // Will be calculated later
               debtAmount: 0, // Will be calculated later
-              entryBy: 'System',
-              comments: `Salesman Bill - ${bill.productName || 'Fuel'} (${
-                bill.quantity
-              }L)`,
-              type: 'bill',
+              entryBy: "System",
+              comments: `Salesman Bill - ${
+                bill.salesmanUsername || "Unknown"
+              } - ${bill.productName || "Fuel"} (${bill.quantity}L)`,
+              type: "bill",
               billDetails: {
                 id: bill.id,
-                pumpMasterId: '', // Will be set from context if needed
+                pumpMasterId: "", // Will be set from context if needed
                 billNo: bill.billNo,
                 billDate: bill.billDate,
                 customerId: bill.customerId,
                 customerName: bill.customerName,
-                rateType: 'EXCLUDING_GST',
+                rateType: "EXCLUDING_GST",
                 totalAmount: bill.amount,
                 discountAmount: 0,
                 taxAmount: 0,
@@ -210,7 +210,7 @@ export const useLedgerStore = create<LedgerStore>()(
                 updatedAt: bill.updatedAt,
                 billItems: [
                   {
-                    id: bill.id + '-item',
+                    id: bill.id + "-item",
                     billId: bill.id,
                     productId: bill.productId,
                     productName: bill.productName,
@@ -237,15 +237,15 @@ export const useLedgerStore = create<LedgerStore>()(
           standalonePayments.forEach((payment) => {
             ledgerEntries.push({
               date: payment.paymentDate,
-              action: 'Payment',
-              invoiceNo: payment.referenceNumber || '',
+              action: "Payment",
+              invoiceNo: payment.referenceNumber || "",
               billAmount: 0,
               amountPaid: payment.amount,
               balanceAmount: 0,
               debtAmount: 0,
-              entryBy: 'System',
-              comments: `${payment.paymentMethod} - ${payment.notes || ''}`,
-              type: 'payment',
+              entryBy: "System",
+              comments: `${payment.paymentMethod} - ${payment.notes || ""}`,
+              type: "payment",
               paymentDetails: {
                 paymentMethod: payment.paymentMethod,
                 referenceNumber: payment.referenceNumber,
@@ -264,17 +264,17 @@ export const useLedgerStore = create<LedgerStore>()(
           salesmanPaymentsInRange.forEach((payment) => {
             ledgerEntries.push({
               date: payment.paymentDate,
-              action: 'Salesman Payment',
-              invoiceNo: payment.referenceNumber || '',
+              action: "Salesman Payment",
+              invoiceNo: payment.referenceNumber || "",
               billAmount: 0,
               amountPaid: payment.amount,
               balanceAmount: 0,
               debtAmount: 0,
-              entryBy: 'System',
+              entryBy: "System",
               comments: `Salesman Payment - ${payment.paymentMethod} - ${
-                payment.notes || ''
+                payment.notes || ""
               }`,
-              type: 'payment',
+              type: "payment",
             });
           });
 
@@ -286,9 +286,9 @@ export const useLedgerStore = create<LedgerStore>()(
           // Calculate running balances
           let runningBalance = totalDebtBefore;
           ledgerEntries.forEach((entry) => {
-            if (entry.type === 'bill') {
+            if (entry.type === "bill") {
               runningBalance += entry.billAmount - entry.amountPaid;
-            } else if (entry.type === 'payment') {
+            } else if (entry.type === "payment") {
               runningBalance -= entry.amountPaid;
             }
             entry.balanceAmount = runningBalance;
@@ -338,7 +338,7 @@ export const useLedgerStore = create<LedgerStore>()(
           const errorMessage =
             error instanceof Error
               ? error.message
-              : 'Failed to compute ledger data';
+              : "Failed to compute ledger data";
           toast.error(errorMessage);
           set({ error: errorMessage, loading: false });
         }
@@ -379,7 +379,7 @@ export const useLedgerStore = create<LedgerStore>()(
       },
     }),
     {
-      name: 'ledger-store',
+      name: "ledger-store",
     }
   )
 );

@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import * as React from 'react';
+import * as React from "react";
 import type {
   ColumnDef,
   ColumnFiltersState,
   SortingState,
   VisibilityState,
   RowSelectionState,
-} from '@tanstack/react-table';
+} from "@tanstack/react-table";
 import {
   flexRender,
   getCoreRowModel,
@@ -15,7 +15,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from '@tanstack/react-table';
+} from "@tanstack/react-table";
 
 import {
   Table,
@@ -24,21 +24,21 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -59,7 +59,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   searchKey,
-  searchPlaceholder = 'Filter...',
+  searchPlaceholder = "Filter...",
   pageSize = 10,
   enableRowSelection = false,
   enableColumnVisibility = true,
@@ -125,7 +125,7 @@ export function DataTable<TData, TValue>({
             <Input
               placeholder={searchPlaceholder}
               value={
-                (table.getColumn(searchKey)?.getFilterValue() as string) ?? ''
+                (table.getColumn(searchKey)?.getFilterValue() as string) ?? ""
               }
               onChange={(event) =>
                 table.getColumn(searchKey)?.setFilterValue(event.target.value)
@@ -135,7 +135,7 @@ export function DataTable<TData, TValue>({
           )}
           {enableRowSelection && (
             <div className="text-sm text-muted-foreground">
-              {table.getFilteredSelectedRowModel().rows.length} of{' '}
+              {table.getFilteredSelectedRowModel().rows.length} of{" "}
               {table.getFilteredRowModel().rows.length} row(s) selected.
             </div>
           )}
@@ -179,7 +179,12 @@ export function DataTable<TData, TValue>({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header, index) => {
                   return (
-                    <TableHead key={header.id} className={`border-r border-gray-300 ${index === 0 ? 'border-l' : ''} last:border-r-0`}>
+                    <TableHead
+                      key={header.id}
+                      className={`border-r border-gray-300 ${
+                        index === 0 ? "border-l" : ""
+                      } last:border-r-0`}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -197,10 +202,15 @@ export function DataTable<TData, TValue>({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
+                  data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell, index) => (
-                    <TableCell key={cell.id} className={`border-r border-gray-300 ${index === 0 ? 'border-l' : ''} last:border-r-0`}>
+                    <TableCell
+                      key={cell.id}
+                      className={`border-r border-gray-300 ${
+                        index === 0 ? "border-l" : ""
+                      } last:border-r-0`}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -227,11 +237,11 @@ export function DataTable<TData, TValue>({
       {enablePagination && (
         <div className="flex items-center justify-between px-2">
           <div className="flex-1 text-sm text-muted-foreground">
-            Showing {table.getState().pagination.pageIndex * pageSize + 1} to{' '}
+            Showing {table.getState().pagination.pageIndex * pageSize + 1} to{" "}
             {Math.min(
               (table.getState().pagination.pageIndex + 1) * pageSize,
               table.getFilteredRowModel().rows.length
-            )}{' '}
+            )}{" "}
             of {table.getFilteredRowModel().rows.length} results
           </div>
           <div className="flex items-center space-x-6 lg:space-x-8">
@@ -252,7 +262,7 @@ export function DataTable<TData, TValue>({
               </select>
             </div>
             <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{' '}
+              Page {table.getState().pagination.pageIndex + 1} of{" "}
               {table.getPageCount()}
             </div>
             <div className="flex items-center space-x-2">

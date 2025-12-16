@@ -42,6 +42,9 @@ public class SalesmanBillResponse {
     @Schema(description = "Salesman Shift ID", example = "123e4567-e29b-41d4-a716-446655440000")
     private UUID salesmanShiftId;
 
+    @Schema(description = "Salesman username", example = "john_doe")
+    private String salesmanUsername;
+
     @Schema(description = "Vehicle number", example = "MH12AB1234")
     private String vehicleNo;
 

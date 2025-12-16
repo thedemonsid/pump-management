@@ -46,6 +46,8 @@ export interface SalesmanBillResponse {
   productName?: string;
   /** Salesman Shift ID - links bill to the salesman's shift */
   salesmanShiftId: string;
+  /** Salesman username - name of the salesman who created the bill */
+  salesmanUsername?: string;
   /** Nozzle ID - optional, tracks which nozzle dispensed (for reporting) */
   nozzleId?: string;
   /** Nozzle name - optional, for display purposes */
