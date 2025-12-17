@@ -1,6 +1,8 @@
 package com.reallink.pump.services;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -222,8 +224,11 @@ public class DipReadingService {
         DipReading dipReading = mapper.toEntity(request);
         dipReading.setTank(tank);
         dipReading.setPumpMaster(pumpMaster);
-        // Set reading timestamp to current server time
-        dipReading.setReadingTimestamp(LocalDateTime.now());
+
+        // Set reading timestamp using provided date or current date with current time
+        LocalDate readingDate = request.getReadingDate() != null ? request.getReadingDate() : LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
+        dipReading.setReadingTimestamp(LocalDateTime.of(readingDate, currentTime));
 
         // Save and return response
         DipReading savedDipReading = repository.save(dipReading);
@@ -283,7 +288,12 @@ public class DipReadingService {
         mapper.updateEntityFromRequest(request, dipReading);
         dipReading.setTank(tank);
         dipReading.setPumpMaster(pumpMaster);
-        // Note: We do NOT update readingTimestamp - it should remain the original timestamp
+
+        // Update reading timestamp if date is provided
+        if (request.getReadingDate() != null) {
+            LocalTime currentTime = dipReading.getReadingTimestamp().toLocalTime();
+            dipReading.setReadingTimestamp(LocalDateTime.of(request.getReadingDate(), currentTime));
+        }
 
         // Save and return response
         DipReading updatedDipReading = repository.save(dipReading);

@@ -35,6 +35,7 @@ export const DipReadingSchema = z.object({
 export const CreateDipReadingSchema = z.object({
   tankId: z.string().min(1, "Tank is required"),
   pumpMasterId: z.string().min(1, "Pump Master is required"),
+  readingDate: z.date().optional(),
   dipLevel: z.number().min(0, "Dip level must be non-negative").optional(),
   density: z.number().min(0, "Density must be non-negative").optional(),
   temperature: z.number().optional(),

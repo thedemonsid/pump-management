@@ -138,7 +138,21 @@ export class DipReadingService {
    * @returns Created dip reading
    */
   static async create(dipReading: CreateDipReading): Promise<DipReading> {
-    const response = await api.post<DipReading>(this.BASE_PATH, dipReading);
+    // Format date to local YYYY-MM-DD format (not UTC) to prevent timezone shifting
+    const formatLocalDate = (date: Date): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
+    const payload = {
+      ...dipReading,
+      readingDate: dipReading.readingDate
+        ? formatLocalDate(dipReading.readingDate)
+        : undefined,
+    };
+    const response = await api.post<DipReading>(this.BASE_PATH, payload);
     return response.data;
   }
 
@@ -152,9 +166,23 @@ export class DipReadingService {
     id: string,
     dipReading: UpdateDipReading
   ): Promise<DipReading> {
+    // Format date to local YYYY-MM-DD format (not UTC) to prevent timezone shifting
+    const formatLocalDate = (date: Date): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
+    const payload = {
+      ...dipReading,
+      readingDate: dipReading.readingDate
+        ? formatLocalDate(dipReading.readingDate)
+        : undefined,
+    };
     const response = await api.put<DipReading>(
       `${this.BASE_PATH}/${id}`,
-      dipReading
+      payload
     );
     return response.data;
   }

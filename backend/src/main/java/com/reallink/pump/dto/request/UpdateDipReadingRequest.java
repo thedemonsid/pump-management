@@ -1,6 +1,7 @@
 package com.reallink.pump.dto.request;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -21,6 +22,9 @@ public class UpdateDipReadingRequest {
     @NotNull(message = "Pump Master ID is required")
     @Schema(description = "Pump Master ID", example = "123e4567-e89b-12d3-a456-426614174000", required = true)
     private UUID pumpMasterId;
+
+    @Schema(description = "Reading date (defaults to current date if not provided)", example = "2024-12-17")
+    private LocalDate readingDate;
 
     @DecimalMin(value = "0.00", message = "Dip level must be non-negative")
     @Digits(integer = 10, fraction = 2, message = "Dip level must have at most 10 digits and 2 decimal places")

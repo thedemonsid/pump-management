@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import { DipReadingService } from "@/services";
 import {
   CreateDipReadingSchema,
@@ -47,6 +55,9 @@ export function DipReadingForm({
     defaultValues: {
       tankId: reading?.tankId || tank.id || "",
       pumpMasterId: reading?.pumpMasterId || tank.pumpMasterId || "",
+      readingDate: reading?.readingTimestamp
+        ? new Date(reading.readingTimestamp)
+        : new Date(),
       dipLevel: reading?.dipLevel || undefined,
       density: reading?.density || undefined,
       temperature: reading?.temperature || undefined,
@@ -143,6 +154,52 @@ export function DipReadingForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Reading Date */}
+        <FormField
+          control={form.control}
+          name="readingDate"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Reading Date</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={(date) => {
+                      field.onChange(date);
+                    }}
+                    disabled={(date) => date > new Date()}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormDescription>
+                Date when the dip reading was taken
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <div className="grid grid-cols-2 gap-4">
           {/* Dip Level */}
           <FormField
