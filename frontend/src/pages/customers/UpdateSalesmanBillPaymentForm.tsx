@@ -1,19 +1,19 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useSalesmanBillPaymentStore } from '@/store/salesman-bill-payment-store';
-import { PaymentMethod } from '@/types/customer-bill-payment';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useSalesmanBillPaymentStore } from "@/store/salesman-bill-payment-store";
+import { PaymentMethod } from "@/types/customer-bill-payment";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Form,
   FormControl,
@@ -21,20 +21,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Loader2, CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
+} from "@/components/ui/form";
+import { Loader2, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import type { SalesmanBillPaymentResponse } from '@/types';
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import type { SalesmanBillPaymentResponse } from "@/types";
 
 const UpdateSalesmanBillPaymentSchema = z.object({
-  amount: z.number().min(0.01, 'Amount must be greater than 0').optional(),
+  amount: z.number().min(0.01, "Amount must be greater than 0").optional(),
   paymentDate: z.date().optional(),
   paymentMethod: z.string().optional(),
   referenceNumber: z.string().optional(),
@@ -65,7 +65,7 @@ export function UpdateSalesmanBillPaymentForm({
       paymentDate: new Date(payment.paymentDate),
       paymentMethod: payment.paymentMethod,
       referenceNumber: payment.referenceNumber,
-      notes: payment.notes || '',
+      notes: payment.notes || "",
     },
   });
 
@@ -141,19 +141,19 @@ export function UpdateSalesmanBillPaymentForm({
             name="paymentDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Payment Date</FormLabel>
+                <FormLabel>Payment Date (Optional)</FormLabel>
                 <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
                         variant="outline"
                         className={cn(
-                          'w-full pl-3 text-left font-normal',
-                          !field.value && 'text-muted-foreground'
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
                         )}
                       >
                         {field.value ? (
-                          format(field.value, 'PPP')
+                          format(field.value, "PPP")
                         ) : (
                           <span>Pick a date</span>
                         )}
@@ -170,12 +170,15 @@ export function UpdateSalesmanBillPaymentForm({
                         setIsCalendarOpen(false);
                       }}
                       disabled={(date) =>
-                        date > new Date() || date < new Date('1900-01-01')
+                        date > new Date() || date < new Date("1900-01-01")
                       }
                       initialFocus
                     />
                   </PopoverContent>
                 </Popover>
+                <p className="text-xs text-muted-foreground">
+                  Defaults to current payment date if not changed
+                </p>
                 <FormMessage />
               </FormItem>
             )}
@@ -222,7 +225,7 @@ export function UpdateSalesmanBillPaymentForm({
                 Updating Payment...
               </>
             ) : (
-              'Update Payment'
+              "Update Payment"
             )}
           </Button>
         </div>

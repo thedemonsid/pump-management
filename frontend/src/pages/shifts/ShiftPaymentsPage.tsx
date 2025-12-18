@@ -39,6 +39,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DatePicker } from "@/components/shared/DatePicker";
 import ReactSelect from "react-select";
 import { SalesmanBillPaymentService } from "@/services/salesman-bill-payment-service";
 import { CustomerService } from "@/services/customer-service";
@@ -79,6 +80,7 @@ export function ShiftPaymentsPage() {
   // Form state
   const [selectedCustomer, setSelectedCustomer] = useState<Option | null>(null);
   const [amount, setAmount] = useState<string>("");
+  const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
   const [paymentMethod, setPaymentMethod] = useState<Option | null>({
     value: "CASH",
     label: "Cash",
@@ -117,6 +119,7 @@ export function ShiftPaymentsPage() {
   const resetForm = () => {
     setSelectedCustomer(null);
     setAmount("");
+    setPaymentDate(new Date());
     setPaymentMethod({ value: "CASH", label: "Cash" });
     setReferenceNumber("NA");
     setNotes("");
@@ -150,7 +153,7 @@ export function ShiftPaymentsPage() {
         salesmanShiftId: shiftId!,
         customerId: selectedCustomer.value,
         amount: parseFloat(amount),
-        paymentDate: new Date().toISOString(),
+        paymentDate: paymentDate?.toISOString() || new Date().toISOString(),
         paymentMethod: paymentMethod.value as PaymentMethod,
         referenceNumber: referenceNumber.trim() || "NA",
         notes: notes.trim() || undefined,
@@ -444,6 +447,15 @@ export function ShiftPaymentsPage() {
                 className="text-base"
               />
             </div>
+
+            {/* Payment Date */}
+            <DatePicker
+              date={paymentDate}
+              onDateChange={setPaymentDate}
+              label="Payment Date (Optional)"
+              disabled={isCreatingPayment}
+              helperText="Defaults to today if not specified"
+            />
 
             {/* Payment Method */}
             <div className="space-y-2">

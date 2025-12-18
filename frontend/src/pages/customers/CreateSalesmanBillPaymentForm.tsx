@@ -207,7 +207,7 @@ export function CreateSalesmanBillPaymentForm({
             name="paymentDate"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Payment Date</FormLabel>
+                <FormLabel>Payment Date (Optional)</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -239,6 +239,9 @@ export function CreateSalesmanBillPaymentForm({
                     />
                   </PopoverContent>
                 </Popover>
+                <p className="text-xs text-muted-foreground">
+                  Defaults to today if not specified
+                </p>
                 <FormMessage />
               </FormItem>
             )}

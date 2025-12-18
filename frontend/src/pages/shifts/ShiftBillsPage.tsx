@@ -37,6 +37,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { DatePicker } from "@/components/shared/DatePicker";
 import ReactSelect from "react-select";
 import { SalesmanBillService } from "@/services/salesman-bill-service";
 import { CustomerService } from "@/services/customer-service";
@@ -96,6 +97,10 @@ export function ShiftBillsPage() {
   const [vehicleNo, setVehicleNo] = useState<string>("NA");
   const [driverName, setDriverName] = useState<string>("NA");
 
+  // Date fields
+  const [billDate, setBillDate] = useState<Date | undefined>(new Date());
+  const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
+
   // Cash payment fields
   const [cashPaymentMethod, setCashPaymentMethod] = useState<Option>({
     value: "CASH",
@@ -149,6 +154,8 @@ export function ShiftBillsPage() {
     setRate("");
     setVehicleNo("NA");
     setDriverName("NA");
+    setBillDate(new Date());
+    setPaymentDate(new Date());
     setCashPaymentMethod({ value: "CASH", label: "Cash" });
     setCashReferenceNumber("NA");
     setCashNotes("");
@@ -231,7 +238,9 @@ export function ShiftBillsPage() {
         customerId: selectedCustomer.value,
         productId: selectedProduct.value,
         billNo: Date.now(), // Generate bill number (backend should handle this)
-        billDate: new Date().toISOString().split("T")[0],
+        billDate:
+          billDate?.toISOString().split("T")[0] ||
+          new Date().toISOString().split("T")[0],
         billingMode: billingMode,
         paymentType: paymentType,
         quantity:
@@ -248,7 +257,7 @@ export function ShiftBillsPage() {
       if (paymentType === "CASH") {
         billData.cashPayment = {
           amount: billAmount,
-          paymentDate: new Date().toISOString(),
+          paymentDate: paymentDate?.toISOString() || new Date().toISOString(),
           paymentMethod: cashPaymentMethod.value as
             | "CASH"
             | "UPI"
@@ -668,6 +677,15 @@ export function ShiftBillsPage() {
               />
             </div>
 
+            {/* Bill Date */}
+            <DatePicker
+              date={billDate}
+              onDateChange={setBillDate}
+              label="Bill Date (Optional)"
+              disabled={isCreatingBill}
+              helperText="Defaults to today if not specified"
+            />
+
             {/* Billing Mode Toggle */}
             <div className="space-y-3 pt-2 border-t">
               <Label className="text-base">
@@ -919,6 +937,15 @@ export function ShiftBillsPage() {
                     required
                   />
                 </div>
+
+                {/* Payment Date */}
+                <DatePicker
+                  date={paymentDate}
+                  onDateChange={setPaymentDate}
+                  label="Payment Date (Optional)"
+                  disabled={isCreatingBill}
+                  helperText="Defaults to today if not specified"
+                />
 
                 {/* Notes */}
                 <div className="space-y-2">
