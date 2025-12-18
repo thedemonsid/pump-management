@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { SingleDatePicker } from "@/components/shared/SingleDatePicker";
 import { Loader2, Plus, Minus } from "lucide-react";
 
 interface TransactionFormProps {
@@ -109,10 +110,25 @@ export function TransactionForm({
           name="transactionDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Transaction Date</FormLabel>
-              <FormControl>
-                <Input type="datetime-local" {...field} />
-              </FormControl>
+              <SingleDatePicker
+                date={field.value ? new Date(field.value) : undefined}
+                onDateChange={(date) => {
+                  if (date) {
+                    // Set time to current time when date is selected
+                    const now = new Date();
+                    date.setHours(now.getHours());
+                    date.setMinutes(now.getMinutes());
+                    date.setSeconds(now.getSeconds());
+                    field.onChange(date.toISOString().slice(0, 16));
+                  } else {
+                    field.onChange(undefined);
+                  }
+                }}
+                label="Transaction Date"
+                disabled={form.formState.isSubmitting}
+                disableFutureDates={true}
+                placeholder="Select transaction date"
+              />
               <FormMessage />
             </FormItem>
           )}

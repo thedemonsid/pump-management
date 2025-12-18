@@ -1,42 +1,37 @@
-'use client';
+"use client";
 
-import type { ColumnDef } from '@tanstack/react-table';
-import type { BankAccountLedgerEntry } from '@/types/bank-account-ledger';
+import type { ColumnDef } from "@tanstack/react-table";
+import type { BankAccountLedgerEntry } from "@/types/bank-account-ledger";
+import { format } from "date-fns";
 
 export const ledgerColumns: ColumnDef<BankAccountLedgerEntry>[] = [
   {
-    accessorKey: 'date',
-    header: 'Date',
+    accessorKey: "date",
+    header: "Date",
     cell: ({ row }) => {
       const entry = row.original;
       return (
-        <div className="font-medium">
-          {new Date(entry.date).toLocaleDateString('en-IN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-          })}
-        </div>
+        <div className="font-medium">{format(new Date(entry.date), "PPP")}</div>
       );
     },
   },
   {
-    accessorKey: 'action',
-    header: 'Action',
+    accessorKey: "action",
+    header: "Action",
     cell: ({ row }) => {
       const entry = row.original;
       return <div className="font-medium">{entry.action}</div>;
     },
   },
   {
-    accessorKey: 'credit',
-    header: 'Credit',
+    accessorKey: "credit",
+    header: "Credit",
     cell: ({ row }) => {
       const entry = row.original;
       const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-IN', {
-          style: 'currency',
-          currency: 'INR',
+        return new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         }).format(amount);
@@ -44,20 +39,20 @@ export const ledgerColumns: ColumnDef<BankAccountLedgerEntry>[] = [
 
       return (
         <div className="text-right font-medium text-green-600">
-          {entry.credit > 0 ? formatCurrency(entry.credit) : '-'}
+          {entry.credit > 0 ? formatCurrency(entry.credit) : "-"}
         </div>
       );
     },
   },
   {
-    accessorKey: 'debit',
-    header: 'Debit',
+    accessorKey: "debit",
+    header: "Debit",
     cell: ({ row }) => {
       const entry = row.original;
       const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-IN', {
-          style: 'currency',
-          currency: 'INR',
+        return new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         }).format(amount);
@@ -65,20 +60,20 @@ export const ledgerColumns: ColumnDef<BankAccountLedgerEntry>[] = [
 
       return (
         <div className="text-right font-medium text-red-600">
-          {entry.debit > 0 ? formatCurrency(entry.debit) : '-'}
+          {entry.debit > 0 ? formatCurrency(entry.debit) : "-"}
         </div>
       );
     },
   },
   {
-    accessorKey: 'balance',
-    header: 'Balance',
+    accessorKey: "balance",
+    header: "Balance",
     cell: ({ row }) => {
       const entry = row.original;
       const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-IN', {
-          style: 'currency',
-          currency: 'INR',
+        return new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         }).format(amount);
@@ -87,7 +82,7 @@ export const ledgerColumns: ColumnDef<BankAccountLedgerEntry>[] = [
       return (
         <div
           className={`text-right font-bold ${
-            entry.balance >= 0 ? 'text-green-600' : 'text-red-600'
+            entry.balance >= 0 ? "text-green-600" : "text-red-600"
           }`}
         >
           {formatCurrency(Math.abs(entry.balance))}
@@ -96,8 +91,8 @@ export const ledgerColumns: ColumnDef<BankAccountLedgerEntry>[] = [
     },
   },
   {
-    accessorKey: 'description',
-    header: 'Description',
+    accessorKey: "description",
+    header: "Description",
     cell: ({ row }) => {
       const entry = row.original;
       return (
@@ -106,11 +101,11 @@ export const ledgerColumns: ColumnDef<BankAccountLedgerEntry>[] = [
     },
   },
   {
-    accessorKey: 'entryBy',
-    header: 'Entry By',
+    accessorKey: "entryBy",
+    header: "Entry By",
     cell: ({ row }) => {
       const entry = row.original;
-      return <div className="text-sm">{entry.entryBy || '-'}</div>;
+      return <div className="text-sm">{entry.entryBy || "-"}</div>;
     },
   },
 ];
