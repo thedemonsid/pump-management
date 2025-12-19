@@ -232,15 +232,23 @@ export function ShiftBillsPage() {
           ? parseFloat(quantity) * parseFloat(rate)
           : parseFloat(requestedAmount);
 
+      // Format date to local YYYY-MM-DD format to avoid timezone issues
+      const formatLocalDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+
       const billData: CreateSalesmanBillRequest = {
         pumpMasterId: user?.pumpMasterId || "",
         salesmanShiftId: shiftId!,
         customerId: selectedCustomer.value,
         productId: selectedProduct.value,
         billNo: Date.now(), // Generate bill number (backend should handle this)
-        billDate:
-          billDate?.toISOString().split("T")[0] ||
-          new Date().toISOString().split("T")[0],
+        billDate: billDate
+          ? formatLocalDate(billDate)
+          : formatLocalDate(new Date()),
         billingMode: billingMode,
         paymentType: paymentType,
         quantity:
@@ -257,7 +265,9 @@ export function ShiftBillsPage() {
       if (paymentType === "CASH") {
         billData.cashPayment = {
           amount: billAmount,
-          paymentDate: paymentDate?.toISOString() || new Date().toISOString(),
+          paymentDate: paymentDate
+            ? paymentDate.toISOString()
+            : new Date().toISOString(),
           paymentMethod: cashPaymentMethod.value as
             | "CASH"
             | "UPI"
@@ -632,6 +642,15 @@ export function ShiftBillsPage() {
               </Alert>
             )}
 
+            {/* Bill Date */}
+            <DatePicker
+              date={billDate}
+              onDateChange={setBillDate}
+              label="Bill Date (Optional)"
+              disabled={isCreatingBill}
+              helperText="Defaults to today if not specified"
+            />
+
             {/* Customer */}
             <div className="space-y-2">
               <Label>
@@ -676,15 +695,6 @@ export function ShiftBillsPage() {
                 }}
               />
             </div>
-
-            {/* Bill Date */}
-            <DatePicker
-              date={billDate}
-              onDateChange={setBillDate}
-              label="Bill Date (Optional)"
-              disabled={isCreatingBill}
-              helperText="Defaults to today if not specified"
-            />
 
             {/* Billing Mode Toggle */}
             <div className="space-y-3 pt-2 border-t">

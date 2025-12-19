@@ -148,12 +148,17 @@ export function ShiftPaymentsPage() {
     setIsCreatingPayment(true);
 
     try {
+      // Format date to preserve local date/time without timezone conversion
+      const formattedDate = paymentDate
+        ? format(paymentDate, "yyyy-MM-dd'T'HH:mm:ss")
+        : format(new Date(), "yyyy-MM-dd'T'HH:mm:ss");
+
       await SalesmanBillPaymentService.create({
         pumpMasterId: user?.pumpMasterId || "",
         salesmanShiftId: shiftId!,
         customerId: selectedCustomer.value,
         amount: parseFloat(amount),
-        paymentDate: paymentDate?.toISOString() || new Date().toISOString(),
+        paymentDate: formattedDate,
         paymentMethod: paymentMethod.value as PaymentMethod,
         referenceNumber: referenceNumber.trim() || "NA",
         notes: notes.trim() || undefined,
