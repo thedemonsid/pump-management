@@ -42,5 +42,10 @@ public class CashDistributionRequest {
 
         @NotNull(message = "Payment method is required")
         private PaymentMethod paymentMethod;
+
+        /**
+         * Payment date (optional, defaults to current date if not provided)
+         */
+        private java.time.LocalDate paymentDate;
     }
 }

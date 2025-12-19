@@ -134,6 +134,8 @@ export interface DistributionItem {
     | "CHEQUE"
     | "CARD"
     | "FLEET_CARD";
+  /** Payment date (YYYY-MM-DD format, optional) */
+  paymentDate?: string;
 }
 
 /**

@@ -3,6 +3,8 @@ import { Plus, Trash2, Loader2, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/shared/DatePicker";
+import { format } from "date-fns";
 import {
   Select,
   SelectContent,
@@ -30,6 +32,7 @@ interface DistributionEntry {
     | "CHEQUE"
     | "CARD"
     | "FLEET_CARD";
+  paymentDate: string; // YYYY-MM-DD format
 }
 
 interface CashDistributionSectionProps {
@@ -100,6 +103,7 @@ export function CashDistributionSection({
         bankAccountId: "",
         amount: "",
         paymentMethod: "CASH",
+        paymentDate: new Date().toISOString().split("T")[0], // Default to today
       },
     ]);
   };
@@ -112,7 +116,7 @@ export function CashDistributionSection({
   // Update entry
   const updateEntry = (
     index: number,
-    field: "bankAccountId" | "amount" | "paymentMethod",
+    field: "bankAccountId" | "amount" | "paymentMethod" | "paymentDate",
     value: string
   ) => {
     setEntries(
@@ -141,6 +145,7 @@ export function CashDistributionSection({
           bankAccountId: e.bankAccountId,
           amount: parseFloat(e.amount),
           paymentMethod: e.paymentMethod,
+          paymentDate: e.paymentDate, // Include payment date
         })),
       };
 
@@ -302,6 +307,9 @@ export function CashDistributionSection({
                     <p className="text-xs text-muted-foreground truncate">
                       {dist.accountNumber}
                     </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Date: {format(new Date(dist.transactionDate), "PPP")}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-semibold text-sm sm:text-base">
@@ -356,6 +364,25 @@ export function CashDistributionSection({
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <DatePicker
+                    date={
+                      entry.paymentDate
+                        ? new Date(entry.paymentDate)
+                        : undefined
+                    }
+                    onDateChange={(date) =>
+                      updateEntry(
+                        index,
+                        "paymentDate",
+                        date ? date.toISOString().split("T")[0] : ""
+                      )
+                    }
+                    label="Payment Date"
+                    placeholder="Select payment date"
+                    disableFutureDates={true}
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>

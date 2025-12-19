@@ -3,6 +3,7 @@ import { Plus, Trash2, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/shared/DatePicker";
 import {
   Select,
   SelectContent,
@@ -27,6 +28,7 @@ export interface PreDistributionEntry {
     | "CHEQUE"
     | "CARD"
     | "FLEET_CARD";
+  paymentDate: string; // YYYY-MM-DD format
 }
 
 interface PreAccountingCashDistributionProps {
@@ -85,6 +87,7 @@ export function PreAccountingCashDistribution({
         bankAccountId: "",
         amount: "",
         paymentMethod: "CASH",
+        paymentDate: new Date().toISOString().split("T")[0], // Default to today
       },
     ]);
   };
@@ -97,7 +100,7 @@ export function PreAccountingCashDistribution({
   // Update entry
   const updateEntry = (
     index: number,
-    field: "bankAccountId" | "amount" | "paymentMethod",
+    field: "bankAccountId" | "amount" | "paymentMethod" | "paymentDate",
     value: string
   ) => {
     onDistributionsChange(
@@ -218,6 +221,35 @@ export function PreAccountingCashDistribution({
                       {selectedAccount.accountNumber}
                     </div>
                   )}
+                  <div>
+                    <DatePicker
+                      date={
+                        entry.paymentDate
+                          ? new Date(entry.paymentDate + "T00:00:00")
+                          : undefined
+                      }
+                      onDateChange={(date) => {
+                        if (date) {
+                          const year = date.getFullYear();
+                          const month = String(date.getMonth() + 1).padStart(
+                            2,
+                            "0"
+                          );
+                          const day = String(date.getDate()).padStart(2, "0");
+                          updateEntry(
+                            index,
+                            "paymentDate",
+                            `${year}-${month}-${day}`
+                          );
+                        } else {
+                          updateEntry(index, "paymentDate", "");
+                        }
+                      }}
+                      label="Payment Date"
+                      placeholder="Select payment date"
+                      disableFutureDates={true}
+                    />
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <Label className="text-xs text-muted-foreground mb-1 block">

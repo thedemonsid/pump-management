@@ -324,7 +324,11 @@ public class SalesmanShiftAccountingService {
             transaction.setAmount(item.getAmount());
             transaction.setTransactionType(BankTransaction.TransactionType.CREDIT);
             transaction.setDescription("Money deposit from shift (" + shiftInfo + ")");
-            transaction.setTransactionDate(LocalDateTime.now());
+            // Use provided paymentDate or default to current date-time
+            LocalDateTime transactionDateTime = item.getPaymentDate() != null
+                    ? item.getPaymentDate().atStartOfDay()
+                    : LocalDateTime.now();
+            transaction.setTransactionDate(transactionDateTime);
             transaction.setPaymentMethod(item.getPaymentMethod());
             transaction.setShiftAccounting(accounting);
             transaction.setEntryBy(currentUser);

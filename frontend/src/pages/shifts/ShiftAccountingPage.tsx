@@ -253,6 +253,7 @@ export function ShiftAccountingPage() {
                 bankAccountId: d.bankAccountId,
                 amount: parseFloat(d.amount),
                 paymentMethod: d.paymentMethod,
+                paymentDate: d.paymentDate, // Include payment date
               })),
             };
 
