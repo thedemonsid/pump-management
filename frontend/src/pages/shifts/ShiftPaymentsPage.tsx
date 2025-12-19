@@ -414,6 +414,15 @@ export function ShiftPaymentsPage() {
               </Alert>
             )}
 
+            {/* Payment Date */}
+            <DatePicker
+              date={paymentDate}
+              onDateChange={setPaymentDate}
+              label="Payment Date (Optional)"
+              disabled={isCreatingPayment}
+              helperText="Defaults to today if not specified"
+            />
+
             {/* Customer */}
             <div className="space-y-2">
               <Label>
@@ -452,15 +461,6 @@ export function ShiftPaymentsPage() {
                 className="text-base"
               />
             </div>
-
-            {/* Payment Date */}
-            <DatePicker
-              date={paymentDate}
-              onDateChange={setPaymentDate}
-              label="Payment Date (Optional)"
-              disabled={isCreatingPayment}
-              helperText="Defaults to today if not specified"
-            />
 
             {/* Payment Method */}
             <div className="space-y-2">
