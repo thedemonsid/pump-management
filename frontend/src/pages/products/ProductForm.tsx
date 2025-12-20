@@ -68,6 +68,7 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
           salesUnit: product.salesUnit,
           purchaseUnit: product.purchaseUnit,
           stockConversionRatio: product.stockConversionRatio,
+          openingBalance: product.openingBalance,
         }
       : {
           gstPercentage: 0,
@@ -81,6 +82,7 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
           salesUnit: "Liters",
           purchaseUnit: "Liters",
           stockConversionRatio: 1.0,
+          openingBalance: 0,
         },
   });
 
@@ -396,7 +398,7 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
           />
         </div>
 
-        {/* Row 4: Low Stock Alert */}
+        {/* Row 4: Low Stock Alert and Opening Balance */}
         <div className="grid grid-cols-3 gap-4">
           <FormField
             control={form.control}
@@ -420,6 +422,34 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
               </FormItem>
             )}
           />
+
+          {/* Opening Balance - Only for GENERAL products */}
+          {form.watch("productType") === ProductType.GENERAL && (
+            <FormField
+              control={form.control}
+              name="openingBalance"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Opening Balance</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={field.value === 0 ? "" : field.value}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.onChange(value === "" ? 0 : parseInt(value) || 0);
+                      }}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-xs">
+                    Can be negative
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </div>
 
         {/* Action Buttons */}

@@ -64,4 +64,7 @@ public class UpdateProductRequest {
     @Digits(integer = 10, fraction = 4, message = "Stock conversion ratio must have at most 10 digits and 4 decimal places")
     @Schema(description = "Conversion ratio between purchase and sales units", example = "1.0000")
     private BigDecimal stockConversionRatio;
+
+    @Schema(description = "Opening balance for general products (can be negative)", example = "500")
+    private Integer openingBalance;
 }

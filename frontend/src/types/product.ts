@@ -30,7 +30,8 @@ export const ProductSchema = z.object({
   stockConversionRatio: z
     .number()
     .positive("Stock conversion ratio must be positive"),
-  stockQuantity: z.number().optional(),
+  stockQuantity: z.number().int().optional(),
+  openingBalance: z.number().int().optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });

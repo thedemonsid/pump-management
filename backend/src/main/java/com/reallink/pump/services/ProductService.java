@@ -139,8 +139,8 @@ public class ProductService {
                     existingProduct,
                     oldSalesUnit,
                     newSalesUnit,
-                    existingProduct.getStockQuantity(), // old stock quantity
-                    existingProduct.getStockQuantity(), // new stock quantity unchanged here
+                    BigDecimal.valueOf(existingProduct.getStockQuantity()), // old stock quantity
+                    BigDecimal.valueOf(existingProduct.getStockQuantity()), // new stock quantity unchanged here
                     oldSalesRate,
                     newSalesRate,
                     reason,

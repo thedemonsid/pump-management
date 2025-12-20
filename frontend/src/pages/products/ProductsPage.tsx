@@ -211,6 +211,7 @@ export function ProductsPage() {
                   <TableHead>Sales Rate</TableHead>
                   <TableHead>Units</TableHead>
                   <TableHead>Low Stock</TableHead>
+                  <TableHead>Opening Balance</TableHead>
                   {/* <TableHead>Stock Quantity</TableHead> */}
                   <TableHead className="w-[100px]">Actions</TableHead>
                 </TableRow>
@@ -250,6 +251,23 @@ export function ProductsPage() {
                       >
                         {product.lowStockCount}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {product.productType === "GENERAL" ? (
+                        <Badge
+                          variant={
+                            (product.openingBalance ?? 0) < 0
+                              ? "destructive"
+                              : "secondary"
+                          }
+                        >
+                          {product.openingBalance ?? 0}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">
+                          N/A
+                        </span>
+                      )}
                     </TableCell>
                     {/* <TableCell>
                       <Badge variant="secondary">

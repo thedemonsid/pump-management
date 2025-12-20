@@ -52,8 +52,11 @@ public class ProductResponse {
     @Schema(description = "Conversion ratio between purchase and sales units", example = "1.0000")
     private BigDecimal stockConversionRatio;
 
-    @Schema(description = "Current stock quantity", example = "1500.00")
-    private BigDecimal stockQuantity;
+    @Schema(description = "Current stock quantity", example = "1500")
+    private Integer stockQuantity;
+
+    @Schema(description = "Opening balance for general products", example = "500")
+    private Integer openingBalance;
 
     @Schema(description = "Number of associated tanks", example = "3")
     private Integer tankCount;

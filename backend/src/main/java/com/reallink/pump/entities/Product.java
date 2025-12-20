@@ -100,10 +100,11 @@ public class Product extends BaseEntity {
     @Column(name = "stock_conversion_ratio", precision = 14, scale = 4)
     private BigDecimal stockConversionRatio;
 
-    @DecimalMin(value = "0.0", inclusive = true, message = "Stock quantity must be non-negative")
-    @Digits(integer = 10, fraction = 2, message = "Stock quantity must have at most 10 digits and 2 decimal places")
-    @Column(name = "stock_quantity", precision = 12, scale = 2)
-    private BigDecimal stockQuantity = BigDecimal.ZERO;
+    @Column(name = "stock_quantity", columnDefinition = "INT DEFAULT 0")
+    private Integer stockQuantity = 0;
+
+    @Column(name = "opening_balance", columnDefinition = "INT DEFAULT 0")
+    private Integer openingBalance = 0;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     private Set<Tank> tanks = new HashSet<>();
