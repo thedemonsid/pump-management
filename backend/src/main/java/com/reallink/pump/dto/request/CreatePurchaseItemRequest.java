@@ -21,9 +21,8 @@ public class CreatePurchaseItemRequest {
 
     @NotNull(message = "Quantity is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Quantity must be positive")
-    @Digits(integer = 10, fraction = 2, message = "Quantity must have at most 10 digits and 2 decimal places")
-    @Schema(description = "Quantity of the product", example = "100.00", required = true)
-    private BigDecimal quantity;
+    @Schema(description = "Quantity of the product", example = "100", required = true)
+    private Integer quantity;
 
     @NotBlank(message = "Purchase unit is required")
     @Size(max = 20, message = "Purchase unit cannot exceed 20 characters")

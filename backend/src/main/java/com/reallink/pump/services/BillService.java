@@ -26,6 +26,7 @@ import com.reallink.pump.entities.BillItem;
 import com.reallink.pump.entities.Customer;
 import com.reallink.pump.entities.CustomerBillPayment;
 import com.reallink.pump.entities.Product;
+import com.reallink.pump.entities.ProductType;
 import com.reallink.pump.entities.PumpInfoMaster;
 import com.reallink.pump.entities.RateType;
 import com.reallink.pump.exception.PumpBusinessException;
@@ -58,6 +59,7 @@ public class BillService {
     private final BankAccountRepository bankAccountRepository;
     private final BillMapper mapper;
     private final CustomerBillPaymentMapper customerBillPaymentMapper;
+    private final ProductService productService;
 
     public List<BillResponse> getAll() {
         return repository.findAll().stream()
@@ -120,6 +122,11 @@ public class BillService {
             calculateBillItemAmounts(billItem, itemRequest, bill.getRateType());
 
             bill.getBillItems().add(billItem);
+
+            // Update stock for GENERAL products
+            if (product.getProductType() == ProductType.GENERAL) {
+                productService.updateStockQuantity(product.getId(), -itemRequest.getQuantity().intValue());
+            }
         }
 
         // Calculate totals
@@ -168,6 +175,14 @@ public class BillService {
 
         // Update bill items if provided (null = leave as-is, empty list = remove all items)
         if (request.getBillItems() != null) {
+            // Restore stock for old items (GENERAL products only)
+            for (BillItem oldItem : existingBill.getBillItems()) {
+                Product product = oldItem.getProduct();
+                if (product.getProductType() == ProductType.GENERAL) {
+                    productService.updateStockQuantity(product.getId(), oldItem.getQuantity().intValue());
+                }
+            }
+
             // Delete existing bill items (DB)
             billItemRepository.deleteByBill_Id(id);
             // Also clear in-memory collection to avoid stale/deleted children causing persistence issues
@@ -199,6 +214,11 @@ public class BillService {
 
                     BillItem savedItem = billItemRepository.save(billItem);
                     existingBill.getBillItems().add(savedItem);
+
+                    // Reduce stock for new items (GENERAL products only)
+                    if (product.getProductType() == ProductType.GENERAL) {
+                        productService.updateStockQuantity(product.getId(), -itemRequest.getQuantity().intValue());
+                    }
                 }
 
                 // Recalculate bill totals
@@ -212,9 +232,19 @@ public class BillService {
 
     @Transactional
     public void delete(@NotNull UUID id) {
-        if (!repository.existsById(id)) {
+        Bill bill = repository.findById(id).orElse(null);
+        if (bill == null) {
             throw new PumpBusinessException("BILL_NOT_FOUND", "Bill with ID " + id + " not found");
         }
+
+        // Restore stock for all items (GENERAL products only)
+        for (BillItem item : bill.getBillItems()) {
+            Product product = item.getProduct();
+            if (product.getProductType() == ProductType.GENERAL) {
+                productService.updateStockQuantity(product.getId(), item.getQuantity().intValue());
+            }
+        }
+
         repository.deleteById(id);
     }
 
@@ -233,6 +263,12 @@ public class BillService {
         }
 
         UUID billId = bill.getId();
+
+        // Restore stock for GENERAL products before deleting
+        Product product = billItem.getProduct();
+        if (product.getProductType() == ProductType.GENERAL) {
+            productService.updateStockQuantity(product.getId(), billItem.getQuantity().intValue());
+        }
 
         // Delete the bill item (DB)
         billItemRepository.deleteById(billItemId);
@@ -328,6 +364,11 @@ public class BillService {
 
         BillItem savedItem = billItemRepository.save(billItem);
 
+        // Reduce stock for GENERAL products
+        if (product.getProductType() == ProductType.GENERAL) {
+            productService.updateStockQuantity(product.getId(), -request.getQuantity().intValue());
+        }
+
         // Recalculate bill totals
         calculateBillTotals(bill, new ArrayList<>(bill.getBillItems()));
 
@@ -345,11 +386,20 @@ public class BillService {
 
         Bill bill = existingItem.getBill();
 
+        // Store old quantity and product for stock adjustment
+        BigDecimal oldQuantity = existingItem.getQuantity();
+        Product oldProduct = existingItem.getProduct();
+
         // Validate product exists
         Product product = productRepository.findById(request.getProductId()).orElse(null);
         if (product == null) {
             throw new PumpBusinessException("INVALID_PRODUCT",
                     "Product with ID " + request.getProductId() + " does not exist");
+        }
+
+        // Restore stock for old product/quantity if it was GENERAL
+        if (oldProduct.getProductType() == ProductType.GENERAL) {
+            productService.updateStockQuantity(oldProduct.getId(), oldQuantity.intValue());
         }
 
         existingItem.setProduct(product);
@@ -360,6 +410,11 @@ public class BillService {
         calculateBillItemAmounts(existingItem, request, bill.getRateType());
 
         BillItem savedItem = billItemRepository.save(existingItem);
+
+        // Reduce stock for new product/quantity if it's GENERAL
+        if (product.getProductType() == ProductType.GENERAL) {
+            productService.updateStockQuantity(product.getId(), -request.getQuantity().intValue());
+        }
 
         // Recalculate bill totals
         calculateBillTotals(bill, new ArrayList<>(bill.getBillItems()));

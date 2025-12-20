@@ -39,9 +39,8 @@ public class PurchaseItem extends BaseEntity {
 
     @NotNull(message = "Quantity is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Quantity must be positive")
-    @Digits(integer = 10, fraction = 2, message = "Quantity must have at most 10 digits and 2 decimal places")
-    @Column(name = "quantity", nullable = false, precision = 12, scale = 2)
-    private BigDecimal quantity;
+    @Column(name = "quantity", nullable = false, columnDefinition = "INT")
+    private Integer quantity;
 
     @NotBlank(message = "Purchase unit is required")
     @Size(max = 20, message = "Purchase unit cannot exceed 20 characters")

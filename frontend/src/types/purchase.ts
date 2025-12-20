@@ -6,7 +6,7 @@ export const PurchaseItemSchema = z.object({
   id: z.string().optional(),
   productId: z.string(),
   productName: z.string().optional(),
-  quantity: z.number().positive("Quantity must be positive"),
+  quantity: z.number().int().positive("Quantity must be positive"),
   purchaseUnit: z.string().min(1, "Purchase unit is required"),
   purchaseRate: z.number().positive("Purchase rate must be positive"),
   amount: z.number().nonnegative("Amount must be non-negative"),
@@ -17,7 +17,7 @@ export const PurchaseItemSchema = z.object({
 
 export const CreatePurchaseItemSchema = z.object({
   productId: z.string(),
-  quantity: z.number().positive("Quantity must be positive"),
+  quantity: z.number().int().positive("Quantity must be positive"),
   purchaseUnit: z.string().min(1, "Purchase unit is required").max(20),
   purchaseRate: z.number().positive("Purchase rate must be positive"),
   taxPercentage: z

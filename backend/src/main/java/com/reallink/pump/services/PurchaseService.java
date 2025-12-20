@@ -55,6 +55,7 @@ public class PurchaseService {
     private final BankAccountRepository bankAccountRepository;
     private final SupplierPaymentRepository supplierPaymentRepository;
     private final PurchaseMapper mapper;
+    private final ProductService productService;
 
     public List<PurchaseResponse> getAll() {
         return repository.findAll().stream()
@@ -176,9 +177,7 @@ public class PurchaseService {
 
             // Update stock if addToStock is true
             if (itemRequest.getAddToStock() != null && itemRequest.getAddToStock()) {
-                BigDecimal currentStock = product.getStockQuantity() != null ? product.getStockQuantity() : BigDecimal.ZERO;
-                product.setStockQuantity(currentStock.add(itemRequest.getQuantity()));
-                productRepository.save(product);
+                productService.updateStockQuantity(product.getId(), itemRequest.getQuantity());
             }
         }
 
@@ -230,7 +229,7 @@ public class PurchaseService {
     }
 
     private void calculatePurchaseItemAmounts(PurchaseItem purchaseItem, CreatePurchaseItemRequest request, RateType rateType) {
-        BigDecimal quantity = request.getQuantity();
+        BigDecimal quantity = BigDecimal.valueOf(request.getQuantity());
         BigDecimal rate = request.getPurchaseRate();
         BigDecimal taxPercentage = request.getTaxPercentage().setScale(2, RoundingMode.HALF_UP);
         purchaseItem.setTaxPercentage(taxPercentage);
@@ -345,9 +344,7 @@ public class PurchaseService {
             for (PurchaseItem oldItem : existingPurchase.getPurchaseItems()) {
                 if (oldItem.getAddToStock() != null && oldItem.getAddToStock()) {
                     Product product = oldItem.getProduct();
-                    BigDecimal currentStock = product.getStockQuantity() != null ? product.getStockQuantity() : BigDecimal.ZERO;
-                    product.setStockQuantity(currentStock.subtract(oldItem.getQuantity()));
-                    productRepository.save(product);
+                    productService.updateStockQuantity(product.getId(), -oldItem.getQuantity());
                 }
             }
 
@@ -377,9 +374,7 @@ public class PurchaseService {
 
                 // Update stock if addToStock is true
                 if (itemRequest.getAddToStock() != null && itemRequest.getAddToStock()) {
-                    BigDecimal currentStock = product.getStockQuantity() != null ? product.getStockQuantity() : BigDecimal.ZERO;
-                    product.setStockQuantity(currentStock.add(itemRequest.getQuantity()));
-                    productRepository.save(product);
+                    productService.updateStockQuantity(product.getId(), itemRequest.getQuantity());
                 }
             }
 
@@ -433,9 +428,7 @@ public class PurchaseService {
         for (PurchaseItem item : purchase.getPurchaseItems()) {
             if (item.getAddToStock() != null && item.getAddToStock()) {
                 Product product = item.getProduct();
-                BigDecimal currentStock = product.getStockQuantity() != null ? product.getStockQuantity() : BigDecimal.ZERO;
-                product.setStockQuantity(currentStock.subtract(item.getQuantity()));
-                productRepository.save(product);
+                productService.updateStockQuantity(product.getId(), -item.getQuantity());
             }
         }
 

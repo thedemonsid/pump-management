@@ -19,8 +19,8 @@ public class PurchaseItemResponse {
     @Schema(description = "Product name", example = "Diesel")
     private String productName;
 
-    @Schema(description = "Quantity", example = "100.00")
-    private BigDecimal quantity;
+    @Schema(description = "Quantity", example = "100")
+    private Integer quantity;
 
     @Schema(description = "Purchase unit", example = "Liters")
     private String purchaseUnit;

@@ -103,6 +103,11 @@ public class ProductService {
         if (existingProduct == null) {
             throw new PumpBusinessException("PRODUCT_NOT_FOUND", "Product with ID " + id + " not found");
         }
+
+        // Check if opening balance has changed
+        Integer oldOpeningBalance = existingProduct.getOpeningBalance();
+        Integer newOpeningBalance = request.getOpeningBalance() != null ? request.getOpeningBalance() : oldOpeningBalance;
+
         // Detect changes: sales unit and/or sales rate
         String oldSalesUnit = existingProduct.getSalesUnit();
         String newSalesUnit = request.getSalesUnit() != null ? request.getSalesUnit() : oldSalesUnit;
@@ -151,6 +156,14 @@ public class ProductService {
 
         // Apply updates and save product
         mapper.updateEntity(request, existingProduct);
+
+        // Update stock quantity if opening balance changed
+        if (newOpeningBalance != null && !newOpeningBalance.equals(oldOpeningBalance)) {
+            Integer stockDifference = newOpeningBalance - oldOpeningBalance;
+            Integer currentStockQuantity = existingProduct.getStockQuantity() != null ? existingProduct.getStockQuantity() : 0;
+            existingProduct.setStockQuantity(currentStockQuantity + stockDifference);
+        }
+
         Product updatedProduct = repository.save(existingProduct);
         return mapper.toResponse(updatedProduct);
     }
@@ -179,6 +192,25 @@ public class ProductService {
         return repository.findProductsWithoutTanks().stream()
                 .map(mapper::toResponse)
                 .toList();
+    }
+
+    /**
+     * Update stock quantity for a product by adjusting it with the given delta.
+     * Only updates if the product exists.
+     *
+     * @param productId the product ID
+     * @param quantityDelta the quantity change (positive to increase, negative
+     * to decrease)
+     */
+    @Transactional
+    public void updateStockQuantity(@NotNull UUID productId, int quantityDelta) {
+        Product product = repository.findById(productId).orElse(null);
+        if (product == null) {
+            throw new PumpBusinessException("PRODUCT_NOT_FOUND", "Product with ID " + productId + " not found");
+        }
+        Integer currentStock = product.getStockQuantity() != null ? product.getStockQuantity() : 0;
+        product.setStockQuantity(currentStock + quantityDelta);
+        repository.save(product);
     }
 
     // No validation methods needed

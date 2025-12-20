@@ -212,7 +212,7 @@ export function ProductsPage() {
                   <TableHead>Units</TableHead>
                   <TableHead>Low Stock</TableHead>
                   <TableHead>Opening Balance</TableHead>
-                  {/* <TableHead>Stock Quantity</TableHead> */}
+                  <TableHead>Stock Quantity</TableHead>
                   <TableHead className="w-[100px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -269,12 +269,23 @@ export function ProductsPage() {
                         </span>
                       )}
                     </TableCell>
-                    {/* <TableCell>
-                      <Badge variant="secondary">
-                        {getTankQuantityForProduct(product.id!)}{" "}
-                        {product.salesUnit}
-                      </Badge>
-                    </TableCell> */}
+                    <TableCell>
+                      {product.productType === "GENERAL" ? (
+                        <Badge
+                          variant={
+                            (product.stockQuantity ?? 0) < product.lowStockCount
+                              ? "destructive"
+                              : "secondary"
+                          }
+                        >
+                          {product.stockQuantity ?? 0} {product.salesUnit}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">
+                          N/A
+                        </span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button
