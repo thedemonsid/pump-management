@@ -9,16 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Pencil, Loader2 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Plus, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -29,9 +20,10 @@ import {
 } from "@/components/ui/dialog";
 import { ProductForm } from "./ProductForm";
 import type { Product } from "@/types";
-import { formatCurrency } from "@/lib/utils/index";
 import { Link } from "react-router-dom";
 import { TankTransactionService } from "@/services/tank-transaction-service";
+import { DataTable } from "@/components/ui/data-table";
+import { columns } from "./columns";
 
 export function ProductsPage() {
   const { products, loading, error, fetchProducts } = useProductStore();
@@ -199,108 +191,15 @@ export function ProductsPage() {
               No products found. Create your first product to get started.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product Name</TableHead>
-                  <TableHead>Alias</TableHead>
-                  <TableHead>Product Type</TableHead>
-                  <TableHead>HSN Code</TableHead>
-                  <TableHead>GST %</TableHead>
-                  <TableHead>Purchase Rate</TableHead>
-                  <TableHead>Sales Rate</TableHead>
-                  <TableHead>Units</TableHead>
-                  <TableHead>Low Stock</TableHead>
-                  <TableHead>Opening Balance</TableHead>
-                  <TableHead>Stock Quantity</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {products.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell className="font-medium">
-                      {product.productName}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{product.alias}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{product.productType}</Badge>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {product.hsnCode}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{product.gstPercentage}%</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {formatCurrency(product.purchaseRate)}
-                    </TableCell>
-                    <TableCell>{formatCurrency(product.salesRate)}</TableCell>
-                    <TableCell>
-                      {product.salesUnit}
-                      {product.salesUnit !== product.purchaseUnit &&
-                        ` / ${product.purchaseUnit}`}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          product.lowStockCount < 50 ? "destructive" : "outline"
-                        }
-                      >
-                        {product.lowStockCount}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {product.productType === "GENERAL" ? (
-                        <Badge
-                          variant={
-                            (product.openingBalance ?? 0) < 0
-                              ? "destructive"
-                              : "secondary"
-                          }
-                        >
-                          {product.openingBalance ?? 0}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">
-                          N/A
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {product.productType === "GENERAL" ? (
-                        <Badge
-                          variant={
-                            (product.stockQuantity ?? 0) < product.lowStockCount
-                              ? "destructive"
-                              : "secondary"
-                          }
-                        >
-                          {product.stockQuantity ?? 0} {product.salesUnit}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">
-                          N/A
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setEditingProduct(product)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={columns}
+              data={products}
+              searchKey="productName"
+              searchPlaceholder="Filter products..."
+              meta={{
+                onEdit: (product: Product) => setEditingProduct(product),
+              }}
+            />
           )}
         </CardContent>
       </Card>

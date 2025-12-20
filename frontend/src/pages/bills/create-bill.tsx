@@ -1,18 +1,18 @@
-import { Button } from '@/components/ui/button';
-import { useState, useRef, useEffect } from 'react';
-import { type SelectInstance } from 'react-select';
-import { CustomerService } from '@/services/customer-service';
-import { ProductService } from '@/services/product-service';
-import { BankAccountService } from '@/services/bank-account-service';
-import type { Customer } from '@/types/customer';
-import type { Product } from '@/types/product';
-import type { BankAccount } from '@/types/bank-account';
-import { BillHeader } from '@/components/bills/BillHeader';
-import { BillItemsTable } from '@/components/bills/BillItemsTable';
-import { PaymentsTable } from '@/components/bills/PaymentsTable';
-import { useBillStore } from '@/store/bill-store';
-import type { CreateBillRequest } from '@/types';
-import { DEFAULT_PUMP_INFO } from '@/types';
+import { Button } from "@/components/ui/button";
+import { useState, useRef, useEffect } from "react";
+import { type SelectInstance } from "react-select";
+import { CustomerService } from "@/services/customer-service";
+import { ProductService } from "@/services/product-service";
+import { BankAccountService } from "@/services/bank-account-service";
+import type { Customer } from "@/types/customer";
+import type { Product } from "@/types/product";
+import type { BankAccount } from "@/types/bank-account";
+import { BillHeader } from "@/components/bills/BillHeader";
+import { BillItemsTable } from "@/components/bills/BillItemsTable";
+import { PaymentsTable } from "@/components/bills/PaymentsTable";
+import { useBillStore } from "@/store/bill-store";
+import type { CreateBillRequest } from "@/types";
+import { DEFAULT_PUMP_INFO } from "@/types";
 
 interface LocalBillItem {
   product: string;
@@ -33,20 +33,20 @@ interface PaymentEntry {
 const CreateBill = () => {
   const { createBill, loading, nextBillNo, getNextBillNo } = useBillStore();
   const [billItems, setBillItems] = useState<LocalBillItem[]>([]);
-  const [quantity, setQuantity] = useState('');
-  const [price, setPrice] = useState('');
+  const [quantity, setQuantity] = useState("");
+  const [price, setPrice] = useState("");
   const [billDate, setBillDate] = useState(() => {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    return today.toISOString().split("T")[0];
   });
-  const [gstIncluded, setGstIncluded] = useState<string>('');
-  const [paymentType, setPaymentType] = useState<string>('');
-  const [itemDiscount, setItemDiscount] = useState('0');
-  const [itemGst, setItemGst] = useState('0');
+  const [gstIncluded, setGstIncluded] = useState<string>("");
+  const [paymentType, setPaymentType] = useState<string>("");
+  const [itemDiscount, setItemDiscount] = useState("0");
+  const [itemGst, setItemGst] = useState("0");
   const [payments, setPayments] = useState<PaymentEntry[]>([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
-    useState<string>('');
-  const [paymentAmount, setPaymentAmount] = useState<string>('');
+    useState<string>("");
+  const [paymentAmount, setPaymentAmount] = useState<string>("");
   const bankAccountRef = useRef<SelectInstance<
     { value: BankAccount; label: string },
     false
@@ -76,13 +76,13 @@ const CreateBill = () => {
           ProductService.getAll(),
           BankAccountService.getAll(),
         ]);
-        console.log('Customer data:', customerData);
-        console.log('Product data:', productData);
+        console.log("Customer data:", customerData);
+        console.log("Product data:", productData);
         setCustomers(customerData);
         setProducts(productData);
         setBankAccounts(bankAccountData);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       }
     };
     loadData();
@@ -94,18 +94,19 @@ const CreateBill = () => {
       try {
         await getNextBillNo();
       } catch (error) {
-        console.error('Failed to fetch next bill number:', error);
+        console.error("Failed to fetch next bill number:", error);
       }
     };
     fetchNextBillNo();
   }, [getNextBillNo]);
 
-  // Calculate totals for passing to components
-  const subtotal = billItems.reduce(
-    (sum, item) => sum + parseFloat(item.total),
+  // Calculate final total after discount
+  const finalTotal = billItems.reduce(
+    (sum, item) =>
+      sum +
+      parseFloat(item.total) * (1 - parseFloat(item.discount || "0") / 100),
     0
   );
-  const finalTotal = subtotal;
 
   // Handle bill creation
   const handleCreateBill = async () => {
@@ -120,10 +121,10 @@ const CreateBill = () => {
       billNo: nextBillNo || 1,
       billDate,
       customerId,
-      paymentType: (paymentType?.toUpperCase() === 'CASH'
-        ? 'CASH'
-        : 'CREDIT') as 'CASH' | 'CREDIT',
-      rateType: gstIncluded === 'including' ? 'INCLUDING_GST' : 'EXCLUDING_GST',
+      paymentType: (paymentType?.toUpperCase() === "CASH"
+        ? "CASH"
+        : "CREDIT") as "CASH" | "CREDIT",
+      rateType: gstIncluded === "including" ? "INCLUDING_GST" : "EXCLUDING_GST",
       billItems: billItems.map((item) => ({
         productId: item.productId,
         quantity: Math.round(parseFloat(item.quantity) * 100) / 100,
@@ -135,20 +136,20 @@ const CreateBill = () => {
         .filter((payment) => payment.bankAccount.id)
         .map((payment) => ({
           pumpMasterId: DEFAULT_PUMP_INFO.id!,
-          billId: '', // Will be set after bill creation
+          billId: "", // Will be set after bill creation
           customerId,
           bankAccountId: payment.bankAccount.id!,
           amount: Math.round(parseFloat(payment.amount) * 100) / 100,
           paymentDate: new Date().toISOString(),
           paymentMethod: payment.paymentMethod as
-            | 'CASH'
-            | 'UPI'
-            | 'RTGS'
-            | 'NEFT'
-            | 'IMPS'
-            | 'CHEQUE',
+            | "CASH"
+            | "UPI"
+            | "RTGS"
+            | "NEFT"
+            | "IMPS"
+            | "CHEQUE",
           referenceNumber: `REF-${Date.now()}`, // Generate a reference
-          notes: '',
+          notes: "",
         })),
     };
 
@@ -158,9 +159,9 @@ const CreateBill = () => {
       setBillItems([]);
       setPayments([]);
       setSelectedCustomer(null);
-      setPaymentType('');
+      setPaymentType("");
     } catch (error) {
-      console.error('Failed to create bill:', error);
+      console.error("Failed to create bill:", error);
     }
   };
 
@@ -199,9 +200,9 @@ const CreateBill = () => {
         ) => {
           const transformedItems = items.map((item) => ({
             ...item,
-            productId: selectedProduct?.id || '',
-            discount: '0',
-            gst: '0',
+            productId: selectedProduct?.id || "",
+            discount: "0",
+            gst: "0",
           }));
           setBillItems(transformedItems);
         }}
@@ -220,10 +221,10 @@ const CreateBill = () => {
         onAddItem={(item) => {
           setBillItems([...billItems, item]);
           setSelectedProduct(null);
-          setQuantity('');
-          setPrice('');
-          setItemDiscount('0');
-          setItemGst('0');
+          setQuantity("");
+          setPrice("");
+          setItemDiscount("0");
+          setItemGst("0");
         }}
       />
 
@@ -252,7 +253,7 @@ const CreateBill = () => {
             onClick={handleCreateBill}
             disabled={loading}
           >
-            {loading ? 'Saving...' : 'Save Bill'}
+            {loading ? "Saving..." : "Save Bill"}
           </Button>
         </div>
       )}
