@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useShiftStore } from "@/store/shifts/shift-store";
+import { SalesmanShiftService } from "@/services/salesman-shift-service";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -33,6 +34,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { StartShiftForm } from "./components/StartShiftForm";
 import { toast } from "sonner";
@@ -46,6 +57,7 @@ import {
   Clock,
   User,
   Plus,
+  Trash2,
 } from "lucide-react";
 import { format, subDays } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -73,6 +85,10 @@ export function ShiftListPage() {
 
   // Start shift sheet state
   const [isStartShiftOpen, setIsStartShiftOpen] = useState(false);
+
+  // Delete confirmation state
+  const [shiftToDelete, setShiftToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isAdmin = user?.role === "ADMIN" || user?.role === "MANAGER";
 
@@ -117,6 +133,31 @@ export function ShiftListPage() {
     setStatusFilter("ALL");
   };
 
+  const handleShiftCreated = () => {
+    setIsStartShiftOpen(false);
+    loadShifts();
+    toast.success("Shift started successfully!");
+  };
+
+  const handleDeleteShift = async () => {
+    if (!shiftToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await SalesmanShiftService.deleteShift(shiftToDelete);
+      toast.success("Shift deleted successfully!");
+      setShiftToDelete(null);
+      loadShifts();
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Failed to delete shift";
+      toast.error(errorMessage);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // Filter shifts by search query (client-side)
   const filteredShifts = shifts.filter((shift) => {
     if (!searchQuery) return true;
@@ -132,11 +173,6 @@ export function ShiftListPage() {
     const endTime = end ? new Date(end).getTime() : Date.now();
     const hours = Math.round((endTime - startTime) / (1000 * 60 * 60));
     return `${hours}h`;
-  };
-
-  const handleShiftCreated = () => {
-    setIsStartShiftOpen(false);
-    loadShifts(); // Reload the shifts list
   };
 
   return (
@@ -405,14 +441,26 @@ export function ShiftListPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigate(`/shifts/${shift.id}`)}
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View
-                        </Button>
+                        <div className="flex items-center justify-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/shifts/${shift.id}`)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View
+                          </Button>
+                          {isAdmin && shift.status === "OPEN" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShiftToDelete(shift.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -445,6 +493,49 @@ export function ShiftListPage() {
           </SheetContent>
         </Sheet>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={!!shiftToDelete}
+        onOpenChange={(open) => !open && setShiftToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Shift</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this shift? This action cannot be
+              undone.
+              <br />
+              <br />
+              <strong>Note:</strong> You can only delete open shifts that have:
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>No closed nozzle assignments</li>
+                <li>No nozzle tests</li>
+                <li>No bills</li>
+                <li>No payments</li>
+                <li>No expenses</li>
+              </ul>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteShift}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

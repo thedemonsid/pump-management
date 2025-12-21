@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import ReactSelect from "react-select";
 import { NozzleService } from "@/services/nozzle-service";
 import { NozzleAssignmentService } from "@/services/nozzle-assignment-service";
@@ -9,6 +10,8 @@ import { SalesmanService } from "@/services/salesman-service";
 import { toast } from "sonner";
 import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { SingleDatePicker } from "@/components/shared/SingleDatePicker";
+import { useAuth } from "@/hooks/useAuth";
 import type { Nozzle, Salesman } from "@/types";
 
 interface StartShiftFormProps {
@@ -33,17 +36,28 @@ export function StartShiftForm({
   onSuccess,
   onCancel,
 }: StartShiftFormProps) {
+  const { user } = useAuth();
   const [openingCash] = useState<string>("0");
   const [selectedSalesman, setSelectedSalesman] =
     useState<SalesmanOption | null>(null);
   const [salesmen, setSalesmen] = useState<SalesmanOption[]>([]);
   const [selectedNozzles, setSelectedNozzles] = useState<NozzleOption[]>([]);
   const [availableNozzles, setAvailableNozzles] = useState<NozzleOption[]>([]);
+  const [shiftStartDate, setShiftStartDate] = useState<Date | undefined>(
+    new Date()
+  );
+  const [shiftStartTime, setShiftStartTime] = useState<string>(() => {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingNozzles, setIsLoadingNozzles] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const needsSalesmanSelector = !salesmanId; // Show selector if salesmanId not provided
+  const isAdminOrManager = user?.role === "ADMIN" || user?.role === "MANAGER";
 
   // Fetch salesmen if needed (for admin/manager)
   useEffect(() => {
@@ -177,10 +191,27 @@ export function StartShiftForm({
       }
 
       // Step 1: Start the shift
-      const shift = await SalesmanShiftService.startShift({
+      const shiftPayload: {
+        salesmanId: string;
+        openingCash: number;
+        startDatetime?: string;
+      } = {
         salesmanId: effectiveSalesmanId,
         openingCash: parseFloat(openingCash),
-      });
+      };
+
+      // Add custom start date only for admin/manager
+      if (isAdminOrManager && shiftStartDate) {
+        // Use the selected date and time
+        const year = shiftStartDate.getFullYear();
+        const month = String(shiftStartDate.getMonth() + 1).padStart(2, "0");
+        const day = String(shiftStartDate.getDate()).padStart(2, "0");
+        const [hours, minutes] = shiftStartTime.split(":");
+        const seconds = "00";
+        shiftPayload.startDatetime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+      }
+
+      const shift = await SalesmanShiftService.startShift(shiftPayload);
 
       // Step 2: Assign nozzles to the shift
       const assignmentPromises = selectedNozzles.map((nozzle) =>
@@ -212,6 +243,33 @@ export function StartShiftForm({
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
+      )}
+
+      {/* Shift Start Date (for admin/manager only) */}
+      {isAdminOrManager && (
+        <>
+          <SingleDatePicker
+            date={shiftStartDate}
+            onDateChange={setShiftStartDate}
+            label="Shift Start Date"
+            disabled={isLoading}
+            disableFutureDates={true}
+            placeholder="Select shift start date"
+          />
+          <div className="space-y-2">
+            <Label htmlFor="shift-time" className="text-sm font-medium">
+              Shift Start Time
+            </Label>
+            <Input
+              id="shift-time"
+              type="time"
+              value={shiftStartTime}
+              onChange={(e) => setShiftStartTime(e.target.value)}
+              disabled={isLoading}
+              className="w-full"
+            />
+          </div>
+        </>
       )}
 
       {/* Salesman Selection (for admin/manager) */}
@@ -335,8 +393,9 @@ export function StartShiftForm({
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription className="text-sm">
-          The shift will start at the current date and time. Make sure to close
-          all nozzles before ending your shift.
+          {isAdminOrManager
+            ? "You can select a custom start date for the shift. Make sure to close all nozzles before ending the shift."
+            : "The shift will start at the current date and time. Make sure to close all nozzles before ending your shift."}
         </AlertDescription>
       </Alert>
 

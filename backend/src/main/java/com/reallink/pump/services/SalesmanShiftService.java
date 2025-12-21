@@ -59,7 +59,7 @@ public class SalesmanShiftService {
      */
     @Transactional
     @PreAuthorize("hasAnyRole('SALESMAN', 'MANAGER', 'ADMIN')")
-    public SalesmanShift startShift(UUID salesmanId, BigDecimal openingCash) {
+    public SalesmanShift startShift(UUID salesmanId, BigDecimal openingCash, LocalDateTime startDatetime) {
         UUID pumpMasterId = securityHelper.getCurrentPumpMasterId();
 
         // Security check: SALESMAN can only start their own shift
@@ -83,11 +83,14 @@ public class SalesmanShiftService {
         PumpInfoMaster pumpMaster = pumpInfoMasterRepository.findById(pumpMasterId)
                 .orElseThrow(() -> new EntityNotFoundException("Pump master not found"));
 
+        // Use provided startDatetime or default to now
+        LocalDateTime effectiveStartDatetime = startDatetime != null ? startDatetime : LocalDateTime.now();
+
         // Create new shift
         SalesmanShift shift = new SalesmanShift(
                 salesman,
                 pumpMaster,
-                LocalDateTime.now(),
+                effectiveStartDatetime,
                 openingCash != null ? openingCash : BigDecimal.ZERO
         );
 
@@ -532,6 +535,63 @@ public class SalesmanShiftService {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SALESMAN')")
     public BigDecimal getTotalTestQuantityForShift(UUID shiftId) {
         return nozzleTestRepository.sumTestQuantityByShift(shiftId);
+    }
+
+    /**
+     * Delete a shift. Only admin and manager can delete shifts. Can only delete
+     * if: - Shift is OPEN (not closed) - No nozzle assignments are closed - No
+     * nozzle tests exist - No bills exist - No payments exist - No expenses
+     * exist
+     */
+    @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public void deleteShift(UUID shiftId) {
+        SalesmanShift shift = salesmanShiftRepository.findById(shiftId)
+                .orElseThrow(() -> new EntityNotFoundException("Shift not found with id: " + shiftId));
+
+        // Check 1: Shift must be OPEN
+        if (shift.isClosed()) {
+            throw new IllegalStateException("Cannot delete a closed shift. Only open shifts can be deleted.");
+        }
+
+        // Check 2: No closed nozzle assignments
+        long closedNozzleCount = shift.getNozzleAssignments().stream()
+                .filter(NozzleAssignment::isClosed)
+                .count();
+        if (closedNozzleCount > 0) {
+            throw new IllegalStateException("Cannot delete shift. " + closedNozzleCount + " nozzle(s) have been closed.");
+        }
+
+        // Check 3: No nozzle tests
+        if (!shift.getNozzleTests().isEmpty()) {
+            throw new IllegalStateException("Cannot delete shift. " + shift.getNozzleTests().size() + " nozzle test(s) exist.");
+        }
+
+        // Check 4: No bills
+        if (!shift.getCreditBills().isEmpty()) {
+            throw new IllegalStateException("Cannot delete shift. " + shift.getCreditBills().size() + " bill(s) exist.");
+        }
+
+        // Check 5: No payments
+        if (!shift.getPayments().isEmpty()) {
+            throw new IllegalStateException("Cannot delete shift. " + shift.getPayments().size() + " payment(s) exist.");
+        }
+
+        // Check 6: No expenses
+        if (!shift.getExpenses().isEmpty()) {
+            throw new IllegalStateException("Cannot delete shift. " + shift.getExpenses().size() + " expense(s) exist.");
+        }
+
+        // If we have any open nozzle assignments, we need to delete them first
+        // This is safe because they are OPEN and have no tests
+        if (!shift.getNozzleAssignments().isEmpty()) {
+            shift.getNozzleAssignments().clear();
+        }
+
+        // Delete the shift
+        salesmanShiftRepository.delete(shift);
+
+        log.info("Deleted shift {} for salesman {}", shiftId, shift.getSalesman().getUsername());
     }
 
     /**

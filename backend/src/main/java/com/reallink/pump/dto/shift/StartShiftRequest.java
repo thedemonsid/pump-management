@@ -1,6 +1,7 @@
 package com.reallink.pump.dto.shift;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -23,4 +24,10 @@ public class StartShiftRequest {
     @DecimalMin(value = "0.0", message = "Opening cash cannot be negative")
     @Digits(integer = 15, fraction = 2, message = "Opening cash must have at most 15 digits and 2 decimal places")
     private BigDecimal openingCash = BigDecimal.ZERO;
+
+    /**
+     * Optional start datetime. If not provided, defaults to current time. Only
+     * admins and managers should be able to set a custom start datetime.
+     */
+    private LocalDateTime startDatetime;
 }

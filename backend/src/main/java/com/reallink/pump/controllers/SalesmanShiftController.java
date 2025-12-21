@@ -9,11 +9,11 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -62,7 +62,8 @@ public class SalesmanShiftController {
 
         SalesmanShift shift = salesmanShiftService.startShift(
                 request.getSalesmanId(),
-                request.getOpeningCash()
+                request.getOpeningCash(),
+                request.getStartDatetime()
         );
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -383,6 +384,22 @@ public class SalesmanShiftController {
         log.info("Deleting nozzle test: {} from shift: {}", testId, shiftId);
 
         salesmanShiftService.deleteNozzleTest(testId);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Delete a shift (Admin/Manager only). DELETE /api/v1/salesman-shifts/{id}
+     * Can only delete if: - Shift is OPEN (not closed) - No nozzle assignments
+     * are closed - No nozzle tests exist - No bills exist - No payments exist -
+     * No expenses exist
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<Void> deleteShift(@PathVariable UUID id) {
+        log.info("Deleting shift: {}", id);
+
+        salesmanShiftService.deleteShift(id);
 
         return ResponseEntity.noContent().build();
     }

@@ -160,4 +160,9 @@ export class SalesmanShiftService {
     );
     return response.data;
   }
+
+  // Delete shift (Admin/Manager only)
+  static async deleteShift(id: string): Promise<void> {
+    await api.delete(`${this.BASE_PATH}/${id}`);
+  }
 }
