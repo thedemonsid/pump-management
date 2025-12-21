@@ -53,6 +53,7 @@ public class SalesmanBillService {
     private final SalesmanBillMapper mapper;
     private final FileStorageService fileStorageService;
     private final SecurityHelper securityHelper;
+    private final ProductService productService;
 
     /**
      * Validates the billing request based on billing mode - BY_QUANTITY:
@@ -226,6 +227,11 @@ public class SalesmanBillService {
         // Save bill first
         SalesmanBill savedBill = repository.save(bill);
 
+        // Update stock for GENERAL products (decrease stock)
+        if (product.getProductType() == ProductType.GENERAL) {
+            productService.updateStockQuantity(product.getId(), -quantity.intValue());
+        }
+
         // If payment type is CASH, create the payment record
         if (request.getPaymentType() == com.reallink.pump.entities.PaymentType.CASH && request.getCashPayment() != null) {
             createCashPayment(savedBill, request.getCashPayment(), pumpMaster, customer, salesmanShift);
@@ -346,6 +352,11 @@ public class SalesmanBillService {
         // Save bill first
         SalesmanBill savedBill = repository.save(bill);
 
+        // Update stock for GENERAL products (decrease stock)
+        if (product.getProductType() == ProductType.GENERAL) {
+            productService.updateStockQuantity(product.getId(), -quantity.intValue());
+        }
+
         // If payment type is CASH, create the payment record
         if (request.getPaymentType() == com.reallink.pump.entities.PaymentType.CASH && request.getCashPayment() != null) {
             createCashPayment(savedBill, request.getCashPayment(), pumpMaster, customer, salesmanShift);
@@ -427,9 +438,16 @@ public class SalesmanBillService {
 
     @Transactional
     public void delete(@NotNull UUID id) {
-        if (!repository.existsById(id)) {
+        SalesmanBill bill = repository.findById(id).orElse(null);
+        if (bill == null) {
             throw new PumpBusinessException("SALESMAN_BILL_NOT_FOUND", "Salesman bill with ID " + id + " not found");
         }
+
+        // Restore stock for GENERAL products (increase stock back)
+        if (bill.getProduct().getProductType() == ProductType.GENERAL) {
+            productService.updateStockQuantity(bill.getProduct().getId(), bill.getQuantity().intValue());
+        }
+
         salesmanBillPaymentRepository.deleteBySalesmanBill_Id(id);
         repository.deleteById(id);
     }
