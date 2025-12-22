@@ -23,7 +23,8 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
 
     List<Expense> findByPumpMaster_IdAndExpenseType(UUID pumpMasterId, ExpenseType expenseType);
 
-    List<Expense> findBySalesmanShift_Id(UUID salesmanShiftId);
+    @Query("SELECT e FROM Expense e WHERE e.salesmanShift.id = :salesmanShiftId ORDER BY e.expenseDate ASC, e.createdAt ASC")
+    List<Expense> findBySalesmanShift_Id(@Param("salesmanShiftId") UUID salesmanShiftId);
 
     List<Expense> findByBankAccount_Id(UUID bankAccountId);
 

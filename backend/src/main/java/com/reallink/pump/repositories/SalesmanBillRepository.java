@@ -33,12 +33,13 @@ public interface SalesmanBillRepository extends JpaRepository<SalesmanBill, UUID
     /**
      * Find all bills for a specific salesman shift.
      */
-    List<SalesmanBill> findBySalesmanShiftIdOrderByBillDateDesc(UUID salesmanShiftId);
+    @Query("SELECT b FROM SalesmanBill b WHERE b.salesmanShift.id = :salesmanShiftId ORDER BY b.billDate ASC, b.createdAt ASC")
+    List<SalesmanBill> findBySalesmanShiftIdOrderByBillDateDesc(@Param("salesmanShiftId") UUID salesmanShiftId);
 
     /**
      * Find only credit bills for a specific salesman shift.
      */
-    @Query("SELECT b FROM SalesmanBill b WHERE b.salesmanShift.id = :salesmanShiftId AND b.paymentType = 'CREDIT' ORDER BY b.billDate DESC")
+    @Query("SELECT b FROM SalesmanBill b WHERE b.salesmanShift.id = :salesmanShiftId AND b.paymentType = 'CREDIT' ORDER BY b.billDate ASC, b.createdAt ASC")
     List<SalesmanBill> findCreditBillsBySalesmanShiftId(@Param("salesmanShiftId") UUID salesmanShiftId);
 
     /**

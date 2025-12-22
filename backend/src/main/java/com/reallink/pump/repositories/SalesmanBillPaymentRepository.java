@@ -41,7 +41,8 @@ public interface SalesmanBillPaymentRepository extends JpaRepository<SalesmanBil
             + "LEFT JOIN FETCH sbp.customer "
             + "LEFT JOIN FETCH sbp.salesmanShift ss "
             + "LEFT JOIN FETCH ss.salesman "
-            + "WHERE sbp.salesmanShift.id = :shiftId")
+            + "WHERE sbp.salesmanShift.id = :shiftId "
+            + "ORDER BY sbp.paymentDate ASC")
     List<SalesmanBillPayment> findBySalesmanShiftId(@Param("shiftId") UUID shiftId);
 
     @Query("SELECT sbp FROM SalesmanBillPayment sbp "
@@ -82,7 +83,7 @@ public interface SalesmanBillPaymentRepository extends JpaRepository<SalesmanBil
             + "LEFT JOIN FETCH sbp.salesmanShift ss "
             + "LEFT JOIN FETCH ss.salesman "
             + "WHERE sbp.salesmanShift.id = :shiftId "
-            + "ORDER BY sbp.paymentDate DESC")
+            + "ORDER BY sbp.paymentDate ASC")
     List<SalesmanBillPayment> findBySalesmanShiftIdOrderByPaymentDateDesc(@Param("shiftId") UUID shiftId);
 
     void deleteBySalesmanBill_Id(UUID salesmanBillId);
