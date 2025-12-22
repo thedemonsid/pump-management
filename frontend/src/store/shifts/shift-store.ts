@@ -15,6 +15,8 @@ interface ShiftStore {
     fromDate?: string;
     toDate?: string;
     salesmanId?: string;
+    status?: string;
+    isAccountingDone?: string;
   }) => Promise<void>;
   fetchShiftById: (id: string) => Promise<void>;
   fetchActiveShift: (salesmanId?: string) => Promise<void>;

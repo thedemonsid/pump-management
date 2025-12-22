@@ -71,11 +71,12 @@ public class SalesmanShiftController {
     }
 
     /**
-     * Get all shifts (filtered by role). GET /api/v1/salesman-shifts
+     * Get all shifts with optional filters. GET /api/v1/salesman-shifts
      *
      * Query params: - salesmanId: Filter by salesman (MANAGER/ADMIN only) -
      * status: Filter by status (OPEN, CLOSED) - fromDate: Filter from date (ISO
-     * DateTime format) - toDate: Filter to date (ISO DateTime format)
+     * DateTime format) - toDate: Filter to date (ISO DateTime format) -
+     * isAccountingDone: Filter by accounting status (true/false)
      */
     @GetMapping
     @PreAuthorize("hasAnyRole('SALESMAN', 'MANAGER', 'ADMIN')")
@@ -83,10 +84,11 @@ public class SalesmanShiftController {
             @RequestParam(required = false) UUID salesmanId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
+            @RequestParam(required = false) Boolean isAccountingDone) {
 
-        log.info("Fetching shifts - salesmanId: {}, status: {}, from: {}, to: {}",
-                salesmanId, status, fromDate, toDate);
+        log.info("Fetching shifts - salesmanId: {}, status: {}, from: {}, to: {}, isAccountingDone: {}",
+                salesmanId, status, fromDate, toDate, isAccountingDone);
 
         // Parse status if provided
         SalesmanShift.ShiftStatus shiftStatus = null;
@@ -100,7 +102,7 @@ public class SalesmanShiftController {
         }
 
         List<SalesmanShift> shifts = salesmanShiftService.getAllShifts(
-                salesmanId, shiftStatus, fromDate, toDate);
+                salesmanId, shiftStatus, fromDate, toDate, isAccountingDone);
 
         List<ShiftResponse> response = shifts.stream()
                 .map(ShiftResponse::fromMinimal)

@@ -16,6 +16,7 @@ export class SalesmanShiftService {
     toDate?: string;
     salesmanId?: string;
     status?: string;
+    isAccountingDone?: string;
   }): Promise<ShiftResponse[]> {
     const queryParams = new URLSearchParams();
     if (params?.fromDate)
@@ -24,6 +25,8 @@ export class SalesmanShiftService {
       queryParams.append("toDate", `${params.toDate}T23:59:59`);
     if (params?.salesmanId) queryParams.append("salesmanId", params.salesmanId);
     if (params?.status) queryParams.append("status", params.status);
+    if (params?.isAccountingDone)
+      queryParams.append("isAccountingDone", params.isAccountingDone);
 
     const url = queryParams.toString()
       ? `${this.BASE_PATH}?${queryParams.toString()}`

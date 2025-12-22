@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -259,11 +260,12 @@ public class SalesmanShiftService {
      * @param status Optional status filter (OPEN, CLOSED)
      * @param fromDate Optional start date filter
      * @param toDate Optional end date filter
+     * @param isAccountingDone Optional accounting status filter
      * @return List of filtered shifts
      */
     @PreAuthorize("hasAnyRole('SALESMAN', 'MANAGER', 'ADMIN')")
     public List<SalesmanShift> getAllShifts(UUID salesmanId, SalesmanShift.ShiftStatus status,
-            LocalDateTime fromDate, LocalDateTime toDate) {
+            LocalDateTime fromDate, LocalDateTime toDate, Boolean isAccountingDone) {
         UUID pumpMasterId = securityHelper.getCurrentPumpMasterId();
 
         // Set default date range if not provided (yesterday to tomorrow)
@@ -273,10 +275,10 @@ public class SalesmanShiftService {
         if (securityHelper.isSalesman()) {
             // Salesmen only see their own shifts
             UUID currentSalesmanId = securityHelper.getCurrentUserId();
-            return filterShifts(currentSalesmanId, status, effectiveFromDate, effectiveToDate, pumpMasterId);
+            return filterShifts(currentSalesmanId, status, effectiveFromDate, effectiveToDate, pumpMasterId, isAccountingDone);
         } else {
             // Managers and admins can see all shifts or filter by salesman
-            return filterShifts(salesmanId, status, effectiveFromDate, effectiveToDate, pumpMasterId);
+            return filterShifts(salesmanId, status, effectiveFromDate, effectiveToDate, pumpMasterId, isAccountingDone);
         }
     }
 
@@ -284,7 +286,7 @@ public class SalesmanShiftService {
      * Helper method to filter shifts based on criteria.
      */
     private List<SalesmanShift> filterShifts(UUID salesmanId, SalesmanShift.ShiftStatus status,
-            LocalDateTime fromDate, LocalDateTime toDate, UUID pumpMasterId) {
+            LocalDateTime fromDate, LocalDateTime toDate, UUID pumpMasterId, Boolean isAccountingDone) {
         List<SalesmanShift> shifts;
 
         if (salesmanId != null && status != null) {
@@ -305,6 +307,13 @@ public class SalesmanShiftService {
                     pumpMasterId, fromDate, toDate);
         }
 
+        // Apply accounting status filter if provided
+        if (isAccountingDone != null) {
+            shifts = shifts.stream()
+                    .filter(shift -> shift.getIsAccountingDone().equals(isAccountingDone))
+                    .collect(Collectors.toList());
+        }
+
         return shifts;
     }
 
@@ -313,7 +322,7 @@ public class SalesmanShiftService {
      */
     @Deprecated
     public List<SalesmanShift> getAllShifts() {
-        return getAllShifts(null, null, null, null);
+        return getAllShifts(null, null, null, null, null);
     }
 
     /**

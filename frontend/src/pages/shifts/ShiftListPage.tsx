@@ -82,6 +82,9 @@ export function ShiftListPage() {
   const [statusFilter, setStatusFilter] = useState<"ALL" | "OPEN" | "CLOSED">(
     "ALL"
   );
+  const [accountingFilter, setAccountingFilter] = useState<
+    "ALL" | "PENDING" | "DONE"
+  >("ALL");
 
   // Start shift sheet state
   const [isStartShiftOpen, setIsStartShiftOpen] = useState(false);
@@ -113,6 +116,11 @@ export function ShiftListPage() {
         filters.status = statusFilter;
       }
 
+      if (accountingFilter !== "ALL") {
+        filters.isAccountingDone =
+          accountingFilter === "DONE" ? "true" : "false";
+      }
+
       await fetchShifts(filters);
     } catch (err) {
       toast.error("Failed to load shifts");
@@ -124,13 +132,14 @@ export function ShiftListPage() {
   useEffect(() => {
     loadShifts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startDate, endDate, statusFilter]);
+  }, [startDate, endDate, statusFilter, accountingFilter]);
 
   const handleReset = () => {
     setStartDate(getYesterday());
     setEndDate(getToday());
     setSearchQuery("");
     setStatusFilter("ALL");
+    setAccountingFilter("ALL");
   };
 
   const handleShiftCreated = () => {
@@ -307,6 +316,30 @@ export function ShiftListPage() {
                 </select>
               </div>
 
+              {/* Accounting Filter */}
+              <div className="flex-1 min-w-[200px]">
+                <Label
+                  htmlFor="accounting"
+                  className="text-sm font-medium mb-2 block"
+                >
+                  Accounting
+                </Label>
+                <select
+                  id="accounting"
+                  value={accountingFilter}
+                  onChange={(e) =>
+                    setAccountingFilter(
+                      e.target.value as "ALL" | "PENDING" | "DONE"
+                    )
+                  }
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="ALL">All</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="DONE">Done</option>
+                </select>
+              </div>
+
               <Button variant="outline" onClick={handleReset}>
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Reset to Default
@@ -338,6 +371,8 @@ export function ShiftListPage() {
                 {startDate && ` from ${format(startDate, "PPP")}`}
                 {endDate && ` to ${format(endDate, "PPP")}`}
                 {statusFilter !== "ALL" && ` with status: ${statusFilter}`}
+                {accountingFilter !== "ALL" &&
+                  ` with accounting: ${accountingFilter}`}
               </div>
             )}
           </div>
