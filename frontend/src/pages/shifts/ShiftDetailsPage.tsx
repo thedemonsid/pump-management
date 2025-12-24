@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useShiftStore } from "@/store/shifts/shift-store";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -51,10 +52,18 @@ import {
   Lock,
   Receipt,
   Beaker,
+  CalendarIcon,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import type {
   NozzleAssignmentResponse,
   SalesmanBillResponse,
@@ -67,11 +76,26 @@ import type {
 import { RegisterNozzleTestSheet } from "@/components/shifts/RegisterNozzleTestSheet";
 import { NozzleTestsList } from "@/components/shifts/NozzleTestsList";
 
+// Helper function to format date to local ISO string (without timezone offset issues)
+const formatDateToLocalISO = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+};
+
 export function ShiftDetailsPage() {
   const { shiftId } = useParams<{ shiftId: string }>();
   const navigate = useNavigate();
   const { currentShift, fetchShiftById, closeShift } = useShiftStore();
   const isMobile = useIsMobile();
+  const { user } = useAuth();
+
+  // Check if user is admin or manager
+  const isAdminOrManager = user?.role === "ADMIN" || user?.role === "MANAGER";
 
   const [nozzleAssignments, setNozzleAssignments] = useState<
     NozzleAssignmentResponse[]
@@ -89,18 +113,30 @@ export function ShiftDetailsPage() {
   const [isClosing, setIsClosing] = useState(false);
   const [showRegisterTestSheet, setShowRegisterTestSheet] = useState(false);
 
+  // Shift closing date state (for admin/manager)
+  const [shiftCloseDate, setShiftCloseDate] = useState<Date>(new Date());
+
   // Nozzle closing state
   const [selectedNozzle, setSelectedNozzle] =
     useState<NozzleAssignmentResponse | null>(null);
   const [closingBalance, setClosingBalance] = useState("");
   const [isClosingNozzle, setIsClosingNozzle] = useState(false);
+  // Nozzle close date state (for admin/manager)
+  const [nozzleCloseDate, setNozzleCloseDate] = useState<Date>(new Date());
 
   const handleCloseShift = async () => {
     if (!shiftId) return;
 
     setIsClosing(true);
     try {
-      await closeShift(shiftId);
+      // If admin/manager, pass the selected date as endDatetime
+      if (isAdminOrManager) {
+        await closeShift(shiftId, {
+          endDatetime: formatDateToLocalISO(shiftCloseDate),
+        });
+      } else {
+        await closeShift(shiftId);
+      }
       toast.success("Shift closed successfully");
       setShowCloseDialog(false);
       navigate("/shifts");
@@ -115,6 +151,7 @@ export function ShiftDetailsPage() {
   const handleOpenCloseNozzleDialog = (nozzle: NozzleAssignmentResponse) => {
     setSelectedNozzle(nozzle);
     setClosingBalance(nozzle.openingBalance.toString());
+    setNozzleCloseDate(new Date()); // Reset to today's date
     setShowCloseDialog(false); // Close shift dialog if open
   };
 
@@ -131,6 +168,10 @@ export function ShiftDetailsPage() {
     try {
       const request: CloseNozzleRequest = {
         closingBalance: closingBalanceNum,
+        // Include endTime if admin/manager
+        ...(isAdminOrManager && {
+          endTime: formatDateToLocalISO(nozzleCloseDate),
+        }),
       };
 
       await NozzleAssignmentService.closeNozzleAssignment(
@@ -962,7 +1003,7 @@ export function ShiftDetailsPage() {
             </SheetDescription>
           </SheetHeader>
 
-          <div className="py-6">
+          <div className="py-6 space-y-4">
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
@@ -974,6 +1015,61 @@ export function ShiftDetailsPage() {
                 </ul>
               </AlertDescription>
             </Alert>
+
+            {/* Date picker for admin/manager */}
+            {isAdminOrManager && (
+              <div className="space-y-2">
+                <Label htmlFor="shiftCloseDate">
+                  Close Date & Time{" "}
+                  <span className="text-muted-foreground">
+                    (Admin/Manager only)
+                  </span>
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !shiftCloseDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {shiftCloseDate ? (
+                        format(shiftCloseDate, "PPP HH:mm")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={shiftCloseDate}
+                      onSelect={(date) => date && setShiftCloseDate(date)}
+                      initialFocus
+                    />
+                    <div className="p-3 border-t">
+                      <Label htmlFor="shiftCloseTime">Time</Label>
+                      <Input
+                        id="shiftCloseTime"
+                        type="time"
+                        value={format(shiftCloseDate, "HH:mm")}
+                        onChange={(e) => {
+                          const [hours, minutes] = e.target.value.split(":");
+                          const newDate = new Date(shiftCloseDate);
+                          newDate.setHours(
+                            parseInt(hours, 10),
+                            parseInt(minutes, 10)
+                          );
+                          setShiftCloseDate(newDate);
+                        }}
+                      />
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
           </div>
 
           <SheetFooter>
@@ -1075,6 +1171,57 @@ export function ShiftDetailsPage() {
                 </div>
               )}
             </div>
+
+            {/* Close Date (Admin/Manager only) */}
+            {isAdminOrManager && (
+              <div className="space-y-2">
+                <Label>Closing Date & Time</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                      disabled={isClosingNozzle}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {nozzleCloseDate
+                        ? format(nozzleCloseDate, "PPP p")
+                        : "Select date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={nozzleCloseDate}
+                      onSelect={(date) => date && setNozzleCloseDate(date)}
+                      initialFocus
+                    />
+                    <div className="p-3 border-t">
+                      <Label htmlFor="nozzleCloseTime" className="text-xs">
+                        Time
+                      </Label>
+                      <Input
+                        id="nozzleCloseTime"
+                        type="time"
+                        value={format(nozzleCloseDate, "HH:mm")}
+                        onChange={(e) => {
+                          const [hours, minutes] = e.target.value
+                            .split(":")
+                            .map(Number);
+                          const newDate = new Date(nozzleCloseDate);
+                          newDate.setHours(hours, minutes, 0, 0);
+                          setNozzleCloseDate(newDate);
+                        }}
+                        className="mt-1"
+                      />
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <p className="text-xs text-muted-foreground">
+                  As admin/manager, you can set a custom closing date/time.
+                </p>
+              </div>
+            )}
 
             <Alert>
               <AlertCircle className="h-4 w-4" />

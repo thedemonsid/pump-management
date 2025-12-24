@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import { SalesmanShiftService } from "@/services/salesman-shift-service";
-import type { ShiftResponse, ShiftDetailsResponse } from "@/types";
+import type {
+  ShiftResponse,
+  ShiftDetailsResponse,
+  CloseShiftRequest,
+} from "@/types";
 
 interface ShiftStore {
   // State
@@ -24,7 +28,7 @@ interface ShiftStore {
     salesmanId: string,
     openingCash: number
   ) => Promise<ShiftResponse>;
-  closeShift: (id: string) => Promise<void>;
+  closeShift: (id: string, request?: CloseShiftRequest) => Promise<void>;
   refreshCurrentShift: () => Promise<void>;
   clearCurrentShift: () => void;
   setError: (error: string | null) => void;
@@ -107,10 +111,10 @@ export const useShiftStore = create<ShiftStore>((set, get) => ({
   },
 
   // Close shift
-  closeShift: async (id: string) => {
+  closeShift: async (id: string, request?: CloseShiftRequest) => {
     set({ isLoading: true, error: null });
     try {
-      await SalesmanShiftService.closeShift(id);
+      await SalesmanShiftService.closeShift(id, request);
       set({ activeShift: null, isLoading: false });
       // Refresh current shift if it's the one being closed
       if (get().currentShift?.id === id) {

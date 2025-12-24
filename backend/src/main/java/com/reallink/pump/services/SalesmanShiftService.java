@@ -164,7 +164,7 @@ public class SalesmanShiftService {
      */
     @Transactional
     @PreAuthorize("hasAnyRole('SALESMAN', 'MANAGER', 'ADMIN')")
-    public NozzleAssignment closeNozzleAssignment(UUID assignmentId, BigDecimal closingBalance) {
+    public NozzleAssignment closeNozzleAssignment(UUID assignmentId, BigDecimal closingBalance, LocalDateTime endTime) {
         // Get assignment
         NozzleAssignment assignment = nozzleAssignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new EntityNotFoundException("Nozzle assignment not found"));
@@ -183,8 +183,12 @@ public class SalesmanShiftService {
                     "Cannot close nozzle assignment. At least one nozzle test (which can be zero) is required before closing.");
         }
 
+        // Use provided endTime or default to now
+        // Only ADMIN/MANAGER can set custom endTime (handled in controller)
+        LocalDateTime closeTime = endTime != null ? endTime : LocalDateTime.now();
+
         // Close the assignment
-        assignment.closeAssignment(LocalDateTime.now(), closingBalance);
+        assignment.closeAssignment(closeTime, closingBalance);
 
         // Update nozzle's current reading
         Nozzle nozzle = assignment.getNozzle();
@@ -209,7 +213,7 @@ public class SalesmanShiftService {
      */
     @Transactional
     @PreAuthorize("hasAnyRole('SALESMAN', 'MANAGER', 'ADMIN')")
-    public SalesmanShift closeShift(UUID shiftId) {
+    public SalesmanShift closeShift(UUID shiftId, LocalDateTime endDatetime) {
         // Get shift
         SalesmanShift shift = salesmanShiftRepository.findById(shiftId)
                 .orElseThrow(() -> new EntityNotFoundException("Shift not found"));
@@ -228,8 +232,12 @@ public class SalesmanShiftService {
             throw new IllegalStateException("Cannot close shift. " + openNozzleCount + " nozzle(s) are still open.");
         }
 
+        // Use provided endDatetime or default to now
+        // Only ADMIN/MANAGER can set custom endDatetime (handled in controller)
+        LocalDateTime closeTime = endDatetime != null ? endDatetime : LocalDateTime.now();
+
         // Close the shift
-        shift.closeShift(LocalDateTime.now());
+        shift.closeShift(closeTime);
 
         SalesmanShift savedShift = salesmanShiftRepository.save(shift);
 

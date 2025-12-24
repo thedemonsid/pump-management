@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.reallink.pump.dto.shift.AddNozzleRequest;
 import com.reallink.pump.dto.shift.CloseNozzleRequest;
+import com.reallink.pump.dto.shift.CloseShiftRequest;
 import com.reallink.pump.dto.shift.CreateNozzleTestRequest;
 import com.reallink.pump.dto.shift.CreateShiftAccountingRequest;
 import com.reallink.pump.dto.shift.NozzleAssignmentResponse;
@@ -32,6 +33,7 @@ import com.reallink.pump.entities.NozzleAssignment;
 import com.reallink.pump.entities.NozzleTest;
 import com.reallink.pump.entities.SalesmanShift;
 import com.reallink.pump.entities.SalesmanShiftAccounting;
+import com.reallink.pump.security.SecurityHelper;
 import com.reallink.pump.services.SalesmanShiftAccountingService;
 import com.reallink.pump.services.SalesmanShiftService;
 
@@ -51,6 +53,7 @@ public class SalesmanShiftController {
 
     private final SalesmanShiftService salesmanShiftService;
     private final SalesmanShiftAccountingService accountingService;
+    private final SecurityHelper securityHelper;
 
     /**
      * Start a new shift for a salesman. POST /api/v1/salesman-shifts
@@ -175,14 +178,29 @@ public class SalesmanShiftController {
     }
 
     /**
-     * Close a shift. PUT /api/v1/salesman-shifts/{id}/close
+     * Close a shift. PUT /api/v1/salesman-shifts/{id}/close Accepts optional
+     * request body with endDatetime. Only ADMIN/MANAGER can set custom
+     * endDatetime, salesmen will use current time.
      */
     @PutMapping("/{id}/close")
     @PreAuthorize("hasAnyRole('SALESMAN', 'MANAGER', 'ADMIN')")
-    public ResponseEntity<ShiftResponse> closeShift(@PathVariable UUID id) {
+    public ResponseEntity<ShiftResponse> closeShift(
+            @PathVariable UUID id,
+            @RequestBody(required = false) CloseShiftRequest request) {
         log.info("Closing shift: {}", id);
 
-        SalesmanShift shift = salesmanShiftService.closeShift(id);
+        // Only allow ADMIN/MANAGER to set custom endDatetime
+        LocalDateTime endDatetime = null;
+        if (request != null && request.getEndDatetime() != null) {
+            if (securityHelper.isAdminOrManager()) {
+                endDatetime = request.getEndDatetime();
+                log.info("Custom end datetime set by admin/manager: {}", endDatetime);
+            } else {
+                log.warn("Non-admin user attempted to set custom end datetime, ignoring");
+            }
+        }
+
+        SalesmanShift shift = salesmanShiftService.closeShift(id, endDatetime);
 
         return ResponseEntity.ok(ShiftResponse.from(shift));
     }
@@ -227,7 +245,9 @@ public class SalesmanShiftController {
 
     /**
      * Close a nozzle assignment. PUT
-     * /api/v1/salesman-shifts/{shiftId}/nozzles/{assignmentId}/close
+     * /api/v1/salesman-shifts/{shiftId}/nozzles/{assignmentId}/close Accepts
+     * optional endTime in request body. Only ADMIN/MANAGER can set custom
+     * endTime, salesmen will use current time.
      */
     @PutMapping("/{shiftId}/nozzles/{assignmentId}/close")
     @PreAuthorize("hasAnyRole('SALESMAN', 'MANAGER', 'ADMIN')")
@@ -238,9 +258,21 @@ public class SalesmanShiftController {
 
         log.info("Closing nozzle assignment {} for shift {}", assignmentId, shiftId);
 
+        // Only allow ADMIN/MANAGER to set custom endTime
+        LocalDateTime endTime = null;
+        if (request.getEndTime() != null) {
+            if (securityHelper.isAdminOrManager()) {
+                endTime = request.getEndTime();
+                log.info("Custom end time set by admin/manager: {}", endTime);
+            } else {
+                log.warn("Non-admin user attempted to set custom end time, ignoring");
+            }
+        }
+
         NozzleAssignment assignment = salesmanShiftService.closeNozzleAssignment(
                 assignmentId,
-                request.getClosingBalance()
+                request.getClosingBalance(),
+                endTime
         );
 
         return ResponseEntity.ok(NozzleAssignmentResponse.from(assignment));

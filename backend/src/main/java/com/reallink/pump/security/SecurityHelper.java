@@ -72,6 +72,13 @@ public class SecurityHelper {
     }
 
     /**
+     * Check if current user is ADMIN or MANAGER.
+     */
+    public boolean isAdminOrManager() {
+        return isAdmin() || isManager();
+    }
+
+    /**
      * Check if current user is SALESMAN.
      */
     public boolean isSalesman() {
